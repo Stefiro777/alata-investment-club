@@ -1,65 +1,275 @@
-import Image from "next/image";
+import { createClient } from '@/lib/supabase-server'
+import Image from 'next/image'
+import Link from 'next/link'
 
-export default function Home() {
+type Contenuto = {
+  id: number
+  titolo: string
+  descrizione: string | null
+  tipo: string
+  data: string | null
+  link: string | null
+}
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return null
+  return new Date(dateStr).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function ContentCard({ item }: { item: Contenuto }) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <article className="group flex flex-col border-t border-[#e5e5e5] pt-6 pb-4">
+      {item.data && (
+        <span className="text-[#6b7280] text-xs tracking-widest uppercase mb-3">
+          {formatDate(item.data)}
+        </span>
+      )}
+      <h3 className="font-serif text-xl font-medium text-[#0a0a0a] leading-snug mb-2 group-hover:text-[#1B3A4B] transition-colors">
+        {item.titolo}
+      </h3>
+      {item.descrizione && (
+        <p className="text-[#6b7280] text-sm leading-relaxed flex-1">{item.descrizione}</p>
+      )}
+      {item.link && (
+        <a
+          href={item.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-[#1B3A4B] text-xs font-medium tracking-wide uppercase mt-4 hover:gap-3 transition-all duration-150"
+        >
+          Read
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      )}
+    </article>
+  )
+}
+
+function InstagramIcon() {
+  return (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+    </svg>
+  )
+}
+
+function LinkedInIcon() {
+  return (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+    </svg>
+  )
+}
+
+function MailIcon() {
+  return (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
+export default async function HomePage() {
+  const supabase = await createClient()
+
+  const { data: reports } = await supabase
+    .from('contenuti')
+    .select('*')
+    .eq('tipo', 'report')
+    .order('data', { ascending: false })
+
+  const { data: eventi } = await supabase
+    .from('contenuti')
+    .select('*')
+    .in('tipo', ['evento', 'aggiornamento'])
+    .order('data', { ascending: false })
+
+  return (
+    <div>
+      {/* Hero — dark band */}
+      <section className="bg-[#1B3A4B] text-white py-24 sm:py-36">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            {/* Left — text */}
+            <div className="flex-1 min-w-0">
+              <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-8">
+                Alata<br />
+                <em className="italic font-semibold">Investment Club</em>
+              </h1>
+              <div className="w-16 h-px bg-white/30 mb-8" />
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/team"
+                  className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1B3A4B] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
+                >
+                  Meet the Team
+                </Link>
+                <Link
+                  href="/career-service"
+                  className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1B3A4B] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
+                >
+                  Career Service
+                </Link>
+              </div>
+            </div>
+
+            {/* Right — logo */}
+            <div className="flex-shrink-0 flex justify-center">
+              <div style={{
+                position: 'relative',
+                padding: '16px',
+                background: 'linear-gradient(135deg, #0f2030 0%, #1B3A4B 50%, #0f2030 100%)',
+                borderRadius: '2px',
+                boxShadow: '0 4px 24px rgba(15, 32, 48, 0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  inset: '6px',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '1px',
+                  pointerEvents: 'none',
+                }} />
+                <Image
+                  src="/logofronte.png"
+                  alt="Alata Investment Club"
+                  width={320}
+                  height={320}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Description — white band */}
+      <section className="bg-white py-16 sm:py-20 border-b border-[#e5e5e5]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-3xl">
+            Alata Investment Club is a university association of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Reports */}
+      <section className="py-20 sm:py-28 bg-[#f5f5f5]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="mb-12 border-b border-[#e5e5e5] pb-6">
+            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Research</p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-light text-[#0a0a0a]">Our Reports</h2>
+          </div>
+
+          {!reports || reports.length === 0 ? (
+            <div className="py-20 text-center text-[#6b7280]">
+              <p className="text-sm tracking-wide">No reports available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-12">
+              {reports.map((item) => (
+                <ContentCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
         </div>
-      </main>
+      </section>
+
+      {/* News & Events */}
+      <section className="py-20 sm:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="mb-12 border-b border-[#e5e5e5] pb-6">
+            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Latest</p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-light text-[#0a0a0a]">News &amp; Events</h2>
+          </div>
+
+          {!eventi || eventi.length === 0 ? (
+            <div className="py-20 text-center text-[#6b7280]">
+              <p className="text-sm tracking-wide">No events or updates available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-12">
+              {eventi.map((item) => (
+                <ContentCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Contact Us */}
+      <section className="py-20 sm:py-28 bg-[#1B3A4B] text-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Get in touch</p>
+              <h2 className="font-serif text-4xl sm:text-5xl font-light leading-tight mb-6">
+                Contact Us
+              </h2>
+              <div className="w-12 h-px bg-white/30 mb-6" />
+              <p className="text-white/70 text-sm leading-relaxed">
+                Interested in joining, partnering, or simply learning more about what we do? Reach out through any of the channels below.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              <a
+                href="https://www.instagram.com/alata_investmentclub"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 group"
+              >
+                <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                  <InstagramIcon />
+                </div>
+                <div>
+                  <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">Instagram</p>
+                  <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
+                    @alata_investmentclub
+                  </p>
+                </div>
+              </a>
+
+              <a
+                href="https://www.linkedin.com/company/alatainvestmentclub/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 group"
+              >
+                <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                  <LinkedInIcon />
+                </div>
+                <div>
+                  <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">LinkedIn</p>
+                  <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
+                    Alata Investment Club
+                  </p>
+                </div>
+              </a>
+
+              <a
+                href="mailto:Alatabrixiaic@gmail.com"
+                className="flex items-center gap-4 group"
+              >
+                <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                  <MailIcon />
+                </div>
+                <div>
+                  <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">Email</p>
+                  <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
+                    Alatabrixiaic@gmail.com
+                  </p>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-  );
+  )
 }
