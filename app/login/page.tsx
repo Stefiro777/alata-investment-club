@@ -69,7 +69,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1B3A4B] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
               />
             </div>
 
@@ -85,7 +85,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1B3A4B] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
               />
             </div>
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#1B3A4B] hover:bg-[#142e3c] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
               {loading ? (
                 <>
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
           <p className="text-center text-xs text-[#6b7280] mt-6 pt-6 border-t border-[#f5f5f5]">
             Don&apos;t have an account?{' '}
-            <span className="text-[#1B3A4B] font-medium">Contact the administrator.</span>
+            <span className="text-[#1a4a3a] font-medium">Contact the administrator.</span>
           </p>
         </div>
 

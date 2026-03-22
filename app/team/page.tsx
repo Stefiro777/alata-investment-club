@@ -22,7 +22,7 @@ function MemberCard({ member }: { member: Member }) {
   return (
     <div className="group flex flex-col">
       {/* Photo */}
-      <div className="relative w-full aspect-[3/4] bg-[#f5f5f5] overflow-hidden mb-5">
+      <div className="relative w-full aspect-[3/4] bg-[#f5f5f5] overflow-hidden mb-5 border border-black/10 rounded-sm">
         {member.foto_url ? (
           <Image
             src={member.foto_url}
@@ -32,7 +32,7 @@ function MemberCard({ member }: { member: Member }) {
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-[#eaeaea]">
-            <span className="font-serif text-6xl font-light text-[#1B3A4B]/25">
+            <span className="font-serif text-6xl font-light text-[#1a4a3a]/25">
               {member.nome.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -42,7 +42,7 @@ function MemberCard({ member }: { member: Member }) {
       {/* Info */}
       <div className="flex flex-col gap-1">
         <h3 className="font-serif text-xl font-medium text-[#0a0a0a]">{member.nome}</h3>
-        <p className="text-xs tracking-widest uppercase text-[#1B3A4B] font-medium">{member.ruolo}</p>
+        <p className="text-xs tracking-widest uppercase text-[#1a4a3a] font-medium">{member.ruolo}</p>
         {member.bio && (
           <p className="text-[#6b7280] text-sm leading-relaxed mt-2">{member.bio}</p>
         )}
@@ -51,7 +51,7 @@ function MemberCard({ member }: { member: Member }) {
             href={member.linkedin_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-[#0a0a0a] hover:text-[#1B3A4B] text-xs font-medium tracking-wide mt-3 transition-colors"
+            className="inline-flex items-center gap-2 text-[#0a0a0a] hover:text-[#1a4a3a] text-xs font-medium tracking-wide mt-3 transition-colors"
           >
             <LinkedInIcon />
             LinkedIn Profile
@@ -72,10 +72,10 @@ export default async function TeamPage() {
   return (
     <div>
       {/* Header — dark */}
-      <section className="bg-[#1B3A4B] text-white py-20 sm:py-28">
+      <section className="bg-[#1a4a3a] text-white py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">People</p>
-          <h1 className="font-serif text-5xl sm:text-6xl font-light text-white mb-6">
+          <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
             Our Team
           </h1>
           <div className="w-12 h-px bg-white/30 mb-6" />

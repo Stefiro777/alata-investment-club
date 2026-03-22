@@ -27,7 +27,7 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
       </button>
 
       {open && (
-        <div className="absolute top-16 left-0 right-0 bg-[#1B3A4B] border-t border-white/10 shadow-lg z-50">
+        <div className="absolute top-16 left-0 right-0 bg-[#1a4a3a] border-t border-white/10 shadow-lg z-50">
           <div className="px-6 py-3 flex flex-col">
             {links.map((link) => (
               <Link

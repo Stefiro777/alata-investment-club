@@ -60,7 +60,7 @@ export default function RootLayout({
     <html lang="en" className={`${cormorant.variable} ${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         {/* Navbar */}
-        <header className="bg-[#1B3A4B] shadow-md sticky top-0 z-50">
+        <header className="bg-[#1a4a3a] shadow-md sticky top-0 z-50">
           <nav className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Logo + nome */}
@@ -106,7 +106,7 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
 
         {/* Footer */}
-        <footer className="bg-[#1B3A4B] text-white">
+        <footer className="bg-[#1a4a3a] text-white">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
               {/* Logo + nome */}

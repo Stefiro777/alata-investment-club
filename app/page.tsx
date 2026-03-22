@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import Link from 'next/link'
+import ReportsCarousel from './components/ReportsCarousel'
 
 type Contenuto = {
   id: number
   titolo: string
   descrizione: string | null
   tipo: string
-  data: string | null
+  data_pubblicazione: string | null
   link: string | null
 }
 
@@ -20,33 +21,49 @@ function formatDate(dateStr: string | null) {
   })
 }
 
+function truncate(text: string, max: number) {
+  return text.length > max ? text.slice(0, max).trimEnd() + '…' : text
+}
+
 function ContentCard({ item }: { item: Contenuto }) {
+  const title = truncate(item.titolo, 150)
+  const description = item.descrizione ? truncate(item.descrizione, 200) : null
+
   return (
-    <article className="group flex flex-col border-t border-[#e5e5e5] pt-6 pb-4">
-      {item.data && (
+    <article className="group flex flex-col border border-black/10 p-6 hover:border-black/25 transition-colors duration-150">
+      {item.data_pubblicazione && (
         <span className="text-[#6b7280] text-xs tracking-widest uppercase mb-3">
-          {formatDate(item.data)}
+          {formatDate(item.data_pubblicazione)}
         </span>
       )}
-      <h3 className="font-serif text-xl font-medium text-[#0a0a0a] leading-snug mb-2 group-hover:text-[#1B3A4B] transition-colors">
-        {item.titolo}
+      <h3 className="font-serif text-xl font-medium text-[#0a0a0a] leading-snug mb-2 group-hover:text-[#1a4a3a] transition-colors">
+        {title}
       </h3>
-      {item.descrizione && (
-        <p className="text-[#6b7280] text-sm leading-relaxed flex-1">{item.descrizione}</p>
+      {description && (
+        <p className="text-[#6b7280] text-sm leading-relaxed flex-1">{description}</p>
       )}
-      {item.link && (
-        <a
-          href={item.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-[#1B3A4B] text-xs font-medium tracking-wide uppercase mt-4 hover:gap-3 transition-all duration-150"
-        >
-          Read
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </a>
-      )}
+      <div className="mt-4 pt-4 border-t border-black/5">
+        {item.link ? (
+          <a
+            href={item.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
+          >
+            Read on LinkedIn
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-[#6b7280]/40 text-xs font-medium tracking-wide uppercase cursor-not-allowed">
+            Read on LinkedIn
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </span>
+        )}
+      </div>
     </article>
   )
 }
@@ -78,71 +95,85 @@ function MailIcon() {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const { data: reports } = await supabase
+  const { data: reports, error: reportsError } = await supabase
     .from('contenuti')
     .select('*')
     .eq('tipo', 'report')
-    .order('data', { ascending: false })
+    .order('data_pubblicazione', { ascending: false })
+
+  console.log('[Supabase] reports:', reports, '| error:', reportsError)
 
   const { data: eventi } = await supabase
     .from('contenuti')
     .select('*')
     .in('tipo', ['evento', 'aggiornamento'])
-    .order('data', { ascending: false })
+    .order('data_pubblicazione', { ascending: false })
 
   return (
     <div>
-      {/* Hero — dark band */}
-      <section className="bg-[#1B3A4B] text-white py-24 sm:py-36">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-            {/* Left — text */}
-            <div className="flex-1 min-w-0">
-              <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-8">
-                Alata<br />
-                <em className="italic font-semibold">Investment Club</em>
-              </h1>
-              <div className="w-16 h-px bg-white/30 mb-8" />
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/team"
-                  className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1B3A4B] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
-                >
-                  Meet the Team
-                </Link>
-                <Link
-                  href="/career-service"
-                  className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1B3A4B] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
-                >
-                  Career Service
-                </Link>
+      {/* Hero — background image + overlay */}
+      <section className="text-white" style={{ position: 'relative', minHeight: '600px', overflow: 'hidden' }}>
+        {/* Background photo */}
+        <Image
+          src="/loggia.jpeg"
+          fill
+          alt="Loggia"
+          style={{ objectFit: 'cover', filter: 'grayscale(100%)', zIndex: 0 }}
+          priority
+        />
+        {/* Green overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.72)', zIndex: 1 }} />
+        {/* Content */}
+        <div className="py-24 sm:py-36" style={{ position: 'relative', zIndex: 2 }}>
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row-reverse items-center gap-12 lg:gap-16">
+              {/* Right (DOM first → desktop right via row-reverse) — text */}
+              <div className="flex-1 min-w-0">
+                <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-8">
+                  Alata<br />
+                  <em className="italic font-semibold">Investment Club</em>
+                </h1>
+                <div className="w-16 h-px bg-white/30 mb-8" />
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link
+                    href="/team"
+                    className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1a4a3a] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
+                  >
+                    Meet the Team
+                  </Link>
+                  <Link
+                    href="/career-service"
+                    className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1a4a3a] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
+                  >
+                    Career Service
+                  </Link>
+                </div>
               </div>
-            </div>
 
-            {/* Right — logo */}
-            <div className="flex-shrink-0 flex justify-center">
-              <div style={{
-                position: 'relative',
-                padding: '16px',
-                background: 'linear-gradient(135deg, #0f2030 0%, #1B3A4B 50%, #0f2030 100%)',
-                borderRadius: '2px',
-                boxShadow: '0 4px 24px rgba(15, 32, 48, 0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
-              }}>
+              {/* Left — logo with frame */}
+              <div className="flex-shrink-0 flex justify-center">
                 <div style={{
-                  position: 'absolute',
-                  inset: '6px',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: '1px',
-                  pointerEvents: 'none',
-                }} />
-                <Image
-                  src="/logofronte.png"
-                  alt="Alata Investment Club"
-                  width={320}
-                  height={320}
-                  className="object-contain"
-                  priority
-                />
+                  position: 'relative',
+                  padding: '16px',
+                  background: 'linear-gradient(135deg, #0f2e22 0%, #1a4a3a 50%, #0f2e22 100%)',
+                  borderRadius: '2px',
+                  boxShadow: '0 4px 24px rgba(15, 32, 48, 0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    inset: '6px',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '1px',
+                    pointerEvents: 'none',
+                  }} />
+                  <Image
+                    src="/logofronte.png"
+                    alt="Alata Investment Club"
+                    width={320}
+                    height={320}
+                    className="object-contain"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -161,22 +192,11 @@ export default async function HomePage() {
       {/* Reports */}
       <section className="py-20 sm:py-28 bg-[#f5f5f5]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-12 border-b border-[#e5e5e5] pb-6">
+          <div className="mb-10 border-b border-[#e5e5e5] pb-6">
             <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Research</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-light text-[#0a0a0a]">Our Reports</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">Our Reports</h2>
           </div>
-
-          {!reports || reports.length === 0 ? (
-            <div className="py-20 text-center text-[#6b7280]">
-              <p className="text-sm tracking-wide">No reports available at the moment.</p>
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-12">
-              {reports.map((item) => (
-                <ContentCard key={item.id} item={item} />
-              ))}
-            </div>
-          )}
+          <ReportsCarousel reports={reports ?? []} />
         </div>
       </section>
 
@@ -185,7 +205,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="mb-12 border-b border-[#e5e5e5] pb-6">
             <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Latest</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-light text-[#0a0a0a]">News &amp; Events</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">News &amp; Events</h2>
           </div>
 
           {!eventi || eventi.length === 0 ? (
@@ -203,12 +223,12 @@ export default async function HomePage() {
       </section>
 
       {/* Contact Us */}
-      <section className="py-20 sm:py-28 bg-[#1B3A4B] text-white">
+      <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Get in touch</p>
-              <h2 className="font-serif text-4xl sm:text-5xl font-light leading-tight mb-6">
+              <h2 className="font-serif text-4xl sm:text-5xl font-bold leading-tight mb-6">
                 Contact Us
               </h2>
               <div className="w-12 h-px bg-white/30 mb-6" />

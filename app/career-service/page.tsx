@@ -56,10 +56,10 @@ export default function CareerServicePage() {
   return (
     <div>
       {/* Header — dark */}
-      <section className="bg-[#1B3A4B] text-white py-20 sm:py-28">
+      <section className="bg-[#1a4a3a] text-white py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Professional support</p>
-          <h1 className="font-serif text-5xl sm:text-6xl font-light text-white mb-6">
+          <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
             Career Service
           </h1>
           <div className="w-12 h-px bg-white/30 mb-6" />
@@ -79,7 +79,7 @@ export default function CareerServicePage() {
                   <span className="font-serif text-5xl font-light text-[#e5e5e5]">
                     {service.number}
                   </span>
-                  <span className="font-serif text-2xl font-medium text-[#1B3A4B]">
+                  <span className="font-serif text-2xl font-medium text-[#1a4a3a]">
                     {service.price}
                   </span>
                 </div>
@@ -94,7 +94,7 @@ export default function CareerServicePage() {
                 <ul className="space-y-2.5 flex-1">
                   {service.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3 text-sm text-[#0a0a0a]">
-                      <span className="w-1 h-1 rounded-full bg-[#1B3A4B] flex-shrink-0 mt-2" />
+                      <span className="w-1 h-1 rounded-full bg-[#1a4a3a] flex-shrink-0 mt-2" />
                       {feature}
                     </li>
                   ))}
@@ -104,7 +104,7 @@ export default function CareerServicePage() {
                   href={service.calendlyUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 w-full bg-[#1B3A4B] hover:bg-[#142e3c] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 mt-2"
+                  className="inline-flex items-center justify-center gap-2 w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 mt-2"
                 >
                   Book now
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +121,7 @@ export default function CareerServicePage() {
       <section className="py-20 bg-white border-t border-[#e5e5e5]">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">Follow us</p>
-          <h2 className="font-serif text-3xl sm:text-4xl font-light text-[#0a0a0a] mb-4">
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-4">
             All our links in one place
           </h2>
           <p className="text-[#6b7280] text-sm leading-relaxed mb-10">
@@ -131,7 +131,7 @@ export default function CareerServicePage() {
             href={LINKTREE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 bg-[#1B3A4B] hover:bg-[#142e3c] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-150"
+            className="inline-flex items-center gap-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-150"
           >
             Visit our Linktree
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
