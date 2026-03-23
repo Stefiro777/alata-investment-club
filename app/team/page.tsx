@@ -26,7 +26,7 @@ function initials(nome: string) {
 
 function MemberCard({ nome, ruolo, fotoUrl }: { nome: string; ruolo: string; fotoUrl?: string }) {
   return (
-    <div className="flex flex-col bg-white" style={{ border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
+    <div className="bg-white overflow-hidden" style={{ display: 'flex', flexDirection: 'column', height: '100%', border: '1px solid #1a4a3a' }}>
       {/* Photo */}
       <div className="relative h-48 md:h-96 overflow-hidden bg-[#f5f5f5]">
         {fotoUrl ? (
@@ -38,7 +38,7 @@ function MemberCard({ nome, ruolo, fotoUrl }: { nome: string; ruolo: string; fot
         )}
       </div>
       {/* Info */}
-      <div className="p-4 bg-[#1a4a3a]">
+      <div className="p-4 bg-[#1a4a3a] flex-grow">
         <h3 className="font-serif text-lg font-bold text-white">{nome}</h3>
         <p className="text-xs uppercase tracking-widest text-white/70 mt-1">{ruolo}</p>
       </div>
@@ -69,23 +69,51 @@ export default function TeamPage() {
 
       {/* Grid */}
       <section className="py-20 sm:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-6">
-          {/* Row 1 — 2 cards centered */}
-          <div className="grid grid-cols-2 gap-6 max-w-xl mx-auto">
-            {row1.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+
+          {/* Mobile layout — hidden on md+ */}
+          <div className="md:hidden space-y-6">
+            <div className="grid grid-cols-1 gap-6 items-stretch">
+              <MemberCard nome={row1[0].nome} ruolo={row1[0].ruolo} fotoUrl={row1[0].fotoUrl} />
+            </div>
+            <div className="grid grid-cols-2 gap-6 items-stretch">
+              <MemberCard nome={row1[1].nome} ruolo={row1[1].ruolo} fotoUrl={row1[1].fotoUrl} />
+              <MemberCard nome={row2[0].nome} ruolo={row2[0].ruolo} fotoUrl={row2[0].fotoUrl} />
+            </div>
+            <div className="grid grid-cols-2 gap-6 items-stretch">
+              <MemberCard nome={row2[1].nome} ruolo={row2[1].ruolo} fotoUrl={row2[1].fotoUrl} />
+              <MemberCard nome={row2[2].nome} ruolo={row2[2].ruolo} fotoUrl={row2[2].fotoUrl} />
+            </div>
+            <div className="grid grid-cols-2 gap-6 items-stretch">
+              <MemberCard nome={row3[0].nome} ruolo={row3[0].ruolo} fotoUrl={row3[0].fotoUrl} />
+              <MemberCard nome={row3[1].nome} ruolo={row3[1].ruolo} fotoUrl={row3[1].fotoUrl} />
+            </div>
+            <div className="grid grid-cols-2 gap-6 items-stretch">
+              <MemberCard nome={row3[2].nome} ruolo={row3[2].ruolo} fotoUrl={row3[2].fotoUrl} />
+              <MemberCard nome={row4[0].nome} ruolo={row4[0].ruolo} fotoUrl={row4[0].fotoUrl} />
+            </div>
+            <div className="grid grid-cols-2 gap-6 items-stretch">
+              <MemberCard nome={row4[1].nome} ruolo={row4[1].ruolo} fotoUrl={row4[1].fotoUrl} />
+              <MemberCard nome={row4[2].nome} ruolo={row4[2].ruolo} fotoUrl={row4[2].fotoUrl} />
+            </div>
           </div>
-          {/* Row 2 — 3 cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {row2.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+
+          {/* Desktop layout — hidden below md */}
+          <div className="hidden md:block space-y-6">
+            <div className="grid grid-cols-2 gap-6 max-w-xl mx-auto items-stretch">
+              {row1.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+            </div>
+            <div className="grid grid-cols-3 gap-6 items-stretch">
+              {row2.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+            </div>
+            <div className="grid grid-cols-3 gap-6 items-stretch">
+              {row3.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+            </div>
+            <div className="grid grid-cols-3 gap-6 items-stretch">
+              {row4.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+            </div>
           </div>
-          {/* Row 3 — 3 cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {row3.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
-          </div>
-          {/* Row 4 — 3 cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {row4.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
-          </div>
+
         </div>
       </section>
     </div>

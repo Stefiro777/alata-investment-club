@@ -1,17 +1,25 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
 import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (searchParams.get('msg') === 'account-created') {
+      setSuccessMsg('Account created successfully. You can now sign in.')
+    }
+  }, [searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -98,9 +106,14 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280]">
+                    Password
+                  </label>
+                  <Link href="/reset-password" className="text-xs text-[#1a4a3a] hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
                 <input
                   id="password"
                   type="password"
@@ -112,6 +125,12 @@ export default function LoginPage() {
                   className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
                 />
               </div>
+
+              {successMsg && (
+                <p className="text-[#1a4a3a] text-xs border-l-2 border-[#1a4a3a] pl-3 py-1">
+                  {successMsg}
+                </p>
+              )}
 
               {error && (
                 <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">
@@ -140,7 +159,12 @@ export default function LoginPage() {
 
             <p className="text-center text-xs text-[#6b7280] mt-6 pt-6 border-t border-[#f5f5f5]">
               Don&apos;t have an account?{' '}
-              <span className="text-[#1a4a3a] font-medium">Contact the administrator.</span>
+              <a
+                href="mailto:alatabrixiaic@gmail.com"
+                className="text-[#1a4a3a] font-medium hover:underline"
+              >
+                Contact the administrator.
+              </a>
             </p>
           </div>
 
