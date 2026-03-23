@@ -11,41 +11,54 @@ type Contenuto = {
   link: string | null
 }
 
-function cleanText(text: string): string {
-  return text
-    .replace(/urn:li:\S*/g, '')                           // urn:li: references
-    .replace(/\([^)]*\)/g, '')                            // (parentheses and content)
-    .replace(/\[[^\]]*\]/g, '')                           // [brackets and content]
-    .replace(/\{[^}]*\}/g, '')                            // {braces and content}
-    .replace(/#\S+/g, '')                                 // #hashtag
-    .replace(/@\S+/g, '')                                 // @mention
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')         // control chars
-    .replace(/[^\x20-\x7E\xA0-\u017E\u2000-\u206F]/g, '') // unicode strano
-    .replace(/[ \t]+/g, ' ')                              // spazi multipli
-    .replace(/\n{3,}/g, '\n\n')                           // righe vuote multiple
+function cleanLine(line: string): string {
+  return line
+    .replace(/\r/g, '')
+    .replace(/@\[([^\]]+)\]\(urn:[^)]*\)/g, '$1')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+    .replace(/urn:li:\S*/g, '')
+    .replace(/#\S+/g, '')
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+    .replace(/[^\x20-\x7E\xA0-\u017E]/g, '')
+    .replace(/[ \t]+/g, ' ')
     .trim()
 }
 
-// Tutto fino al primo di: : . ! ? , \n — max 70 caratteri
-function extractTitle(text: string): string {
-  const clean = cleanText(text)
-  const match = clean.match(/^[^:.!?,\n]+/)
-  if (match) {
-    const t = match[0].trim()
-    if (t) return t.length > 70 ? t.slice(0, 70).trimEnd() + '…' : t
+function getTitle(text: string): string {
+  const lines = text.split(/\r?\n/)
+  for (const line of lines) {
+    const cleaned = cleanLine(line)
+    if (cleaned.length > 0) return cleaned
   }
-  return clean.length > 70 ? clean.slice(0, 70).trimEnd() + '…' : clean
+  return ''
 }
 
-// Testo pulito completo esclusa la parte del titolo
-function extractDescription(raw: string | null, title: string): string | null {
-  if (!raw) return null
-  const clean = cleanText(raw)
-  const base = title.replace(/…$/, '')
-  const body = clean.startsWith(base)
-    ? clean.slice(base.length).replace(/^[:.!?,\s]+/, '').trim()
-    : clean
-  return body || null
+function getPreview(text: string): string | null {
+  const lines = text.split(/\r?\n/)
+  let pastTitle = false
+  const bodyLines: string[] = []
+
+  for (const line of lines) {
+    const cleaned = cleanLine(line)
+    if (!pastTitle) {
+      if (cleaned.length > 0) pastTitle = true
+      continue
+    }
+    if (/^Credits:/i.test(cleaned)) continue
+    bodyLines.push(cleaned)
+  }
+
+  const body = bodyLines.join(' ').replace(/\s+/g, ' ').trim()
+  if (!body) return null
+  return body.length > 120 ? body.slice(0, 120).trimEnd() + '...' : body
+}
+
+function getLinkedInUrl(link: string): string {
+  if (link.startsWith('urn:')) {
+    return `https://www.linkedin.com/feed/update/${link}/`
+  }
+  return link
 }
 
 function formatDate(dateStr: string | null) {
@@ -58,8 +71,8 @@ function formatDate(dateStr: string | null) {
 }
 
 function ReportCard({ item }: { item: Contenuto }) {
-  const title = extractTitle(item.titolo)
-  const description = extractDescription(item.descrizione, title)
+  const title = getTitle(item.titolo)
+  const preview = getPreview(item.descrizione ?? item.titolo)
 
   return (
     <article className="flex flex-col bg-white border border-black/10 hover:border-black/25 hover:shadow-md transition-all duration-200 p-6 h-full">
@@ -71,18 +84,18 @@ function ReportCard({ item }: { item: Contenuto }) {
       <h3 className="font-serif text-xl font-bold text-[#0a0a0a] leading-snug mb-3">
         {title}
       </h3>
-      {description && (
-        <p className="text-[#6b7280] text-sm leading-relaxed line-clamp-3 flex-1">
-          {description}
+      {preview && (
+        <p className="text-[#6b7280] text-sm leading-relaxed flex-1">
+          {preview}
         </p>
       )}
       <div className="mt-4 pt-4 border-t border-black/5">
         {item.link ? (
           <a
-            href={item.link}
+            href={getLinkedInUrl(item.link)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
+            className="inline-flex items-center justify-center gap-1.5 border border-[#1a4a3a] text-[#1a4a3a] bg-transparent hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
           >
             Read on LinkedIn
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,8 +118,8 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
     const q = search.toLowerCase().trim()
     if (!q) return reports
     return reports.filter((item) => {
-      const t = cleanText(item.titolo).toLowerCase()
-      const d = item.descrizione ? cleanText(item.descrizione).toLowerCase() : ''
+      const t = getTitle(item.titolo).toLowerCase()
+      const d = item.descrizione ? getTitle(item.descrizione).toLowerCase() : ''
       return t.includes(q) || d.includes(q)
     })
   }, [reports, search])

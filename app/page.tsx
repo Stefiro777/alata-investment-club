@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import Link from 'next/link'
-import ReportsCarousel from './components/ReportsCarousel'
+import StatsSection from './components/StatsSection'
 
 type Contenuto = {
   id: number
@@ -95,14 +95,6 @@ function MailIcon() {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const { data: reports, error: reportsError } = await supabase
-    .from('contenuti')
-    .select('*')
-    .eq('tipo', 'report')
-    .order('data_pubblicazione', { ascending: false })
-
-  console.log('[Supabase] reports:', reports, '| error:', reportsError)
-
   const { data: eventi } = await supabase
     .from('contenuti')
     .select('*')
@@ -115,7 +107,7 @@ export default async function HomePage() {
       <section className="text-white" style={{ position: 'relative', minHeight: '600px', overflow: 'hidden' }}>
         {/* Background photo */}
         <Image
-          src="/loggia.jpeg"
+          src="/loggia.jpg"
           fill
           alt="Loggia"
           style={{ objectFit: 'cover', filter: 'grayscale(100%)', zIndex: 0 }}
@@ -126,7 +118,7 @@ export default async function HomePage() {
         {/* Content */}
         <div className="py-24 sm:py-36" style={{ position: 'relative', zIndex: 2 }}>
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-12 lg:gap-16">
+            <div className="flex flex-col lg:flex-row-reverse items-center gap-12 lg:gap-16 text-center lg:text-left">
               {/* Right (DOM first → desktop right via row-reverse) — text */}
               <div className="flex-1 min-w-0">
                 <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-8">
@@ -134,7 +126,7 @@ export default async function HomePage() {
                   <em className="italic font-semibold">Investment Club</em>
                 </h1>
                 <div className="w-16 h-px bg-white/30 mb-8" />
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Link
                     href="/team"
                     className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1a4a3a] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
@@ -151,21 +143,8 @@ export default async function HomePage() {
               </div>
 
               {/* Left — logo with frame */}
-              <div className="flex-shrink-0 flex justify-center">
-                <div style={{
-                  position: 'relative',
-                  padding: '16px',
-                  background: 'linear-gradient(135deg, #0f2e22 0%, #1a4a3a 50%, #0f2e22 100%)',
-                  borderRadius: '2px',
-                  boxShadow: '0 4px 24px rgba(15, 32, 48, 0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    inset: '6px',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '1px',
-                    pointerEvents: 'none',
-                  }} />
+              <div className="flex-shrink-0 flex justify-center mx-auto md:mx-0">
+                <div style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.5)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
                   <Image
                     src="/logofronte.png"
                     alt="Alata Investment Club"
@@ -189,16 +168,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Reports */}
-      <section className="py-20 sm:py-28 bg-[#f5f5f5]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-10 border-b border-[#e5e5e5] pb-6">
-            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Research</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">Our Reports</h2>
-          </div>
-          <ReportsCarousel reports={reports ?? []} />
-        </div>
-      </section>
+      <StatsSection />
 
       {/* News & Events */}
       <section className="py-20 sm:py-28 bg-white">
@@ -219,6 +189,32 @@ export default async function HomePage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Our Partners */}
+      <section className="py-16 bg-white overflow-hidden">
+        <style>{`
+          @keyframes partners-scroll {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+          }
+          .partners-track {
+            animation: partners-scroll 20s linear infinite;
+          }
+        `}</style>
+        <div className="flex flex-col items-center mb-8">
+          <h2 className="font-serif text-4xl font-bold text-[#0a0a0a]">Our Partners</h2>
+          <div className="w-[60px] h-[3px] bg-[#1a4a3a] mt-3" />
+        </div>
+        <div className="overflow-hidden">
+          <div className="partners-track flex items-center w-max">
+            {['/syrto.jpeg', '/forbes.png', '/syrto.jpeg', '/forbes.png', '/syrto.jpeg', '/forbes.png', '/syrto.jpeg', '/forbes.png'].map((src, i) => (
+              <div key={i} className="mx-12 h-16 flex items-center">
+                <Image src={src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

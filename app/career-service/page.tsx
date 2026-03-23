@@ -1,7 +1,9 @@
+import Image from 'next/image'
+
 // -----------------------------------------------------------------------
 // EDIT HERE: update Calendly links and Linktree URL
 // -----------------------------------------------------------------------
-const LINKTREE_URL = '#' // <-- replace with your Linktree URL
+const LINKTREE_URL = 'https://linktr.ee/alatainvestmentclub'
 
 const services = [
   {
@@ -10,7 +12,7 @@ const services = [
     title: 'CV Review',
     description:
       'Receive detailed, personalised feedback on your CV from our members with hands-on experience in finance, banking, and consulting. We help you craft a compelling, competitive curriculum that stands out to top recruiters.',
-    price: '€ 19.90',
+    price: '€29,99',
     calendlyUrl: '#', // <-- replace with your Calendly link
     features: [
       'Full structure and layout review',
@@ -25,10 +27,10 @@ const services = [
     title: 'Master Orientation Call',
     description:
       "Get guidance from those who have already navigated the graduate school path in finance. We help you identify the most suitable master's programme for your profile and professional goals, in Italy and abroad.",
-    price: '€ 29.90',
+    price: '€49,99',
     calendlyUrl: '#', // <-- replace with your Calendly link
     features: [
-      '45-minute 1:1 session',
+      '30-minute 1:1 session',
       'Personal profile analysis',
       'Programme comparison and ranking',
       'Application and admission advice',
@@ -40,10 +42,10 @@ const services = [
     title: 'Career Orientation Call',
     description:
       'A personalised consulting session to define your professional roadmap in the financial sector. From choosing your first internship to building your network, we help you take the right steps at the right time.',
-    price: '€ 29.90',
+    price: '€49,99',
     calendlyUrl: '#', // <-- replace with your Calendly link
     features: [
-      '45-minute 1:1 session',
+      '30-minute 1:1 session',
       'Professional goals definition',
       'Networking strategy',
       'Personal development plan',
@@ -55,17 +57,21 @@ const services = [
 export default function CareerServicePage() {
   return (
     <div>
-      {/* Header — dark */}
-      <section className="bg-[#1a4a3a] text-white py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Professional support</p>
-          <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
-            Career Service
-          </h1>
-          <div className="w-12 h-px bg-white/30 mb-6" />
-          <p className="text-white/70 text-base max-w-2xl leading-relaxed">
-            Services designed to accelerate your career in finance — from university orientation to landing your first role in the industry.
-          </p>
+      {/* Header — background image */}
+      <section className="relative min-h-[500px] text-white flex items-center overflow-hidden">
+        <Image src="/vittoria.jpeg" alt="" fill className="object-cover object-top grayscale" priority />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div className="relative z-10 w-full py-20 sm:py-28">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Professional support</p>
+            <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
+              Career Service
+            </h1>
+            <div className="w-12 h-px bg-white/30 mb-6" />
+            <p className="text-white/70 text-base max-w-2xl leading-relaxed">
+              Services designed to accelerate your career in finance — from university orientation to landing your first role in the industry.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -74,20 +80,17 @@ export default function CareerServicePage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid gap-px bg-[#e5e5e5] md:grid-cols-3">
             {services.map((service) => (
-              <div key={service.id} className="bg-white p-8 sm:p-10 flex flex-col gap-6">
-                <div className="flex items-start justify-between">
-                  <span className="font-serif text-5xl font-light text-[#e5e5e5]">
-                    {service.number}
-                  </span>
-                  <span className="font-serif text-2xl font-medium text-[#1a4a3a]">
+              <div key={service.id} className="bg-white p-8 sm:p-10 flex flex-col gap-6" style={{ borderTop: '3px solid #1a4a3a' }}>
+                <div className="flex items-baseline justify-between mb-4">
+                  <h2 className="font-serif text-2xl font-medium text-[#0a0a0a]">
+                    {service.title}
+                  </h2>
+                  <span className="font-serif text-2xl font-medium text-[#1a4a3a] flex-shrink-0 ml-4">
                     {service.price}
                   </span>
                 </div>
 
                 <div>
-                  <h2 className="font-serif text-2xl font-medium text-[#0a0a0a] mb-3">
-                    {service.title}
-                  </h2>
                   <p className="text-[#6b7280] text-sm leading-relaxed">{service.description}</p>
                 </div>
 

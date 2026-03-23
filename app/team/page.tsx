@@ -1,104 +1,91 @@
-import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 
-type Member = {
-  id: number
-  nome: string
-  ruolo: string
-  bio: string | null
-  foto_url: string | null
-  linkedin_url: string | null
+const row1 = [
+  { nome: 'Filippo Lombardi',   ruolo: 'President',               fotoUrl: '/filippo-lombardi.jpeg' },
+  { nome: 'Alessio Bianchetti', ruolo: 'Consultant',               fotoUrl: '/alessio-bianchetti.jpeg' },
+]
+const row2 = [
+  { nome: 'Stefano Finulli',  ruolo: 'Head of Public Relations',   fotoUrl: '/stefano-finulli.jpeg' },
+  { nome: 'Lorenzo Fioretti', ruolo: 'Co-Head of Events',          fotoUrl: '/lorenzo-fioretti.jpeg' },
+  { nome: 'Alex Bonera',      ruolo: 'Co-Head of Events',          fotoUrl: '/alex-bonera.jpeg' },
+]
+const row3 = [
+  { nome: 'Filippo Barnabò',   ruolo: 'Head of Media',             fotoUrl: '/filippo-barnabo.jpeg' },
+  { nome: 'Antonio Di Miceli', ruolo: 'Head of Macro',             fotoUrl: '/antonio-dimiceli.jpeg' },
+  { nome: 'Gabriele Sgotti',   ruolo: 'Head of Syrto',             fotoUrl: '/gabriele-sgotti.jpeg' },
+]
+const row4 = [
+  { nome: 'Simone Moscatelli', ruolo: 'Co-Head of Equity Research', fotoUrl: '/simone-moscatelli.jpeg' },
+  { nome: 'Cristian Ferrari',  ruolo: 'Co-Head of Equity Research', fotoUrl: '/cristian-ferrari.jpeg' },
+  { nome: 'Edoardo Piceni',    ruolo: 'Head of Alumni',             fotoUrl: '/edoardo-piceni.jpeg' },
+]
+
+function initials(nome: string) {
+  return nome.split(' ').map(n => n[0]).join('')
 }
 
-function LinkedInIcon() {
+function MemberCard({ nome, ruolo, fotoUrl }: { nome: string; ruolo: string; fotoUrl?: string }) {
   return (
-    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-    </svg>
-  )
-}
-
-function MemberCard({ member }: { member: Member }) {
-  return (
-    <div className="group flex flex-col">
+    <div className="flex flex-col bg-white" style={{ border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
       {/* Photo */}
-      <div className="relative w-full aspect-[3/4] bg-[#f5f5f5] overflow-hidden mb-5 border border-black/10 rounded-sm">
-        {member.foto_url ? (
-          <Image
-            src={member.foto_url}
-            alt={member.nome}
-            fill
-            className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-          />
+      <div className="relative h-48 md:h-96 overflow-hidden bg-[#f5f5f5]">
+        {fotoUrl ? (
+          <Image src={fotoUrl} alt={nome} fill className="object-cover object-top md:object-center" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#eaeaea]">
-            <span className="font-serif text-6xl font-light text-[#1a4a3a]/25">
-              {member.nome.charAt(0).toUpperCase()}
-            </span>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-serif text-2xl text-[#1a4a3a]">{initials(nome)}</span>
           </div>
         )}
       </div>
-
       {/* Info */}
-      <div className="flex flex-col gap-1">
-        <h3 className="font-serif text-xl font-medium text-[#0a0a0a]">{member.nome}</h3>
-        <p className="text-xs tracking-widest uppercase text-[#1a4a3a] font-medium">{member.ruolo}</p>
-        {member.bio && (
-          <p className="text-[#6b7280] text-sm leading-relaxed mt-2">{member.bio}</p>
-        )}
-        {member.linkedin_url && (
-          <a
-            href={member.linkedin_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-[#0a0a0a] hover:text-[#1a4a3a] text-xs font-medium tracking-wide mt-3 transition-colors"
-          >
-            <LinkedInIcon />
-            LinkedIn Profile
-          </a>
-        )}
+      <div className="p-4 bg-[#1a4a3a]">
+        <h3 className="font-serif text-lg font-bold text-white">{nome}</h3>
+        <p className="text-xs uppercase tracking-widest text-white/70 mt-1">{ruolo}</p>
       </div>
     </div>
   )
 }
 
-export default async function TeamPage() {
-  const supabase = await createClient()
-  const { data: members } = await supabase
-    .from('team')
-    .select('*')
-    .order('id', { ascending: true })
-
+export default function TeamPage() {
   return (
     <div>
-      {/* Header — dark */}
-      <section className="bg-[#1a4a3a] text-white py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">People</p>
-          <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
-            Our Team
-          </h1>
-          <div className="w-12 h-px bg-white/30 mb-6" />
-          <p className="text-white/70 text-base max-w-2xl leading-relaxed">
-            Meet the board members who lead Alata Investment Club, united by a shared passion for financial markets and professional development.
-          </p>
+      {/* Hero */}
+      <section className="relative min-h-[500px] text-white flex items-center overflow-hidden">
+        <Image src="/universita.jpg" alt="" fill className="object-cover grayscale" style={{ objectPosition: 'center 20%' }} priority />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div className="relative z-10 w-full py-20 sm:py-28">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Our Team</p>
+            <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
+              Our Team
+            </h1>
+            <div className="w-12 h-px bg-white/30 mb-6" />
+            <p className="text-white/70 text-base max-w-2xl leading-relaxed">
+              Meet the Board of Directors driving Alata Investment Club — united by ambition and a genuine passion for finance.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Grid — white */}
+      {/* Grid */}
       <section className="py-20 sm:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          {!members || members.length === 0 ? (
-            <div className="py-20 text-center text-[#6b7280]">
-              <p className="text-sm tracking-wide">No team members available at the moment.</p>
-            </div>
-          ) : (
-            <div className="grid gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {members.map((member) => (
-                <MemberCard key={member.id} member={member} />
-              ))}
-            </div>
-          )}
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-6">
+          {/* Row 1 — 2 cards centered */}
+          <div className="grid grid-cols-2 gap-6 max-w-xl mx-auto">
+            {row1.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+          </div>
+          {/* Row 2 — 3 cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {row2.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+          </div>
+          {/* Row 3 — 3 cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {row3.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+          </div>
+          {/* Row 4 — 3 cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {row4.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+          </div>
         </div>
       </section>
     </div>

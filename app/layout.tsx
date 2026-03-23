@@ -4,6 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import './globals.css'
 import MobileMenu from './components/MobileMenu'
+import CookieBanner from './components/CookieBanner'
+import CookiePolicy from './components/CookiePolicy'
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -24,9 +26,10 @@ export const metadata: Metadata = {
 
 const navLinks = [
   { href: '/', label: 'About' },
+  { href: '/reports', label: 'Reports' },
   { href: '/team', label: 'Team' },
   { href: '/career-service', label: 'Career Service' },
-  { href: '/dashboard', label: 'Members' },
+  { href: '/dashboard', label: 'Reserved Area' },
 ]
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -104,6 +107,7 @@ export default function RootLayout({
 
         {/* Main */}
         <main className="flex-1">{children}</main>
+        <CookieBanner />
 
         {/* Footer */}
         <footer className="bg-[#1a4a3a] text-white">
@@ -174,6 +178,7 @@ export default function RootLayout({
               <p className="text-white/40 text-xs">
                 Alatabrixiaic@gmail.com
               </p>
+              <CookiePolicy />
             </div>
           </div>
         </footer>
