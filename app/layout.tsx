@@ -29,6 +29,7 @@ const navLinks = [
   { href: '/reports', label: 'Reports' },
   { href: '/team', label: 'Team' },
   { href: '/career-service', label: 'Career Service' },
+  { href: '/events', label: 'Events' },
   { href: '/join-us', label: 'Join Us' },
   { href: '/dashboard', label: 'Reserved Area' },
 ]

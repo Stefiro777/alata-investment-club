@@ -7,6 +7,8 @@ type Contenuto = {
   id: number
   titolo: string
   descrizione: string | null
+  short_description: string | null
+  tag: string | null
   tipo: string
   data_pubblicazione: string | null
   link: string | null
@@ -27,20 +29,29 @@ function truncate(text: string, max: number) {
 
 function ContentCard({ item }: { item: Contenuto }) {
   const title = truncate(item.titolo, 150)
-  const description = item.descrizione ? truncate(item.descrizione, 200) : null
+  const preview = item.short_description
+    ? item.short_description
+    : item.descrizione ? truncate(item.descrizione, 200) : null
 
   return (
     <article className="group flex flex-col border border-black/10 p-6 hover:border-black/25 transition-colors duration-150">
-      {item.data_pubblicazione && (
-        <span className="text-[#6b7280] text-xs tracking-widest uppercase mb-3">
-          {formatDate(item.data_pubblicazione)}
-        </span>
-      )}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        {item.data_pubblicazione ? (
+          <span className="text-[#6b7280] text-xs tracking-widest uppercase">
+            {formatDate(item.data_pubblicazione)}
+          </span>
+        ) : <span />}
+        {item.tag && (
+          <span className="shrink-0 text-xs px-2.5 py-0.5 bg-[#1a4a3a] text-white tracking-wide">
+            {item.tag}
+          </span>
+        )}
+      </div>
       <h3 className="font-serif text-xl font-medium text-[#0a0a0a] leading-snug mb-2 group-hover:text-[#1a4a3a] transition-colors">
         {title}
       </h3>
-      {description && (
-        <p className="text-[#6b7280] text-sm leading-relaxed flex-1">{description}</p>
+      {preview && (
+        <p className="text-[#6b7280] text-sm leading-relaxed flex-1">{preview}</p>
       )}
       <div className="mt-4 pt-4 border-t border-black/5">
         {item.link ? (
@@ -100,6 +111,7 @@ export default async function HomePage() {
     .select('*')
     .in('tipo', ['evento', 'aggiornamento'])
     .order('data_pubblicazione', { ascending: false })
+    .limit(3)
 
   return (
     <div>
@@ -173,9 +185,20 @@ export default async function HomePage() {
       {/* News & Events */}
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-12 border-b border-[#e5e5e5] pb-6">
-            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Latest</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">News &amp; Events</h2>
+          <div className="mb-12 border-b border-[#e5e5e5] pb-6 flex items-end justify-between gap-6">
+            <div>
+              <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Latest</p>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">News &amp; Events</h2>
+            </div>
+            <Link
+              href="/events"
+              className="shrink-0 inline-flex items-center gap-2 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-semibold tracking-wide uppercase px-6 py-2.5 transition-colors duration-150"
+            >
+              See all events
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
           </div>
 
           {!eventi || eventi.length === 0 ? (
@@ -200,7 +223,7 @@ export default async function HomePage() {
             to   { transform: translateX(-50%); }
           }
           .partners-track {
-            animation: partners-scroll 20s linear infinite;
+            animation: partners-scroll 30s linear infinite;
           }
         `}</style>
         <div className="flex flex-col items-center mb-8">
@@ -209,9 +232,12 @@ export default async function HomePage() {
         </div>
         <div className="overflow-hidden">
           <div className="partners-track flex items-center w-max">
-            {['/syrto.jpeg', '/forbes.png', '/syrto.jpeg', '/forbes.png', '/syrto.jpeg', '/forbes.png', '/syrto.jpeg', '/forbes.png'].map((src, i) => (
+            {['/syrto2.jpeg', '/forbes.png', '/athenalogo.png', '/syrto2.jpeg', '/forbes.png', '/athenalogo.png', '/syrto2.jpeg', '/forbes.png', '/athenalogo.png', '/syrto2.jpeg', '/forbes.png', '/athenalogo.png'].map((src, i) => (
               <div key={i} className="mx-12 h-16 flex items-center">
-                <Image src={src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
+                {src === '/athenalogo.png'
+                  ? <Image src={src} alt="" height={96} width={240} className="h-24 w-auto object-contain" />
+                  : <Image src={src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
+                }
               </div>
             ))}
           </div>

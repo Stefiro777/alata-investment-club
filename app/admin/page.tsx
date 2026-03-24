@@ -6,10 +6,14 @@ type Contenuto = {
   id: number
   titolo: string
   descrizione: string | null
+  short_description: string | null
+  full_description: string | null
+  tag: string | null
   tipo: string
   data_pubblicazione: string | null
   link: string | null
   foto_url: string | null
+  photos: string[] | null
 }
 
 export default async function AdminPage() {

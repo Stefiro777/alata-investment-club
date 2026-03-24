@@ -1,45 +1,57 @@
 import Image from 'next/image'
 
 const row1 = [
-  { nome: 'Filippo Lombardi',   ruolo: 'President',               fotoUrl: '/filippo-lombardi.jpeg' },
-  { nome: 'Alessio Bianchetti', ruolo: 'Consultant',               fotoUrl: '/alessio-bianchetti.jpeg' },
+  { nome: 'Filippo Lombardi',   ruolo: 'President',               fotoUrl: '/filippo-lombardi.jpeg',  linkedIn: 'https://www.linkedin.com/in/filippolombardiofficial/' },
+  { nome: 'Alessio Bianchetti', ruolo: 'Consultant',               fotoUrl: '/alessio-bianchetti.jpeg', linkedIn: 'https://www.linkedin.com/in/alessio-bianchetti-673815213/' },
 ]
 const row2 = [
-  { nome: 'Stefano Finulli',  ruolo: 'Head of Public Relations',   fotoUrl: '/stefano-finulli.jpeg' },
-  { nome: 'Lorenzo Fioretti', ruolo: 'Co-Head of Events',          fotoUrl: '/lorenzo-fioretti.jpeg' },
-  { nome: 'Alex Bonera',      ruolo: 'Co-Head of Events',          fotoUrl: '/alex-bonera.jpeg' },
+  { nome: 'Stefano Finulli',  ruolo: 'Head of Public Relations',   fotoUrl: '/stefano-finulli.jpeg',  linkedIn: 'https://www.linkedin.com/in/sfinulli/' },
+  { nome: 'Lorenzo Fioretti', ruolo: 'Co-Head of Events',          fotoUrl: '/lorenzo-fioretti.jpeg', linkedIn: 'https://www.linkedin.com/in/lorenzo-fioretti-a6726a258/' },
+  { nome: 'Alex Bonera',      ruolo: 'Co-Head of Events',          fotoUrl: '/alex-bonera.jpeg',      linkedIn: 'https://www.linkedin.com/in/alex-bonera-102845268/' },
 ]
 const row3 = [
-  { nome: 'Filippo Barnabò',   ruolo: 'Head of Media',             fotoUrl: '/filippo-barnabo.jpeg' },
-  { nome: 'Antonio Di Miceli', ruolo: 'Head of Macro',             fotoUrl: '/antonio-dimiceli.jpeg' },
-  { nome: 'Gabriele Sgotti',   ruolo: 'Head of Syrto',             fotoUrl: '/gabriele-sgotti.jpeg' },
+  { nome: 'Filippo Barnabò',   ruolo: 'Head of Media',             fotoUrl: '/filippo-barnabo.jpeg',   linkedIn: 'https://www.linkedin.com/in/filippo-barnab%C3%B3/' },
+  { nome: 'Antonio Di Miceli', ruolo: 'Head of Macro',             fotoUrl: '/antonio-dimiceli.jpeg',  linkedIn: 'https://www.linkedin.com/in/antoniodimiceli/' },
+  { nome: 'Gabriele Sgotti',   ruolo: 'Head of Syrto',             fotoUrl: '/gabriele-sgotti.jpeg',   linkedIn: 'https://www.linkedin.com/in/gabriele-sgotti-49aaa2324/' },
 ]
 const row4 = [
-  { nome: 'Simone Moscatelli', ruolo: 'Co-Head of Equity Research', fotoUrl: '/simone-moscatelli.jpeg' },
-  { nome: 'Cristian Ferrari',  ruolo: 'Co-Head of Equity Research', fotoUrl: '/cristian-ferrari.jpeg' },
-  { nome: 'Edoardo Piceni',    ruolo: 'Head of Alumni',             fotoUrl: '/edoardo-piceni.jpeg' },
+  { nome: 'Simone Moscatelli', ruolo: 'Co-Head of Equity Research', fotoUrl: '/simone-moscatelli.jpeg', linkedIn: 'https://www.linkedin.com/in/simone-moscatelli/' },
+  { nome: 'Cristian Ferrari',  ruolo: 'Co-Head of Equity Research', fotoUrl: '/cristian-ferrari.jpeg',  linkedIn: 'https://www.linkedin.com/in/ferraricristian03/' },
+  { nome: 'Edoardo Piceni',    ruolo: 'Head of Alumni',             fotoUrl: '/edoardo-piceni.jpeg',    linkedIn: 'https://www.linkedin.com/in/edoardo-antonio-piceni-89a132212/' },
 ]
 
 function initials(nome: string) {
   return nome.split(' ').map(n => n[0]).join('')
 }
 
-function MemberCard({ nome, ruolo, fotoUrl }: { nome: string; ruolo: string; fotoUrl?: string }) {
+function MemberCard({ nome, ruolo, fotoUrl, linkedIn }: { nome: string; ruolo: string; fotoUrl?: string; linkedIn?: string }) {
   return (
     <div className="bg-white overflow-hidden" style={{ display: 'flex', flexDirection: 'column', height: '100%', border: '1px solid #1a4a3a' }}>
       {/* Photo */}
-      <div className="relative h-48 md:h-96 overflow-hidden bg-[#f5f5f5]">
-        {fotoUrl ? (
-          <Image src={fotoUrl} alt={nome} fill className="object-cover object-top md:object-center" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="font-serif text-2xl text-[#1a4a3a]">{initials(nome)}</span>
-          </div>
-        )}
+      <div className="flex justify-center items-center py-5 bg-[#f5f5f5]">
+        <div className="relative w-32 h-32 rounded-full overflow-hidden bg-[#e0e0e0]">
+          {fotoUrl ? (
+            <Image src={fotoUrl} alt={nome} fill className="object-cover object-top" />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="font-serif text-2xl text-[#1a4a3a]">{initials(nome)}</span>
+            </div>
+          )}
+        </div>
       </div>
       {/* Info */}
       <div className="p-4 bg-[#1a4a3a] flex-grow">
-        <h3 className="font-serif text-lg font-bold text-white">{nome}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-serif text-lg font-bold text-white">{nome}</h3>
+          {linkedIn && (
+            <a href={linkedIn} target="_blank" rel="noopener noreferrer" className="shrink-0 opacity-100 hover:opacity-70 transition-opacity">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="20" height="20" rx="3" fill="white"/>
+                <path d="M5.5 8H7.5V14.5H5.5V8ZM6.5 7C5.84 7 5.5 6.56 5.5 6C5.5 5.44 5.85 5 6.51 5C7.17 5 7.5 5.44 7.5 6C7.5 6.56 7.16 7 6.5 7ZM14.5 14.5H12.5V11C12.5 10.17 12.19 9.62 11.47 9.62C10.92 9.62 10.6 10 10.44 10.36C10.38 10.51 10.37 10.72 10.37 10.93V14.5H8.37V8H10.37V8.89C10.66 8.43 11.18 7.78 12.37 7.78C13.85 7.78 14.5 8.78 14.5 10.35V14.5Z" fill="#1a4a3a"/>
+              </svg>
+            </a>
+          )}
+        </div>
         <p className="text-xs uppercase tracking-widest text-white/70 mt-1">{ruolo}</p>
       </div>
     </div>
@@ -74,43 +86,43 @@ export default function TeamPage() {
           {/* Mobile layout — hidden on md+ */}
           <div className="md:hidden space-y-6">
             <div className="grid grid-cols-1 gap-6 items-stretch">
-              <MemberCard nome={row1[0].nome} ruolo={row1[0].ruolo} fotoUrl={row1[0].fotoUrl} />
+              <MemberCard nome={row1[0].nome} ruolo={row1[0].ruolo} fotoUrl={row1[0].fotoUrl} linkedIn={row1[0].linkedIn} />
             </div>
             <div className="grid grid-cols-2 gap-6 items-stretch">
-              <MemberCard nome={row1[1].nome} ruolo={row1[1].ruolo} fotoUrl={row1[1].fotoUrl} />
-              <MemberCard nome={row2[0].nome} ruolo={row2[0].ruolo} fotoUrl={row2[0].fotoUrl} />
+              <MemberCard nome={row1[1].nome} ruolo={row1[1].ruolo} fotoUrl={row1[1].fotoUrl} linkedIn={row1[1].linkedIn} />
+              <MemberCard nome={row2[0].nome} ruolo={row2[0].ruolo} fotoUrl={row2[0].fotoUrl} linkedIn={row2[0].linkedIn} />
             </div>
             <div className="grid grid-cols-2 gap-6 items-stretch">
-              <MemberCard nome={row2[1].nome} ruolo={row2[1].ruolo} fotoUrl={row2[1].fotoUrl} />
-              <MemberCard nome={row2[2].nome} ruolo={row2[2].ruolo} fotoUrl={row2[2].fotoUrl} />
+              <MemberCard nome={row2[1].nome} ruolo={row2[1].ruolo} fotoUrl={row2[1].fotoUrl} linkedIn={row2[1].linkedIn} />
+              <MemberCard nome={row2[2].nome} ruolo={row2[2].ruolo} fotoUrl={row2[2].fotoUrl} linkedIn={row2[2].linkedIn} />
             </div>
             <div className="grid grid-cols-2 gap-6 items-stretch">
-              <MemberCard nome={row3[0].nome} ruolo={row3[0].ruolo} fotoUrl={row3[0].fotoUrl} />
-              <MemberCard nome={row3[1].nome} ruolo={row3[1].ruolo} fotoUrl={row3[1].fotoUrl} />
+              <MemberCard nome={row3[0].nome} ruolo={row3[0].ruolo} fotoUrl={row3[0].fotoUrl} linkedIn={row3[0].linkedIn} />
+              <MemberCard nome={row3[1].nome} ruolo={row3[1].ruolo} fotoUrl={row3[1].fotoUrl} linkedIn={row3[1].linkedIn} />
             </div>
             <div className="grid grid-cols-2 gap-6 items-stretch">
-              <MemberCard nome={row3[2].nome} ruolo={row3[2].ruolo} fotoUrl={row3[2].fotoUrl} />
-              <MemberCard nome={row4[0].nome} ruolo={row4[0].ruolo} fotoUrl={row4[0].fotoUrl} />
+              <MemberCard nome={row3[2].nome} ruolo={row3[2].ruolo} fotoUrl={row3[2].fotoUrl} linkedIn={row3[2].linkedIn} />
+              <MemberCard nome={row4[0].nome} ruolo={row4[0].ruolo} fotoUrl={row4[0].fotoUrl} linkedIn={row4[0].linkedIn} />
             </div>
             <div className="grid grid-cols-2 gap-6 items-stretch">
-              <MemberCard nome={row4[1].nome} ruolo={row4[1].ruolo} fotoUrl={row4[1].fotoUrl} />
-              <MemberCard nome={row4[2].nome} ruolo={row4[2].ruolo} fotoUrl={row4[2].fotoUrl} />
+              <MemberCard nome={row4[1].nome} ruolo={row4[1].ruolo} fotoUrl={row4[1].fotoUrl} linkedIn={row4[1].linkedIn} />
+              <MemberCard nome={row4[2].nome} ruolo={row4[2].ruolo} fotoUrl={row4[2].fotoUrl} linkedIn={row4[2].linkedIn} />
             </div>
           </div>
 
           {/* Desktop layout — hidden below md */}
           <div className="hidden md:block space-y-6">
             <div className="grid grid-cols-2 gap-6 max-w-xl mx-auto items-stretch">
-              {row1.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+              {row1.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} linkedIn={m.linkedIn} />)}
             </div>
             <div className="grid grid-cols-3 gap-6 items-stretch">
-              {row2.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+              {row2.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} linkedIn={m.linkedIn} />)}
             </div>
             <div className="grid grid-cols-3 gap-6 items-stretch">
-              {row3.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+              {row3.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} linkedIn={m.linkedIn} />)}
             </div>
             <div className="grid grid-cols-3 gap-6 items-stretch">
-              {row4.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} />)}
+              {row4.map(m => <MemberCard key={m.nome} nome={m.nome} ruolo={m.ruolo} fotoUrl={m.fotoUrl} linkedIn={m.linkedIn} />)}
             </div>
           </div>
 
