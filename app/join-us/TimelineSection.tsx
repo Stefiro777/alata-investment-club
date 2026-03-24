@@ -65,10 +65,9 @@ function TimelineItem({ step, index }: { step: Step; index: number }) {
     >
       {/* Node circle on the line */}
       <div
-        className="absolute left-0 top-0 w-10 h-10 rounded-full flex items-center justify-center z-10 ring-4"
+        className="absolute left-0 top-0 w-10 h-10 rounded-full flex items-center justify-center z-10 ring-4 ring-[#f9f9f7]"
         style={{
           background: isDark ? 'white' : '#1a4a3a',
-          ringColor: '#f9f9f7',
         }}
       >
         <span
