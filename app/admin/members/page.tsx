@@ -18,19 +18,27 @@ export default async function MembersPage() {
 
   if (!adminRow) redirect('/login')
 
-  const [{ data: adminUsers }, { data: settings }] = await Promise.all([
-    supabase
-      .from('admin_users')
-      .select('email')
-      .order('email', { ascending: true }),
-    supabase
-      .from('settings')
-      .select('value')
-      .eq('key', 'applications_open')
-      .maybeSingle(),
+  const [
+    { data: adminUsers },
+    { data: appSettings },
+    { data: showPricesRow },
+    { data: priceCVRow },
+    { data: priceMasterRow },
+    { data: priceCareerRow },
+  ] = await Promise.all([
+    supabase.from('admin_users').select('email').order('email', { ascending: true }),
+    supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'show_prices').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'price_cv_review').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'price_master_orientation').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'price_career_orientation').maybeSingle(),
   ])
 
-  const applicationsOpen = settings?.value === 'true'
+  const applicationsOpen = appSettings?.value === 'true'
+  const showPrices = showPricesRow ? showPricesRow.value === 'true' : true
+  const priceCV = priceCVRow?.value ?? '€29,99'
+  const priceMaster = priceMasterRow?.value ?? '€49,99'
+  const priceCareer = priceCareerRow?.value ?? '€49,99'
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -62,6 +70,10 @@ export default async function MembersPage() {
         adminUsers={(adminUsers ?? []).map(r => r.email as string)}
         superadmin={SUPERADMIN}
         applicationsOpen={applicationsOpen}
+        showPrices={showPrices}
+        priceCV={priceCV}
+        priceMaster={priceMaster}
+        priceCareer={priceCareer}
       />
     </div>
   )

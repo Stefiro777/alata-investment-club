@@ -17,10 +17,18 @@ export default function MembersClient({
   adminUsers,
   superadmin,
   applicationsOpen,
+  showPrices,
+  priceCV: initialPriceCV,
+  priceMaster: initialPriceMaster,
+  priceCareer: initialPriceCareer,
 }: {
   adminUsers: string[]
   superadmin: string
   applicationsOpen: boolean
+  showPrices: boolean
+  priceCV: string
+  priceMaster: string
+  priceCareer: string
 }) {
   const router = useRouter()
 
@@ -29,6 +37,17 @@ export default function MembersClient({
   const [togglingApps, setTogglingApps] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
 
+  const [pricesVisible, setPricesVisible] = useState(showPrices)
+  const [togglingPrices, setTogglingPrices] = useState(false)
+  const [priceToggleSaved, setPriceToggleSaved] = useState(false)
+
+  const [priceCV, setPriceCV] = useState(initialPriceCV)
+  const [priceMaster, setPriceMaster] = useState(initialPriceMaster)
+  const [priceCareer, setPriceCareer] = useState(initialPriceCareer)
+  const [savingPrices, setSavingPrices] = useState(false)
+  const [pricesSaved, setPricesSaved] = useState(false)
+  const [pricesError, setPricesError] = useState<string | null>(null)
+
   async function handleToggleApplications() {
     setTogglingApps(true)
     setSettingsSaved(false)
@@ -36,11 +55,48 @@ export default function MembersClient({
     const newValue = !appsOpen
     await supabase
       .from('settings')
-      .update({ value: newValue ? 'true' : 'false' })
-      .eq('key', 'applications_open')
+      .upsert({ key: 'applications_open', value: newValue ? 'true' : 'false' }, { onConflict: 'key' })
     setAppsOpen(newValue)
     setTogglingApps(false)
     setSettingsSaved(true)
+  }
+
+  async function handleTogglePrices() {
+    setTogglingPrices(true)
+    setPriceToggleSaved(false)
+    const supabase = createClient()
+    const newValue = !pricesVisible
+    const { error } = await supabase
+      .from('settings')
+      .upsert({ key: 'show_prices', value: newValue ? 'true' : 'false' }, { onConflict: 'key' })
+    console.log('[toggle prices] error:', error)
+    setPricesVisible(newValue)
+    setTogglingPrices(false)
+    setPriceToggleSaved(true)
+  }
+
+  async function handleSavePrices(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingPrices(true)
+    setPricesSaved(false)
+    setPricesError(null)
+    const supabase = createClient()
+    const rows = [
+      { key: 'price_cv_review', value: priceCV },
+      { key: 'price_master_orientation', value: priceMaster },
+      { key: 'price_career_orientation', value: priceCareer },
+    ]
+    const { error } = await supabase
+      .from('settings')
+      .upsert(rows, { onConflict: 'key' })
+    console.log('[save prices] error:', error)
+    if (error) {
+      setPricesError(error.message)
+    } else {
+      setPricesSaved(true)
+      setTimeout(() => setPricesSaved(false), 3000)
+    }
+    setSavingPrices(false)
   }
 
   // Invite member state
@@ -140,7 +196,8 @@ export default function MembersClient({
       <section id="settings">
         <SectionHeading title="Settings" />
 
-        <div className="bg-white border border-black/10 p-8">
+        <div className="bg-white border border-black/10 p-8 space-y-6">
+          {/* Applications Open */}
           <div className="flex items-center justify-between gap-6">
             <div>
               <p className="text-sm font-medium text-[#0a0a0a]">Applications Open</p>
@@ -170,6 +227,83 @@ export default function MembersClient({
               </button>
             </div>
           </div>
+
+          <div className="border-t border-black/5" />
+
+          {/* Show Prices */}
+          <div className="flex items-center justify-between gap-6">
+            <div>
+              <p className="text-sm font-medium text-[#0a0a0a]">Show Prices – Career Service</p>
+              <p className="text-xs text-[#6b7280] mt-0.5">
+                Mostra o nasconde i prezzi nella pagina{' '}
+                <span className="font-medium">/career-service</span>.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {priceToggleSaved && (
+                <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>
+              )}
+              <button
+                onClick={handleTogglePrices}
+                disabled={togglingPrices}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                  pricesVisible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'
+                }`}
+                role="switch"
+                aria-checked={pricesVisible}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${
+                    pricesVisible ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div className="border-t border-black/5" />
+
+          {/* Prezzi Career Service */}
+          <div>
+            <p className="text-sm font-medium text-[#0a0a0a] mb-1">Prezzi Career Service</p>
+            <p className="text-xs text-[#6b7280] mb-4">
+              Valori mostrati nella pagina <span className="font-medium">/career-service</span>.
+            </p>
+            <form onSubmit={handleSavePrices} className="space-y-3">
+              {[
+                { label: 'CV Review', value: priceCV, setter: setPriceCV },
+                { label: 'Master Orientation', value: priceMaster, setter: setPriceMaster },
+                { label: 'Career Orientation', value: priceCareer, setter: setPriceCareer },
+              ].map(({ label, value, setter }) => (
+                <div key={label} className="flex items-center gap-4">
+                  <span className="text-xs text-[#6b7280] w-40 flex-shrink-0">{label}</span>
+                  <input
+                    type="text"
+                    value={value}
+                    onChange={e => setter(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                    placeholder="€29,99"
+                  />
+                </div>
+              ))}
+              {pricesError && (
+                <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{pricesError}</p>
+              )}
+              <div className="flex items-center gap-4 pt-1">
+                <button
+                  type="submit"
+                  disabled={savingPrices}
+                  className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingPrices ? '…' : 'Save Prices'}
+                </button>
+                {pricesSaved && (
+                  <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>
+                )}
+              </div>
+            </form>
+          </div>
+
         </div>
       </section>
 

@@ -1,4 +1,7 @@
 import Image from 'next/image'
+import { createClient } from '@/lib/supabase-server'
+
+export const dynamic = 'force-dynamic'
 
 // -----------------------------------------------------------------------
 // EDIT HERE: update Calendly links and Linktree URL
@@ -54,7 +57,21 @@ const services = [
 ]
 // -----------------------------------------------------------------------
 
-export default function CareerServicePage() {
+export default async function CareerServicePage() {
+  const supabase = await createClient()
+  const { data: settingsRows } = await supabase
+    .from('settings')
+    .select('key, value')
+    .in('key', ['show_prices', 'price_cv_review', 'price_master_orientation', 'price_career_orientation'])
+
+  const s = Object.fromEntries((settingsRows ?? []).map(r => [r.key, r.value]))
+  const showPrices = s['show_prices'] !== 'false'
+  const prices: Record<string, string> = {
+    'cv-review': s['price_cv_review'] ?? '€29,99',
+    'master': s['price_master_orientation'] ?? '€49,99',
+    'career': s['price_career_orientation'] ?? '€49,99',
+  }
+
   return (
     <div>
       {/* Header — background image */}
@@ -85,9 +102,15 @@ export default function CareerServicePage() {
                   <h2 className="font-serif text-2xl font-medium text-[#0a0a0a]">
                     {service.title}
                   </h2>
-                  <span className="font-serif text-2xl font-medium text-[#1a4a3a] flex-shrink-0 ml-4">
-                    {service.price}
-                  </span>
+                  {showPrices ? (
+                    <span className="font-serif text-2xl font-medium text-[#1a4a3a] flex-shrink-0 ml-4">
+                      {prices[service.id]}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-medium tracking-wide uppercase text-[#6b7280] flex-shrink-0 ml-4">
+                      Contact us
+                    </span>
+                  )}
                 </div>
 
                 <div>
