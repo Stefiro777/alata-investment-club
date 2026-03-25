@@ -22,6 +22,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Alata Investment Club',
   description: 'University Finance Association · University of Brescia',
+  icons: { icon: '/favicon.ico' },
 }
 
 const navLinks = [
