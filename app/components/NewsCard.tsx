@@ -7,6 +7,8 @@ export type NewsItem = {
   id: number
   titolo: string
   descrizione: string | null
+  short_description: string | null
+  full_description: string | null
   immagine_url: string | null
   photos: string[] | null
   tag: string | null
@@ -124,24 +126,28 @@ function DetailModal({ item, onClose }: { item: NewsItem; onClose: () => void })
 export default function NewsCard({ item }: { item: NewsItem }) {
   const [modalOpen, setModalOpen] = useState(false)
   const coverPhoto = item.photos?.[0] ?? item.immagine_url ?? null
-  const preview = item.descrizione ? truncate(item.descrizione, 120) : null
+  const preview = item.short_description ?? (item.descrizione ? truncate(item.descrizione, 120) : null)
 
   return (
     <>
-      <article className="group flex flex-col border border-black/10 hover:border-[#1a4a3a] transition-colors duration-150 overflow-hidden">
+      <article
+        className="group flex flex-col border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+      >
         {/* Photo */}
         {coverPhoto ? (
-          <div className="relative h-48 overflow-hidden bg-[#f5f5f5]">
+          <div className="relative h-64 overflow-hidden bg-[#f5f5f5]">
             <Image
               src={coverPhoto}
               alt={item.titolo}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
-              style={{ objectPosition: 'center' }}
+              style={{ objectPosition: 'center top', imageOrientation: 'from-image' } as React.CSSProperties}
             />
+            <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 0 3px white' }} />
           </div>
         ) : (
-          <div className="h-48 bg-[#1a4a3a]/5 flex items-center justify-center">
+          <div className="h-64 bg-[#1a4a3a]/5 flex items-center justify-center">
             <svg className="w-10 h-10 text-[#1a4a3a]/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -168,12 +174,12 @@ export default function NewsCard({ item }: { item: NewsItem }) {
           </h3>
 
           {preview && (
-            <p className="text-[#6b7280] text-sm leading-relaxed mb-4 line-clamp-3">
+            <p className="text-[#6b7280] text-sm leading-relaxed mb-4">
               {preview}
             </p>
           )}
 
-          <div className="flex items-center gap-4 pt-4 border-t border-black/5 mt-auto">
+          <div className="flex items-center gap-4 pt-4 mt-auto" style={{ borderTop: '3px solid #1a4a3a' }}>
             {item.link && (
               <a
                 href={item.link}
@@ -190,9 +196,9 @@ export default function NewsCard({ item }: { item: NewsItem }) {
             )}
             <button
               onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150 ml-auto"
+              className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase relative after:absolute after:bottom-[-2px] after:left-0 after:h-px after:w-0 after:bg-[#1a4a3a] hover:after:w-full after:transition-all after:duration-300 hover:gap-3 transition-all duration-150 ml-auto"
             >
-              Leggi di più
+              Read more
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>

@@ -265,7 +265,7 @@ function EventCard({
   const hasText = !!(item.full_description || item.descrizione)
 
   return (
-    <article className="group flex flex-col border border-black/10 hover:border-[#1a4a3a] transition-colors duration-150 overflow-hidden">
+    <article className="group flex flex-col border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* Photo area */}
       <div
         className={`relative h-64 bg-[#f5f5f5] overflow-hidden ${hasGallery ? 'cursor-pointer' : ''}`}
@@ -327,7 +327,7 @@ function EventCard({
           </p>
         )}
 
-        <div className="flex items-center gap-4 pt-4 border-t border-black/5 mt-auto">
+        <div className="flex items-center gap-4 pt-4 mt-auto" style={{ borderTop: '3px solid #1a4a3a' }}>
           {item.link && (
             <a
               href={item.link}
@@ -357,7 +357,7 @@ function EventCard({
             {(hasText || coverPhoto) && (
               <button
                 onClick={() => onOpenDetail(item)}
-                className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
+                className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase relative after:absolute after:bottom-[-2px] after:left-0 after:h-px after:w-0 after:bg-[#1a4a3a] hover:after:w-full after:transition-all after:duration-300 hover:gap-3 transition-all duration-150"
               >
                 Read more
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

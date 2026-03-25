@@ -4,6 +4,8 @@ import Link from 'next/link'
 import StatsSection from './components/StatsSection'
 import NewsCard, { type NewsItem } from './components/NewsCard'
 
+export const dynamic = 'force-dynamic'
+
 function InstagramIcon() {
   return (
     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -33,7 +35,7 @@ export default async function HomePage() {
 
   const { data: eventi } = await supabase
     .from('contenuti')
-    .select('id, titolo, descrizione, immagine_url, photos, tag, tipo, data_pubblicazione, link')
+    .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
     .in('tipo', ['evento', 'aggiornamento', 'news'])
     .order('data_pubblicazione', { ascending: false })
     .limit(3)

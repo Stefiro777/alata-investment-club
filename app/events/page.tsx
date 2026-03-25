@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import EventsGrid from './EventsGrid'
 
+export const dynamic = 'force-dynamic'
+
 export default async function EventsPage() {
   const supabase = await createClient()
 

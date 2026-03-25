@@ -27,9 +27,9 @@ export const metadata: Metadata = {
 const navLinks = [
   { href: '/', label: 'About' },
   { href: '/reports', label: 'Reports' },
+  { href: '/events', label: 'Events' },
   { href: '/team', label: 'Team' },
   { href: '/career-service', label: 'Career Service' },
-  { href: '/events', label: 'Events' },
   { href: '/join-us', label: 'Join Us' },
   { href: '/dashboard', label: 'Reserved Area' },
 ]
@@ -112,7 +112,7 @@ export default function RootLayout({
         <CookieBanner />
 
         {/* Footer */}
-        <footer className="bg-[#1a4a3a] text-white">
+        <footer className="bg-[#1a4a3a] text-white border-t border-white/20">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
               {/* Logo + nome */}
