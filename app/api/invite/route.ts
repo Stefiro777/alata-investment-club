@@ -10,16 +10,14 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? req.headers.get('origin') ?? ''
-
   try {
     console.log('Starting invite for:', email)
-    console.log('Redirect URL:', `${siteUrl}/accept-invite`)
+    console.log('Redirect URL:', `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite`)
     console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
     console.log('Service key present:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
 
     const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${siteUrl}/accept-invite`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite`,
     })
     console.log('Supabase response:', JSON.stringify({ data, error }))
 
