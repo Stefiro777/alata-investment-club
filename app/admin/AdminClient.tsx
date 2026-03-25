@@ -19,6 +19,15 @@ type Contenuto = {
   photos: string[] | null
 }
 
+type Alumni = {
+  id: string
+  name: string
+  role: string
+  graduation_year: string | null
+  linkedin_url: string | null
+  created_at: string
+}
+
 const TAG_OPTIONS = ['Aperitif', 'Event', 'Team Building', 'Career Talk']
 
 function SectionHeading({ title }: { title: string }) {
@@ -553,10 +562,200 @@ function InsertForm({ onInserted }: { onInserted: (item: Contenuto) => void }) {
   )
 }
 
+// ── Alumni insert form ───────────────────────────────────────────────────────
+
+function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [role, setRole] = useState('')
+  const [graduationYear, setGraduationYear] = useState('')
+  const [linkedinUrl, setLinkedinUrl] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    setError(null)
+    setSuccess(false)
+
+    const supabase = createClient()
+    const { data, error: err } = await supabase
+      .from('alumni')
+      .insert({
+        name,
+        role,
+        graduation_year: graduationYear || null,
+        linkedin_url: linkedinUrl || null,
+      })
+      .select()
+      .single()
+
+    if (err) {
+      setError(err.message)
+      setSubmitting(false)
+      return
+    }
+
+    setName('')
+    setRole('')
+    setGraduationYear('')
+    setLinkedinUrl('')
+    setSuccess(true)
+    setSubmitting(false)
+    setTimeout(() => setSuccess(false), 3000)
+    onInserted(data as Alumni)
+    router.refresh()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280]">Nuovo alumni</p>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Nome <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Mario Rossi"
+            className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Ruolo <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={role}
+            onChange={e => setRole(e.target.value)}
+            placeholder="Former President"
+            className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          />
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Anno di laurea
+          </label>
+          <input
+            type="text"
+            value={graduationYear}
+            onChange={e => setGraduationYear(e.target.value)}
+            placeholder="2024"
+            className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            LinkedIn URL
+          </label>
+          <input
+            type="text"
+            value={linkedinUrl}
+            onChange={e => setLinkedinUrl(e.target.value)}
+            placeholder="https://linkedin.com/in/..."
+            className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          />
+        </div>
+      </div>
+
+      {error && (
+        <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
+      )}
+      {success && (
+        <p className="text-[#1a4a3a] text-xs border-l-2 border-[#1a4a3a] pl-3 py-1">Alumni aggiunto con successo.</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {submitting ? 'Saving…' : 'Aggiungi'}
+      </button>
+    </form>
+  )
+}
+
+// ── Alumni row ───────────────────────────────────────────────────────────────
+
+function AlumniRow({
+  alumni,
+  onDeleted,
+}: {
+  alumni: Alumni
+  onDeleted: (id: string) => void
+}) {
+  const router = useRouter()
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleDelete() {
+    if (!confirm(`Eliminare "${alumni.name}"?`)) return
+    setDeleting(true)
+    const supabase = createClient()
+    const { error: err } = await supabase.from('alumni').delete().eq('id', alumni.id)
+    if (err) {
+      setError(err.message)
+      setDeleting(false)
+    } else {
+      onDeleted(alumni.id)
+      router.refresh()
+    }
+  }
+
+  return (
+    <div className="bg-white px-6 py-4 flex items-center justify-between gap-6 border-b border-black/5 last:border-b-0">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-serif text-base font-medium text-[#0a0a0a]">{alumni.name}</p>
+          {alumni.graduation_year && (
+            <span className="text-xs px-2 py-0.5 border border-[#1a4a3a] text-[#1a4a3a] whitespace-nowrap">
+              {alumni.graduation_year}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-[#6b7280] mt-0.5">{alumni.role}</p>
+        {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
+      </div>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {alumni.linkedin_url && (
+          <a
+            href={alumni.linkedin_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-[#1a4a3a] hover:underline"
+          >
+            LinkedIn
+          </a>
+        )}
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {deleting ? '…' : 'Elimina'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ──────────────────────────────────────────────────────────
 
-export default function AdminClient({ items: initialItems }: { items: Contenuto[] }) {
+export default function AdminClient({ items: initialItems, alumni: initialAlumni }: { items: Contenuto[]; alumni: Alumni[] }) {
   const [items, setItems] = useState<Contenuto[]>(initialItems)
+  const [alumniList, setAlumniList] = useState<Alumni[]>(initialAlumni)
 
   function handleUpdated(updated: Contenuto) {
     setItems(prev => prev.map(i => i.id === updated.id ? updated : i))
@@ -570,15 +769,33 @@ export default function AdminClient({ items: initialItems }: { items: Contenuto[
     setItems(prev => [item, ...prev])
   }
 
+  function handleAlumniInserted(a: Alumni) {
+    setAlumniList(prev => [a, ...prev])
+  }
+
+  function handleAlumniDeleted(id: string) {
+    setAlumniList(prev => prev.filter(a => a.id !== id))
+  }
+
+  function scrollTo(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-8 py-10 space-y-16">
 
       <nav className="flex flex-wrap gap-2">
         <button
-          onClick={() => document.getElementById('news-events')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          onClick={() => scrollTo('news-events')}
           className="px-5 py-2 text-xs font-medium tracking-wide border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white transition-colors duration-150 rounded-full"
         >
           News & Events
+        </button>
+        <button
+          onClick={() => scrollTo('alumni')}
+          className="px-5 py-2 text-xs font-medium tracking-wide border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white transition-colors duration-150 rounded-full"
+        >
+          Alumni
         </button>
       </nav>
 
@@ -607,6 +824,40 @@ export default function AdminClient({ items: initialItems }: { items: Contenuto[
                     item={item}
                     onUpdated={handleUpdated}
                     onDeleted={handleDeleted}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          Alumni
+      ══════════════════════════════════════ */}
+      <section id="alumni">
+        <SectionHeading title="Alumni" />
+
+        <div className="bg-white border border-black/10 p-8 space-y-10">
+
+          <AlumniInsertForm onInserted={handleAlumniInserted} />
+
+          <div className="border-t border-black/10" />
+
+          <div>
+            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">
+              Alumni esistenti ({alumniList.length})
+            </p>
+            {alumniList.length === 0 ? (
+              <p className="text-[#6b7280] text-sm">Nessun alumni presente.</p>
+            ) : (
+              <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">
+                {alumniList.map(a => (
+                  <AlumniRow
+                    key={a.id}
+                    alumni={a}
+                    onDeleted={handleAlumniDeleted}
                   />
                 ))}
               </div>

@@ -2,6 +2,15 @@ import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import AdminClient from './AdminClient'
 
+type Alumni = {
+  id: string
+  name: string
+  role: string
+  graduation_year: string | null
+  linkedin_url: string | null
+  created_at: string
+}
+
 type Contenuto = {
   id: number
   titolo: string
@@ -30,11 +39,17 @@ export default async function AdminPage() {
 
   if (!adminRow) redirect('/login')
 
-  const { data: items } = await supabase
-    .from('contenuti')
-    .select('*')
-    .in('tipo', ['evento', 'news', 'aggiornamento'])
-    .order('data_pubblicazione', { ascending: false })
+  const [{ data: items }, { data: alumniData }] = await Promise.all([
+    supabase
+      .from('contenuti')
+      .select('*')
+      .in('tipo', ['evento', 'news', 'aggiornamento'])
+      .order('data_pubblicazione', { ascending: false }),
+    supabase
+      .from('alumni')
+      .select('id, name, role, graduation_year, linkedin_url, created_at')
+      .order('created_at', { ascending: false }),
+  ])
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -64,6 +79,7 @@ export default async function AdminPage() {
 
       <AdminClient
         items={(items ?? []) as Contenuto[]}
+        alumni={(alumniData ?? []) as Alumni[]}
       />
     </div>
   )

@@ -21,6 +21,7 @@ export default function MembersClient({
   priceCV: initialPriceCV,
   priceMaster: initialPriceMaster,
   priceCareer: initialPriceCareer,
+  showAlumni,
 }: {
   adminUsers: string[]
   superadmin: string
@@ -29,6 +30,7 @@ export default function MembersClient({
   priceCV: string
   priceMaster: string
   priceCareer: string
+  showAlumni: boolean
 }) {
   const router = useRouter()
 
@@ -40,6 +42,10 @@ export default function MembersClient({
   const [pricesVisible, setPricesVisible] = useState(showPrices)
   const [togglingPrices, setTogglingPrices] = useState(false)
   const [priceToggleSaved, setPriceToggleSaved] = useState(false)
+
+  const [alumniVisible, setAlumniVisible] = useState(showAlumni)
+  const [togglingAlumni, setTogglingAlumni] = useState(false)
+  const [alumniToggleSaved, setAlumniToggleSaved] = useState(false)
 
   const [priceCV, setPriceCV] = useState(initialPriceCV)
   const [priceMaster, setPriceMaster] = useState(initialPriceMaster)
@@ -73,6 +79,19 @@ export default function MembersClient({
     setPricesVisible(newValue)
     setTogglingPrices(false)
     setPriceToggleSaved(true)
+  }
+
+  async function handleToggleAlumni() {
+    setTogglingAlumni(true)
+    setAlumniToggleSaved(false)
+    const supabase = createClient()
+    const newValue = !alumniVisible
+    await supabase
+      .from('settings')
+      .upsert({ key: 'show_alumni', value: newValue ? 'true' : 'false' }, { onConflict: 'key' })
+    setAlumniVisible(newValue)
+    setTogglingAlumni(false)
+    setAlumniToggleSaved(true)
   }
 
   async function handleSavePrices(e: React.FormEvent) {
@@ -255,6 +274,40 @@ export default function MembersClient({
                 <span
                   className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${
                     pricesVisible ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div className="border-t border-black/5" />
+
+          {/* Show Alumni Page */}
+          <div className="flex items-center justify-between gap-6">
+            <div>
+              <p className="text-sm font-medium text-[#0a0a0a]">Show Alumni Page</p>
+              <p className="text-xs text-[#6b7280] mt-0.5">
+                Enables or disables the{' '}
+                <span className="font-medium">/team/alumni</span> page and the link in{' '}
+                <span className="font-medium">/team</span>.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {alumniToggleSaved && (
+                <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>
+              )}
+              <button
+                onClick={handleToggleAlumni}
+                disabled={togglingAlumni}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                  alumniVisible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'
+                }`}
+                role="switch"
+                aria-checked={alumniVisible}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${
+                    alumniVisible ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>

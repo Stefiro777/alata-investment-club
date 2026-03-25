@@ -1,4 +1,8 @@
 import Image from 'next/image'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase-server'
+
+export const dynamic = 'force-dynamic'
 
 const row1 = [
   { nome: 'Filippo Lombardi',   ruolo: 'President',               fotoUrl: '/filippo-lombardi.jpeg',  linkedIn: 'https://www.linkedin.com/in/filippolombardiofficial/' },
@@ -58,7 +62,16 @@ function MemberCard({ nome, ruolo, fotoUrl, linkedIn }: { nome: string; ruolo: s
   )
 }
 
-export default function TeamPage() {
+export default async function TeamPage() {
+  const supabase = await createClient()
+  const { data: showAlumniRow } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', 'show_alumni')
+    .maybeSingle()
+
+  const showAlumni = showAlumniRow?.value === 'true'
+
   return (
     <div>
       {/* Hero */}
@@ -128,6 +141,31 @@ export default function TeamPage() {
 
         </div>
       </section>
+
+      {/* Meet our Alumni — visible only if show_alumni is true */}
+      {showAlumni && (
+        <section className="py-20 bg-[#f5f5f5] border-t border-[#e5e5e5]">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-8">
+            <div>
+              <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Past Members</p>
+              <h2 className="font-serif text-3xl font-bold text-[#0a0a0a] mb-3">Meet our Alumni</h2>
+              <div className="w-10 h-px bg-[#1a4a3a]" />
+              <p className="text-[#6b7280] text-sm leading-relaxed mt-4 max-w-lg">
+                Discover the former members who helped build Alata Investment Club and are now making an impact across the financial industry.
+              </p>
+            </div>
+            <Link
+              href="/team/alumni"
+              className="inline-flex items-center gap-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-150 whitespace-nowrap"
+            >
+              View Alumni
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

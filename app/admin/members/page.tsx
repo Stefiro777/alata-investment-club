@@ -25,6 +25,7 @@ export default async function MembersPage() {
     { data: priceCVRow },
     { data: priceMasterRow },
     { data: priceCareerRow },
+    { data: showAlumniRow },
   ] = await Promise.all([
     supabase.from('admin_users').select('email').order('email', { ascending: true }),
     supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
@@ -32,6 +33,7 @@ export default async function MembersPage() {
     supabase.from('settings').select('value').eq('key', 'price_cv_review').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'price_master_orientation').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'price_career_orientation').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'show_alumni').maybeSingle(),
   ])
 
   const applicationsOpen = appSettings?.value === 'true'
@@ -39,6 +41,7 @@ export default async function MembersPage() {
   const priceCV = priceCVRow?.value ?? '€29,99'
   const priceMaster = priceMasterRow?.value ?? '€49,99'
   const priceCareer = priceCareerRow?.value ?? '€49,99'
+  const showAlumni = showAlumniRow?.value === 'true'
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -74,6 +77,7 @@ export default async function MembersPage() {
         priceCV={priceCV}
         priceMaster={priceMaster}
         priceCareer={priceCareer}
+        showAlumni={showAlumni}
       />
     </div>
   )
