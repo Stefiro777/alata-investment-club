@@ -28,6 +28,14 @@ type Alumni = {
   created_at: string
 }
 
+type AlumniCompany = {
+  id: string
+  name: string
+  logo_url: string
+  website_url: string | null
+  created_at: string
+}
+
 const TAG_OPTIONS = ['Aperitif', 'Event', 'Team Building', 'Career Talk']
 
 function SectionHeading({ title }: { title: string }) {
@@ -751,11 +759,184 @@ function AlumniRow({
   )
 }
 
+// ── Alumni company insert form ───────────────────────────────────────────────
+
+function AlumniCompanyInsertForm({ onInserted }: { onInserted: (c: AlumniCompany) => void }) {
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    setError(null)
+    setSuccess(false)
+
+    const supabase = createClient()
+    const { data, error: err } = await supabase
+      .from('alumni_companies')
+      .insert({
+        name,
+        logo_url: logoUrl,
+        website_url: websiteUrl || null,
+      })
+      .select()
+      .single()
+
+    if (err) {
+      setError(err.message)
+      setSubmitting(false)
+      return
+    }
+
+    setName('')
+    setLogoUrl('')
+    setWebsiteUrl('')
+    setSuccess(true)
+    setSubmitting(false)
+    setTimeout(() => setSuccess(false), 3000)
+    onInserted(data as AlumniCompany)
+    router.refresh()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280]">Nuova azienda</p>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Nome azienda <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Goldman Sachs"
+            className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            URL sito web
+          </label>
+          <input
+            type="text"
+            value={websiteUrl}
+            onChange={e => setWebsiteUrl(e.target.value)}
+            placeholder="https://goldmansachs.com"
+            className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+          URL logo <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          required
+          value={logoUrl}
+          onChange={e => setLogoUrl(e.target.value)}
+          placeholder="https://... (link diretto all'immagine)"
+          className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+        />
+        {logoUrl && (
+          <div className="mt-2 p-3 border border-[#e5e5e5] bg-[#f9f9f7] inline-flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoUrl} alt="preview" className="h-8 w-auto object-contain max-w-[120px]" />
+            <span className="text-xs text-[#6b7280]">Preview</span>
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
+      )}
+      {success && (
+        <p className="text-[#1a4a3a] text-xs border-l-2 border-[#1a4a3a] pl-3 py-1">Azienda aggiunta con successo.</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {submitting ? 'Saving…' : 'Aggiungi'}
+      </button>
+    </form>
+  )
+}
+
+// ── Alumni company row ───────────────────────────────────────────────────────
+
+function AlumniCompanyRow({
+  company,
+  onDeleted,
+}: {
+  company: AlumniCompany
+  onDeleted: (id: string) => void
+}) {
+  const router = useRouter()
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleDelete() {
+    if (!confirm(`Eliminare "${company.name}"?`)) return
+    setDeleting(true)
+    const supabase = createClient()
+    const { error: err } = await supabase.from('alumni_companies').delete().eq('id', company.id)
+    if (err) {
+      setError(err.message)
+      setDeleting(false)
+    } else {
+      onDeleted(company.id)
+      router.refresh()
+    }
+  }
+
+  return (
+    <div className="bg-white px-6 py-4 flex items-center justify-between gap-6 border-b border-black/5 last:border-b-0">
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={company.logo_url}
+          alt={company.name}
+          className="h-8 w-auto object-contain max-w-[100px] flex-shrink-0 opacity-80"
+        />
+        <div className="min-w-0">
+          <p className="font-serif text-base font-medium text-[#0a0a0a] truncate">{company.name}</p>
+          {company.website_url && (
+            <p className="text-xs text-[#6b7280] truncate">{company.website_url}</p>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {error && <p className="text-red-600 text-xs">{error}</p>}
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {deleting ? '…' : 'Elimina'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ──────────────────────────────────────────────────────────
 
-export default function AdminClient({ items: initialItems, alumni: initialAlumni }: { items: Contenuto[]; alumni: Alumni[] }) {
+export default function AdminClient({ items: initialItems, alumni: initialAlumni, alumniCompanies: initialAlumniCompanies }: { items: Contenuto[]; alumni: Alumni[]; alumniCompanies: AlumniCompany[] }) {
   const [items, setItems] = useState<Contenuto[]>(initialItems)
   const [alumniList, setAlumniList] = useState<Alumni[]>(initialAlumni)
+  const [companiesList, setCompaniesList] = useState<AlumniCompany[]>(initialAlumniCompanies)
 
   function handleUpdated(updated: Contenuto) {
     setItems(prev => prev.map(i => i.id === updated.id ? updated : i))
@@ -775,6 +956,14 @@ export default function AdminClient({ items: initialItems, alumni: initialAlumni
 
   function handleAlumniDeleted(id: string) {
     setAlumniList(prev => prev.filter(a => a.id !== id))
+  }
+
+  function handleCompanyInserted(c: AlumniCompany) {
+    setCompaniesList(prev => [c, ...prev])
+  }
+
+  function handleCompanyDeleted(id: string) {
+    setCompaniesList(prev => prev.filter(c => c.id !== id))
   }
 
   function scrollTo(id: string) {
@@ -858,6 +1047,32 @@ export default function AdminClient({ items: initialItems, alumni: initialAlumni
                     key={a.id}
                     alumni={a}
                     onDeleted={handleAlumniDeleted}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-black/10" />
+
+          {/* ── Companies ── */}
+          <AlumniCompanyInsertForm onInserted={handleCompanyInserted} />
+
+          <div className="border-t border-black/10" />
+
+          <div>
+            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">
+              Aziende esistenti ({companiesList.length})
+            </p>
+            {companiesList.length === 0 ? (
+              <p className="text-[#6b7280] text-sm">Nessuna azienda presente.</p>
+            ) : (
+              <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">
+                {companiesList.map(c => (
+                  <AlumniCompanyRow
+                    key={c.id}
+                    company={c}
+                    onDeleted={handleCompanyDeleted}
                   />
                 ))}
               </div>

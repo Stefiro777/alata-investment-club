@@ -11,6 +11,14 @@ type Alumni = {
   created_at: string
 }
 
+type AlumniCompany = {
+  id: string
+  name: string
+  logo_url: string
+  website_url: string | null
+  created_at: string
+}
+
 type Contenuto = {
   id: number
   titolo: string
@@ -39,7 +47,7 @@ export default async function AdminPage() {
 
   if (!adminRow) redirect('/login')
 
-  const [{ data: items }, { data: alumniData }] = await Promise.all([
+  const [{ data: items }, { data: alumniData }, { data: alumniCompaniesData }] = await Promise.all([
     supabase
       .from('contenuti')
       .select('*')
@@ -48,6 +56,10 @@ export default async function AdminPage() {
     supabase
       .from('alumni')
       .select('id, name, role, graduation_year, linkedin_url, created_at')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('alumni_companies')
+      .select('id, name, logo_url, website_url, created_at')
       .order('created_at', { ascending: false }),
   ])
 
@@ -80,6 +92,7 @@ export default async function AdminPage() {
       <AdminClient
         items={(items ?? []) as Contenuto[]}
         alumni={(alumniData ?? []) as Alumni[]}
+        alumniCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]}
       />
     </div>
   )
