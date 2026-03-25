@@ -15,7 +15,7 @@ type Contenuto = {
   tipo: string
   data_pubblicazione: string | null
   link: string | null
-  foto_url: string | null
+  immagine_url: string | null
   photos: string[] | null
 }
 
@@ -54,7 +54,7 @@ export default function AdminClient({ items }: { items: Contenuto[] }) {
   }
 
   function startEdit(item: Contenuto) {
-    const existingPhotos = (item.photos as string[] | null) ?? (item.foto_url ? [item.foto_url] : [])
+    const existingPhotos = (item.photos as string[] | null) ?? (item.immagine_url ? [item.immagine_url] : [])
     setEditingId(item.id)
     setTitolo(item.titolo)
     setData(item.data_pubblicazione ?? '')
@@ -87,6 +87,7 @@ export default function AdminClient({ items }: { items: Contenuto[] }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    console.log('[admin] handleSubmit — editingId:', editingId, 'titolo:', titolo)
     setSubmitting(true)
     setFormError(null)
     setFormSuccess(false)
@@ -124,19 +125,30 @@ export default function AdminClient({ items }: { items: Contenuto[] }) {
       short_description: shortDescription || null,
       full_description: fullDescription || null,
       tag: tag || null,
-      foto_url: uploadedPhotos[0] ?? null,
+      immagine_url: uploadedPhotos[0] ?? null,
       photos: uploadedPhotos.length > 0 ? uploadedPhotos : null,
     }
 
     if (editingId !== null) {
-      const { error } = await supabase.from('contenuti').update(payload).eq('id', editingId)
+      console.log('[admin] UPDATE id:', editingId, 'payload:', payload)
+      const { data: updateData, error } = await supabase
+        .from('contenuti')
+        .update(payload)
+        .eq('id', editingId)
+        .select()
+      console.log('[admin] UPDATE result — data:', updateData, 'error:', error)
       if (error) {
         setFormError(`Update failed: ${error.message}`)
         setSubmitting(false)
         return
       }
     } else {
-      const { error } = await supabase.from('contenuti').insert({ ...payload, tipo: 'evento' })
+      console.log('[admin] INSERT payload:', payload)
+      const { data: insertData, error } = await supabase
+        .from('contenuti')
+        .insert({ ...payload, tipo: 'evento' })
+        .select()
+      console.log('[admin] INSERT result — data:', insertData, 'error:', error)
       if (error) {
         setFormError(`Insert failed: ${error.message}`)
         setSubmitting(false)
@@ -187,7 +199,7 @@ export default function AdminClient({ items }: { items: Contenuto[] }) {
           <div>
             <div className="flex items-center justify-between mb-6">
               <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280]">
-                {editingId !== null ? 'Modifica card' : 'Nuova card'}
+                {editingId !== null ? `Modifica card #${editingId}` : 'Nuova card'}
               </p>
               {editingId !== null && (
                 <button
@@ -361,7 +373,7 @@ export default function AdminClient({ items }: { items: Contenuto[] }) {
             ) : (
               <div className="space-y-px bg-black/5 rounded-sm">
                 {items.map(item => {
-                  const photoCount = (item.photos as string[] | null)?.length ?? (item.foto_url ? 1 : 0)
+                  const photoCount = (item.photos as string[] | null)?.length ?? (item.immagine_url ? 1 : 0)
                   return (
                     <div
                       key={item.id}

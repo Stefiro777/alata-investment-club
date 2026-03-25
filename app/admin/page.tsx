@@ -12,7 +12,7 @@ type Contenuto = {
   tipo: string
   data_pubblicazione: string | null
   link: string | null
-  foto_url: string | null
+  immagine_url: string | null
   photos: string[] | null
 }
 
@@ -33,7 +33,7 @@ export default async function AdminPage() {
   const { data: items } = await supabase
     .from('contenuti')
     .select('*')
-    .in('tipo', ['evento', 'news'])
+    .in('tipo', ['evento', 'news', 'aggiornamento'])
     .order('data_pubblicazione', { ascending: false })
 
   return (

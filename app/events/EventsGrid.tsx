@@ -13,6 +13,7 @@ type Contenuto = {
   tipo: string
   data_pubblicazione: string | null
   link: string | null
+  immagine_url: string | null
   foto_url: string | null
   photos: string[] | null
 }
@@ -28,6 +29,7 @@ function formatDate(dateStr: string | null) {
 
 function getPhotos(item: Contenuto): string[] {
   if (item.photos && (item.photos as unknown[]).length > 0) return item.photos as string[]
+  if (item.immagine_url) return [item.immagine_url]
   if (item.foto_url) return [item.foto_url]
   return []
 }
@@ -143,33 +145,144 @@ function GalleryModal({
   )
 }
 
+// ── Detail modal ─────────────────────────────────────────────────────────────
+
+function EventDetailModal({
+  item,
+  onClose,
+}: {
+  item: Contenuto
+  onClose: () => void
+}) {
+  const photos = getPhotos(item)
+  const coverPhoto = photos[0] ?? null
+  const fullText = item.full_description || item.descrizione
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose })
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCloseRef.current()
+    }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center text-[#6b7280] hover:text-[#0a0a0a] transition-colors text-lg"
+          aria-label="Chiudi"
+        >
+          ✕
+        </button>
+
+        {/* Cover photo — object-contain so the full image is always visible */}
+        {coverPhoto && (
+          <div className="relative w-full flex items-center justify-center bg-[#111]" style={{ maxHeight: '320px', minHeight: '200px', height: '320px' }}>
+            <Image
+              src={coverPhoto}
+              alt={item.titolo}
+              fill
+              className="object-contain"
+              style={{ imageOrientation: 'from-image' } as React.CSSProperties}
+            />
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            {item.data_pubblicazione && (
+              <span className="text-[#6b7280] text-xs tracking-widest uppercase">
+                {formatDate(item.data_pubblicazione)}
+              </span>
+            )}
+            {item.tag && (
+              <span className="text-xs px-2.5 py-0.5 bg-[#1a4a3a] text-white tracking-wide">
+                {item.tag}
+              </span>
+            )}
+          </div>
+
+          <h2 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-6 leading-snug">
+            {item.titolo}
+          </h2>
+
+          {fullText && (
+            <p className="text-[#374151] text-sm leading-relaxed whitespace-pre-line">
+              {fullText}
+            </p>
+          )}
+
+          {item.link && (
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-6 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
+            >
+              Read on LinkedIn
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Event card ───────────────────────────────────────────────────────────────
 
 function EventCard({
   item,
   onOpenGallery,
+  onOpenDetail,
 }: {
   item: Contenuto
   onOpenGallery: (item: Contenuto) => void
+  onOpenDetail: (item: Contenuto) => void
 }) {
   const photos = getPhotos(item)
   const coverPhoto = photos[0] ?? null
   const hasGallery = photos.length > 1
+  const hasText = !!(item.full_description || item.descrizione)
 
   return (
     <article className="group flex flex-col border border-black/10 hover:border-[#1a4a3a] transition-colors duration-150 overflow-hidden">
       {/* Photo area */}
       <div
-        className={`relative h-48 bg-[#f5f5f5] overflow-hidden ${hasGallery ? 'cursor-pointer' : ''}`}
+        className={`relative h-64 bg-[#f5f5f5] overflow-hidden ${hasGallery ? 'cursor-pointer' : ''}`}
         onClick={hasGallery ? () => onOpenGallery(item) : undefined}
       >
         {coverPhoto ? (
-          <Image
-            src={coverPhoto}
-            alt={item.titolo}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+          <>
+            <Image
+              src={coverPhoto}
+              alt={item.titolo}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              style={{ objectPosition: 'center top', imageOrientation: 'from-image' } as React.CSSProperties}
+            />
+            {/* Inset border overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 0 3px white' }} />
+          </>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-[#1a4a3a]/5">
             <svg className="w-10 h-10 text-[#1a4a3a]/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,9 +321,9 @@ function EventCard({
           {item.titolo}
         </h3>
 
-        {(item.full_description || item.descrizione) && (
-          <p className="text-[#6b7280] text-sm leading-relaxed mb-4 line-clamp-3">
-            {item.full_description || item.descrizione}
+        {(item.short_description || item.descrizione) && (
+          <p className="text-[#6b7280] text-sm leading-relaxed mb-4">
+            {item.short_description ?? item.descrizione}
           </p>
         )}
 
@@ -220,26 +333,39 @@ function EventCard({
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
+              className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] transition-colors duration-150"
               onClick={e => e.stopPropagation()}
             >
-              Read more
+              LinkedIn
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </a>
           )}
-          {hasGallery && (
-            <button
-              onClick={() => onOpenGallery(item)}
-              className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] transition-colors ml-auto"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Gallery
-            </button>
-          )}
+          <div className="flex items-center gap-3 ml-auto">
+            {hasGallery && (
+              <button
+                onClick={() => onOpenGallery(item)}
+                className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Gallery
+              </button>
+            )}
+            {(hasText || coverPhoto) && (
+              <button
+                onClick={() => onOpenDetail(item)}
+                className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
+              >
+                Read more
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </article>
@@ -248,20 +374,32 @@ function EventCard({
 
 // ── Grid ─────────────────────────────────────────────────────────────────────
 
+const TAG_FILTERS: { label: string; value: string | null }[] = [
+  { label: 'All', value: null },
+  { label: 'Aperitifs', value: 'Aperitif' },
+  { label: 'Event', value: 'Event' },
+  { label: 'Team Building', value: 'Team Building' },
+  { label: 'Career Talk', value: 'Career Talk' },
+]
+
 export default function EventsGrid({ items }: { items: Contenuto[] }) {
   const [query, setQuery] = useState('')
+  const [activeTag, setActiveTag] = useState<string | null>(null)
   const [galleryItem, setGalleryItem] = useState<Contenuto | null>(null)
+  const [detailItem, setDetailItem] = useState<Contenuto | null>(null)
   const closeGallery = useCallback(() => setGalleryItem(null), [])
+  const closeDetail = useCallback(() => setDetailItem(null), [])
 
-  const filtered = query.trim()
-    ? items.filter(item => {
-        const q = query.toLowerCase()
-        return (
-          item.titolo.toLowerCase().includes(q) ||
-          (item.full_description ?? item.descrizione ?? '').toLowerCase().includes(q)
-        )
-      })
-    : items
+  const filtered = items.filter(item => {
+    if (activeTag && item.tag !== activeTag) return false
+    const q = query.trim().toLowerCase()
+    if (!q) return true
+    return (
+      item.titolo.toLowerCase().includes(q) ||
+      (item.short_description ?? '').toLowerCase().includes(q) ||
+      (item.tag ?? '').toLowerCase().includes(q)
+    )
+  })
 
   return (
     <div>
@@ -284,8 +422,29 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
         />
       </div>
 
+      {/* Tag filters */}
+      <div className="flex flex-wrap gap-2 mb-10">
+        {TAG_FILTERS.map(({ label, value }) => {
+          const active = activeTag === value
+          return (
+            <button
+              key={label}
+              onClick={() => setActiveTag(value)}
+              className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150"
+              style={
+                active
+                  ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
+                  : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }
+              }
+            >
+              {label}
+            </button>
+          )
+        })}
+      </div>
+
       {/* Results count */}
-      {!query.trim() && (
+      {!query.trim() && !activeTag && (
         <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-10">
           {items.length} {items.length === 1 ? 'item' : 'items'}
         </p>
@@ -299,7 +458,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filtered.map(item => (
-            <EventCard key={item.id} item={item} onOpenGallery={setGalleryItem} />
+            <EventCard key={item.id} item={item} onOpenGallery={setGalleryItem} onOpenDetail={setDetailItem} />
           ))}
         </div>
       )}
@@ -311,6 +470,11 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
           title={galleryItem.titolo}
           onClose={closeGallery}
         />
+      )}
+
+      {/* Detail modal */}
+      {detailItem && (
+        <EventDetailModal item={detailItem} onClose={closeDetail} />
       )}
     </div>
   )

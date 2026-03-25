@@ -2,82 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import Link from 'next/link'
 import StatsSection from './components/StatsSection'
-
-type Contenuto = {
-  id: number
-  titolo: string
-  descrizione: string | null
-  short_description: string | null
-  tag: string | null
-  tipo: string
-  data_pubblicazione: string | null
-  link: string | null
-}
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return null
-  return new Date(dateStr).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-function truncate(text: string, max: number) {
-  return text.length > max ? text.slice(0, max).trimEnd() + '…' : text
-}
-
-function ContentCard({ item }: { item: Contenuto }) {
-  const title = truncate(item.titolo, 150)
-  const preview = item.short_description
-    ? item.short_description
-    : item.descrizione ? truncate(item.descrizione, 200) : null
-
-  return (
-    <article className="group flex flex-col border border-black/10 p-6 hover:border-black/25 transition-colors duration-150">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        {item.data_pubblicazione ? (
-          <span className="text-[#6b7280] text-xs tracking-widest uppercase">
-            {formatDate(item.data_pubblicazione)}
-          </span>
-        ) : <span />}
-        {item.tag && (
-          <span className="shrink-0 text-xs px-2.5 py-0.5 bg-[#1a4a3a] text-white tracking-wide">
-            {item.tag}
-          </span>
-        )}
-      </div>
-      <h3 className="font-serif text-xl font-medium text-[#0a0a0a] leading-snug mb-2 group-hover:text-[#1a4a3a] transition-colors">
-        {title}
-      </h3>
-      {preview && (
-        <p className="text-[#6b7280] text-sm leading-relaxed flex-1">{preview}</p>
-      )}
-      <div className="mt-4 pt-4 border-t border-black/5">
-        {item.link ? (
-          <a
-            href={item.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
-          >
-            Read on LinkedIn
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </a>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 text-[#6b7280]/40 text-xs font-medium tracking-wide uppercase cursor-not-allowed">
-            Read on LinkedIn
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </span>
-        )}
-      </div>
-    </article>
-  )
-}
+import NewsCard, { type NewsItem } from './components/NewsCard'
 
 function InstagramIcon() {
   return (
@@ -108,8 +33,8 @@ export default async function HomePage() {
 
   const { data: eventi } = await supabase
     .from('contenuti')
-    .select('*')
-    .in('tipo', ['evento', 'aggiornamento'])
+    .select('id, titolo, descrizione, immagine_url, photos, tag, tipo, data_pubblicazione, link')
+    .in('tipo', ['evento', 'aggiornamento', 'news'])
     .order('data_pubblicazione', { ascending: false })
     .limit(3)
 
@@ -206,9 +131,9 @@ export default async function HomePage() {
               <p className="text-sm tracking-wide">No events or updates available at the moment.</p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-12">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {eventi.map((item) => (
-                <ContentCard key={item.id} item={item} />
+                <NewsCard key={item.id} item={item as NewsItem} />
               ))}
             </div>
           )}
