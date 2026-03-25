@@ -72,10 +72,12 @@ export default function MembersClient({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     })
-    const json = await res.json()
+    const text = await res.text()
+    let json: any = {}
+    try { json = JSON.parse(text) } catch { json = { error: text } }
 
     if (!res.ok) {
-      setInviteError(json.error ?? 'Failed to send invite')
+      setInviteError(json.error ?? 'Unknown error')
     } else {
       setInviteEmail('')
       setInviteSuccess(true)
