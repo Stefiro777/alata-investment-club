@@ -931,12 +931,119 @@ function AlumniCompanyRow({
   )
 }
 
+// ── Collapsible list section ─────────────────────────────────────────────────
+
+function CollapsibleListSection({
+  label,
+  totalCount,
+  filteredCount,
+  open,
+  onToggle,
+  search,
+  onSearch,
+  emptyMessage,
+  children,
+}: {
+  label: string
+  totalCount: number
+  filteredCount: number
+  open: boolean
+  onToggle: () => void
+  search: string
+  onSearch: (v: string) => void
+  emptyMessage: string
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      {/* Header row */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-3 group mb-0 w-full text-left"
+      >
+        <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280]">
+          {label} ({totalCount})
+        </p>
+        <svg
+          className="w-3.5 h-3.5 text-[#9ca3af] transition-transform duration-200 flex-shrink-0"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Collapsible body — CSS grid trick for smooth height animation */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateRows: open ? '1fr' : '0fr',
+          transition: 'grid-template-rows 0.25s ease',
+        }}
+      >
+        <div style={{ overflow: 'hidden' }}>
+          {/* Search */}
+          <div className="relative mt-4 mb-4">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af] pointer-events-none"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={e => onSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full pl-9 pr-4 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+            />
+          </div>
+
+          {/* List */}
+          {totalCount === 0 ? (
+            <p className="text-[#6b7280] text-sm pb-1">{emptyMessage}</p>
+          ) : filteredCount === 0 ? (
+            <p className="text-[#6b7280] text-sm pb-1">
+              No results for &ldquo;{search}&rdquo;.
+            </p>
+          ) : (
+            <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">
+              {children}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ──────────────────────────────────────────────────────────
 
 export default function AdminClient({ items: initialItems, alumni: initialAlumni, alumniCompanies: initialAlumniCompanies }: { items: Contenuto[]; alumni: Alumni[]; alumniCompanies: AlumniCompany[] }) {
   const [items, setItems] = useState<Contenuto[]>(initialItems)
   const [alumniList, setAlumniList] = useState<Alumni[]>(initialAlumni)
   const [companiesList, setCompaniesList] = useState<AlumniCompany[]>(initialAlumniCompanies)
+
+  // Collapsible + search state
+  const [newsOpen, setNewsOpen] = useState(false)
+  const [newsSearch, setNewsSearch] = useState('')
+  const [alumniOpen, setAlumniOpen] = useState(false)
+  const [alumniSearch, setAlumniSearch] = useState('')
+  const [companiesOpen, setCompaniesOpen] = useState(false)
+  const [companiesSearch, setCompaniesSearch] = useState('')
+
+  const filteredItems = newsSearch
+    ? items.filter(i => i.titolo.toLowerCase().includes(newsSearch.toLowerCase()))
+    : items
+  const filteredAlumni = alumniSearch
+    ? alumniList.filter(a => a.name.toLowerCase().includes(alumniSearch.toLowerCase()))
+    : alumniList
+  const filteredCompanies = companiesSearch
+    ? companiesList.filter(c => c.name.toLowerCase().includes(companiesSearch.toLowerCase()))
+    : companiesList
 
   function handleUpdated(updated: Contenuto) {
     setItems(prev => prev.map(i => i.id === updated.id ? updated : i))
@@ -993,31 +1100,29 @@ export default function AdminClient({ items: initialItems, alumni: initialAlumni
 
         <div className="bg-white border border-black/10 p-8 space-y-10">
 
-          {/* Insert form */}
           <InsertForm onInserted={handleInserted} />
 
           <div className="border-t border-black/10" />
 
-          {/* Items list */}
-          <div>
-            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">
-              Card esistenti ({items.length})
-            </p>
-            {items.length === 0 ? (
-              <p className="text-[#6b7280] text-sm">Nessuna card presente.</p>
-            ) : (
-              <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">
-                {items.map(item => (
-                  <ItemEditRow
-                    key={item.id}
-                    item={item}
-                    onUpdated={handleUpdated}
-                    onDeleted={handleDeleted}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <CollapsibleListSection
+            label="Card esistenti"
+            totalCount={items.length}
+            filteredCount={filteredItems.length}
+            open={newsOpen}
+            onToggle={() => setNewsOpen(v => !v)}
+            search={newsSearch}
+            onSearch={setNewsSearch}
+            emptyMessage="Nessuna card presente."
+          >
+            {filteredItems.map(item => (
+              <ItemEditRow
+                key={item.id}
+                item={item}
+                onUpdated={handleUpdated}
+                onDeleted={handleDeleted}
+              />
+            ))}
+          </CollapsibleListSection>
 
         </div>
       </section>
@@ -1034,50 +1139,49 @@ export default function AdminClient({ items: initialItems, alumni: initialAlumni
 
           <div className="border-t border-black/10" />
 
-          <div>
-            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">
-              Alumni esistenti ({alumniList.length})
-            </p>
-            {alumniList.length === 0 ? (
-              <p className="text-[#6b7280] text-sm">Nessun alumni presente.</p>
-            ) : (
-              <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">
-                {alumniList.map(a => (
-                  <AlumniRow
-                    key={a.id}
-                    alumni={a}
-                    onDeleted={handleAlumniDeleted}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <CollapsibleListSection
+            label="Alumni esistenti"
+            totalCount={alumniList.length}
+            filteredCount={filteredAlumni.length}
+            open={alumniOpen}
+            onToggle={() => setAlumniOpen(v => !v)}
+            search={alumniSearch}
+            onSearch={setAlumniSearch}
+            emptyMessage="Nessun alumni presente."
+          >
+            {filteredAlumni.map(a => (
+              <AlumniRow
+                key={a.id}
+                alumni={a}
+                onDeleted={handleAlumniDeleted}
+              />
+            ))}
+          </CollapsibleListSection>
 
           <div className="border-t border-black/10" />
 
-          {/* ── Companies ── */}
           <AlumniCompanyInsertForm onInserted={handleCompanyInserted} />
 
           <div className="border-t border-black/10" />
 
-          <div>
-            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">
-              Aziende esistenti ({companiesList.length})
-            </p>
-            {companiesList.length === 0 ? (
-              <p className="text-[#6b7280] text-sm">Nessuna azienda presente.</p>
-            ) : (
-              <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">
-                {companiesList.map(c => (
-                  <AlumniCompanyRow
-                    key={c.id}
-                    company={c}
-                    onDeleted={handleCompanyDeleted}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <CollapsibleListSection
+            label="Aziende esistenti"
+            totalCount={companiesList.length}
+            filteredCount={filteredCompanies.length}
+            open={companiesOpen}
+            onToggle={() => setCompaniesOpen(v => !v)}
+            search={companiesSearch}
+            onSearch={setCompaniesSearch}
+            emptyMessage="Nessuna azienda presente."
+          >
+            {filteredCompanies.map(c => (
+              <AlumniCompanyRow
+                key={c.id}
+                company={c}
+                onDeleted={handleCompanyDeleted}
+              />
+            ))}
+          </CollapsibleListSection>
 
         </div>
       </section>
