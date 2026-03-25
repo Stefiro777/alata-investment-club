@@ -18,24 +18,70 @@ function AcceptInviteForm() {
   const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
-    const token_hash = searchParams.get('token_hash')
-    const type = searchParams.get('type') ?? 'invite'
-
-    if (!token_hash) {
-      setTokenError('Invalid or expired invite link. Please request a new invitation.')
-      return
-    }
-
     const supabase = createClient()
-    supabase.auth
-      .verifyOtp({ token_hash, type: type as 'invite' })
-      .then(({ error }) => {
-        if (error) {
-          setTokenError(error.message)
-        } else {
+
+    // Debug
+    console.log('URL:', window.location.href)
+    console.log('Hash:', window.location.hash)
+    console.log('Search:', window.location.search)
+
+    // Parse hash fragment manually (not accessible via useSearchParams)
+    const hash = window.location.hash.substring(1)
+    const hashParams = new URLSearchParams(hash)
+
+    const token_hash = searchParams.get('token_hash')
+    const access_token = hashParams.get('access_token')
+    const refresh_token = hashParams.get('refresh_token') ?? ''
+    const type = searchParams.get('type') ?? hashParams.get('type') ?? 'invite'
+
+    console.log('token_hash:', token_hash)
+    console.log('access_token:', access_token ? 'present' : 'absent')
+    console.log('type:', type)
+
+    if (token_hash) {
+      // New Supabase format: ?token_hash=...&type=invite
+      supabase.auth
+        .verifyOtp({ token_hash, type: type as 'invite' })
+        .then(({ error }) => {
+          if (error) {
+            console.error('verifyOtp error:', error)
+            setTokenError(error.message)
+          } else {
+            setSessionReady(true)
+          }
+        })
+    } else if (access_token) {
+      // Old Supabase format: #access_token=...
+      supabase.auth
+        .setSession({ access_token, refresh_token })
+        .then(({ error }) => {
+          if (error) {
+            console.error('setSession error:', error)
+            setTokenError(error.message)
+          } else {
+            setSessionReady(true)
+          }
+        })
+    } else {
+      // No token found — wait briefly for onAuthStateChange in case
+      // the Supabase client parses the hash automatically
+      const timeout = setTimeout(() => {
+        setTokenError('Invalid or expired invite link. Please request a new invitation.')
+      }, 3000)
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        console.log('onAuthStateChange event:', event)
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          clearTimeout(timeout)
           setSessionReady(true)
         }
       })
+
+      return () => {
+        clearTimeout(timeout)
+        subscription.unsubscribe()
+      }
+    }
   }, [searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -90,7 +136,6 @@ function AcceptInviteForm() {
       {/* Right — form panel */}
       <div className="w-full md:w-1/2 bg-white flex items-center justify-center py-16 px-6 sm:px-12">
         <div className="w-full max-w-sm">
-          {/* Logo */}
           <div className="text-center mb-10">
             <Link href="/" className="inline-block">
               <div style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.15)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
@@ -107,7 +152,6 @@ function AcceptInviteForm() {
             <p className="text-[#6b7280] text-sm mt-1">Set a password to complete your registration.</p>
           </div>
 
-          {/* Form card */}
           <div className="bg-white p-8 border border-[#e5e5e5]">
             {tokenError ? (
               <div className="space-y-4">
