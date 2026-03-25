@@ -1,21 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createServerClient } from '@/lib/supabase-server'
 
 export async function POST(req: NextRequest) {
-  // Verify caller is an admin
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: adminRow } = await supabase
-    .from('admin_users')
-    .select('email')
-    .eq('email', user.email)
-    .maybeSingle()
-
-  if (!adminRow) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
   const { email } = await req.json()
   if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
@@ -24,12 +10,27 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const origin = req.headers.get('origin') ?? ''
-  const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${origin}/accept-invite`,
-  })
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? req.headers.get('origin') ?? ''
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  try {
+    console.log('Starting invite for:', email)
+    console.log('Redirect URL:', `${siteUrl}/accept-invite`)
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('Service key present:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
 
-  return NextResponse.json({ success: true })
+    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${siteUrl}/accept-invite`,
+    })
+    console.log('Supabase response:', JSON.stringify({ data, error }))
+
+    if (error) {
+      console.error('INVITE ERROR:', error.message, error.status, error.code, error)
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
 }
