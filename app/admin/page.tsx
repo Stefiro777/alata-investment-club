@@ -8,6 +8,7 @@ type Alumni = {
   role: string
   graduation_year: string | null
   linkedin_url: string | null
+  current_company: string | null
   created_at: string
 }
 
@@ -55,7 +56,7 @@ export default async function AdminPage() {
       .order('data_pubblicazione', { ascending: false }),
     supabase
       .from('alumni')
-      .select('id, name, role, graduation_year, linkedin_url, created_at')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, created_at')
       .order('created_at', { ascending: false }),
     supabase
       .from('alumni_companies')

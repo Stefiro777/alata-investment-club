@@ -25,6 +25,7 @@ type Alumni = {
   role: string
   graduation_year: string | null
   linkedin_url: string | null
+  current_company: string | null
   created_at: string
 }
 
@@ -578,6 +579,7 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
   const [role, setRole] = useState('')
   const [graduationYear, setGraduationYear] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
+  const [currentCompany, setCurrentCompany] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -596,6 +598,7 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
         role,
         graduation_year: graduationYear || null,
         linkedin_url: linkedinUrl || null,
+        current_company: currentCompany || null,
       })
       .select()
       .single()
@@ -610,6 +613,7 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
     setRole('')
     setGraduationYear('')
     setLinkedinUrl('')
+    setCurrentCompany('')
     setSuccess(true)
     setSubmitting(false)
     setTimeout(() => setSuccess(false), 3000)
@@ -677,6 +681,19 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
         </div>
       </div>
 
+      <div>
+        <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+          Current Company
+        </label>
+        <input
+          type="text"
+          value={currentCompany}
+          onChange={e => setCurrentCompany(e.target.value)}
+          placeholder="Goldman Sachs"
+          className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+        />
+      </div>
+
       {error && (
         <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
       )}
@@ -734,6 +751,9 @@ function AlumniRow({
           )}
         </div>
         <p className="text-xs text-[#6b7280] mt-0.5">{alumni.role}</p>
+        {alumni.current_company && (
+          <p className="text-xs text-[#9ca3af] mt-0.5">{alumni.current_company}</p>
+        )}
         {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
