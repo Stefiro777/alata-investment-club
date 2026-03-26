@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import MembersClient from './MembersClient'
+import type { Alumni, AlumniCompany } from '@/lib/types'
 
 const SUPERADMIN = 'finullistefano@gmail.com'
 
@@ -26,6 +27,8 @@ export default async function MembersPage() {
     { data: priceMasterRow },
     { data: priceCareerRow },
     { data: showAlumniRow },
+    { data: alumniRaw, error: alumniError },
+    { data: alumniCompaniesData },
   ] = await Promise.all([
     supabase.from('admin_users').select('email').order('email', { ascending: true }),
     supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
@@ -34,7 +37,24 @@ export default async function MembersPage() {
     supabase.from('settings').select('value').eq('key', 'price_master_orientation').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'price_career_orientation').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'show_alumni').maybeSingle(),
+    supabase
+      .from('alumni')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, order_index, created_at')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('alumni_companies')
+      .select('id, name, logo_url, website_url, created_at')
+      .order('created_at', { ascending: false }),
   ])
+
+  // Fallback if order_index column doesn't exist yet
+  const alumniData = alumniError
+    ? (await supabase
+        .from('alumni')
+        .select('id, name, role, graduation_year, linkedin_url, current_company, created_at')
+        .order('created_at', { ascending: true })).data
+    : alumniRaw
 
   const applicationsOpen = appSettings?.value === 'true'
   const showPrices = showPricesRow ? showPricesRow.value === 'true' : true
@@ -84,6 +104,8 @@ export default async function MembersPage() {
         priceMaster={priceMaster}
         priceCareer={priceCareer}
         showAlumni={showAlumni}
+        alumni={(alumniData ?? []) as Alumni[]}
+        alumniCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]}
       />
     </div>
   )

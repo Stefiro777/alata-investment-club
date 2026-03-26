@@ -1,18 +1,16 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import LogoutButton from './LogoutButton'
-import ResourcesSection from './ResourcesSection'
+import DashboardClient from './DashboardClient'
+import type { Resource } from '@/lib/types'
+
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   const { data: adminRow } = await supabase
     .from('admin_users')
@@ -22,16 +20,33 @@ export default async function DashboardPage() {
 
   const isAdmin = !!adminRow
 
+  const { data: resourcesData } = await supabase
+    .from('resources')
+    .select('id, title, description, url, category, subcategory, subcategory_order, is_folder, order_index, created_at')
+    .order('order_index', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: true })
+
+  const resources = (resourcesData ?? []) as Resource[]
+
+  const displayName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined) ??
+    user.email?.split('@')[0] ??
+    'Member'
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Top bar */}
-      <div className="bg-[#1a4a3a] text-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-5 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="font-serif text-xl font-medium text-white">Members Area</h1>
-            <p className="text-white/50 text-xs mt-0.5">{user.email}</p>
+      <div className="bg-[#1a4a3a] text-white sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <a href="/" className="font-serif font-bold text-white text-base leading-tight hover:text-white/80 transition-colors">
+              Alata Investment Club
+            </a>
+            <span className="text-white/30">·</span>
+            <span className="text-white/60 text-xs tracking-wide uppercase">Members Area</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {isAdmin && (
               <a
                 href="/admin"
@@ -45,10 +60,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-        <ResourcesSection />
-      </div>
+      <DashboardClient displayName={displayName} resources={resources} />
     </div>
   )
 }

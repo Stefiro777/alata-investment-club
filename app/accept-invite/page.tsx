@@ -10,6 +10,7 @@ function AcceptInviteForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const [fullName, setFullName] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -99,7 +100,10 @@ function AcceptInviteForm() {
 
     setLoading(true)
     const supabase = createClient()
-    const { error: updateError } = await supabase.auth.updateUser({ password })
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
+      data: { full_name: fullName.trim() || undefined },
+    })
 
     if (updateError) {
       setError(updateError.message)
@@ -174,6 +178,21 @@ function AcceptInviteForm() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label htmlFor="fullName" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    id="fullName"
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="John Doe"
+                    className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                  />
+                </div>
+
                 <div>
                   <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
                     Password

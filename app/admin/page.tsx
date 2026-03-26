@@ -1,16 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import AdminClient from './AdminClient'
-import type { Alumni } from '@/lib/types'
-
-
-type AlumniCompany = {
-  id: string
-  name: string
-  logo_url: string
-  website_url: string | null
-  created_at: string
-}
+import type { Resource } from '@/lib/types'
 
 type Contenuto = {
   id: number
@@ -40,29 +31,18 @@ export default async function AdminPage() {
 
   if (!adminRow) redirect('/login')
 
-  const [{ data: items }, { data: alumniRaw, error: alumniError }, { data: alumniCompaniesData }] = await Promise.all([
+  const [{ data: items }, { data: resourcesData }] = await Promise.all([
     supabase
       .from('contenuti')
       .select('*')
       .in('tipo', ['evento', 'news', 'aggiornamento'])
       .order('data_pubblicazione', { ascending: false }),
     supabase
-      .from('alumni')
-      .select('id, name, role, graduation_year, linkedin_url, current_company, order_index, created_at')
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('alumni_companies')
-      .select('id, name, logo_url, website_url, created_at')
-      .order('created_at', { ascending: false }),
+      .from('resources')
+      .select('id, title, description, url, category, subcategory, subcategory_order, is_folder, order_index, created_at')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
   ])
-
-  // Fallback if order_index column doesn't exist yet
-  const alumniData = alumniError
-    ? (await supabase
-        .from('alumni')
-        .select('id, name, role, graduation_year, linkedin_url, current_company, created_at')
-        .order('created_at', { ascending: false })).data
-    : alumniRaw
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -98,8 +78,7 @@ export default async function AdminPage() {
 
       <AdminClient
         items={(items ?? []) as Contenuto[]}
-        alumni={(alumniData ?? []) as Alumni[]}
-        alumniCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]}
+        resources={(resourcesData ?? []) as Resource[]}
       />
     </div>
   )
