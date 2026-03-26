@@ -16,7 +16,7 @@ const services = [
     description:
       'Receive detailed, personalised feedback on your CV from our members with hands-on experience in finance, banking, and consulting. We help you craft a compelling, competitive curriculum that stands out to top recruiters.',
     price: '€29,99',
-    calendlyUrl: '#', // <-- replace with your Calendly link
+    calendlyUrl: 'https://calendly.com/alatabrixiaic/30min',
     features: [
       'Full structure and layout review',
       'Content and language feedback',
@@ -31,7 +31,7 @@ const services = [
     description:
       "Get guidance from those who have already navigated the graduate school path in finance. We help you identify the most suitable master's programme for your profile and professional goals, in Italy and abroad.",
     price: '€49,99',
-    calendlyUrl: '#', // <-- replace with your Calendly link
+    calendlyUrl: 'https://calendly.com/alatabrixiaic/30min',
     features: [
       '30-minute 1:1 session',
       'Personal profile analysis',
@@ -46,7 +46,7 @@ const services = [
     description:
       'A personalised consulting session to define your professional roadmap in the financial sector. From choosing your first internship to building your network, we help you take the right steps at the right time.',
     price: '€49,99',
-    calendlyUrl: '#', // <-- replace with your Calendly link
+    calendlyUrl: 'https://calendly.com/alatabrixiaic/30min',
     features: [
       '30-minute 1:1 session',
       'Professional goals definition',
