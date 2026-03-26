@@ -1041,7 +1041,7 @@ export default function AdminClient({
   const [newsSearch, setNewsSearch] = useState('')
   const [resourcesOpen, setResourcesOpen] = useState(false)
   const [resourcesSearch, setResourcesSearch] = useState('')
-  const [partnersOpen, setPartnersOpen] = useState(false)
+  const [partnersOpen, setPartnersOpen] = useState(true)
   const [partnersList, setPartnersList] = useState<Partner[]>(initialPartners)
 
   const filteredItems = newsSearch
