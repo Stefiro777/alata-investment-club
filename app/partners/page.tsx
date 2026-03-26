@@ -12,7 +12,7 @@ export default function PartnersPage() {
           src="/teatro.jpg"
           fill
           alt="Teatro"
-          style={{ objectFit: 'cover', objectPosition: 'center 60%', filter: 'grayscale(100%)', zIndex: 0 }}
+          style={{ objectFit: 'cover', objectPosition: 'center 70%', filter: 'grayscale(100%)', zIndex: 0 }}
           priority
         />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.72)', zIndex: 1 }} />
