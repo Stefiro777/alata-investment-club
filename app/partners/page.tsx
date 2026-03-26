@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import PartnersMarquee from '@/app/components/PartnersMarquee'
 
 export const dynamic = 'force-dynamic'
@@ -6,16 +7,26 @@ export default function PartnersPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-[#1a4a3a] text-white py-24 sm:py-32">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Partnerships</p>
-          <h1 className="font-serif text-5xl sm:text-6xl font-bold leading-tight mb-6">
-            Partner with Alata
-          </h1>
-          <div className="w-16 h-px bg-white/30 mb-6" />
-          <p className="text-white/70 text-lg sm:text-xl max-w-2xl leading-relaxed">
-            Build your brand where the next generation of finance professionals starts.
-          </p>
+      <section className="text-white" style={{ position: 'relative', minHeight: '600px', overflow: 'hidden' }}>
+        <Image
+          src="/teatro.jpg"
+          fill
+          alt="Teatro"
+          style={{ objectFit: 'cover', objectPosition: 'center', zIndex: 0 }}
+          priority
+        />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.72)', zIndex: 1 }} />
+        <div className="py-24 sm:py-32" style={{ position: 'relative', zIndex: 2 }}>
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Partnerships</p>
+            <h1 className="font-serif text-5xl sm:text-6xl font-bold leading-tight mb-6">
+              Partner with Alata
+            </h1>
+            <div className="w-16 h-px bg-white/30 mb-6" />
+            <p className="text-white/70 text-lg sm:text-xl max-w-2xl leading-relaxed">
+              Build your brand where the next generation of finance professionals starts.
+            </p>
+          </div>
         </div>
       </section>
 
