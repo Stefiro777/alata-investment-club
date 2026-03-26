@@ -101,6 +101,7 @@ export default async function HomePage() {
       {/* Description — white band */}
       <section className="bg-white py-16 sm:py-20 border-b border-[#e5e5e5]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-6">Who We Are</h2>
           <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-3xl">
             Alata Investment Club is a university association of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
           </p>
@@ -108,6 +109,50 @@ export default async function HomePage() {
       </section>
 
       <StatsSection />
+
+      {/* About — Vision + Mission */}
+      <div className="bg-white grid md:grid-cols-2 divide-y md:divide-y-0">
+        <div className="px-8 lg:px-14 py-20 sm:py-24">
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+            Our Vision
+          </h2>
+          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5" />
+          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
+            A community where ambition meets opportunity, regardless of where you start.
+          </p>
+        </div>
+        <div className="px-8 lg:px-14 py-20 sm:py-24 relative before:hidden md:before:block before:absolute before:left-0 before:top-10 before:bottom-10 before:w-px before:bg-black/10">
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+            Our Mission
+          </h2>
+          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5" />
+          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
+            Alata was born from a simple idea: that the best conversations about finance happen between people who are genuinely curious. We bring together the most ambitious students at UniBS to share knowledge, challenge each other, and grow, inside and outside the classroom.
+          </p>
+        </div>
+      </div>
+
+      {/* About — What We Value */}
+      <section className="bg-[#f5f5f5] pt-10 sm:pt-12 pb-10 sm:pb-12">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8">
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+            What We Value
+          </h2>
+          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-10" />
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { label: 'Community', body: 'More than a club, a network built on trust. The relationships you build here last well beyond your degree.' },
+              { label: 'Drive', body: "We attract people who don't wait to be told what to do. Taking initiative isn't a buzzword here, it's the entry requirement." },
+              { label: 'Ambition', body: "We think big about what a university club can be. And we're building accordingly." },
+            ].map(({ label, body }) => (
+              <div key={label} className="bg-[#1a4a3a] p-8">
+                <h3 className="font-serif text-2xl font-bold text-white mb-3">{label}</h3>
+                <p className="text-white/65 text-sm leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* News & Events */}
       <section className="py-20 sm:py-28 bg-white">

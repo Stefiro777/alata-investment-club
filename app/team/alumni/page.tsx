@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import AlumniGrid from './AlumniGrid'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +13,7 @@ type Alumni = {
   graduation_year: string | null
   linkedin_url: string | null
   current_company: string | null
+  order_index?: number | null
 }
 
 type AlumniCompany = {
@@ -21,66 +23,6 @@ type AlumniCompany = {
   website_url: string | null
 }
 
-function LinkedInIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="20" height="20" rx="3" fill="white"/>
-      <path d="M5.5 8H7.5V14.5H5.5V8ZM6.5 7C5.84 7 5.5 6.56 5.5 6C5.5 5.44 5.85 5 6.51 5C7.17 5 7.5 5.44 7.5 6C7.5 6.56 7.16 7 6.5 7ZM14.5 14.5H12.5V11C12.5 10.17 12.19 9.62 11.47 9.62C10.92 9.62 10.6 10 10.44 10.36C10.38 10.51 10.37 10.72 10.37 10.93V14.5H8.37V8H10.37V8.89C10.66 8.43 11.18 7.78 12.37 7.78C13.85 7.78 14.5 8.78 14.5 10.35V14.5Z" fill="#1a4a3a"/>
-    </svg>
-  )
-}
-
-function AlumniCard({ alumni }: { alumni: Alumni }) {
-  const initials = alumni.name.split(' ').map(n => n[0]).join('')
-  return (
-    <div
-      className="bg-white overflow-hidden flex flex-col"
-      style={{ border: '1px solid #1a4a3a' }}
-    >
-      {/* Initials area */}
-      <div className="flex justify-center items-center py-6 bg-[#f5f5f5]">
-        <div
-          className="w-16 h-16 rounded-full bg-white flex items-center justify-center"
-          style={{ border: '1px solid #1a4a3a' }}
-        >
-          <span className="font-serif text-xl font-bold text-[#1a4a3a]">{initials}</span>
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="p-4 bg-[#1a4a3a] flex-grow">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="font-serif text-base font-bold text-white leading-tight">{alumni.name}</h3>
-            <p className="text-xs uppercase tracking-widest text-white/70 mt-1">{alumni.role}</p>
-            {alumni.graduation_year && (
-              <p className="text-xs text-white/50 mt-1.5">Class of {alumni.graduation_year}</p>
-            )}
-            {alumni.current_company && (
-              <p className="text-xs text-white/60 mt-1.5 flex items-center gap-1">
-                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0H5m14 0H5m0 0H3" />
-                </svg>
-                {alumni.current_company}
-              </p>
-            )}
-          </div>
-          {alumni.linkedin_url && (
-            <a
-              href={alumni.linkedin_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 opacity-100 hover:opacity-70 transition-opacity mt-0.5"
-              aria-label={`${alumni.name} on LinkedIn`}
-            >
-              <LinkedInIcon />
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default async function AlumniPage() {
   const supabase = await createClient()
@@ -95,16 +37,24 @@ export default async function AlumniPage() {
     redirect('/team')
   }
 
-  const [{ data: alumniList }, { data: companiesData }] = await Promise.all([
+  const [{ data: alumniData, error: alumniError }, { data: companiesData }] = await Promise.all([
     supabase
       .from('alumni')
-      .select('id, name, role, graduation_year, linkedin_url, current_company')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, order_index')
       .order('created_at', { ascending: false }),
     supabase
       .from('alumni_companies')
       .select('id, name, logo_url, website_url')
       .order('created_at', { ascending: false }),
   ])
+
+  // Fallback if order_index column doesn't exist yet (migration not yet run)
+  const alumniList = alumniError
+    ? (await supabase
+        .from('alumni')
+        .select('id, name, role, graduation_year, linkedin_url, current_company')
+        .order('created_at', { ascending: false })).data
+    : alumniData
 
   const alumni = (alumniList ?? []) as Alumni[]
   const companies = (companiesData ?? []) as AlumniCompany[]
@@ -153,11 +103,7 @@ export default async function AlumniPage() {
               No alumni to display yet.
             </p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {alumni.map(a => (
-                <AlumniCard key={a.id} alumni={a} />
-              ))}
-            </div>
+            <AlumniGrid alumni={alumni} />
           )}
         </div>
       </section>

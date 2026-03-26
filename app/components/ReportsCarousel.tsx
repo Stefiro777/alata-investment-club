@@ -113,6 +113,7 @@ const CARDS_PER_PAGE = 3
 export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
+  const [fading, setFading] = useState(false)
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
@@ -129,12 +130,22 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
   const currentCards = filtered.slice(safePage * CARDS_PER_PAGE, (safePage + 1) * CARDS_PER_PAGE)
 
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value)
-    setPage(0)
+    setFading(true)
+    setTimeout(() => {
+      setSearch(e.target.value)
+      setPage(0)
+      setFading(false)
+    }, 220)
   }
 
   function goTo(p: number) {
-    setPage(Math.max(0, Math.min(totalPages - 1, p)))
+    const target = Math.max(0, Math.min(totalPages - 1, p))
+    if (target === safePage) return
+    setFading(true)
+    setTimeout(() => {
+      setPage(target)
+      setFading(false)
+    }, 220)
   }
 
   return (
@@ -167,8 +178,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
         <>
           {/* Cards grid */}
           <div
-            key={`${safePage}-${search}`}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-card-enter"
+            className={`grid grid-cols-1 sm:grid-cols-3 gap-6 transition-opacity ease-in-out duration-[220ms] ${fading ? 'opacity-0' : 'opacity-100'}`}
           >
             {currentCards.map((item) => (
               <ReportCard key={item.id} item={item} />

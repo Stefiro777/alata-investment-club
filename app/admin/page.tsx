@@ -48,7 +48,7 @@ export default async function AdminPage() {
 
   if (!adminRow) redirect('/login')
 
-  const [{ data: items }, { data: alumniData }, { data: alumniCompaniesData }] = await Promise.all([
+  const [{ data: items }, { data: alumniRaw, error: alumniError }, { data: alumniCompaniesData }] = await Promise.all([
     supabase
       .from('contenuti')
       .select('*')
@@ -56,13 +56,21 @@ export default async function AdminPage() {
       .order('data_pubblicazione', { ascending: false }),
     supabase
       .from('alumni')
-      .select('id, name, role, graduation_year, linkedin_url, current_company, created_at')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, order_index, created_at')
       .order('created_at', { ascending: false }),
     supabase
       .from('alumni_companies')
       .select('id, name, logo_url, website_url, created_at')
       .order('created_at', { ascending: false }),
   ])
+
+  // Fallback if order_index column doesn't exist yet
+  const alumniData = alumniError
+    ? (await supabase
+        .from('alumni')
+        .select('id, name, role, graduation_year, linkedin_url, current_company, created_at')
+        .order('created_at', { ascending: false })).data
+    : alumniRaw
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">

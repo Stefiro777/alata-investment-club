@@ -4,7 +4,8 @@
       "Bash(node -e \":*)",
       "Bash(grep -r \"SERVICE_ROLE\\\\|service_role\\\\|SUPABASE_SERVICE\" C:UsersfinulDesktopalata-investment-club --include=*.env* --include=*.local)",
       "Bash(npm run:*)",
-      "Bash(vercel --prod)"
+      "Bash(vercel --prod)",
+      "Bash(find node_modules/@supabase/postgrest-js -name *.d.ts)"
     ]
   }
 }

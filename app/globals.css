@@ -30,6 +30,10 @@
   animation: cardEnter 0.25s ease-out both;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

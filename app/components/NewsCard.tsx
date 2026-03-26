@@ -194,15 +194,6 @@ export default function NewsCard({ item }: { item: NewsItem }) {
                 </svg>
               </a>
             )}
-            <button
-              onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase relative after:absolute after:bottom-[-2px] after:left-0 after:h-px after:w-0 after:bg-[#1a4a3a] hover:after:w-full after:transition-all after:duration-300 hover:gap-3 transition-all duration-150 ml-auto"
-            >
-              Read more
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </button>
           </div>
         </div>
       </article>

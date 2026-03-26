@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import PhotoUpload, { PhotoEntry } from './PhotoUpload'
@@ -26,6 +26,7 @@ type Alumni = {
   graduation_year: string | null
   linkedin_url: string | null
   current_company: string | null
+  order_index: number | null
   created_at: string
 }
 
@@ -717,9 +718,15 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
 function AlumniRow({
   alumni,
   onDeleted,
+  dragHandlers,
 }: {
   alumni: Alumni
   onDeleted: (id: string) => void
+  dragHandlers?: {
+    onDragStart: () => void
+    onDragEnter: () => void
+    onDragEnd: () => void
+  }
 }) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
@@ -740,7 +747,23 @@ function AlumniRow({
   }
 
   return (
-    <div className="bg-white px-6 py-4 flex items-center justify-between gap-6 border-b border-black/5 last:border-b-0">
+    <div
+      className="bg-white px-4 py-4 flex items-center gap-3 border-b border-black/5 last:border-b-0"
+      draggable={!!dragHandlers}
+      onDragStart={dragHandlers?.onDragStart}
+      onDragEnter={dragHandlers?.onDragEnter}
+      onDragEnd={dragHandlers?.onDragEnd}
+      onDragOver={e => e.preventDefault()}
+    >
+      {dragHandlers && (
+        <div className="cursor-grab text-[#9ca3af] flex-shrink-0 select-none px-1" title="Trascina per riordinare">
+          <svg width="12" height="20" viewBox="0 0 12 20" fill="currentColor">
+            <circle cx="3" cy="4" r="1.5"/><circle cx="9" cy="4" r="1.5"/>
+            <circle cx="3" cy="10" r="1.5"/><circle cx="9" cy="10" r="1.5"/>
+            <circle cx="3" cy="16" r="1.5"/><circle cx="9" cy="16" r="1.5"/>
+          </svg>
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-serif text-base font-medium text-[#0a0a0a]">{alumni.name}</p>
@@ -1085,6 +1108,42 @@ export default function AdminClient({ items: initialItems, alumni: initialAlumni
     setAlumniList(prev => prev.filter(a => a.id !== id))
   }
 
+  const dragSrcRef = useRef<number | null>(null)
+  const alumniListRef = useRef<Alumni[]>(alumniList)
+  alumniListRef.current = alumniList
+  const [savingOrder, setSavingOrder] = useState(false)
+
+  function handleAlumniDragStart(idx: number) {
+    dragSrcRef.current = idx
+  }
+
+  function handleAlumniDragEnter(idx: number) {
+    const src = dragSrcRef.current
+    if (src === null || src === idx) return
+    dragSrcRef.current = idx
+    setAlumniList(prev => {
+      const next = [...prev]
+      const [moved] = next.splice(src, 1)
+      next.splice(idx, 0, moved)
+      return next
+    })
+  }
+
+  async function handleAlumniDragEnd() {
+    dragSrcRef.current = null
+    const currentList = alumniListRef.current
+    setSavingOrder(true)
+    const supabase = createClient()
+    const results = await Promise.all(
+      currentList.map((a, i) =>
+        supabase.from('alumni').update({ order_index: i }).eq('id', a.id)
+      )
+    )
+    const failed = results.find(r => r.error)
+    if (failed?.error) console.error('[alumni order] save failed:', failed.error.message)
+    setSavingOrder(false)
+  }
+
   function handleCompanyInserted(c: AlumniCompany) {
     setCompaniesList(prev => [c, ...prev])
   }
@@ -1169,11 +1228,24 @@ export default function AdminClient({ items: initialItems, alumni: initialAlumni
             onSearch={setAlumniSearch}
             emptyMessage="Nessun alumni presente."
           >
-            {filteredAlumni.map(a => (
+            {alumniSearch && (
+              <p className="text-xs text-[#9ca3af] px-1 pb-2">
+                Drag-and-drop disabilitato durante la ricerca.
+              </p>
+            )}
+            {savingOrder && (
+              <p className="text-xs text-[#1a4a3a] px-1 pb-2">Salvataggio ordine…</p>
+            )}
+            {filteredAlumni.map((a, idx) => (
               <AlumniRow
                 key={a.id}
                 alumni={a}
                 onDeleted={handleAlumniDeleted}
+                dragHandlers={!alumniSearch ? {
+                  onDragStart: () => handleAlumniDragStart(idx),
+                  onDragEnter: () => handleAlumniDragEnter(idx),
+                  onDragEnd: handleAlumniDragEnd,
+                } : undefined}
               />
             ))}
           </CollapsibleListSection>
