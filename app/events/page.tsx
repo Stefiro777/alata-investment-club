@@ -16,8 +16,8 @@ export default async function EventsPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative min-h-[440px] text-white flex items-center overflow-hidden">
-        <Image src="/universita.jpg" alt="" fill className="object-cover grayscale" style={{ objectPosition: 'center 20%' }} priority />
+      <section className="relative min-h-[500px] text-white flex items-center overflow-hidden">
+        <Image src="/duomo.jpg" alt="" fill className="object-cover grayscale" style={{ objectPosition: 'center 50%' }} priority />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">

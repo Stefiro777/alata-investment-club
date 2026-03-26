@@ -46,7 +46,7 @@ export default async function HomePage() {
       <section className="text-white" style={{ position: 'relative', minHeight: '600px', overflow: 'hidden' }}>
         {/* Background photo */}
         <Image
-          src="/loggia.jpg"
+          src="/loggia.jpeg"
           fill
           alt="Loggia"
           style={{ objectFit: 'cover', filter: 'grayscale(100%)', zIndex: 0 }}
