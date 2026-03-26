@@ -76,7 +76,7 @@ export default async function CareerServicePage() {
   return (
     <div>
       {/* Header — background image */}
-      <section className="relative min-h-[500px] lg:min-h-[650px] text-white flex items-center overflow-hidden">
+      <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
         <Image src="/vittoria.jpeg" alt="" fill className="object-cover object-top grayscale" priority />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div className="relative z-10 w-full py-20 sm:py-28">

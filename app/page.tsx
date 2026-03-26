@@ -44,7 +44,7 @@ export default async function HomePage() {
   return (
     <div>
       {/* Hero — background image + overlay */}
-      <section className="text-white" className="relative overflow-hidden min-h-[600px] lg:min-h-[750px]" style={{ position: 'relative' }}>
+      <section className="text-white" className="relative overflow-hidden min-h-[600px] lg:min-h-[710px]" style={{ position: 'relative' }}>
         {/* Background photo */}
         <Image
           src="/loggia.jpg"
