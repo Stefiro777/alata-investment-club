@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-type NavLink = { href: string; label: string }
+type NavLink = { href: string; label: string; subLinks?: { href: string; label: string }[] }
 
 export default function MobileMenu({ links }: { links: NavLink[] }) {
   const [open, setOpen] = useState(false)
@@ -29,16 +29,34 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
       {open && (
         <div className="absolute top-16 left-0 right-0 bg-[#1a4a3a] border-t border-white/10 shadow-lg z-50">
           <div className="px-6 py-3 flex flex-col">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="text-white/80 hover:text-white py-3 text-sm font-medium tracking-wide transition-colors border-b border-white/10 last:border-0"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {links.map((link) =>
+              link.subLinks ? (
+                <div key={link.href} className="border-b border-white/10">
+                  <span className="block py-3 text-sm font-medium tracking-wide text-white/50 uppercase text-xs">
+                    {link.label}
+                  </span>
+                  {link.subLinks.map(sub => (
+                    <Link
+                      key={sub.href}
+                      href={sub.href}
+                      onClick={() => setOpen(false)}
+                      className="block pl-3 py-2.5 text-sm text-white/80 hover:text-white tracking-wide transition-colors"
+                    >
+                      {sub.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="text-white/80 hover:text-white py-3 text-sm font-medium tracking-wide transition-colors border-b border-white/10 last:border-0"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </div>
         </div>
       )}

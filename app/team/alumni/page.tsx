@@ -130,7 +130,6 @@ export default async function AlumniPage() {
                       href={company.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="opacity-70 hover:opacity-100 transition-opacity"
                       aria-label={company.name}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -145,7 +144,7 @@ export default async function AlumniPage() {
                     <img
                       src={company.logo_url}
                       alt={company.name}
-                      className="h-12 w-auto object-contain max-w-[160px] opacity-70"
+                      className="h-12 w-auto object-contain max-w-[160px]"
                     />
                   )}
                 </div>

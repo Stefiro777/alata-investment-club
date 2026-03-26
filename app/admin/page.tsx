@@ -73,18 +73,24 @@ export default async function AdminPage() {
             <h1 className="font-serif text-xl font-medium">Admin — Content Management</h1>
             <p className="text-white/50 text-xs mt-0.5">{user.email}</p>
           </div>
-          <div className="flex items-center justify-between gap-8 flex-1 ml-8">
+          <div className="flex items-center gap-3 ml-8">
             <a
-              href="/dashboard"
+              href="/admin/team"
               className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
             >
-              Back to Dashboard
+              Team
             </a>
             <a
               href="/admin/members"
               className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
             >
-              Members Management
+              Members
+            </a>
+            <a
+              href="/dashboard"
+              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
+            >
+              Dashboard
             </a>
           </div>
         </div>

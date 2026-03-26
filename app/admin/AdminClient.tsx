@@ -795,6 +795,17 @@ function AlumniRow({
 
 // ── Alumni company insert form ───────────────────────────────────────────────
 
+async function uploadAlumniLogo(file: File): Promise<{ url: string } | { error: string }> {
+  const supabase = createClient()
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name.replace(/\s+/g, '_')}`
+  const { data, error } = await supabase.storage
+    .from('alumni-logos')
+    .upload(path, file, { upsert: false })
+  if (error) return { error: error.message }
+  const { data: { publicUrl } } = supabase.storage.from('alumni-logos').getPublicUrl(data.path)
+  return { url: publicUrl }
+}
+
 function AlumniCompanyInsertForm({ onInserted }: { onInserted: (c: AlumniCompany) => void }) {
   const router = useRouter()
   const [name, setName] = useState('')
@@ -803,6 +814,24 @@ function AlumniCompanyInsertForm({ onInserted }: { onInserted: (c: AlumniCompany
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const logoFileRef = useRef<HTMLInputElement>(null)
+
+  async function handleLogoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadError(null)
+    const result = await uploadAlumniLogo(file)
+    if ('error' in result) {
+      setUploadError(result.error)
+    } else {
+      setLogoUrl(result.url)
+    }
+    setUploading(false)
+    if (logoFileRef.current) logoFileRef.current.value = ''
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -873,14 +902,26 @@ function AlumniCompanyInsertForm({ onInserted }: { onInserted: (c: AlumniCompany
         <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
           URL logo <span className="text-red-500">*</span>
         </label>
-        <input
-          type="text"
-          required
-          value={logoUrl}
-          onChange={e => setLogoUrl(e.target.value)}
-          placeholder="https://... (link diretto all'immagine)"
-          className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-        />
+        <div className="flex gap-2">
+          <input
+            type="text"
+            required
+            value={logoUrl}
+            onChange={e => setLogoUrl(e.target.value)}
+            placeholder="https://... oppure carica dal PC"
+            className="flex-1 px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          />
+          <button
+            type="button"
+            onClick={() => logoFileRef.current?.click()}
+            disabled={uploading}
+            className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-4 py-3 transition-colors duration-150 disabled:opacity-50 whitespace-nowrap"
+          >
+            {uploading ? 'Uploading…' : 'Upload'}
+          </button>
+          <input ref={logoFileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoFile} />
+        </div>
+        {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
         {logoUrl && (
           <div className="mt-2 p-3 border border-[#e5e5e5] bg-[#f9f9f7] inline-flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}

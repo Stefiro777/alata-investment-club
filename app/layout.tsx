@@ -25,11 +25,14 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.ico' },
 }
 
-const navLinks = [
+const navLinks: { href: string; label: string; subLinks?: { href: string; label: string }[] }[] = [
   { href: '/', label: 'About' },
   { href: '/reports', label: 'Reports' },
   { href: '/events', label: 'Events' },
-  { href: '/team', label: 'Team' },
+  { href: '/team', label: 'Team', subLinks: [
+    { href: '/team', label: 'Board of Directors' },
+    { href: '/team/alumni', label: 'Alumni' },
+  ]},
   { href: '/career-service', label: 'Career Service' },
   { href: '/join-us', label: 'Join Us' },
   { href: '/dashboard', label: 'Reserved Area' },
@@ -87,19 +90,41 @@ export default function RootLayout({
 
               {/* Desktop nav */}
               <div className="hidden md:flex items-center gap-8">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-150 ${
-                      link.label === 'Team' || link.label === 'Career Service'
-                        ? 'font-bold'
-                        : 'font-medium'
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {navLinks.map((link) =>
+                  link.subLinks ? (
+                    <div key={link.href} className="relative group">
+                      <button className={`flex items-center gap-1 text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-150 ${link.label === 'Team' ? 'font-bold' : 'font-medium'}`}>
+                        {link.label}
+                        <svg className="w-3 h-3 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 hidden group-hover:block z-50">
+                        <div className="bg-[#123a2d] border border-white/10 shadow-xl min-w-[190px] py-1">
+                          {link.subLinks.map(sub => (
+                            <Link
+                              key={sub.href}
+                              href={sub.href}
+                              className="block px-5 py-2.5 text-white/75 hover:text-white hover:bg-white/10 text-sm tracking-wide transition-colors"
+                            >
+                              {sub.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-150 ${
+                        link.label === 'Career Service' ? 'font-bold' : 'font-medium'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                )}
               </div>
 
               {/* Mobile menu */}

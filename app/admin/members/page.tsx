@@ -52,18 +52,24 @@ export default async function MembersPage() {
             <h1 className="font-serif text-xl font-medium">Admin — Members Management</h1>
             <p className="text-white/50 text-xs mt-0.5">{user.email}</p>
           </div>
-          <div className="flex items-center justify-between gap-8 flex-1 ml-8">
-            <a
-              href="/dashboard"
-              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
-            >
-              Back to Dashboard
-            </a>
+          <div className="flex items-center gap-3 ml-8">
             <a
               href="/admin"
               className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
             >
-              Content Management
+              Content
+            </a>
+            <a
+              href="/admin/team"
+              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
+            >
+              Team
+            </a>
+            <a
+              href="/dashboard"
+              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
+            >
+              Dashboard
             </a>
           </div>
         </div>
