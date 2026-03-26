@@ -241,6 +241,8 @@ function AlumniList({
   listRef.current = list
 
   const dragIndex = useRef<number | null>(null)
+  const [listOpen, setListOpen] = useState(false)
+  const [search, setSearch] = useState('')
 
   function onDragStart(index: number) {
     dragIndex.current = index
@@ -274,29 +276,78 @@ function AlumniList({
     setList(prev => prev.filter(x => x.id !== id))
   }
 
+  const filtered = search.trim()
+    ? list.filter(a =>
+        a.name.toLowerCase().includes(search.toLowerCase()) ||
+        a.role.toLowerCase().includes(search.toLowerCase()) ||
+        (a.current_company ?? '').toLowerCase().includes(search.toLowerCase())
+      )
+    : list
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <AlumniInsertForm onInserted={handleInserted} />
-      <div className="bg-black/5 rounded-sm">
-        {list.length === 0 ? (
-          <div className="bg-white px-6 py-8 text-center text-sm text-[#6b7280]">No alumni yet.</div>
-        ) : (
-          list.map((a, i) => (
-            <div
-              key={a.id}
-              draggable
-              onDragStart={() => onDragStart(i)}
-              onDragOver={e => e.preventDefault()}
-              onDrop={() => onDrop(i)}
-            >
-              <AlumniRow
-                alumni={a}
-                onUpdated={handleUpdated}
-                onDeleted={handleDeleted}
-              />
-            </div>
-          ))
-        )}
+
+      {/* Toggle header */}
+      <button
+        type="button"
+        onClick={() => setListOpen(v => !v)}
+        className="flex items-center gap-3 w-full text-left group border border-black/10 bg-white px-4 py-3 hover:border-[#1a4a3a] transition-colors duration-150"
+      >
+        <span className="text-sm font-medium text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors flex-1">
+          Alumni ({list.length})
+        </span>
+        <svg
+          className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0"
+          style={{ transform: listOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Collapsible body */}
+      <div style={{ display: 'grid', gridTemplateRows: listOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+        <div style={{ overflow: 'hidden' }}>
+          {/* Search */}
+          <div className="relative mb-3">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name, role or company…"
+              className="w-full pl-9 pr-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
+            />
+          </div>
+
+          <div className="bg-black/5 rounded-sm">
+            {filtered.length === 0 ? (
+              <div className="bg-white px-6 py-8 text-center text-sm text-[#6b7280]">
+                {search.trim() ? 'No results.' : 'No alumni yet.'}
+              </div>
+            ) : (
+              filtered.map((a, i) => (
+                <div
+                  key={a.id}
+                  draggable={!search.trim()}
+                  onDragStart={!search.trim() ? () => onDragStart(i) : undefined}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={!search.trim() ? () => onDrop(i) : undefined}
+                >
+                  <AlumniRow
+                    alumni={a}
+                    onUpdated={handleUpdated}
+                    onDeleted={handleDeleted}
+                  />
+                </div>
+              ))
+            )}
+          </div>
+          <div className="pb-1" />
+        </div>
       </div>
     </div>
   )

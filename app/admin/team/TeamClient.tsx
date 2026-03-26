@@ -354,6 +354,8 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
   const dragSrcRef = useRef<string | null>(null)
   const [savingOrder, setSavingOrder] = useState(false)
   const [orderSaved, setOrderSaved] = useState(false)
+  const [listOpen, setListOpen] = useState(false)
+  const [search, setSearch] = useState('')
 
   function onDragStart(_e: React.DragEvent, id: string) {
     dragSrcRef.current = id
@@ -406,34 +408,80 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
 
   const dragHandlers = { onDragStart, onDragOver, onDrop }
 
+  const filtered = search.trim()
+    ? members.filter(m =>
+        m.name.toLowerCase().includes(search.toLowerCase()) ||
+        m.role.toLowerCase().includes(search.toLowerCase())
+      )
+    : members
+
   return (
     <section>
-      <div className="flex items-center gap-4 mb-8">
-        <div>
-          <h2 className="font-serif text-2xl font-bold text-[#0a0a0a]">{title}</h2>
-          <div className="w-10 h-0.5 bg-[#1a4a3a] mt-2" />
-        </div>
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-4">
+        <button
+          type="button"
+          onClick={() => setListOpen(v => !v)}
+          className="flex items-center gap-3 group text-left"
+        >
+          <div>
+            <h2 className="font-serif text-2xl font-bold text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors">
+              {title}
+              <span className="ml-2 text-base font-normal text-[#9ca3af]">({members.length})</span>
+            </h2>
+            <div className="w-10 h-0.5 bg-[#1a4a3a] mt-2" />
+          </div>
+          <svg
+            className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0 mt-1"
+            style={{ transform: listOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
         {savingOrder && <span className="text-xs text-[#6b7280]">Saving order…</span>}
         {orderSaved && <span className="text-xs text-[#1a4a3a] font-medium">Order saved</span>}
       </div>
 
-      {members.length === 0 ? (
-        <p className="text-sm text-[#6b7280] mb-6">No members yet.</p>
-      ) : (
-        <div className="space-y-px mb-6">
-          {members.map(m => (
-            <MemberRow
-              key={m.id}
-              member={m}
-              onUpdated={handleUpdated}
-              onDeleted={handleDeleted}
-              dragHandlers={dragHandlers}
+      {/* Collapsible body */}
+      <div style={{ display: 'grid', gridTemplateRows: listOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+        <div style={{ overflow: 'hidden' }}>
+          {/* Search */}
+          <div className="relative mb-4 mt-2">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name or role…"
+              className="w-full pl-9 pr-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
             />
-          ))}
-        </div>
-      )}
+          </div>
 
-      <AddMemberForm type={type} onAdded={handleAdded} />
+          {filtered.length === 0 ? (
+            <p className="text-sm text-[#6b7280] mb-6">
+              {search.trim() ? 'No results.' : 'No members yet.'}
+            </p>
+          ) : (
+            <div className="space-y-px mb-6">
+              {filtered.map(m => (
+                <MemberRow
+                  key={m.id}
+                  member={m}
+                  onUpdated={handleUpdated}
+                  onDeleted={handleDeleted}
+                  dragHandlers={search.trim() ? undefined : dragHandlers}
+                />
+              ))}
+            </div>
+          )}
+
+          <AddMemberForm type={type} onAdded={handleAdded} />
+          <div className="pb-1" />
+        </div>
+      </div>
     </section>
   )
 }
