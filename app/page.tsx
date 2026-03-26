@@ -64,21 +64,7 @@ export default async function HomePage() {
                   Alata<br />
                   <em className="italic font-semibold">Investment Club</em>
                 </h1>
-                <div className="w-16 h-px bg-white/30 mb-8" />
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Link
-                    href="/team"
-                    className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1a4a3a] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
-                  >
-                    Meet the Team
-                  </Link>
-                  <Link
-                    href="/career-service"
-                    className="inline-flex items-center justify-center gap-2 border border-white text-white hover:bg-white hover:text-[#1a4a3a] text-sm font-semibold tracking-wide px-8 py-3.5 transition-colors duration-150"
-                  >
-                    Career Service
-                  </Link>
-                </div>
+                <div className="w-16 h-px bg-white/30" />
               </div>
 
               {/* Left — logo with frame */}
