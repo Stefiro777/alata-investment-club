@@ -14,7 +14,7 @@ export default async function ReportsPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative min-h-[500px] text-white flex items-center overflow-hidden">
+      <section className="relative min-h-[500px] lg:min-h-[650px] text-white flex items-center overflow-hidden">
         <Image src="/castello.jpg" alt="" fill className="object-cover grayscale" style={{ objectPosition: 'center 60%' }} priority />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div className="relative z-10 w-full py-20 sm:py-28">

@@ -7,7 +7,7 @@ export default function PartnersPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative min-h-[500px] text-white flex items-center overflow-hidden">
+      <section className="relative min-h-[500px] lg:min-h-[650px] text-white flex items-center overflow-hidden">
         <Image
           src="/teatro.jpg"
           fill
