@@ -940,11 +940,13 @@ export default function MembersClient({
             <button
               type="button"
               onClick={() => setCompaniesListOpen(v => !v)}
-              className="flex items-center gap-3 w-full text-left"
+              className="flex items-center gap-3 w-full text-left group border border-black/10 bg-white px-4 py-3 hover:border-[#1a4a3a] transition-colors duration-150"
             >
-              <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280]">Loghi aziende ({companiesList.length})</p>
+              <span className="text-sm font-medium text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors flex-1">
+                Loghi aziende ({companiesList.length})
+              </span>
               <svg
-                className="w-3.5 h-3.5 text-[#9ca3af] transition-transform duration-200 flex-shrink-0"
+                className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0"
                 style={{ transform: companiesListOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
                 fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
