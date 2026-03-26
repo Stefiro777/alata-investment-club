@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import type { Alumni, AlumniCompany, Partner } from '@/lib/types'
+import type { Alumni, AlumniCompany } from '@/lib/types'
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -22,15 +22,6 @@ async function uploadAlumniLogo(file: File): Promise<{ url: string } | { error: 
   const { data, error } = await supabase.storage.from('alumni-logos').upload(path, file, { upsert: false })
   if (error) return { error: error.message }
   const { data: { publicUrl } } = supabase.storage.from('alumni-logos').getPublicUrl(data.path)
-  return { url: publicUrl }
-}
-
-async function uploadPartnerLogo(file: File): Promise<{ url: string } | { error: string }> {
-  const supabase = createClient()
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name.replace(/\s+/g, '_')}`
-  const { data, error } = await supabase.storage.from('partners').upload(path, file, { upsert: false })
-  if (error) return { error: error.message }
-  const { data: { publicUrl } } = supabase.storage.from('partners').getPublicUrl(data.path)
   return { url: publicUrl }
 }
 
@@ -600,177 +591,6 @@ function AlumniCompanyRow({
   )
 }
 
-// ── Partner Insert Form ────────────────────────────────────────────────────────
-
-function PartnerInsertForm({ onInserted }: { onInserted: (p: Partner) => void }) {
-  const [name, setName] = useState('')
-  const [logoUrl, setLogoUrl] = useState('')
-  const [websiteUrl, setWebsiteUrl] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    setError(null)
-    const result = await uploadPartnerLogo(file)
-    if ('error' in result) { setError(result.error) } else { setLogoUrl(result.url) }
-    setUploading(false)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!name.trim() || !logoUrl.trim()) return
-    setSaving(true)
-    setError(null)
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('partners')
-      .insert({ name: name.trim(), logo_url: logoUrl.trim(), website_url: websiteUrl.trim() || null })
-      .select('id, name, logo_url, website_url, created_at')
-      .single()
-    if (error) { setError(error.message) } else {
-      onInserted(data as Partner)
-      setName('')
-      setLogoUrl('')
-      setWebsiteUrl('')
-    }
-    setSaving(false)
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="bg-white border border-black/10 p-6 space-y-4">
-      <p className="text-xs font-medium tracking-wide text-[#6b7280] uppercase mb-2">Add Partner</p>
-      <div className="grid sm:grid-cols-2 gap-4">
-        <input required value={name} onChange={e => setName(e.target.value)} placeholder="Partner name *"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
-        <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="Website URL"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
-      </div>
-      <div className="space-y-2">
-        <p className="text-xs text-[#6b7280]">Logo *</p>
-        <div className="flex gap-3 items-start">
-          <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL or upload"
-            className="flex-1 px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
-          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-            className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150 disabled:opacity-50">
-            {uploading ? '…' : 'Upload'}
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-        </div>
-        {logoUrl && <img src={logoUrl} alt="preview" className="h-10 object-contain border border-black/10 p-1 bg-white" />}
-      </div>
-      {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
-      <button type="submit" disabled={saving || !logoUrl}
-        className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
-        {saving ? '…' : 'Add Partner'}
-      </button>
-    </form>
-  )
-}
-
-// ── Partner Row ────────────────────────────────────────────────────────────────
-
-function PartnerRow({ partner, onUpdated, onDeleted }: {
-  partner: Partner
-  onUpdated: (p: Partner) => void
-  onDeleted: (id: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState(partner.name)
-  const [logoUrl, setLogoUrl] = useState(partner.logo_url)
-  const [websiteUrl, setWebsiteUrl] = useState(partner.website_url ?? '')
-  const [uploading, setUploading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    setError(null)
-    const result = await uploadPartnerLogo(file)
-    if ('error' in result) { setError(result.error) } else { setLogoUrl(result.url) }
-    setUploading(false)
-  }
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
-    if (!name.trim() || !logoUrl.trim()) return
-    setSaving(true)
-    setError(null)
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('partners')
-      .update({ name: name.trim(), logo_url: logoUrl.trim(), website_url: websiteUrl.trim() || null })
-      .eq('id', partner.id)
-      .select('id, name, logo_url, website_url, created_at')
-      .single()
-    if (error) { setError(error.message) } else { onUpdated(data as Partner); setOpen(false) }
-    setSaving(false)
-  }
-
-  async function handleDelete() {
-    if (!confirm(`Remove ${partner.name}?`)) return
-    setDeleting(true)
-    const supabase = createClient()
-    await supabase.from('partners').delete().eq('id', partner.id)
-    onDeleted(partner.id)
-  }
-
-  return (
-    <div className="bg-white border-b border-black/5 last:border-b-0">
-      <div className="px-6 py-4 flex items-center gap-4">
-        <img src={partner.logo_url} alt={partner.name} className="w-10 h-10 object-contain flex-shrink-0 border border-black/10 p-1" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#0a0a0a] truncate">{partner.name}</p>
-          {partner.website_url && <p className="text-xs text-[#6b7280] truncate">{partner.website_url}</p>}
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={() => setOpen(o => !o)}
-            className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-150">
-            {open ? 'Close' : 'Edit'}
-          </button>
-          <button onClick={handleDelete} disabled={deleting}
-            className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-150 disabled:opacity-40">
-            {deleting ? '…' : 'Delete'}
-          </button>
-        </div>
-      </div>
-      {open && (
-        <form onSubmit={handleSave} className="px-6 pb-5 pt-2 border-t border-black/5 space-y-3">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <input required value={name} onChange={e => setName(e.target.value)} placeholder="Partner name *"
-              className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
-            <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="Website URL"
-              className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
-          </div>
-          <div className="flex gap-3 items-start">
-            <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL *"
-              className="flex-1 px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
-            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-              className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150 disabled:opacity-50">
-              {uploading ? '…' : 'Upload'}
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-          </div>
-          {logoUrl && <img src={logoUrl} alt="preview" className="h-10 object-contain border border-black/10 p-1 bg-white" />}
-          {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
-          <button type="submit" disabled={saving || !logoUrl}
-            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-150 disabled:opacity-50">
-            {saving ? '…' : 'Save'}
-          </button>
-        </form>
-      )}
-    </div>
-  )
-}
-
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function MembersClient({
@@ -795,13 +615,9 @@ export default function MembersClient({
   showAlumni: boolean
   alumni: Alumni[]
   alumniCompanies: AlumniCompany[]
-  partners: Partner[]
 }) {
   const router = useRouter()
 
-  // Partners state
-  const [partnersList, setPartnersList] = useState<Partner[]>(partners)
-  const [partnersListOpen, setPartnersListOpen] = useState(false)
 
   // Settings state
   const [appsOpen, setAppsOpen] = useState(applicationsOpen)
@@ -960,7 +776,6 @@ export default function MembersClient({
     { label: 'Settings', id: 'settings' },
     { label: 'Alumni', id: 'alumni' },
     { label: 'Alumni Companies', id: 'alumni-companies' },
-    { label: 'Partners', id: 'partners' },
     { label: 'Invite Member', id: 'invite-member' },
     { label: 'Admin Users', id: 'admin-users' },
   ]
@@ -1155,52 +970,6 @@ export default function MembersClient({
                     ))
                   )}
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════
-          Partners
-      ══════════════════════════════════════ */}
-      <section id="partners">
-        <SectionHeading title="Partners" />
-        <div className="space-y-4">
-          <PartnerInsertForm onInserted={p => setPartnersList(prev => [p, ...prev])} />
-
-          <button
-            type="button"
-            onClick={() => setPartnersListOpen(v => !v)}
-            className="flex items-center gap-3 w-full text-left group border border-black/10 bg-white px-4 py-3 hover:border-[#1a4a3a] transition-colors duration-150"
-          >
-            <span className="text-sm font-medium text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors flex-1">
-              Loghi partner ({partnersList.length})
-            </span>
-            <svg
-              className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0"
-              style={{ transform: partnersListOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          <div style={{ display: 'grid', gridTemplateRows: partnersListOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
-            <div style={{ overflow: 'hidden' }}>
-              <div className="bg-black/5 rounded-sm mt-4">
-                {partnersList.length === 0 ? (
-                  <div className="bg-white px-6 py-8 text-center text-sm text-[#6b7280]">No partners yet.</div>
-                ) : (
-                  partnersList.map(p => (
-                    <PartnerRow
-                      key={p.id}
-                      partner={p}
-                      onUpdated={updated => setPartnersList(prev => prev.map(x => x.id === updated.id ? updated : x))}
-                      onDeleted={id => setPartnersList(prev => prev.filter(x => x.id !== id))}
-                    />
-                  ))
-                )}
               </div>
             </div>
           </div>

@@ -1,21 +1,8 @@
-import { createClient } from '@/lib/supabase-server'
-import type { Partner } from '@/lib/types'
+import PartnersMarquee from '@/app/components/PartnersMarquee'
 
 export const dynamic = 'force-dynamic'
 
-export default async function PartnersPage() {
-  const supabase = await createClient()
-
-  const { data: partnersData } = await supabase
-    .from('partners')
-    .select('id, name, logo_url, website_url, created_at')
-    .order('created_at', { ascending: true })
-
-  const partners = (partnersData ?? []) as Partner[]
-  const marqueeItems = partners.length > 0
-    ? [...partners, ...partners, ...partners, ...partners]
-    : []
-
+export default function PartnersPage() {
   return (
     <div>
       {/* Hero */}
@@ -63,37 +50,8 @@ export default async function PartnersPage() {
         </div>
       </section>
 
-      {/* Current Partners marquee */}
-      <section className="py-16 bg-white overflow-hidden">
-        <style>{`
-          @keyframes partners-scroll {
-            from { transform: translateX(0); }
-            to   { transform: translateX(-50%); }
-          }
-          .partners-track {
-            animation: partners-scroll 30s linear infinite;
-          }
-        `}</style>
-        <div className="flex flex-col items-center mb-10">
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Trusted by</p>
-          <h2 className="font-serif text-4xl font-bold text-[#0a0a0a]">Our Current Partners</h2>
-          <div className="w-[60px] h-[3px] bg-[#1a4a3a] mt-3" />
-        </div>
-        {marqueeItems.length > 0 ? (
-          <div className="overflow-hidden">
-            <div className="partners-track flex items-center w-max">
-              {marqueeItems.map((p, i) => (
-                <div key={i} className="mx-12 h-16 flex items-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.logo_url} alt={p.name} className="h-16 w-auto object-contain max-w-[160px]" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p className="text-center text-sm text-[#9ca3af]">Partner logos coming soon.</p>
-        )}
-      </section>
+      {/* Current Partners — shared component, same data as homepage */}
+      <PartnersMarquee title="Our Current Partners" subtitle="Trusted by" />
 
       {/* CTA */}
       <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">

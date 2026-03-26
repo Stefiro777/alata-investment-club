@@ -6,7 +6,11 @@
       "Bash(npm run:*)",
       "Bash(vercel --prod)",
       "Bash(find node_modules/@supabase/postgrest-js -name *.d.ts)",
-      "Bash(node -e \"const s=require\\(''fs''\\).statSync\\(''public/duomo.jpg''\\); console.log\\(s.size\\)\")"
+      "Bash(node -e \"const s=require\\(''fs''\\).statSync\\(''public/duomo.jpg''\\); console.log\\(s.size\\)\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(node:*)"
     ]
   }
 }

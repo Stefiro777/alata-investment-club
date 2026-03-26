@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import StatsSection from './components/StatsSection'
 import NewsCard, { type NewsItem } from './components/NewsCard'
+import PartnersMarquee from './components/PartnersMarquee'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,21 +34,12 @@ function MailIcon() {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const [{ data: eventi }, { data: partnersData }] = await Promise.all([
-    supabase
-      .from('contenuti')
-      .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
-      .in('tipo', ['evento', 'aggiornamento', 'news'])
-      .order('data_pubblicazione', { ascending: false })
-      .limit(3),
-    supabase
-      .from('partners')
-      .select('id, name, logo_url')
-      .order('created_at', { ascending: true }),
-  ])
-
-  const partners = (partnersData ?? []) as { id: string; name: string; logo_url: string }[]
-  const FALLBACK_LOGOS = ['/syrto2.jpeg', '/forbes.png', '/athenalogo.png']
+  const { data: eventi } = await supabase
+    .from('contenuti')
+    .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
+    .in('tipo', ['evento', 'aggiornamento', 'news'])
+    .order('data_pubblicazione', { ascending: false })
+    .limit(3)
 
   return (
     <div>
@@ -183,41 +175,7 @@ export default async function HomePage() {
       </section>
 
       {/* Our Partners */}
-      <section className="py-16 bg-white overflow-hidden">
-        <style>{`
-          @keyframes partners-scroll {
-            from { transform: translateX(0); }
-            to   { transform: translateX(-50%); }
-          }
-          .partners-track {
-            animation: partners-scroll 30s linear infinite;
-          }
-        `}</style>
-        <div className="flex flex-col items-center mb-8">
-          <h2 className="font-serif text-4xl font-bold text-[#0a0a0a]">Our Partners</h2>
-          <div className="w-[60px] h-[3px] bg-[#1a4a3a] mt-3" />
-        </div>
-        <div className="overflow-hidden">
-          <div className="partners-track flex items-center w-max">
-            {partners.length > 0
-              ? [...partners, ...partners, ...partners, ...partners].map((p, i) => (
-                  <div key={i} className="mx-12 h-16 flex items-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.logo_url} alt={p.name} className="h-16 w-auto object-contain max-w-[160px]" />
-                  </div>
-                ))
-              : [...FALLBACK_LOGOS, ...FALLBACK_LOGOS, ...FALLBACK_LOGOS, ...FALLBACK_LOGOS].map((src, i) => (
-                  <div key={i} className="mx-12 h-16 flex items-center">
-                    {src === '/athenalogo.png'
-                      ? <Image src={src} alt="" height={96} width={240} className="h-24 w-auto object-contain" />
-                      : <Image src={src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
-                    }
-                  </div>
-                ))
-            }
-          </div>
-        </div>
-      </section>
+      <PartnersMarquee />
 
       {/* Contact Us */}
       <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">

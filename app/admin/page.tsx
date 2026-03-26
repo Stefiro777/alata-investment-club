@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import AdminClient from './AdminClient'
-import type { Resource } from '@/lib/types'
+import type { Resource, Partner } from '@/lib/types'
 
 type Contenuto = {
   id: number
@@ -31,7 +31,7 @@ export default async function AdminPage() {
 
   if (!adminRow) redirect('/login')
 
-  const [{ data: items }, { data: resourcesData }] = await Promise.all([
+  const [{ data: items }, { data: resourcesData }, { data: partnersData }] = await Promise.all([
     supabase
       .from('contenuti')
       .select('*')
@@ -40,6 +40,11 @@ export default async function AdminPage() {
     supabase
       .from('resources')
       .select('id, title, description, url, category, subcategory, subcategory_order, is_folder, order_index, created_at')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('partners')
+      .select('id, name, logo_url, website_url, order_index, created_at')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
   ])
@@ -79,6 +84,7 @@ export default async function AdminPage() {
       <AdminClient
         items={(items ?? []) as Contenuto[]}
         resources={(resourcesData ?? []) as Resource[]}
+        partners={(partnersData ?? []) as Partner[]}
       />
     </div>
   )

@@ -22,6 +22,7 @@ export type Partner = {
   name: string
   logo_url: string
   website_url: string | null
+  order_index: number | null
   created_at: string
 }
 
