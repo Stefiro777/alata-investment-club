@@ -1,16 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-
-type Alumni = {
-  id: string
-  name: string
-  role: string
-  graduation_year: string | null
-  linkedin_url: string | null
-  current_company: string | null
-  order_index?: number | null
-}
+import type { Alumni } from '@/lib/types'
 
 function LinkedInIcon() {
   return (

@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import PhotoUpload, { PhotoEntry } from './PhotoUpload'
+import type { Alumni } from '@/lib/types'
 
 type Contenuto = {
   id: number
@@ -19,16 +20,6 @@ type Contenuto = {
   photos: string[] | null
 }
 
-type Alumni = {
-  id: string
-  name: string
-  role: string
-  graduation_year: string | null
-  linkedin_url: string | null
-  current_company: string | null
-  order_index: number | null
-  created_at: string
-}
 
 type AlumniCompany = {
   id: string

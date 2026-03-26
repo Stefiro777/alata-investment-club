@@ -3,18 +3,10 @@ import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import AlumniGrid from './AlumniGrid'
+import type { Alumni } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-type Alumni = {
-  id: string
-  name: string
-  role: string
-  graduation_year: string | null
-  linkedin_url: string | null
-  current_company: string | null
-  order_index?: number | null
-}
 
 type AlumniCompany = {
   id: string

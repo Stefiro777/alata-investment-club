@@ -1,16 +1,8 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import AdminClient from './AdminClient'
+import type { Alumni } from '@/lib/types'
 
-type Alumni = {
-  id: string
-  name: string
-  role: string
-  graduation_year: string | null
-  linkedin_url: string | null
-  current_company: string | null
-  created_at: string
-}
 
 type AlumniCompany = {
   id: string
