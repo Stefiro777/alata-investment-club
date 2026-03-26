@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import type { Resource } from '@/lib/types'
 
 type View = 'welcome' | 'masters' | 'career' | 'education' | 'forbes' | 'documenti'
@@ -9,7 +9,7 @@ const CATEGORIES: {
   id: Exclude<View, 'welcome'>
   label: string
   description: string
-  icon: (p: { className?: string }) => JSX.Element
+  icon: (p: { className?: string }) => React.ReactElement
 }[] = [
   {
     id: 'masters',
