@@ -33,12 +33,21 @@ function MailIcon() {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const { data: eventi } = await supabase
-    .from('contenuti')
-    .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
-    .in('tipo', ['evento', 'aggiornamento', 'news'])
-    .order('data_pubblicazione', { ascending: false })
-    .limit(3)
+  const [{ data: eventi }, { data: partnersData }] = await Promise.all([
+    supabase
+      .from('contenuti')
+      .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
+      .in('tipo', ['evento', 'aggiornamento', 'news'])
+      .order('data_pubblicazione', { ascending: false })
+      .limit(3),
+    supabase
+      .from('partners')
+      .select('id, name, logo_url')
+      .order('created_at', { ascending: true }),
+  ])
+
+  const partners = (partnersData ?? []) as { id: string; name: string; logo_url: string }[]
+  const FALLBACK_LOGOS = ['/syrto2.jpeg', '/forbes.png', '/athenalogo.png']
 
   return (
     <div>
@@ -190,14 +199,22 @@ export default async function HomePage() {
         </div>
         <div className="overflow-hidden">
           <div className="partners-track flex items-center w-max">
-            {['/syrto2.jpeg', '/forbes.png', '/athenalogo.png', '/syrto2.jpeg', '/forbes.png', '/athenalogo.png', '/syrto2.jpeg', '/forbes.png', '/athenalogo.png', '/syrto2.jpeg', '/forbes.png', '/athenalogo.png'].map((src, i) => (
-              <div key={i} className="mx-12 h-16 flex items-center">
-                {src === '/athenalogo.png'
-                  ? <Image src={src} alt="" height={96} width={240} className="h-24 w-auto object-contain" />
-                  : <Image src={src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
-                }
-              </div>
-            ))}
+            {partners.length > 0
+              ? [...partners, ...partners, ...partners, ...partners].map((p, i) => (
+                  <div key={i} className="mx-12 h-16 flex items-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.logo_url} alt={p.name} className="h-16 w-auto object-contain max-w-[160px]" />
+                  </div>
+                ))
+              : [...FALLBACK_LOGOS, ...FALLBACK_LOGOS, ...FALLBACK_LOGOS, ...FALLBACK_LOGOS].map((src, i) => (
+                  <div key={i} className="mx-12 h-16 flex items-center">
+                    {src === '/athenalogo.png'
+                      ? <Image src={src} alt="" height={96} width={240} className="h-24 w-auto object-contain" />
+                      : <Image src={src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
+                    }
+                  </div>
+                ))
+            }
           </div>
         </div>
       </section>

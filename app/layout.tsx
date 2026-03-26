@@ -34,6 +34,7 @@ const navLinks: { href: string; label: string; subLinks?: { href: string; label:
     { href: '/team/alumni', label: 'Alumni' },
   ]},
   { href: '/career-service', label: 'Career Service' },
+  { href: '/partners', label: 'Partners' },
   { href: '/join-us', label: 'Join Us' },
   { href: '/dashboard', label: 'Reserved Area' },
 ]

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import MembersClient from './MembersClient'
-import type { Alumni, AlumniCompany } from '@/lib/types'
+import type { Alumni, AlumniCompany, Partner } from '@/lib/types'
 
 const SUPERADMIN = 'finullistefano@gmail.com'
 
@@ -29,6 +29,7 @@ export default async function MembersPage() {
     { data: showAlumniRow },
     { data: alumniRaw, error: alumniError },
     { data: alumniCompaniesData },
+    { data: partnersData },
   ] = await Promise.all([
     supabase.from('admin_users').select('email').order('email', { ascending: true }),
     supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
@@ -46,6 +47,10 @@ export default async function MembersPage() {
       .from('alumni_companies')
       .select('id, name, logo_url, website_url, created_at')
       .order('created_at', { ascending: false }),
+    supabase
+      .from('partners')
+      .select('id, name, logo_url, website_url, created_at')
+      .order('created_at', { ascending: true }),
   ])
 
   // Fallback if order_index column doesn't exist yet
@@ -106,6 +111,7 @@ export default async function MembersPage() {
         showAlumni={showAlumni}
         alumni={(alumniData ?? []) as Alumni[]}
         alumniCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]}
+        partners={(partnersData ?? []) as Partner[]}
       />
     </div>
   )

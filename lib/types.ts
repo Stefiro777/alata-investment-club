@@ -17,6 +17,14 @@ export type AlumniCompany = {
   created_at: string
 }
 
+export type Partner = {
+  id: string
+  name: string
+  logo_url: string
+  website_url: string | null
+  created_at: string
+}
+
 export type Resource = {
   id: string
   title: string
