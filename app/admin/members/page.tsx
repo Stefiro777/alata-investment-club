@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server'
+import { createClient, createServiceClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import MembersClient from './MembersClient'
 import type { Alumni, AlumniCompany } from '@/lib/types'
@@ -19,6 +19,8 @@ export default async function MembersPage() {
 
   if (!adminRow) redirect('/login')
 
+  const serviceClient = createServiceClient()
+
   const [
     { data: adminUsers },
     { data: appSettings },
@@ -30,7 +32,7 @@ export default async function MembersPage() {
     { data: alumniRaw, error: alumniError },
     { data: alumniCompaniesData },
   ] = await Promise.all([
-    supabase.from('admin_users').select('email').order('email', { ascending: true }),
+    serviceClient.from('admin_users').select('email').order('email', { ascending: true }),
     supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'show_prices').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'price_cv_review').maybeSingle(),
