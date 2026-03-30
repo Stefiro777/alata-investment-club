@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import MembersClient from './MembersClient'
 import type { Alumni, AlumniCompany } from '@/lib/types'
 
-const SUPERADMIN = 'finullistefano@gmail.com'
+const SUPERADMIN = process.env.SUPERADMIN_EMAIL ?? ''
 
 export default async function MembersPage() {
   const supabase = await createClient()
