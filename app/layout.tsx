@@ -7,6 +7,7 @@ import MobileMenu from './components/MobileMenu'
 import CookieBanner from './components/CookieBanner'
 import CookiePolicy from './components/CookiePolicy'
 import { Analytics } from '@vercel/analytics/react'
+import Clarity from '@/components/Clarity'
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -144,6 +145,7 @@ export default function RootLayout({
         {/* Main */}
         <main className="flex-1">{children}</main>
         <Analytics />
+        <Clarity />
         <CookieBanner />
 
         {/* Footer */}
