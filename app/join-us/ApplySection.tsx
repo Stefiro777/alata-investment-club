@@ -53,12 +53,12 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
 
     const supabase = createClient()
     const { error: insertError } = await supabase.from('applications').insert({
-      first_name: firstName,
-      last_name: lastName,
+      nome: firstName,
+      cognome: lastName,
       email,
-      year_of_study: yearOfStudy,
+      anno_di_studio: yearOfStudy,
       degree_programme: degreeProgramme,
-      motivation,
+      motivazione: motivation,
     })
 
     if (insertError) {
