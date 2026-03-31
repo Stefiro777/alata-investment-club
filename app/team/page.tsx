@@ -117,8 +117,12 @@ export default async function TeamPage() {
           {management.length === 0 ? (
             <p className="text-[#6b7280] text-sm">No members to display.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
-              {management.map(m => <MemberCard key={m.id} member={m} />)}
+            <div className="flex flex-wrap justify-center gap-6 max-w-[54.75rem] mx-auto">
+              {management.map(m => (
+                <div key={m.id} className="w-[calc(50%-12px)] sm:w-[calc(33.333%-16px)]">
+                  <MemberCard member={m} />
+                </div>
+              ))}
             </div>
           )}
         </div>
