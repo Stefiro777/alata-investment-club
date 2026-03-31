@@ -27,7 +27,8 @@
       "Bash(git rm:*)",
       "Bash(echo \"exit: $?\")",
       "Bash(npm install:*)",
-      "Bash(openssl rand:*)"
+      "Bash(openssl rand:*)",
+      "Bash(find C:UsersfinulDesktopalata-investment-clubappapi -name *.ts -o -name *.tsx)"
     ]
   }
 }

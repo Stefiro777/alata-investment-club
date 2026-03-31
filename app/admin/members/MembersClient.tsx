@@ -248,7 +248,7 @@ function AlumniList({
     dragIndex.current = index
   }
 
-  function onDrop(index: number) {
+  async function onDrop(index: number) {
     const from = dragIndex.current
     if (from === null || from === index) { dragIndex.current = null; return }
     const next = [...listRef.current]
@@ -258,10 +258,19 @@ function AlumniList({
     listRef.current = next
     dragIndex.current = null
 
-    const supabase = createClient()
-    next.forEach((a, i) => {
-      supabase.from('alumni').update({ order_index: i }).eq('id', a.id)
-    })
+    try {
+      const res = await fetch('/api/alumni/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: next.map((a, i) => ({ id: a.id, order_index: i })) }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        console.error('[AlumniList] reorder failed:', res.status, body)
+      }
+    } catch (err) {
+      console.error('[AlumniList] reorder network error:', err)
+    }
   }
 
   function handleInserted(a: Alumni) {
