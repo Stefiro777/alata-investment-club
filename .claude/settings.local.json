@@ -10,7 +10,24 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(done)",
+      "Bash(curl:*)",
+      "Bash(grep -iE \"\\\\.\\(ico|png|svg\\)$\")",
+      "Bash(find /c/Users/finul/Desktop/alata-investment-club -maxdepth 1 -type f -name .env*+)",
+      "Bash(find /c/Users/finul/Desktop/alata-investment-club -type f -name *supabase* \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\))",
+      "Bash(find /c/Users/finul/Desktop/alata-investment-club -type f -name *.md ! -path */.next/* ! -path */node_modules/*)",
+      "Bash(find /c/Users/finul/Desktop/alata-investment-club -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\) ! -path */.next/* ! -path */node_modules/* ! -path */.git/*)",
+      "Bash(grep -r NEXT_PUBLIC_ /c/Users/finul/Desktop/alata-investment-club --include=*.ts --include=*.tsx --include=*.js ! -path */.next/* ! -path */node_modules/*)",
+      "Bash(grep:*)",
+      "Bash(find /c/Users/finul/Desktop/alata-investment-club -maxdepth 1 -type f -name .* ! -name .git* ! -path */.git/*)",
+      "Bash(npm audit:*)",
+      "Bash(git rm:*)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(npm install:*)",
+      "Bash(openssl rand:*)"
     ]
   }
 }

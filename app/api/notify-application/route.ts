@@ -8,24 +8,24 @@ const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
 
 interface ApplicationRecord {
   id?: string | number
-  first_name?: string
-  last_name?: string
+  nome?: string
+  cognome?: string
   email?: string
-  year_of_study?: string
+  anno_di_studio?: string
   degree_programme?: string
-  motivation?: string
+  motivazione?: string
   created_at?: string
   [key: string]: unknown
 }
 
 function buildHtml(record: ApplicationRecord): string {
   const fields: [string, string][] = [
-    ['Nome', record.first_name ?? '—'],
-    ['Cognome', record.last_name ?? '—'],
+    ['Nome', record.nome ?? '—'],
+    ['Cognome', record.cognome ?? '—'],
     ['Email', record.email ?? '—'],
-    ['Anno di studio', record.year_of_study ?? '—'],
+    ['Anno di studio', record.anno_di_studio ?? '—'],
     ['Corso di laurea', record.degree_programme ?? '—'],
-    ['Motivazione', record.motivation ?? '—'],
+    ['Motivazione', record.motivazione ?? '—'],
     ['Data candidatura', record.created_at ? new Date(record.created_at).toLocaleString('it-IT') : '—'],
     ['ID', String(record.id ?? '—')],
   ]
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing record field' }, { status: 400 })
   }
 
-  const subject = `Nuova Candidatura — ${record.first_name ?? ''} ${record.last_name ?? ''}`.trim()
+  const subject = `Nuova Candidatura — ${record.nome ?? ''} ${record.cognome ?? ''}`.trim()
 
   const { error } = await resend.emails.send({
     from: FROM,
