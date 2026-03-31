@@ -32,7 +32,7 @@ export default async function JoinUsPage() {
       <TimelineSection />
 
       {/* ── Apply Now ── */}
-      <section className="bg-[#1a4a3a] py-20 px-6">
+      <section id="application-form" className="bg-[#1a4a3a] py-20 px-6">
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="font-serif text-3xl font-bold text-white mb-3">Ready to join?</h2>
           <p className="text-white/70 text-sm mb-8">
