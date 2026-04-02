@@ -1,6 +1,11 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import ApplySection from './ApplySection'
 import TimelineSection from './TimelineSection'
+
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://alatainvestmentclub.com/join-us' },
+}
 
 export default async function JoinUsPage() {
   const supabase = await createClient()

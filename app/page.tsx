@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -6,6 +7,10 @@ import NewsCard, { type NewsItem } from './components/NewsCard'
 import PartnersMarquee from './components/PartnersMarquee'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://alatainvestmentclub.com' },
+}
 
 function InstagramIcon() {
   return (

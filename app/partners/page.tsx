@@ -1,8 +1,13 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import PartnersMarquee from '@/app/components/PartnersMarquee'
 import { createClient } from '@/lib/supabase-server'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://alatainvestmentclub.com/partners' },
+}
 
 export default async function PartnersPage() {
   const supabase = await createClient()

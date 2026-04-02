@@ -24,6 +24,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Alata Investment Club',
   description: 'University Finance Association · University of Brescia',
+  alternates: { canonical: 'https://alatainvestmentclub.com' },
   icons: {
     icon: [
       { url: '/favicon.ico' },

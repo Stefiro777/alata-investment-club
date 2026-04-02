@@ -1,6 +1,11 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import ReportsCarousel from '../components/ReportsCarousel'
+
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://alatainvestmentclub.com/reports' },
+}
 
 export default async function ReportsPage() {
   const supabase = await createClient()

@@ -1,8 +1,13 @@
 //
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase-server'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://alatainvestmentclub.com/career-service' },
+}
 
 // -----------------------------------------------------------------------
 // EDIT HERE: update Calendly links and Linktree URL
