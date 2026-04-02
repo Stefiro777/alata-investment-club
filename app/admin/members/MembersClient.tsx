@@ -264,10 +264,8 @@ function AlumniList({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: next.map((a, i) => ({ id: a.id, order_index: i })) }),
       })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        console.error('[AlumniList] reorder failed:', res.status, body)
-      }
+      const data = await res.json()
+      if (!res.ok) console.error('Reorder failed:', data)
     } catch (err) {
       console.error('[AlumniList] reorder network error:', err)
     }

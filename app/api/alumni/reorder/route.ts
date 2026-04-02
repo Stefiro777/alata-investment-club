@@ -4,24 +4,28 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify caller is authenticated admin
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      console.error('Auth failed:', authError)
+      return NextResponse.json({ error: 'auth failed', detail: authError }, { status: 401 })
+    }
 
     const { data: adminRow } = await supabase
       .from('admin_users')
       .select('email')
       .eq('email', user.email)
       .maybeSingle()
-    if (!adminRow) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!adminRow) {
+      console.error('Not admin:', user.email)
+      return NextResponse.json({ error: 'not admin' }, { status: 403 })
+    }
 
     const { items } = await req.json() as { items: { id: string; order_index: number }[] }
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'items array required' }, { status: 400 })
     }
 
-    // Use service role to bypass RLS
     const serviceClient = createServiceClient()
     const results = await Promise.all(
       items.map(({ id, order_index }) =>
@@ -31,8 +35,8 @@ export async function POST(req: NextRequest) {
 
     const failed = results.find(r => r.error)
     if (failed?.error) {
-      console.error('[alumni/reorder] Supabase update error:', failed.error)
-      return NextResponse.json({ error: failed.error.message }, { status: 500 })
+      console.error('Update failed:', failed.error)
+      return NextResponse.json({ error: 'update failed', detail: failed.error }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
