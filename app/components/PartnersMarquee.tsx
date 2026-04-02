@@ -17,11 +17,11 @@ export default async function PartnersMarquee({
   const supabase = await createClient()
   const { data } = await supabase
     .from('partners')
-    .select('id, name, logo_url')
+    .select('id, name, logo_url, website_url')
     .order('order_index', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: true })
 
-  const partners = (data ?? []) as { id: string; name: string; logo_url: string }[]
+  const partners = (data ?? []) as { id: string; name: string; logo_url: string; website_url: string | null }[]
 
   return (
     <section className="py-16 bg-white overflow-hidden">
