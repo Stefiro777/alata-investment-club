@@ -34,12 +34,19 @@ function MailIcon() {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const { data: eventi } = await supabase
-    .from('contenuti')
-    .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
-    .in('tipo', ['evento', 'aggiornamento', 'news'])
-    .order('data_pubblicazione', { ascending: false })
-    .limit(3)
+  const [{ data: eventi }, { data: partnersData }] = await Promise.all([
+    supabase
+      .from('contenuti')
+      .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
+      .in('tipo', ['evento', 'aggiornamento', 'news'])
+      .order('data_pubblicazione', { ascending: false })
+      .limit(3),
+    supabase
+      .from('partners')
+      .select('id, name, logo_url, website_url, order_index')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
+  ])
 
   return (
     <div>
@@ -175,7 +182,7 @@ export default async function HomePage() {
       </section>
 
       {/* Our Partners */}
-      <PartnersMarquee />
+      <PartnersMarquee partners={partnersData ?? []} />
 
       {/* Contact Us */}
       <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">

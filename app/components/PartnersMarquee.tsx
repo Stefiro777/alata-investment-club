@@ -1,28 +1,37 @@
-import { createClient } from '@/lib/supabase-server'
+'use client'
+
 import Image from 'next/image'
 
-const FALLBACK_LOGOS = [
-  { src: '/syrto2.jpeg', url: 'https://www.syrto.com' },
-  { src: '/forbes.png', url: 'https://www.forbesnextleaders.com' },
-  { src: '/athenalogo.png', url: null },
+type PartnerItem = {
+  id: string
+  name: string
+  logo_url: string
+  website_url: string | null
+}
+
+const FALLBACK_LOGOS: { src: string; url: string | null; id: null }[] = [
+  { src: '/syrto2.jpeg', url: 'https://www.syrto.com', id: null },
+  { src: '/forbes.png', url: 'https://www.forbesnextleaders.com', id: null },
+  { src: '/athenalogo.png', url: null, id: null },
 ]
 
-export default async function PartnersMarquee({
+function trackClick(partnerId: string) {
+  fetch('/api/partners/click', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ partnerId }),
+  })
+}
+
+export default function PartnersMarquee({
   title = 'Our Partners',
   subtitle,
+  partners = [],
 }: {
   title?: string
   subtitle?: string
+  partners?: PartnerItem[]
 }) {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('partners')
-    .select('id, name, logo_url, website_url')
-    .order('order_index', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: true })
-
-  const partners = (data ?? []) as { id: string; name: string; logo_url: string; website_url: string | null }[]
-
   return (
     <section className="py-16 bg-white overflow-hidden">
       <style>{`
@@ -47,7 +56,12 @@ export default async function PartnersMarquee({
             ? [...partners, ...partners, ...partners, ...partners].map((p, i) => (
                 <div key={i} className="mx-12 h-16 flex items-center">
                   {p.website_url ? (
-                    <a href={p.website_url} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={p.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackClick(p.id)}
+                    >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={p.logo_url} alt={p.name} className="h-16 w-auto object-contain max-w-[160px]" />
                     </a>

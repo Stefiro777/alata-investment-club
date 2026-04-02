@@ -1,9 +1,16 @@
 import Image from 'next/image'
 import PartnersMarquee from '@/app/components/PartnersMarquee'
+import { createClient } from '@/lib/supabase-server'
 
 export const dynamic = 'force-dynamic'
 
-export default function PartnersPage() {
+export default async function PartnersPage() {
+  const supabase = await createClient()
+  const { data: partnersData } = await supabase
+    .from('partners')
+    .select('id, name, logo_url, website_url, order_index')
+    .order('order_index', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: true })
   return (
     <div>
       {/* Hero */}
@@ -63,7 +70,7 @@ export default function PartnersPage() {
       </section>
 
       {/* Current Partners — shared component, same data as homepage */}
-      <PartnersMarquee title="Our Current Partners" subtitle="Trusted by" />
+      <PartnersMarquee title="Our Current Partners" subtitle="Trusted by" partners={partnersData ?? []} />
 
       {/* CTA */}
       <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">

@@ -44,7 +44,7 @@ export default async function AdminPage() {
       .order('created_at', { ascending: true }),
     supabase
       .from('partners')
-      .select('id, name, logo_url, website_url, order_index, created_at')
+      .select('id, name, logo_url, website_url, order_index, click_count, created_at')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
   ])

@@ -891,7 +891,10 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={partner.logo_url} alt={partner.name} className="w-8 h-8 object-contain flex-shrink-0 border border-[#e5e5e5] p-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#0a0a0a] truncate">{partner.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-[#0a0a0a] truncate">{partner.name}</p>
+            <span className="flex-shrink-0 text-xs bg-gray-100 text-gray-600 px-2 py-0.5">{partner.click_count ?? 0} click</span>
+          </div>
           {partner.website_url && <p className="text-xs text-[#6b7280] truncate">{partner.website_url}</p>}
         </div>
         <button onClick={() => setExpanded(!expanded)}
