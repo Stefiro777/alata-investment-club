@@ -1,7 +1,11 @@
 import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 
-const FALLBACK_LOGOS = ['/syrto2.jpeg', '/forbes.png', '/athenalogo.png']
+const FALLBACK_LOGOS = [
+  { src: '/syrto2.jpeg', url: 'https://www.syrto.com' },
+  { src: '/forbes.png', url: 'https://www.forbesnextleaders.com' },
+  { src: '/athenalogo.png', url: null },
+]
 
 export default async function PartnersMarquee({
   title = 'Our Partners',
@@ -42,16 +46,31 @@ export default async function PartnersMarquee({
           {partners.length > 0
             ? [...partners, ...partners, ...partners, ...partners].map((p, i) => (
                 <div key={i} className="mx-12 h-16 flex items-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.logo_url} alt={p.name} className="h-16 w-auto object-contain max-w-[160px]" />
+                  {p.website_url ? (
+                    <a href={p.website_url} target="_blank" rel="noopener noreferrer">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.logo_url} alt={p.name} className="h-16 w-auto object-contain max-w-[160px]" />
+                    </a>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.logo_url} alt={p.name} className="h-16 w-auto object-contain max-w-[160px]" />
+                  )}
                 </div>
               ))
-            : [...FALLBACK_LOGOS, ...FALLBACK_LOGOS, ...FALLBACK_LOGOS, ...FALLBACK_LOGOS].map((src, i) => (
+            : [...FALLBACK_LOGOS, ...FALLBACK_LOGOS, ...FALLBACK_LOGOS, ...FALLBACK_LOGOS].map((logo, i) => (
                 <div key={i} className="mx-12 h-16 flex items-center">
-                  {src === '/athenalogo.png'
-                    ? <Image src={src} alt="" height={96} width={240} className="h-24 w-auto object-contain" />
-                    : <Image src={src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
-                  }
+                  {logo.url ? (
+                    <a href={logo.url} target="_blank" rel="noopener noreferrer">
+                      {logo.src === '/athenalogo.png'
+                        ? <Image src={logo.src} alt="" height={96} width={240} className="h-24 w-auto object-contain" />
+                        : <Image src={logo.src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
+                      }
+                    </a>
+                  ) : (
+                    logo.src === '/athenalogo.png'
+                      ? <Image src={logo.src} alt="" height={96} width={240} className="h-24 w-auto object-contain" />
+                      : <Image src={logo.src} alt="" height={64} width={160} className="h-16 w-auto object-contain" />
+                  )}
                 </div>
               ))
           }
