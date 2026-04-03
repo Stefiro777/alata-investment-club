@@ -25,6 +25,10 @@ export const metadata: Metadata = {
   title: 'Alata Investment Club',
   description: 'University Finance Association · University of Brescia',
   alternates: { canonical: 'https://alatainvestmentclub.com' },
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 }
 
 const navLinks: { href: string; label: string; subLinks?: { href: string; label: string }[] }[] = [
