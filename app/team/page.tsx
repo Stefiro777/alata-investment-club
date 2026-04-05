@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
+import Reveal from '../components/Reveal'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,12 +26,12 @@ function initials(name: string) {
 
 function MemberCard({ member }: { member: TeamMember }) {
   return (
-    <div className="bg-white overflow-hidden flex flex-col" style={{ border: '1px solid #1a4a3a' }}>
-      {/* Photo */}
-      <div className="flex justify-center items-center py-5 bg-[#f5f5f5]">
-        <div className="relative w-32 h-32 rounded-full overflow-hidden bg-[#e0e0e0]">
+    <div className="member-card-simple bg-white overflow-hidden flex flex-col" style={{ border: '1px solid #1a4a3a' }}>
+      {/* Photo section — centered with double green ring */}
+      <div className="flex justify-center items-center py-5 bg-[#f5f5f5]" style={{ minHeight: '160px' }}>
+        <div className="relative w-32 h-32 rounded-full overflow-hidden bg-[#e0e0e0] ring-2 ring-[#1a4a3a] ring-offset-2 ring-offset-[#f5f5f5]">
           {member.photo_url ? (
-            <Image src={member.photo_url} alt={member.name} fill className="object-cover object-top" />
+            <Image src={member.photo_url} alt={member.name} fill className="member-photo object-cover object-top" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="font-serif text-2xl text-[#1a4a3a]">{initials(member.name)}</span>
@@ -38,7 +39,7 @@ function MemberCard({ member }: { member: TeamMember }) {
           )}
         </div>
       </div>
-      {/* Info */}
+      {/* Info bar — always visible */}
       <div className="p-4 bg-[#1a4a3a] flex-grow">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-serif text-lg font-bold text-white">{member.name}</h3>
@@ -82,10 +83,11 @@ export default async function TeamPage() {
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Our Team</p>
-            <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">Our Team</h1>
-            <div className="w-12 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-base max-w-2xl leading-relaxed">
+            <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Our Team</p>
+            <h1 className="animate-hero-title font-serif text-5xl sm:text-6xl font-bold text-white mb-6">Our Team</h1>
+            <div className="animate-hero-line w-12 h-px bg-white/30 mb-6" />
+            <p className="text-white/70 text-base max-w-2xl leading-relaxed"
+              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
               Meet the Board of Directors and Management driving Alata Investment Club — united by ambition and a genuine passion for finance.
             </p>
           </div>
@@ -95,19 +97,27 @@ export default async function TeamPage() {
       {/* Board of Directors */}
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-10">Board of Directors</h2>
+          <Reveal>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-10">Board of Directors</h2>
+          </Reveal>
           {bod.length === 0 ? (
             <p className="text-[#6b7280] text-sm">No members to display.</p>
           ) : (
             <div className="space-y-6">
-              {/* First row: first 2 members centered */}
               <div className="grid grid-cols-2 gap-6 max-w-xl mx-auto">
-                {bod.slice(0, 2).map(m => <MemberCard key={m.id} member={m} />)}
+                {bod.slice(0, 2).map((m, i) => (
+                  <Reveal key={m.id} delay={i * 100} direction="up">
+                    <MemberCard member={m} />
+                  </Reveal>
+                ))}
               </div>
-              {/* Remaining members in 3-column rows — same card width as above */}
               {bod.length > 2 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
-                  {bod.slice(2).map(m => <MemberCard key={m.id} member={m} />)}
+                  {bod.slice(2).map((m, i) => (
+                    <Reveal key={m.id} delay={i * 80} direction="up">
+                      <MemberCard member={m} />
+                    </Reveal>
+                  ))}
                 </div>
               )}
             </div>
@@ -118,15 +128,17 @@ export default async function TeamPage() {
       {/* Management */}
       <section className="py-20 sm:py-28 bg-[#f5f5f5] border-t border-[#e5e5e5]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-10">Management</h2>
+          <Reveal>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-10">Management</h2>
+          </Reveal>
           {management.length === 0 ? (
             <p className="text-[#6b7280] text-sm">No members to display.</p>
           ) : (
             <div className="flex flex-wrap justify-center gap-6 max-w-[54.75rem] mx-auto">
-              {management.map(m => (
-                <div key={m.id} className="w-[calc(50%-12px)] sm:w-[calc(33.333%-16px)]">
+              {management.map((m, i) => (
+                <Reveal key={m.id} delay={i * 70} direction="up" className="w-[calc(50%-12px)] sm:w-[calc(33.333%-16px)]">
                   <MemberCard member={m} />
-                </div>
+                </Reveal>
               ))}
             </div>
           )}
@@ -137,23 +149,25 @@ export default async function TeamPage() {
       {showAlumni && (
         <section className="py-20 bg-white border-t border-[#e5e5e5]">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-8">
-            <div>
+            <Reveal direction="right">
               <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Past Members</p>
               <h2 className="font-serif text-3xl font-bold text-[#0a0a0a] mb-3">Meet our Alumni</h2>
               <div className="w-10 h-px bg-[#1a4a3a]" />
               <p className="text-[#6b7280] text-sm leading-relaxed mt-4 max-w-lg">
                 Discover the former members who helped build Alata Investment Club and are now making an impact across the financial industry.
               </p>
-            </div>
-            <Link
-              href="/team/alumni"
-              className="inline-flex items-center gap-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-150 whitespace-nowrap"
-            >
-              View Alumni
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+            </Reveal>
+            <Reveal direction="left" delay={100}>
+              <Link
+                href="/team/alumni"
+                className="inline-flex items-center gap-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-200 whitespace-nowrap"
+              >
+                View Alumni
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </Reveal>
           </div>
         </section>
       )}

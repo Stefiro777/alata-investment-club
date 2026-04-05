@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
+import Reveal from '../components/Reveal'
 
 type Contenuto = {
   id: number
@@ -457,8 +458,10 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filtered.map(item => (
-            <EventCard key={item.id} item={item} onOpenGallery={setGalleryItem} onOpenDetail={setDetailItem} />
+          {filtered.map((item, i) => (
+            <Reveal key={item.id} delay={Math.min(i * 80, 400)} direction="up">
+              <EventCard item={item} onOpenGallery={setGalleryItem} onOpenDetail={setDetailItem} />
+            </Reveal>
           ))}
         </div>
       )}

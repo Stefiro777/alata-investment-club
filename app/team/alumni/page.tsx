@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import AlumniGrid from './AlumniGrid'
+import Reveal from '@/app/components/Reveal'
 import type { Alumni } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -70,17 +71,18 @@ export default async function AlumniPage() {
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">
+            <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">
               <Link href="/team" className="hover:text-white/80 transition-colors">
                 Our Team
               </Link>
               {' / '}Alumni
             </p>
-            <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
+            <h1 className="animate-hero-title font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
               Alumni
             </h1>
-            <div className="w-12 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-base max-w-2xl leading-relaxed">
+            <div className="animate-hero-line w-12 h-px bg-white/30 mb-6" />
+            <p className="text-white/70 text-base max-w-2xl leading-relaxed"
+              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
               Former members who shaped Alata Investment Club — now building their careers in finance.
             </p>
           </div>
@@ -113,14 +115,15 @@ export default async function AlumniPage() {
             }
           `}</style>
 
-          <div className="flex flex-col items-center mb-10">
+          <Reveal direction="up" className="flex flex-col items-center mb-10">
             <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Career Placements</p>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">
               Where Our Alumni Work Today
             </h2>
             <div className="w-10 h-px bg-[#1a4a3a] mt-4" />
-          </div>
+          </Reveal>
 
+          <Reveal direction="up" delay={200}>
           <div className="overflow-hidden">
             <div className="alumni-companies-track flex items-center w-max">
               {marqueeItems.map((company, i) => (
@@ -136,7 +139,7 @@ export default async function AlumniPage() {
                       <img
                         src={company.logo_url}
                         alt={company.name}
-                        className="h-12 w-auto object-contain max-w-[160px]"
+                        className="partner-logo-item h-12 w-auto object-contain max-w-[160px]"
                       />
                     </a>
                   ) : (
@@ -144,13 +147,14 @@ export default async function AlumniPage() {
                     <img
                       src={company.logo_url}
                       alt={company.name}
-                      className="h-12 w-auto object-contain max-w-[160px]"
+                      className="partner-logo-item h-12 w-auto object-contain max-w-[160px]"
                     />
                   )}
                 </div>
               ))}
             </div>
           </div>
+          </Reveal>
         </section>
       )}
     </div>

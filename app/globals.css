@@ -30,8 +30,140 @@
   animation: cardEnter 0.25s ease-out both;
 }
 
+/* Hero entrance */
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(48px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-hero-title {
+  animation: heroFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+.animate-hero-line {
+  animation: heroFadeIn 0.8s ease 0.7s both;
+}
+
+.animate-hero-logo {
+  animation: heroFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0s both;
+}
+
+/* Subtle float for logo */
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: logoFloat 5s ease-in-out infinite;
+}
+
+/* Underline grow (for section accents) */
+@keyframes lineGrow {
+  from { width: 0; opacity: 0; }
+  to   { width: 100%; opacity: 1; }
+}
+
+/* Value cards: subtle shimmer on hover */
+@keyframes shimmerSlide {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+/* Pulse ring for stats */
+@keyframes pulseRing {
+  0%   { transform: scale(1);    opacity: 0.4; }
+  70%  { transform: scale(1.15); opacity: 0; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+/* Contact icon border spin on hover */
+@keyframes borderSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 html {
   scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+}
+
+/* ─── Utility: hover lift ─────────────────────────────────────────── */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: pointer;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(26, 74, 58, 0.15);
+}
+
+/* ─── Utility: hover green border ────────────────────────────────── */
+.hover-border-green {
+  transition: border-color 0.2s ease;
+}
+.hover-border-green:hover {
+  border-color: #1a4a3a;
+}
+
+/* ─── Utility: underline grows left→right on hover ──────────────── */
+.underline-grow {
+  position: relative;
+  display: inline-block;
+}
+.underline-grow::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #1a4a3a;
+  transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.underline-grow:hover::after {
+  width: 100%;
+}
+
+/* ─── Team member card: subtle hover ────────────────────────────── */
+.member-card-simple {
+  transition: box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.member-card-simple:hover {
+  box-shadow: 0 8px 24px rgba(26, 74, 58, 0.15);
+}
+.member-photo {
+  transition: filter 0.3s ease;
+}
+.member-card-simple:hover .member-photo {
+  filter: brightness(1.05);
+}
+
+/* ─── Partner logos: hover brightness ───────────────────────────── */
+.partner-logo-item {
+  opacity: 0.72;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+.partner-logo-item:hover {
+  opacity: 1;
+  filter: brightness(1.05);
+}
+
+/* ─── Respect prefers-reduced-motion ────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {

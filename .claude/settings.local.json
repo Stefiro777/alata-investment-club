@@ -28,7 +28,15 @@
       "Bash(echo \"exit: $?\")",
       "Bash(npm install:*)",
       "Bash(openssl rand:*)",
-      "Bash(find C:UsersfinulDesktopalata-investment-clubappapi -name *.ts -o -name *.tsx)"
+      "Bash(find C:UsersfinulDesktopalata-investment-clubappapi -name *.ts -o -name *.tsx)",
+      "Bash(claude skill:*)",
+      "Bash(claude skills:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npx uipro-cli:*)",
+      "Bash(find /c/Users/finul/Desktop/alata-investment-club -name tailwind.config.* -o -name *.config.ts -o -name *.config.js)",
+      "Bash(npx uipro:*)"
     ]
   }
 }

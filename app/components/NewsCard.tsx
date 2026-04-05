@@ -51,10 +51,12 @@ function DetailModal({ item, onClose }: { item: NewsItem; onClose: () => void })
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+      style={{ animation: 'heroFadeIn 0.2s ease both' }}
       onClick={onClose}
     >
       <div
         className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        style={{ animation: 'heroFadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Close */}
@@ -131,8 +133,20 @@ export default function NewsCard({ item }: { item: NewsItem }) {
   return (
     <>
       <article
-        className="group flex flex-col border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+        onClick={() => setModalOpen(true)}
+        className="group flex flex-col border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden cursor-pointer"
+        style={{
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          transition: 'transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s cubic-bezier(0.22,1,0.36,1)',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(-6px)'
+          ;(e.currentTarget as HTMLElement).style.boxShadow = '0 16px 40px rgba(26,74,58,0.15)'
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.transform = ''
+          ;(e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'
+        }}
       >
         {/* Photo */}
         {coverPhoto ? (
@@ -143,6 +157,10 @@ export default function NewsCard({ item }: { item: NewsItem }) {
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
               style={{ objectPosition: 'center top', imageOrientation: 'from-image' } as React.CSSProperties}
+            />
+            {/* Green tint overlay on hover */}
+            <div
+              className="absolute inset-0 bg-[#1a4a3a] opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
             />
             <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 0 3px white' }} />
           </div>
@@ -169,7 +187,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
             )}
           </div>
 
-          <h3 className="font-serif text-lg font-medium text-[#0a0a0a] leading-snug mb-3 group-hover:text-[#1a4a3a] transition-colors flex-1">
+          <h3 className="font-serif text-lg font-medium text-[#0a0a0a] leading-snug mb-3 group-hover:text-[#1a4a3a] transition-colors duration-200 flex-1">
             {item.titolo}
           </h3>
 
@@ -185,7 +203,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] transition-colors duration-150"
+                className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] hover:gap-3 transition-all duration-150"
                 onClick={e => e.stopPropagation()}
               >
                 LinkedIn
@@ -194,6 +212,9 @@ export default function NewsCard({ item }: { item: NewsItem }) {
                 </svg>
               </a>
             )}
+            <span className="ml-auto text-[#1a4a3a]/40 text-xs tracking-wide uppercase group-hover:text-[#1a4a3a] transition-colors duration-200">
+              Read more →
+            </span>
           </div>
         </div>
       </article>

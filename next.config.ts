@@ -8,6 +8,9 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   trailingSlash: false,
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]

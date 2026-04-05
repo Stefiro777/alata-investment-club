@@ -21,14 +21,17 @@ export default async function JoinUsPage() {
     <div className="min-h-screen">
 
       {/* ── Hero ── */}
-      <section className="relative py-24 px-6" style={{ background: '#1a4a3a' }}>
+      <section className="relative py-24 px-6 overflow-hidden" style={{ background: '#1a4a3a' }}>
+        {/* Subtle texture overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 60%, rgba(255,255,255,0.04) 0%, transparent 70%)' }} />
         <div className="relative z-10 max-w-5xl mx-auto">
-          <p className="text-xs tracking-widest uppercase text-white/60 mb-4">Join Us</p>
-          <h1 className="font-serif text-5xl font-bold text-white leading-tight">
+          <p className="animate-hero-line text-xs tracking-widest uppercase text-white/60 mb-4">Join Us</p>
+          <h1 className="animate-hero-title font-serif text-5xl font-bold text-white leading-tight">
             Become a Member
           </h1>
-          <div className="w-10 h-px bg-white/30 mt-4 mb-6" />
-          <p className="text-white/80 text-lg max-w-xl leading-relaxed">
+          <div className="animate-hero-line w-10 h-px bg-white/30 mt-4 mb-6" />
+          <p className="text-white/80 text-lg max-w-xl leading-relaxed"
+            style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
             Join a meritocratic, collaborative environment where ambition meets finance.
           </p>
         </div>

@@ -45,7 +45,10 @@ function LoginForm() {
   return (
     <div className="flex min-h-screen">
       {/* Left — image panel */}
-      <div className="hidden md:block md:w-1/2 relative">
+      <div
+        className="hidden md:block md:w-1/2 relative"
+        style={{ animation: 'heroFadeIn 0.9s ease both' }}
+      >
         <Image
           src="/capitolino.jpg"
           alt="Capitolino"
@@ -55,20 +58,29 @@ function LoginForm() {
         />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div style={{ position: 'relative', zIndex: 1 }} className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
-          <p className="font-serif italic text-3xl lg:text-4xl leading-snug mb-5">
+          <p
+            className="font-serif italic text-3xl lg:text-4xl leading-snug mb-5"
+            style={{ animation: 'heroFadeUp 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s both' }}
+          >
             Great investments start with great people.
           </p>
-          <p className="text-xs tracking-widest uppercase text-white/60">
+          <p
+            className="text-xs tracking-widest uppercase text-white/60"
+            style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.5s both' }}
+          >
             Alata Investment Club — Brescia
           </p>
         </div>
       </div>
 
       {/* Right — form panel */}
-      <div className="w-full md:w-1/2 bg-white flex items-center justify-center py-16 px-6 sm:px-12">
+      <div
+        className="w-full md:w-1/2 bg-white flex items-center justify-center py-16 px-6 sm:px-12"
+        style={{ animation: 'heroFadeIn 0.7s ease 0.1s both' }}
+      >
         <div className="w-full max-w-sm">
           {/* Logo */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-10" style={{ animation: 'heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.15s both' }}>
             <Link href="/" className="inline-block">
               <div style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.15)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
                 <Image
@@ -87,9 +99,12 @@ function LoginForm() {
           </div>
 
           {/* Form card */}
-          <div className="bg-white p-8 border border-[#e5e5e5]">
+          <div
+            className="bg-white p-8 border border-[#e5e5e5]"
+            style={{ animation: 'heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.3s both' }}
+          >
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
+              <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.38s both' }}>
                 <label htmlFor="email" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
                   Email
                 </label>
@@ -105,12 +120,12 @@ function LoginForm() {
                 />
               </div>
 
-              <div>
+              <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.46s both' }}>
                 <div className="flex items-center justify-between mb-2">
                   <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280]">
                     Password
                   </label>
-                  <Link href="/reset-password" className="text-xs text-[#1a4a3a] hover:underline">
+                  <Link href="/reset-password" className="underline-grow text-xs text-[#1a4a3a]">
                     Forgot password?
                   </Link>
                 </div>
@@ -138,38 +153,41 @@ function LoginForm() {
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-              >
-                {loading ? (
-                  <>
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Signing in…
-                  </>
-                ) : (
-                  'Sign in'
-                )}
-              </button>
+              <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.54s both' }}>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1)' }}
+                >
+                  {loading ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Signing in…
+                    </>
+                  ) : (
+                    'Sign in'
+                  )}
+                </button>
+              </div>
             </form>
 
             <p className="text-center text-xs text-[#6b7280] mt-6 pt-6 border-t border-[#f5f5f5]">
               Don&apos;t have an account?{' '}
               <a
                 href="mailto:alatabrixiaic@gmail.com"
-                className="text-[#1a4a3a] font-medium hover:underline"
+                className="underline-grow text-[#1a4a3a] font-medium"
               >
                 Contact the administrator.
               </a>
             </p>
           </div>
 
-          <div className="mt-6 text-center">
-            <Link href="/" className="text-xs text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors">
+          <div className="mt-6 text-center" style={{ animation: 'heroFadeUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.6s both' }}>
+            <Link href="/" className="underline-grow text-xs text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors">
               ← Back to homepage
             </Link>
           </div>

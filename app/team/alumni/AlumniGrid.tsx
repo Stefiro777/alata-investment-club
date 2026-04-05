@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Alumni } from '@/lib/types'
+import Reveal from '@/app/components/Reveal'
 
 function LinkedInIcon() {
   return (
@@ -76,7 +77,7 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
     <div>
       {/* Filter bar */}
       {companies.length > 0 && (
-        <div className="flex items-center gap-3 mb-10 flex-wrap">
+        <Reveal direction="down" className="flex items-center gap-3 mb-10 flex-wrap">
           <div className="relative">
             <select
               value={selected}
@@ -113,7 +114,7 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
               {filtered.length} {filtered.length === 1 ? 'alumni' : 'alumni'}
             </span>
           )}
-        </div>
+        </Reveal>
       )}
 
       {/* Grid */}
@@ -123,8 +124,10 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filtered.map(a => (
-            <AlumniCard key={a.id} alumni={a} />
+          {filtered.map((a, i) => (
+            <Reveal key={a.id} delay={Math.min(i * 60, 360)} direction="up">
+              <AlumniCard alumni={a} />
+            </Reveal>
           ))}
         </div>
       )}

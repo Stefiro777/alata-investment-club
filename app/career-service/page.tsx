@@ -2,6 +2,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase-server'
+import Reveal from '../components/Reveal'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,12 +87,13 @@ export default async function CareerServicePage() {
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Professional support</p>
-            <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
+            <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Professional support</p>
+            <h1 className="animate-hero-title font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
               Career Service
             </h1>
-            <div className="w-12 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-base max-w-2xl leading-relaxed">
+            <div className="animate-hero-line w-12 h-px bg-white/30 mb-6" />
+            <p className="text-white/70 text-base max-w-2xl leading-relaxed"
+              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
               Services designed to accelerate your career in finance — from university orientation to landing your first role in the industry.
             </p>
           </div>
@@ -102,48 +104,54 @@ export default async function CareerServicePage() {
       <section className="py-20 sm:py-28 bg-[#f5f5f5]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid gap-px bg-[#e5e5e5] md:grid-cols-3">
-            {services.map((service) => (
-              <div key={service.id} className="bg-white p-8 sm:p-10 flex flex-col gap-6" style={{ borderTop: '3px solid #1a4a3a' }}>
-                <div className="flex items-baseline justify-between mb-4">
-                  <h2 className="font-serif text-2xl font-medium text-[#0a0a0a]">
-                    {service.title}
-                  </h2>
-                  {showPrices ? (
-                    <span className="font-serif text-2xl font-medium text-[#1a4a3a] flex-shrink-0 ml-4">
-                      {prices[service.id]}
-                    </span>
-                  ) : (
-                    <span className="text-xs font-medium tracking-wide uppercase text-[#6b7280] flex-shrink-0 ml-4">
-                      Contact us
-                    </span>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-[#6b7280] text-sm leading-relaxed">{service.description}</p>
-                </div>
-
-                <ul className="space-y-2.5 flex-1">
-                  {service.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-sm text-[#0a0a0a]">
-                      <span className="w-1 h-1 rounded-full bg-[#1a4a3a] flex-shrink-0 mt-2" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <a
-                  href={service.calendlyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 mt-2"
+            {services.map((service, i) => (
+              <Reveal key={service.id} delay={i * 150} direction="up">
+                <div
+                  className="hover-lift bg-white p-8 sm:p-10 flex flex-col gap-6 h-full"
+                  style={{ borderTop: '3px solid #1a4a3a' }}
                 >
-                  Book now
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </a>
-              </div>
+                  <div className="flex items-baseline justify-between mb-4">
+                    <h2 className="font-serif text-2xl font-medium text-[#0a0a0a]">
+                      {service.title}
+                    </h2>
+                    {showPrices ? (
+                      <span className="font-serif text-2xl font-medium text-[#1a4a3a] flex-shrink-0 ml-4">
+                        {prices[service.id]}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium tracking-wide uppercase text-[#6b7280] flex-shrink-0 ml-4">
+                        Contact us
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-[#6b7280] text-sm leading-relaxed">{service.description}</p>
+                  </div>
+
+                  <ul className="space-y-2.5 flex-1">
+                    {service.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3 text-sm text-[#0a0a0a]">
+                        <span className="w-1 h-1 rounded-full bg-[#1a4a3a] flex-shrink-0 mt-2" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <a
+                    href={service.calendlyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-sm font-medium tracking-wide py-3.5 px-6 mt-2"
+                    style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
+                  >
+                    Book now
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </a>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -152,24 +160,26 @@ export default async function CareerServicePage() {
       {/* Linktree — white */}
       <section className="py-20 bg-white border-t border-[#e5e5e5]">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">Follow us</p>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-4">
-            All our links in one place
-          </h2>
-          <p className="text-[#6b7280] text-sm leading-relaxed mb-10">
-            Follow Alata Investment Club on social media, access our resources, and stay updated on our activities.
-          </p>
-          <a
-            href={LINKTREE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-150"
-          >
-            Visit our Linktree
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </a>
+          <Reveal>
+            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">Follow us</p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-4">
+              All our links in one place
+            </h2>
+            <p className="text-[#6b7280] text-sm leading-relaxed mb-10">
+              Follow Alata Investment Club on social media, access our resources, and stay updated on our activities.
+            </p>
+            <a
+              href={LINKTREE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-200"
+            >
+              Visit our Linktree
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          </Reveal>
         </div>
       </section>
     </div>

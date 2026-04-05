@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import PartnersMarquee from '@/app/components/PartnersMarquee'
 import { createClient } from '@/lib/supabase-server'
+import Reveal from '@/app/components/Reveal'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,12 +32,13 @@ export default async function PartnersPage() {
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Partnerships</p>
-            <h1 className="font-serif text-5xl sm:text-6xl font-bold mb-6">
+            <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Partnerships</p>
+            <h1 className="animate-hero-title font-serif text-5xl sm:text-6xl font-bold mb-6">
               Partner with Alata
             </h1>
-            <div className="w-12 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-base max-w-2xl leading-relaxed">
+            <div className="animate-hero-line w-12 h-px bg-white/30 mb-6" />
+            <p className="text-white/70 text-base max-w-2xl leading-relaxed"
+              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
               Build your brand where the next generation of finance professionals starts.
             </p>
           </div>
@@ -46,9 +48,11 @@ export default async function PartnersPage() {
       {/* Why Partner */}
       <section className="py-20 sm:py-28 bg-[#f5f5f5]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Collaboration</p>
-          <h2 className="font-serif text-4xl font-bold text-[#0a0a0a] mb-2">Why Partner with Us</h2>
-          <div className="w-10 h-px bg-[#1a4a3a] mb-12" />
+          <Reveal direction="up">
+            <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Collaboration</p>
+            <h2 className="font-serif text-4xl font-bold text-[#0a0a0a] mb-2">Why Partner with Us</h2>
+            <div className="w-10 h-px bg-[#1a4a3a] mb-12" />
+          </Reveal>
           <div className="grid sm:grid-cols-3 gap-6">
             {[
               {
@@ -63,12 +67,14 @@ export default async function PartnersPage() {
                 title: 'Meaningful Collaboration',
                 body: "We don't do generic sponsorships. Every partnership is built around what makes sense for both sides — from guest talks to co-branded initiatives.",
               },
-            ].map(({ title, body }) => (
-              <div key={title} className="bg-white border border-black/10 p-8">
-                <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
-                <h3 className="font-serif text-xl font-bold text-[#0a0a0a] mb-3">{title}</h3>
-                <p className="text-sm text-[#6b7280] leading-relaxed">{body}</p>
-              </div>
+            ].map(({ title, body }, i) => (
+              <Reveal key={title} direction="up" delay={i * 120}>
+                <div className="bg-white border border-black/10 p-8 hover-lift">
+                  <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
+                  <h3 className="font-serif text-xl font-bold text-[#0a0a0a] mb-3">{title}</h3>
+                  <p className="text-sm text-[#6b7280] leading-relaxed">{body}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>

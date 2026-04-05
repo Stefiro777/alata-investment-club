@@ -52,28 +52,31 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Top bar */}
-      <div className="bg-[#1a4a3a] text-white">
+      <div className="bg-[#1a4a3a] text-white" style={{ animation: 'heroFadeIn 0.5s ease both' }}>
         <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex items-center justify-between">
-          <div>
+          <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.1s both' }}>
             <h1 className="font-serif text-xl font-medium">Admin — Content Management</h1>
             <p className="text-white/50 text-xs mt-0.5">{user.email}</p>
           </div>
-          <div className="flex items-center gap-3 ml-8">
+          <div className="flex items-center gap-3 ml-8" style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.2s both' }}>
             <a
               href="/admin/team"
-              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
+              className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
+              style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
             >
               Team
             </a>
             <a
               href="/admin/members"
-              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
+              className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
+              style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
             >
               Members
             </a>
             <a
               href="/dashboard"
-              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
+              className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
+              style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
             >
               Dashboard
             </a>
