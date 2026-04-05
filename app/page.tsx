@@ -163,14 +163,14 @@ export default async function HomePage() {
             </h2>
             <div className="w-10 h-0.5 bg-[#1a4a3a] mb-10" />
           </Reveal>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 items-stretch">
             {[
               { label: 'Community', body: 'More than a club, a network built on trust. The relationships you build here last well beyond your degree.' },
               { label: 'Drive', body: "We attract people who don't wait to be told what to do. Taking initiative isn't a buzzword here, it's the entry requirement." },
               { label: 'Ambition', body: "We think big about what a university club can be. And we're building accordingly." },
             ].map(({ label, body }, i) => (
-              <Reveal key={label} direction="up" delay={i * 150}>
-                <div className="bg-[#1a4a3a] p-8">
+              <Reveal key={label} direction="up" delay={i * 150} className="h-full">
+                <div className="bg-[#1a4a3a] p-8 h-full">
                   <h3 className="font-serif text-2xl font-bold text-white mb-3">{label}</h3>
                   <p className="text-white/65 text-sm leading-relaxed">{body}</p>
                 </div>
