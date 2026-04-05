@@ -94,7 +94,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
       href={resource.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group p-6 border border-black/10 hover:border-[#1a4a3a] bg-white flex flex-col gap-4 transition-colors duration-150"
+      className="group p-6 border border-black/10 hover:border-[#1a4a3a] bg-white flex flex-col gap-4 transition-colors duration-150 h-full"
     >
       <div className="w-10 h-10 bg-[#f5f5f5] flex items-center justify-center group-hover:bg-[#1a4a3a] transition-colors duration-150 flex-shrink-0">
         {resource.is_folder
@@ -155,14 +155,14 @@ function WelcomeView({
           Welcome back, {displayName}
         </h2>
         <div className="w-12 h-px bg-[#1a4a3a] mb-8" />
-        <div className="relative pl-6 border-l-2 border-[#1a4a3a]/20">
+        <div className="relative">
           <span
             className="absolute -top-3 -left-1 font-serif leading-none text-[#1a4a3a] select-none pointer-events-none"
             style={{ fontSize: '4rem', opacity: 0.12 }}
             aria-hidden="true"
           >&ldquo;</span>
           <p className="font-serif italic text-2xl sm:text-3xl text-[#0a0a0a]/70 leading-snug relative">
-            Great investments start with great people.
+            Great investments start with great people.&rdquo;
           </p>
         </div>
       </div>
@@ -199,9 +199,9 @@ function WelcomeView({
           <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-2">Recently Added</p>
           <h3 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-1">Latest Resources</h3>
           <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
             {recent.map(r => (
-              <div key={r.id} className="relative">
+              <div key={r.id} className="relative h-full">
                 <span className="absolute top-3 right-3 text-[10px] font-medium tracking-wider uppercase text-white bg-[#1a4a3a] px-2 py-0.5 z-10">
                   {CATEGORY_LABELS[r.category] ?? r.category}
                 </span>
