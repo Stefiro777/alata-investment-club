@@ -53,7 +53,7 @@ export default async function PartnersPage() {
             <h2 className="font-serif text-4xl font-bold text-[#0a0a0a] mb-2">Why Partner with Us</h2>
             <div className="w-10 h-px bg-[#1a4a3a] mb-12" />
           </Reveal>
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-3 gap-6 items-stretch">
             {[
               {
                 title: 'Access Top Talent',
@@ -68,8 +68,8 @@ export default async function PartnersPage() {
                 body: "We don't do generic sponsorships. Every partnership is built around what makes sense for both sides — from guest talks to co-branded initiatives.",
               },
             ].map(({ title, body }, i) => (
-              <Reveal key={title} direction="up" delay={i * 120}>
-                <div className="bg-white border border-black/10 p-8 hover-lift">
+              <Reveal key={title} direction="up" delay={i * 120} className="h-full">
+                <div className="bg-white border border-black/10 p-8 hover-lift h-full">
                   <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
                   <h3 className="font-serif text-xl font-bold text-[#0a0a0a] mb-3">{title}</h3>
                   <p className="text-sm text-[#6b7280] leading-relaxed">{body}</p>

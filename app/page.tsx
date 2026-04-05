@@ -62,18 +62,27 @@ export default function HomePage() {
         {/* Content */}
         <div className="py-24 sm:py-36" style={{ position: 'relative', zIndex: 2 }}>
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-12 lg:gap-16 text-center lg:text-left">
+            <div className="grid lg:grid-cols-[1fr_auto] items-center gap-10 lg:gap-16">
               {/* Text — animates up */}
-              <div className="flex-1 min-w-0">
-                <h1 className="animate-hero-title font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-8">
+              <div className="text-center lg:text-left">
+                <p className="animate-hero-line text-xs tracking-[0.3em] uppercase text-white/40 mb-6">
+                  University of Brescia&nbsp;&nbsp;·&nbsp;&nbsp;Finance Club
+                </p>
+                <h1
+                  className="animate-hero-title font-serif font-semibold text-white leading-[1.02] mb-8"
+                  style={{ fontSize: 'clamp(3rem, 7.5vw, 6.5rem)' }}
+                >
                   Alata<br />
-                  <em className="italic font-semibold">Investment Club</em>
+                  <em className="italic">Investment Club</em>
                 </h1>
-                <div className="animate-hero-line w-16 h-px bg-white/30" />
+                <div className="animate-hero-line flex items-center gap-5 justify-center lg:justify-start">
+                  <div className="w-16 h-px bg-white/30" />
+                  <em className="font-serif italic text-sm text-white/40">Est. 2023</em>
+                </div>
               </div>
 
               {/* Logo with float animation */}
-              <div className="animate-hero-logo flex-shrink-0 flex justify-center mx-auto md:mx-0">
+              <div className="animate-hero-logo flex-shrink-0 flex justify-center lg:justify-end mx-auto lg:mx-0">
                 <div
                   className="animate-float"
                   style={{
@@ -87,8 +96,8 @@ export default function HomePage() {
                   <Image
                     src="/logofronte.png"
                     alt="Alata Investment Club"
-                    width={320}
-                    height={320}
+                    width={300}
+                    height={300}
                     className="object-contain"
                   />
                 </div>
@@ -99,16 +108,27 @@ export default function HomePage() {
       </section>
 
       {/* Description — white band */}
-      <section className="bg-white py-16 sm:py-20 border-b border-[#e5e5e5]">
+      <section className="bg-white py-16 sm:py-24 border-b border-[#e5e5e5]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <Reveal>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-6">Who We Are</h2>
-          </Reveal>
-          <Reveal delay={120}>
-            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-3xl">
-              Alata Investment Club is a university association of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
-            </p>
-          </Reveal>
+          <div className="grid lg:grid-cols-[260px_1fr] gap-10 lg:gap-20 items-start">
+            <Reveal>
+              <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">About</p>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] leading-tight mb-4">
+                Who<br className="hidden lg:block" /> We Are
+              </h2>
+              <div className="w-8 h-px bg-[#1a4a3a]" />
+            </Reveal>
+            <Reveal delay={120} className="relative">
+              <span
+                className="absolute -top-6 -left-2 font-serif leading-none text-[#1a4a3a] select-none pointer-events-none"
+                style={{ fontSize: '7rem', opacity: 0.05 }}
+                aria-hidden="true"
+              >&ldquo;</span>
+              <p className="text-[#6b7280] text-base sm:text-lg leading-[1.8] relative">
+                Alata Investment Club is a university association of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
+              </p>
+            </Reveal>
+          </div>
         </div>
       </section>
 
@@ -116,21 +136,33 @@ export default function HomePage() {
 
       {/* About — Vision + Mission */}
       <div className="bg-white grid md:grid-cols-2 divide-y md:divide-y-0">
-        <Reveal direction="right" className="px-8 lg:px-14 py-20 sm:py-24">
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+        <Reveal direction="right" className="px-8 lg:px-14 py-20 sm:py-24 relative overflow-hidden">
+          <span
+            className="absolute -bottom-4 -right-3 font-serif font-bold leading-none text-[#1a4a3a] select-none pointer-events-none"
+            style={{ fontSize: '9rem', opacity: 0.04 }}
+            aria-hidden="true"
+          >01</span>
+          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3 relative">Vision</p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3 relative">
             Our Vision
           </h2>
-          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5" />
-          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
+          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5 relative" />
+          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed relative">
             A community where ambition meets opportunity, regardless of where you start.
           </p>
         </Reveal>
-        <Reveal direction="left" delay={80} className="px-8 lg:px-14 py-20 sm:py-24 relative before:hidden md:before:block before:absolute before:left-0 before:top-10 before:bottom-10 before:w-px before:bg-black/10">
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+        <Reveal direction="left" delay={80} className="px-8 lg:px-14 py-20 sm:py-24 relative overflow-hidden before:hidden md:before:block before:absolute before:left-0 before:top-10 before:bottom-10 before:w-px before:bg-black/10">
+          <span
+            className="absolute -bottom-4 -right-3 font-serif font-bold leading-none text-[#1a4a3a] select-none pointer-events-none"
+            style={{ fontSize: '9rem', opacity: 0.04 }}
+            aria-hidden="true"
+          >02</span>
+          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3 relative">Mission</p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3 relative">
             Our Mission
           </h2>
-          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5" />
-          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
+          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5 relative" />
+          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed relative">
             Alata was born from a simple idea: that the best conversations about finance happen between people who are genuinely curious. We bring together the most ambitious students at UniBS to share knowledge, challenge each other, and grow, inside and outside the classroom.
           </p>
         </Reveal>
@@ -153,12 +185,17 @@ export default function HomePage() {
             ].map(({ label, body }, i) => (
               <Reveal key={label} delay={i * 120} direction="up">
                 <div
-                  className="bg-[#1a4a3a] p-8 h-full transition-transform duration-300 hover:-translate-y-1"
+                  className="bg-[#1a4a3a] p-8 h-full transition-transform duration-300 hover:-translate-y-1 relative overflow-hidden"
                   style={{ boxShadow: '0 2px 12px rgba(26,74,58,0.12)' }}
                 >
-                  <div className="w-6 h-px bg-white/40 mb-5" />
-                  <h3 className="font-serif text-2xl font-bold text-white mb-3">{label}</h3>
-                  <p className="text-white/65 text-sm leading-relaxed">{body}</p>
+                  <span
+                    className="absolute -top-3 -right-2 font-serif font-bold leading-none text-white select-none pointer-events-none"
+                    style={{ fontSize: '8rem', opacity: 0.07 }}
+                    aria-hidden="true"
+                  >{String(i + 1).padStart(2, '0')}</span>
+                  <div className="w-6 h-px bg-white/40 mb-5 relative" />
+                  <h3 className="font-serif text-2xl font-bold text-white mb-3 relative">{label}</h3>
+                  <p className="text-white/65 text-sm leading-relaxed relative">{body}</p>
                 </div>
               </Reveal>
             ))}

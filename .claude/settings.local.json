@@ -36,7 +36,11 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npx uipro-cli:*)",
       "Bash(find /c/Users/finul/Desktop/alata-investment-club -name tailwind.config.* -o -name *.config.ts -o -name *.config.js)",
-      "Bash(npx uipro:*)"
+      "Bash(npx uipro:*)",
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"investment club finance premium boutique university minimal\" --design-system -p \"Alata Investment Club\")",
+      "Bash(py --version)",
+      "Bash(where python:*)",
+      "Bash(\"C:\\\\Users\\\\finul\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\python.exe\" skills/ui-ux-pro-max/scripts/search.py \"investment club finance premium boutique minimal editorial\" --design-system -p \"Alata Investment Club\")"
     ]
   }
 }

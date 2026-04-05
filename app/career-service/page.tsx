@@ -107,29 +107,41 @@ export default async function CareerServicePage() {
             {services.map((service, i) => (
               <Reveal key={service.id} delay={i * 150} direction="up">
                 <div
-                  className="hover-lift bg-white p-8 sm:p-10 flex flex-col gap-6 h-full"
+                  className="hover-lift bg-white p-8 sm:p-10 flex flex-col h-full relative overflow-hidden"
                   style={{ borderTop: '3px solid #1a4a3a' }}
                 >
-                  <div className="flex items-baseline justify-between mb-4">
-                    <h2 className="font-serif text-2xl font-medium text-[#0a0a0a]">
-                      {service.title}
-                    </h2>
-                    {showPrices ? (
-                      <span className="font-serif text-2xl font-medium text-[#1a4a3a] flex-shrink-0 ml-4">
-                        {prices[service.id]}
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium tracking-wide uppercase text-[#6b7280] flex-shrink-0 ml-4">
-                        Contact us
-                      </span>
-                    )}
+                  {/* Decorative number */}
+                  <span
+                    className="absolute -bottom-5 -right-3 font-serif font-bold leading-none text-[#1a4a3a] select-none pointer-events-none"
+                    style={{ fontSize: '9rem', opacity: 0.05 }}
+                    aria-hidden="true"
+                  >{service.number}</span>
+
+                  {/* Service number + title */}
+                  <div className="mb-6 relative">
+                    <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-2">{service.number}</p>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <h2 className="font-serif text-2xl font-medium text-[#0a0a0a]">
+                        {service.title}
+                      </h2>
+                      {showPrices ? (
+                        <span className="font-serif text-2xl font-medium text-[#1a4a3a] flex-shrink-0">
+                          {prices[service.id]}
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium tracking-wide uppercase text-[#6b7280] flex-shrink-0">
+                          Contact us
+                        </span>
+                      )}
+                    </div>
+                    <div className="w-8 h-px bg-[#1a4a3a] mt-3" />
                   </div>
 
-                  <div>
+                  <div className="relative">
                     <p className="text-[#6b7280] text-sm leading-relaxed">{service.description}</p>
                   </div>
 
-                  <ul className="space-y-2.5 flex-1">
+                  <ul className="space-y-2.5 flex-1 mt-6 relative">
                     {service.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3 text-sm text-[#0a0a0a]">
                         <span className="w-1 h-1 rounded-full bg-[#1a4a3a] flex-shrink-0 mt-2" />
@@ -142,7 +154,7 @@ export default async function CareerServicePage() {
                     href={service.calendlyUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 w-full border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-sm font-medium tracking-wide py-3.5 px-6 mt-2"
+                    className="inline-flex items-center justify-center gap-2 w-full border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-sm font-medium tracking-wide py-3.5 px-6 mt-6 relative"
                     style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
                   >
                     Book now
