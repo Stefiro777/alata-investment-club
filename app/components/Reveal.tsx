@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react'
+import React, { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react'
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'none'
 
@@ -13,7 +13,7 @@ interface RevealProps {
   threshold?: number      // 0-1
   className?: string
   style?: CSSProperties
-  as?: keyof JSX.IntrinsicElements
+  as?: keyof React.JSX.IntrinsicElements
 }
 
 export default function Reveal({
