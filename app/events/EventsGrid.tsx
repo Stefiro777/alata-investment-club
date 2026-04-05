@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import Reveal from '../components/Reveal'
 
@@ -383,15 +383,19 @@ const TAG_FILTERS: { label: string; value: string | null }[] = [
   { label: 'Career Talk', value: 'Career Talk' },
 ]
 
+const CARDS_PER_PAGE = 6
+
 export default function EventsGrid({ items }: { items: Contenuto[] }) {
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [galleryItem, setGalleryItem] = useState<Contenuto | null>(null)
   const [detailItem, setDetailItem] = useState<Contenuto | null>(null)
+  const [page, setPage] = useState(0)
+  const [fading, setFading] = useState(false)
   const closeGallery = useCallback(() => setGalleryItem(null), [])
   const closeDetail = useCallback(() => setDetailItem(null), [])
 
-  const filtered = items.filter(item => {
+  const filtered = useMemo(() => items.filter(item => {
     if (activeTag && item.tag !== activeTag) return false
     const q = query.trim().toLowerCase()
     if (!q) return true
@@ -400,7 +404,45 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
       (item.short_description ?? '').toLowerCase().includes(q) ||
       (item.tag ?? '').toLowerCase().includes(q)
     )
-  })
+  }), [items, query, activeTag])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / CARDS_PER_PAGE))
+  const safePage = Math.min(page, totalPages - 1)
+  const currentCards = filtered.slice(safePage * CARDS_PER_PAGE, (safePage + 1) * CARDS_PER_PAGE)
+
+  const visibleDots = useMemo(() => {
+    if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i)
+    const start = Math.max(0, Math.min(safePage - 1, totalPages - 3))
+    return [start, start + 1, start + 2]
+  }, [totalPages, safePage])
+
+  function goTo(p: number) {
+    const target = Math.max(0, Math.min(totalPages - 1, p))
+    if (target === safePage) return
+    setFading(true)
+    setTimeout(() => {
+      setPage(target)
+      setFading(false)
+    }, 220)
+  }
+
+  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
+    setFading(true)
+    setTimeout(() => {
+      setQuery(e.target.value)
+      setPage(0)
+      setFading(false)
+    }, 220)
+  }
+
+  function handleTag(value: string | null) {
+    setFading(true)
+    setTimeout(() => {
+      setActiveTag(value)
+      setPage(0)
+      setFading(false)
+    }, 220)
+  }
 
   return (
     <div>
@@ -417,7 +459,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
         <input
           type="text"
           value={query}
-          onChange={e => setQuery(e.target.value)}
+          onChange={handleSearch}
           placeholder="Search events..."
           className="w-full pl-11 pr-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white placeholder-[#9ca3af] transition-colors"
         />
@@ -430,7 +472,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
           return (
             <button
               key={label}
-              onClick={() => setActiveTag(value)}
+              onClick={() => handleTag(value)}
               className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150"
               style={
                 active
@@ -457,13 +499,60 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
           <p className="text-sm tracking-wide">No events found.</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filtered.map((item, i) => (
-            <Reveal key={item.id} delay={Math.min(i * 80, 400)} direction="up">
-              <EventCard item={item} onOpenGallery={setGalleryItem} onOpenDetail={setDetailItem} />
-            </Reveal>
-          ))}
-        </div>
+        <>
+          <div
+            className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-opacity ease-in-out duration-[220ms] ${fading ? 'opacity-0' : 'opacity-100'}`}
+          >
+            {currentCards.map((item, i) => (
+              <Reveal key={item.id} delay={Math.min(i * 80, 400)} direction="up">
+                <EventCard item={item} onOpenGallery={setGalleryItem} onOpenDetail={setDetailItem} />
+              </Reveal>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-10">
+              {/* Prev */}
+              <button
+                onClick={() => goTo(safePage - 1)}
+                disabled={safePage === 0}
+                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-[#1a4a3a] hover:text-[#1a4a3a] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                aria-label="Previous"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* Dots — sliding window of 3 */}
+              {visibleDots.map((i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  aria-label={`Page ${i + 1}`}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === safePage
+                      ? 'w-2.5 h-2.5 bg-[#1a4a3a]'
+                      : 'w-2 h-2 bg-transparent border border-[#1a4a3a]/40 hover:border-[#1a4a3a]/70'
+                  }`}
+                />
+              ))}
+
+              {/* Next */}
+              <button
+                onClick={() => goTo(safePage + 1)}
+                disabled={safePage === totalPages - 1}
+                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-[#1a4a3a] hover:text-[#1a4a3a] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                aria-label="Next"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Gallery modal */}
