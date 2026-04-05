@@ -145,14 +145,9 @@ html {
   filter: brightness(1.05);
 }
 
-/* ─── Partner logos: hover brightness ───────────────────────────── */
+/* ─── Partner logos ──────────────────────────────────────────────── */
 .partner-logo-item {
-  opacity: 0.72;
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-.partner-logo-item:hover {
-  opacity: 1;
-  filter: brightness(1.05);
+  transition: opacity 0.3s ease;
 }
 
 /* ─── Respect prefers-reduced-motion ────────────────────────────── */
