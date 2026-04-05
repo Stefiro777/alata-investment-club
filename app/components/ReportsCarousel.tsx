@@ -129,6 +129,13 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
   const safePage = Math.min(page, totalPages - 1)
   const currentCards = filtered.slice(safePage * CARDS_PER_PAGE, (safePage + 1) * CARDS_PER_PAGE)
 
+  // Sliding window: max 3 dots visible (prev, current, next)
+  const visibleDots = useMemo(() => {
+    if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i)
+    const start = Math.max(0, Math.min(safePage - 1, totalPages - 3))
+    return [start, start + 1, start + 2]
+  }, [totalPages, safePage])
+
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     setFading(true)
     setTimeout(() => {
@@ -200,16 +207,16 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
                 </svg>
               </button>
 
-              {/* Dots */}
-              {Array.from({ length: totalPages }).map((_, i) => (
+              {/* Dots — sliding window of 3 */}
+              {visibleDots.map((i) => (
                 <button
                   key={i}
                   onClick={() => goTo(i)}
                   aria-label={`Page ${i + 1}`}
-                  className={`rounded-full transition-all duration-200 ${
+                  className={`rounded-full transition-all duration-300 ${
                     i === safePage
-                      ? 'w-6 h-2 bg-[#1a4a3a]'
-                      : 'w-2 h-2 bg-black/20 hover:bg-black/40'
+                      ? 'w-2.5 h-2.5 bg-[#1a4a3a]'
+                      : 'w-2 h-2 bg-transparent border border-[#1a4a3a]/40 hover:border-[#1a4a3a]/70'
                   }`}
                 />
               ))}
