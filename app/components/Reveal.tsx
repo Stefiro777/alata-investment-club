@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react'
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'none'
 
@@ -13,7 +13,6 @@ interface RevealProps {
   threshold?: number      // 0-1
   className?: string
   style?: CSSProperties
-  as?: keyof React.JSX.IntrinsicElements
 }
 
 export default function Reveal({
@@ -25,9 +24,8 @@ export default function Reveal({
   threshold = 0.15,
   className = '',
   style,
-  as: Tag = 'div',
 }: RevealProps) {
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -68,13 +66,12 @@ export default function Reveal({
   }
 
   return (
-    // @ts-expect-error dynamic tag
-    <Tag
+    <div
       ref={ref}
       className={className}
       style={{ ...(visible ? visibleStyle : hiddenStyle), ...style }}
     >
       {children}
-    </Tag>
+    </div>
   )
 }
