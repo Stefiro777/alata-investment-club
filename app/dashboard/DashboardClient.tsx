@@ -155,16 +155,9 @@ function WelcomeView({
           Welcome back, {displayName}
         </h2>
         <div className="w-12 h-px bg-[#1a4a3a] mb-8" />
-        <div className="relative">
-          <span
-            className="absolute -top-3 -left-1 font-serif leading-none text-[#1a4a3a] select-none pointer-events-none"
-            style={{ fontSize: '4rem', opacity: 0.12 }}
-            aria-hidden="true"
-          >&ldquo;</span>
-          <p className="font-serif italic text-2xl sm:text-3xl text-[#0a0a0a]/70 leading-snug relative">
-            Great investments start with great people.&rdquo;
-          </p>
-        </div>
+        <p className="font-serif italic text-2xl sm:text-3xl text-[#0a0a0a]/70 leading-snug">
+          &ldquo;Great investments start with great people.&rdquo;
+        </p>
       </div>
 
       {/* Quick access cards */}
