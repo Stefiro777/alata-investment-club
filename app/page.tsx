@@ -5,6 +5,7 @@ import Link from 'next/link'
 import StatsSection from './components/StatsSection'
 import NewsCard, { type NewsItem } from './components/NewsCard'
 import PartnersMarquee from './components/PartnersMarquee'
+import Reveal from './components/Reveal'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,17 +74,31 @@ export default async function HomePage() {
             <div className="flex flex-col lg:flex-row-reverse items-center gap-12 lg:gap-16 text-center lg:text-left">
               {/* Right (DOM first → desktop right via row-reverse) — text */}
               <div className="flex-1 min-w-0">
-                <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-2">
+                {/* Titolo: entra dal basso */}
+                <h1 className="animate-hero-title font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-2">
                   Alata<br />
                   <em className="italic font-semibold">Investment Club</em>
                 </h1>
-                <p className="font-serif italic text-base text-[#1a4a3a] opacity-70 mt-1 tracking-widest mb-8">Est. 2023</p>
-                <div className="w-16 h-px bg-white/30" />
+                {/* Sottotitolo: delay 200ms */}
+                <p
+                  className="font-serif italic text-base text-[#1a4a3a] opacity-70 mt-1 tracking-widest mb-8"
+                  style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.2s both' }}
+                >
+                  Est. 2023
+                </p>
+                {/* CTA (linea): delay 400ms */}
+                <div
+                  className="w-16 h-px bg-white/30"
+                  style={{ animation: 'heroFadeIn 0.8s ease 0.4s both' }}
+                />
               </div>
 
-              {/* Left — logo with frame */}
-              <div className="flex-shrink-0 flex justify-center mx-auto md:mx-0">
-                <div style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.5)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
+              {/* Left — logo con animate-hero-logo + animate-float */}
+              <div className="animate-hero-logo flex-shrink-0 flex justify-center mx-auto md:mx-0">
+                <div
+                  className="animate-float"
+                  style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.5)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}
+                >
                   <Image
                     src="/logofronte.png"
                     alt="Alata Investment Club"
@@ -101,18 +116,24 @@ export default async function HomePage() {
       {/* Description — white band */}
       <section className="bg-white py-16 sm:py-20 border-b border-[#e5e5e5]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-6">Who We Are</h2>
-          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-3xl">
-            Alata Investment Club is a university association of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
-          </p>
+          <Reveal direction="up">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-6">Who We Are</h2>
+            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-3xl">
+              Alata Investment Club is a university association of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
+            </p>
+          </Reveal>
         </div>
       </section>
 
-      <StatsSection />
+      {/* Stats */}
+      <Reveal direction="up">
+        <StatsSection />
+      </Reveal>
 
       {/* About — Vision + Mission */}
       <div className="bg-white grid md:grid-cols-2 divide-y md:divide-y-0">
-        <div className="px-8 lg:px-14 py-20 sm:py-24">
+        {/* Vision: entra da sinistra */}
+        <Reveal direction="left" className="px-8 lg:px-14 py-20 sm:py-24">
           <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
             Our Vision
           </h2>
@@ -120,8 +141,9 @@ export default async function HomePage() {
           <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
             A community where ambition meets opportunity, regardless of where you start.
           </p>
-        </div>
-        <div className="px-8 lg:px-14 py-20 sm:py-24 relative before:hidden md:before:block before:absolute before:left-0 before:top-10 before:bottom-10 before:w-px before:bg-black/10">
+        </Reveal>
+        {/* Mission: entra da destra */}
+        <Reveal direction="right" className="px-8 lg:px-14 py-20 sm:py-24 relative before:hidden md:before:block before:absolute before:left-0 before:top-10 before:bottom-10 before:w-px before:bg-black/10">
           <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
             Our Mission
           </h2>
@@ -129,26 +151,30 @@ export default async function HomePage() {
           <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
             Alata was born from a simple idea: that the best conversations about finance happen between people who are genuinely curious. We bring together the most ambitious students at UniBS to share knowledge, challenge each other, and grow, inside and outside the classroom.
           </p>
-        </div>
+        </Reveal>
       </div>
 
       {/* About — What We Value */}
       <section className="bg-[#f5f5f5] pt-10 sm:pt-12 pb-10 sm:pb-12">
         <div className="max-w-5xl mx-auto px-6 lg:px-8">
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
-            What We Value
-          </h2>
-          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-10" />
+          <Reveal direction="up">
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+              What We Value
+            </h2>
+            <div className="w-10 h-0.5 bg-[#1a4a3a] mb-10" />
+          </Reveal>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { label: 'Community', body: 'More than a club, a network built on trust. The relationships you build here last well beyond your degree.' },
               { label: 'Drive', body: "We attract people who don't wait to be told what to do. Taking initiative isn't a buzzword here, it's the entry requirement." },
               { label: 'Ambition', body: "We think big about what a university club can be. And we're building accordingly." },
-            ].map(({ label, body }) => (
-              <div key={label} className="bg-[#1a4a3a] p-8">
-                <h3 className="font-serif text-2xl font-bold text-white mb-3">{label}</h3>
-                <p className="text-white/65 text-sm leading-relaxed">{body}</p>
-              </div>
+            ].map(({ label, body }, i) => (
+              <Reveal key={label} direction="up" delay={i * 150}>
+                <div className="bg-[#1a4a3a] p-8">
+                  <h3 className="font-serif text-2xl font-bold text-white mb-3">{label}</h3>
+                  <p className="text-white/65 text-sm leading-relaxed">{body}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -157,7 +183,7 @@ export default async function HomePage() {
       {/* News & Events */}
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-12 border-b border-[#e5e5e5] pb-6 flex items-end justify-between gap-6">
+          <Reveal direction="up" className="mb-12 border-b border-[#e5e5e5] pb-6 flex items-end justify-between gap-6">
             <div>
               <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Latest</p>
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">News &amp; Events</h2>
@@ -171,7 +197,7 @@ export default async function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
-          </div>
+          </Reveal>
 
           {!eventi || eventi.length === 0 ? (
             <div className="py-20 text-center text-[#6b7280]">
@@ -179,8 +205,10 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {eventi.map((item) => (
-                <NewsCard key={item.id} item={item as NewsItem} />
+              {eventi.map((item, i) => (
+                <Reveal key={item.id} direction="up" delay={i * 150}>
+                  <NewsCard item={item as NewsItem} />
+                </Reveal>
               ))}
             </div>
           )}
@@ -194,7 +222,8 @@ export default async function HomePage() {
       <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div>
+            {/* Testo da destra */}
+            <Reveal direction="right">
               <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Get in touch</p>
               <h2 className="font-serif text-4xl sm:text-5xl font-bold leading-tight mb-6">
                 Contact Us
@@ -203,57 +232,64 @@ export default async function HomePage() {
               <p className="text-white/70 text-sm leading-relaxed">
                 Interested in joining, partnering, or simply learning more about what we do? Reach out through any of the channels below.
               </p>
-            </div>
+            </Reveal>
 
+            {/* Link social: uno alla volta da sinistra con delay scalato */}
             <div className="flex flex-col gap-6">
-              <a
-                href="https://www.instagram.com/alata_investmentclub"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 group"
-              >
-                <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
-                  <InstagramIcon />
-                </div>
-                <div>
-                  <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">Instagram</p>
-                  <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
-                    @alata_investmentclub
-                  </p>
-                </div>
-              </a>
+              <Reveal direction="left" delay={0}>
+                <a
+                  href="https://www.instagram.com/alata_investmentclub"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 group"
+                >
+                  <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                    <InstagramIcon />
+                  </div>
+                  <div>
+                    <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">Instagram</p>
+                    <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
+                      @alata_investmentclub
+                    </p>
+                  </div>
+                </a>
+              </Reveal>
 
-              <a
-                href="https://www.linkedin.com/company/alatainvestmentclub/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 group"
-              >
-                <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
-                  <LinkedInIcon />
-                </div>
-                <div>
-                  <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">LinkedIn</p>
-                  <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
-                    Alata Investment Club
-                  </p>
-                </div>
-              </a>
+              <Reveal direction="left" delay={100}>
+                <a
+                  href="https://www.linkedin.com/company/alatainvestmentclub/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 group"
+                >
+                  <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                    <LinkedInIcon />
+                  </div>
+                  <div>
+                    <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">LinkedIn</p>
+                    <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
+                      Alata Investment Club
+                    </p>
+                  </div>
+                </a>
+              </Reveal>
 
-              <a
-                href="mailto:Alatabrixiaic@gmail.com"
-                className="flex items-center gap-4 group"
-              >
-                <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
-                  <MailIcon />
-                </div>
-                <div>
-                  <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">Email</p>
-                  <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
-                    Alatabrixiaic@gmail.com
-                  </p>
-                </div>
-              </a>
+              <Reveal direction="left" delay={200}>
+                <a
+                  href="mailto:Alatabrixiaic@gmail.com"
+                  className="flex items-center gap-4 group"
+                >
+                  <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                    <MailIcon />
+                  </div>
+                  <div>
+                    <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">Email</p>
+                    <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
+                      Alatabrixiaic@gmail.com
+                    </p>
+                  </div>
+                </a>
+              </Reveal>
             </div>
           </div>
         </div>
