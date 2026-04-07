@@ -137,12 +137,8 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
   }, [totalPages, safePage])
 
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    setFading(true)
-    setTimeout(() => {
-      setSearch(e.target.value)
-      setPage(0)
-      setFading(false)
-    }, 220)
+    setSearch(e.target.value)
+    setPage(0)
   }
 
   function goTo(p: number) {

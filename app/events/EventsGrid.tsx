@@ -427,12 +427,8 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
   }
 
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    setFading(true)
-    setTimeout(() => {
-      setQuery(e.target.value)
-      setPage(0)
-      setFading(false)
-    }, 220)
+    setQuery(e.target.value)
+    setPage(0)
   }
 
   function handleTag(value: string | null) {
