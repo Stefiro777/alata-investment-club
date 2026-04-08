@@ -25,11 +25,6 @@ export default async function JoinUsPage() {
         {/* Radial glow */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.05) 0%, transparent 65%)' }} />
         {/* Decorative large letter */}
-        <span
-          className="absolute -bottom-10 right-0 font-serif font-bold leading-none text-white select-none pointer-events-none hidden lg:block"
-          style={{ fontSize: '22rem', opacity: 0.025, letterSpacing: '-0.05em' }}
-          aria-hidden="true"
-        >A</span>
         <div className="relative z-10 max-w-5xl mx-auto">
           <p className="animate-hero-line text-xs tracking-[0.3em] uppercase text-white/50 mb-6">Join Us</p>
           <h1
