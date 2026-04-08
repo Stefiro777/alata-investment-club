@@ -443,9 +443,9 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
   return (
     <div>
       {/* Search bar */}
-      <div className="mb-10 relative">
+      <div className="relative mb-10 max-w-md">
         <svg
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1a4a3a]/40 pointer-events-none"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b7280]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -456,8 +456,8 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
           type="text"
           value={query}
           onChange={handleSearch}
-          placeholder="Search events..."
-          className="w-full pl-11 pr-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white placeholder-[#9ca3af] transition-colors"
+          placeholder="Search events…"
+          className="w-full pl-10 pr-4 py-3 border border-black/10 focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] placeholder-[#6b7280] bg-white transition-colors"
         />
       </div>
 
