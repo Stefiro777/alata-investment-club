@@ -249,11 +249,17 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                     </div>
                     <textarea
                       required
-                      rows={5}
+                      rows={3}
                       value={motivation}
                       onChange={e => setMotivation(e.target.value)}
+                      onInput={e => {
+                        const el = e.target as HTMLTextAreaElement
+                        el.style.height = 'auto'
+                        el.style.height = el.scrollHeight + 'px'
+                      }}
                       placeholder="Why do you want to join Alata Investment Club?"
-                      className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors resize-none"
+                      className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors resize-none overflow-hidden"
+                      style={{ height: 'auto' }}
                     />
                   </div>
 
