@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     )
 
     const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alatainvestmentclub.com'}/accept-invite`,
     })
 
     if (process.env.NODE_ENV === 'development') {
