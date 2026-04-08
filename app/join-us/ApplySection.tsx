@@ -20,6 +20,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [telephoneNumber, setTelephoneNumber] = useState('')
   const [yearOfStudy, setYearOfStudy] = useState('')
   const [degreeProgramme, setDegreeProgramme] = useState('')
   const [motivation, setMotivation] = useState('')
@@ -30,6 +31,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     setFirstName('')
     setLastName('')
     setEmail('')
+    setTelephoneNumber('')
     setYearOfStudy('')
     setDegreeProgramme('')
     setMotivation('')
@@ -56,6 +58,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
       nome: firstName,
       cognome: lastName,
       email,
+      telephone_number: telephoneNumber,
       anno_di_studio: yearOfStudy,
       degree_programme: degreeProgramme,
       motivazione: motivation,
@@ -183,6 +186,20 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                       required
                       value={email}
                       onChange={e => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                    />
+                  </div>
+
+                  {/* Telephone Number */}
+                  <div>
+                    <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                      Telephone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={telephoneNumber}
+                      onChange={e => setTelephoneNumber(e.target.value)}
+                      placeholder="e.g. +39 333 123 4567"
                       className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
                     />
                   </div>
