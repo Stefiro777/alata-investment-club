@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export type NewsItem = {
   id: number
@@ -30,111 +30,13 @@ function truncate(text: string, max: number) {
   return text.length > max ? text.slice(0, max).trimEnd() + '…' : text
 }
 
-function DetailModal({ item, onClose }: { item: NewsItem; onClose: () => void }) {
-  const coverPhoto = item.photos?.[0] ?? item.immagine_url ?? null
-  const onCloseRef = useRef(onClose)
-  useEffect(() => { onCloseRef.current = onClose })
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onCloseRef.current()
-    }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [])
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
-      style={{ animation: 'heroFadeIn 0.2s ease both' }}
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-        style={{ animation: 'heroFadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both' }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center text-[#6b7280] hover:text-[#0a0a0a] transition-colors text-lg"
-          aria-label="Chiudi"
-        >
-          ✕
-        </button>
-
-        {/* Photo */}
-        {coverPhoto && (
-          <div className="relative h-56 w-full overflow-hidden bg-[#f5f5f5]">
-            <Image
-              src={coverPhoto}
-              alt={item.titolo}
-              fill
-              className="object-cover"
-              style={{ objectPosition: 'center' }}
-            />
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="p-8">
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            {item.data_pubblicazione && (
-              <span className="text-[#6b7280] text-xs tracking-widest uppercase">
-                {formatDate(item.data_pubblicazione)}
-              </span>
-            )}
-            {item.tag && (
-              <span className="text-xs px-2.5 py-0.5 bg-[#1a4a3a] text-white tracking-wide">
-                {item.tag}
-              </span>
-            )}
-          </div>
-
-          <h2 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-6 leading-snug">
-            {item.titolo}
-          </h2>
-
-          {item.descrizione && (
-            <p className="text-[#374151] text-sm leading-relaxed whitespace-pre-line">
-              {item.descrizione}
-            </p>
-          )}
-
-          {item.link && (
-            <a
-              href={item.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-6 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
-            >
-              Read on LinkedIn
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function NewsCard({ item }: { item: NewsItem }) {
-  const [modalOpen, setModalOpen] = useState(false)
   const coverPhoto = item.photos?.[0] ?? item.immagine_url ?? null
   const preview = item.short_description ?? (item.descrizione ? truncate(item.descrizione, 120) : null)
 
   return (
-    <>
       <article
-        onClick={() => setModalOpen(true)}
-        className="group flex flex-col h-full border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden cursor-pointer"
+        className="relative group flex flex-col h-full border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden cursor-pointer"
         style={{
           boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           transition: 'transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s cubic-bezier(0.22,1,0.36,1)',
@@ -148,6 +50,8 @@ export default function NewsCard({ item }: { item: NewsItem }) {
           ;(e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'
         }}
       >
+        {/* Stretched link — covers the whole card */}
+        <Link href="/events" className="absolute inset-0 z-0" aria-label={item.titolo} />
         {/* Photo */}
         {coverPhoto ? (
           <div className="relative h-64 overflow-hidden bg-[#f5f5f5]">
@@ -203,8 +107,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] hover:gap-3 transition-all duration-150"
-                onClick={e => e.stopPropagation()}
+                className="relative z-10 inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] hover:gap-3 transition-all duration-150"
               >
                 LinkedIn
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,8 +118,5 @@ export default function NewsCard({ item }: { item: NewsItem }) {
           </div>
         </div>
       </article>
-
-      {modalOpen && <DetailModal item={item} onClose={() => setModalOpen(false)} />}
-    </>
   )
 }
