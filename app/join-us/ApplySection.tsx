@@ -95,9 +95,9 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="inline-block bg-white text-[#1a4a3a] text-sm font-medium tracking-wide px-10 py-4 hover:bg-white/90 transition-colors duration-150"
+        className="inline-block bg-white text-[#1a4a3a] text-base font-medium tracking-wide px-12 py-5 hover:bg-white/90 transition-colors duration-150"
       >
-        Apply Now →
+        Apply Now
       </button>
 
       {/* ── Modal ── */}
