@@ -212,9 +212,6 @@ export default function NewsCard({ item }: { item: NewsItem }) {
                 </svg>
               </a>
             )}
-            <span className="ml-auto text-[#1a4a3a]/40 text-xs tracking-wide uppercase group-hover:text-[#1a4a3a] transition-colors duration-200">
-              Read more →
-            </span>
           </div>
         </div>
       </article>
