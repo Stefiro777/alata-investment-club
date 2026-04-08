@@ -176,32 +176,32 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                     </div>
                   </div>
 
-                  {/* Email */}
-                  <div>
-                    <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-                    />
-                  </div>
-
-                  {/* Telephone Number */}
-                  <div>
-                    <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                      Telephone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={telephoneNumber}
-                      onChange={e => setTelephoneNumber(e.target.value)}
-                      placeholder="e.g. +39 333 123 4567"
-                      className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-                    />
+                  {/* Email / Telephone */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                        Email <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                        Telephone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={telephoneNumber}
+                        onChange={e => setTelephoneNumber(e.target.value)}
+                        placeholder="e.g. +39 333 123 4567"
+                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                      />
+                    </div>
                   </div>
 
                   {/* Year of Study / Degree */}
