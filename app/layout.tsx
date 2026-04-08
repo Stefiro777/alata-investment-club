@@ -210,7 +210,7 @@ export default function RootLayout({
 
             <div className="mt-10 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
               <p className="text-white/40 text-xs tracking-wide">
-                &copy; 2025 Alata Investment Club
+                &copy; 2023 Alata Investment Club
               </p>
               <p className="text-white/40 text-xs">
                 Alatabrixiaic@gmail.com
