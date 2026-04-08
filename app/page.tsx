@@ -149,7 +149,7 @@ export default async function HomePage() {
           </h2>
           <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5" />
           <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
-            Alata was born from a simple idea: that the best conversations about finance happen between people who are genuinely curious. We bring together the most ambitious students at UniBS to share knowledge, challenge each other, and grow, inside and outside the classroom.
+            Alata was born from a simple idea: the best conversations about finance happen between people who are genuinely curious. We bring together the most ambitious students at UniBS to share knowledge, challenge each other, and grow, inside and outside the classroom.
           </p>
         </Reveal>
       </div>
@@ -206,7 +206,7 @@ export default async function HomePage() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {eventi.map((item, i) => (
-                <Reveal key={item.id} direction="up" delay={i * 150}>
+                <Reveal key={item.id} direction="up" delay={i * 150} className="h-full">
                   <NewsCard item={item as NewsItem} />
                 </Reveal>
               ))}

@@ -266,7 +266,7 @@ function EventCard({
   const hasText = !!(item.full_description || item.descrizione)
 
   return (
-    <article className="group flex flex-col border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+    <article className="group flex flex-col h-full border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* Photo area */}
       <div
         className={`relative h-64 bg-[#f5f5f5] overflow-hidden ${hasGallery ? 'cursor-pointer' : ''}`}
@@ -500,7 +500,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
             className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-opacity ease-in-out duration-[220ms] ${fading ? 'opacity-0' : 'opacity-100'}`}
           >
             {currentCards.map((item, i) => (
-              <Reveal key={item.id} delay={Math.min(i * 80, 400)} direction="up">
+              <Reveal key={item.id} delay={Math.min(i * 80, 400)} direction="up" className="h-full">
                 <EventCard item={item} onOpenGallery={setGalleryItem} onOpenDetail={setDetailItem} />
               </Reveal>
             ))}

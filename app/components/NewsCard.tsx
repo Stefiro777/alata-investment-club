@@ -134,7 +134,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
     <>
       <article
         onClick={() => setModalOpen(true)}
-        className="group flex flex-col border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden cursor-pointer"
+        className="group flex flex-col h-full border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden cursor-pointer"
         style={{
           boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           transition: 'transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s cubic-bezier(0.22,1,0.36,1)',
