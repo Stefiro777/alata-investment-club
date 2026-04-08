@@ -119,7 +119,7 @@ export default async function HomePage() {
           <Reveal direction="up">
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-6">Who We Are</h2>
             <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-3xl">
-              Alata Investment Club is a university association of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
+              Alata is an Investment Club of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
             </p>
           </Reveal>
         </div>
