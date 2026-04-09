@@ -110,50 +110,26 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
       ? canvasHeight
       : Math.floor(canvasHeight * 0.5)
 
+  // Shared arrow button style (carousel-style, no border-radius)
+  const arrowBase: React.CSSProperties = {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: 36,
+    height: 36,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(255,255,255,0.92)',
+    border: '1px solid #1a4a3a',
+    color: '#1a4a3a',
+    cursor: 'pointer',
+    zIndex: 10,
+    transition: 'background 150ms, color 150ms',
+  }
+
   return (
     <div ref={containerRef} className="w-full bg-[#f5f5f5]">
-
-      {/* ── Navigation bar — only when expanded ── */}
-      {expanded && !loading && (
-        <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-black/10">
-          <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage <= 1}
-            aria-label="Pagina precedente"
-            className="w-7 h-7 flex items-center justify-center text-[#1a4a3a] disabled:opacity-25 hover:bg-[#f3f4f6] transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <span className="text-[11px] font-medium tracking-wide text-[#6b7280]">
-            {currentPage} / {totalPages}
-          </span>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage >= totalPages}
-              aria-label="Pagina successiva"
-              className="w-7 h-7 flex items-center justify-center text-[#1a4a3a] disabled:opacity-25 hover:bg-[#f3f4f6] transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setExpanded(false)}
-              aria-label="Chiudi"
-              className="w-7 h-7 flex items-center justify-center text-[#6b7280] hover:text-[#0a0a0a] hover:bg-[#f3f4f6] transition-colors ml-1"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Canvas container — height animates on expand/collapse ── */}
       <div
@@ -172,14 +148,79 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
             <span className="text-xs text-[#9ca3af] tracking-wide">Caricamento PDF…</span>
           </div>
         )}
+
         <canvas
           ref={canvasRef}
           className="w-full block"
           style={{ visibility: loading ? 'hidden' : 'visible' }}
         />
+
+        {/* ── Prev / Next arrows — absolute, centred vertically, expanded only ── */}
+        {expanded && !loading && totalPages > 1 && (
+          <>
+            <button
+              onClick={e => { e.stopPropagation(); setCurrentPage(p => Math.max(1, p - 1)) }}
+              disabled={currentPage <= 1}
+              aria-label="Pagina precedente"
+              style={{ ...arrowBase, left: 12, opacity: currentPage <= 1 ? 0.3 : 1 }}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <button
+              onClick={e => { e.stopPropagation(); setCurrentPage(p => Math.min(totalPages, p + 1)) }}
+              disabled={currentPage >= totalPages}
+              aria-label="Pagina successiva"
+              style={{ ...arrowBase, right: 12, opacity: currentPage >= totalPages ? 0.3 : 1 }}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        )}
+
+        {/* ── Close (X) + page indicator — top-right, expanded only ── */}
+        {expanded && !loading && (
+          <div
+            className="absolute top-3 right-3 flex items-center gap-2"
+            style={{ zIndex: 10 }}
+            onClick={e => e.stopPropagation()}
+          >
+            {totalPages > 1 && (
+              <span
+                className="text-[10px] font-medium text-[#6b7280] bg-white/90 px-2 py-1"
+                style={{ border: '1px solid rgba(0,0,0,0.08)' }}
+              >
+                {currentPage} / {totalPages}
+              </span>
+            )}
+            <button
+              onClick={() => setExpanded(false)}
+              aria-label="Chiudi"
+              style={{
+                width: 28,
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(255,255,255,0.92)',
+                border: '1px solid rgba(0,0,0,0.12)',
+                color: '#6b7280',
+                cursor: 'pointer',
+              }}
+            >
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* ── "Click to expand" hint — only when collapsed and loaded ── */}
+      {/* ── "Click to expand" hint — collapsed and loaded only ── */}
       {!loading && !expanded && canvasHeight > 0 && (
         <div
           className="flex items-center justify-center gap-1.5 py-2.5 bg-[#f5f5f5] border-t border-black/5 cursor-pointer"

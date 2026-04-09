@@ -29,7 +29,6 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
                 <Reveal
                   direction={imageLeft ? 'left' : 'right'}
                   className={`${imageLeft ? 'md:order-1' : 'md:order-2'}`}
-                  style={{ borderTop: '3px solid #1a4a3a' }}
                 >
                   {report.pdf_url ? (
                     <PdfPreview pdfUrl={report.pdf_url} title={report.title} />
@@ -52,7 +51,6 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
                 <Reveal
                   direction={imageLeft ? 'right' : 'left'}
                   className={`flex flex-col justify-center px-10 py-12 lg:px-14 lg:py-16 bg-white ${imageLeft ? 'md:order-2' : 'md:order-1'}`}
-                  style={{ borderLeft: '3px solid #1a4a3a' }}
                 >
                   {/* "FEATURED REPORT" badge */}
                   <div className="mb-4">
