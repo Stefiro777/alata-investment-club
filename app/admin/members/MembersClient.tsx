@@ -7,7 +7,7 @@ import type { Alumni, AlumniCompany } from '@/lib/types'
 
 const INDUSTRY_OPTIONS = [
   'Investment Banking', 'Consulting', 'Asset Management', 'Private Equity',
-  'Venture Capital', 'Hedge Fund', 'Big Tech', 'Start-up', 'Audit & Accounting',
+  'Venture Capital', 'Hedge Fund', 'Big Tech', 'Sales & Business Development', 'Start-up', 'Audit & Accounting',
   'Tax & Legal', 'Commercial Banking', 'Private Banking', 'Wealth Management',
   'Real Estate', 'Corporate Finance', 'Research & Valuation', 'Insurance',
   'Public Sector', 'Other',
@@ -110,9 +110,10 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
         <select
           value={industry}
           onChange={e => setIndustry(e.target.value)}
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors appearance-none"
+          className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] focus:border-[#1a4a3a] text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors"
+          style={{ accentColor: '#1a4a3a' }}
         >
-          <option value="">Industry (optional)</option>
+          <option value="" disabled className="text-gray-400">Select industry</option>
           {INDUSTRY_OPTIONS.map(opt => (
             <option key={opt} value={opt}>{opt}</option>
           ))}
@@ -254,8 +255,13 @@ function AlumniRow({
             <input required value={role} onChange={e => setRole(e.target.value)} placeholder="Role *" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
             <input value={graduationYear} onChange={e => setGraduationYear(e.target.value)} placeholder="Graduation year" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
             <input value={currentCompany} onChange={e => setCurrentCompany(e.target.value)} placeholder="Current company" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
-            <select value={industry} onChange={e => setIndustry(e.target.value)} className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors appearance-none sm:col-span-2">
-              <option value="">Industry (optional)</option>
+            <select
+              value={industry}
+              onChange={e => setIndustry(e.target.value)}
+              className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] focus:border-[#1a4a3a] text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors sm:col-span-2"
+              style={{ accentColor: '#1a4a3a' }}
+            >
+              <option value="" disabled className="text-gray-400">Select industry</option>
               {INDUSTRY_OPTIONS.map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}

@@ -6,7 +6,7 @@ import Reveal from '@/app/components/Reveal'
 
 export const INDUSTRY_OPTIONS = [
   'Investment Banking', 'Consulting', 'Asset Management', 'Private Equity',
-  'Venture Capital', 'Hedge Fund', 'Big Tech', 'Start-up', 'Audit & Accounting',
+  'Venture Capital', 'Hedge Fund', 'Big Tech', 'Sales & Business Development', 'Start-up', 'Audit & Accounting',
   'Tax & Legal', 'Commercial Banking', 'Private Banking', 'Wealth Management',
   'Real Estate', 'Corporate Finance', 'Research & Valuation', 'Insurance',
   'Public Sector', 'Other',

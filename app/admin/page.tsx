@@ -1,7 +1,8 @@
-import { createClient } from '@/lib/supabase-server'
+import { createClient, createServiceClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import AdminClient from './AdminClient'
-import type { Resource, Partner } from '@/lib/types'
+import AdminShell from './AdminShell'
+import type { Resource, Partner, Alumni, AlumniCompany, FeaturedReport } from '@/lib/types'
+import type { TeamMember } from './team/page'
 
 type Contenuto = {
   id: number
@@ -17,7 +18,13 @@ type Contenuto = {
   photos: string[] | null
 }
 
-export default async function AdminPage() {
+const SUPERADMIN = process.env.SUPERADMIN_EMAIL ?? ''
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ section?: string; tab?: string }>
+}) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -28,10 +35,46 @@ export default async function AdminPage() {
     .select('email')
     .eq('email', user.email)
     .maybeSingle()
-
   if (!adminRow) redirect('/login')
 
-  const [{ data: items }, { data: resourcesData }, { data: partnersData }] = await Promise.all([
+  const params = await searchParams
+  const initialSection = params.section ?? 'people'
+  const initialTab = params.tab ?? 'board'
+
+  const serviceClient = createServiceClient()
+
+  const [
+    { data: adminUsersData },
+    { data: appSettings },
+    { data: showPricesRow },
+    { data: priceCVRow },
+    { data: priceMasterRow },
+    { data: priceCareerRow },
+    { data: showAlumniRow },
+    { data: alumniRaw, error: alumniError },
+    { data: alumniCompaniesData },
+    { data: contenuti },
+    { data: resourcesData },
+    { data: partnersData },
+    { data: featuredReportsData },
+    { data: teamMembersData },
+  ] = await Promise.all([
+    serviceClient.from('admin_users').select('email').order('email', { ascending: true }),
+    supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'show_prices').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'price_cv_review').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'price_master_orientation').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'price_career_orientation').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'show_alumni').maybeSingle(),
+    supabase
+      .from('alumni')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('alumni_companies')
+      .select('id, name, logo_url, website_url, created_at')
+      .order('created_at', { ascending: false }),
     supabase
       .from('contenuti')
       .select('*')
@@ -47,55 +90,45 @@ export default async function AdminPage() {
       .select('id, name, logo_url, website_url, order_index, click_count, created_at')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
+    supabase
+      .from('featured_reports')
+      .select('id, title, description, image_url, pdf_url, display_order, created_at')
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('team_members')
+      .select('id, name, role, photo_url, linkedin_url, type, order_index, created_at')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
   ])
 
-  return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      {/* Top bar */}
-      <div className="bg-[#1a4a3a] text-white" style={{ animation: 'heroFadeIn 0.5s ease both' }}>
-        <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex items-center justify-between">
-          <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.1s both' }}>
-            <h1 className="font-serif text-xl font-medium">Admin — Content Management</h1>
-            <p className="text-white/50 text-xs mt-0.5">{user.email}</p>
-          </div>
-          <div className="flex items-center gap-3 ml-8" style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.2s both' }}>
-            <a
-              href="/admin/team"
-              className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
-              style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
-            >
-              Team
-            </a>
-            <a
-              href="/admin/members"
-              className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
-              style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
-            >
-              Members
-            </a>
-            <a
-              href="/admin/featured-reports"
-              className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
-              style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
-            >
-              Featured Reports
-            </a>
-            <a
-              href="/dashboard"
-              className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
-              style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
-            >
-              Dashboard
-            </a>
-          </div>
-        </div>
-      </div>
+  // Fallback if order_index column doesn't exist yet
+  const alumniData = alumniError
+    ? (await supabase
+        .from('alumni')
+        .select('id, name, role, graduation_year, linkedin_url, current_company, industry, created_at')
+        .order('created_at', { ascending: true })).data
+    : alumniRaw
 
-      <AdminClient
-        items={(items ?? []) as Contenuto[]}
-        resources={(resourcesData ?? []) as Resource[]}
-        partners={(partnersData ?? []) as Partner[]}
-      />
-    </div>
+  return (
+    <AdminShell
+      userEmail={user.email ?? ''}
+      initialSection={initialSection}
+      initialTab={initialTab}
+      items={(contenuti ?? []) as Contenuto[]}
+      resources={(resourcesData ?? []) as Resource[]}
+      partners={(partnersData ?? []) as Partner[]}
+      adminUsers={(adminUsersData ?? []).map(r => r.email as string)}
+      superadmin={SUPERADMIN}
+      applicationsOpen={appSettings?.value === 'true'}
+      showPrices={showPricesRow ? showPricesRow.value === 'true' : true}
+      priceCV={priceCVRow?.value ?? '€29,99'}
+      priceMaster={priceMasterRow?.value ?? '€49,99'}
+      priceCareer={priceCareerRow?.value ?? '€49,99'}
+      showAlumni={showAlumniRow?.value === 'true'}
+      alumni={(alumniData ?? []) as Alumni[]}
+      alumniCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]}
+      reports={(featuredReportsData ?? []) as FeaturedReport[]}
+      teamMembers={(teamMembersData ?? []) as TeamMember[]}
+    />
   )
 }

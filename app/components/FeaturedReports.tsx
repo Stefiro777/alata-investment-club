@@ -1,9 +1,21 @@
-import Image from 'next/image'
+'use client'
+
+import { useState } from 'react'
 import type { FeaturedReport } from '@/lib/types'
 import Reveal from './Reveal'
 
 export default function FeaturedReports({ reports }: { reports: FeaturedReport[] }) {
   if (reports.length === 0) return null
+
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+
+  function toggleExpand(id: string) {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) { next.delete(id) } else { next.add(id) }
+      return next
+    })
+  }
 
   return (
     <section className="py-20 sm:py-28 bg-white">
@@ -19,28 +31,57 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
         <div className="space-y-0">
           {reports.map((report, i) => {
             const imageLeft = i % 2 === 0
+            const isExpanded = expandedIds.has(report.id)
+
             return (
               <div
                 key={report.id}
                 className="grid md:grid-cols-2 border border-black/10"
                 style={{ borderBottom: i < reports.length - 1 ? 'none' : undefined }}
               >
-                {/* Image panel */}
+                {/* ── PDF panel ── */}
                 <Reveal
                   direction={imageLeft ? 'left' : 'right'}
-                  className={`relative overflow-hidden bg-[#f5f5f5] ${imageLeft ? 'md:order-1' : 'md:order-2'}`}
-                  style={{ aspectRatio: '4/3', minHeight: '300px' }}
+                  className={`flex flex-col bg-[#f5f5f5] ${imageLeft ? 'md:order-1' : 'md:order-2'}`}
                 >
-                  {report.image_url ? (
-                    <Image
-                      src={report.image_url}
-                      alt={report.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
+                  {report.pdf_url ? (
+                    <>
+                      {/* iframe with animated height */}
+                      <div
+                        style={{
+                          height: isExpanded ? 700 : 400,
+                          transition: 'height 0.35s cubic-bezier(0.22,1,0.36,1)',
+                        }}
+                      >
+                        <iframe
+                          src={report.pdf_url}
+                          title={report.title}
+                          sandbox="allow-scripts allow-same-origin"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            border: 'none',
+                            display: 'block',
+                            overflow: 'auto',
+                          }}
+                        />
+                      </div>
+
+                      {/* Expand / collapse toggle */}
+                      <button
+                        onClick={() => toggleExpand(report.id)}
+                        className="flex items-center justify-center gap-2 w-full py-3 text-xs font-medium tracking-wide text-[#1a4a3a] hover:bg-[#1a4a3a]/5 border-t border-black/10 transition-colors duration-150 select-none"
+                      >
+                        <span className="text-base leading-none">{isExpanded ? '▲' : '▼'}</span>
+                        <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
+                      </button>
+                    </>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-[#1a4a3a]/5">
+                    /* Fallback when no PDF is available */
+                    <div
+                      className="flex items-center justify-center bg-[#1a4a3a]/5"
+                      style={{ minHeight: '400px' }}
+                    >
                       <svg className="w-12 h-12 text-[#1a4a3a]/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
@@ -48,7 +89,7 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
                   )}
                 </Reveal>
 
-                {/* Text panel */}
+                {/* ── Text panel (unchanged) ── */}
                 <Reveal
                   direction={imageLeft ? 'right' : 'left'}
                   className={`flex flex-col justify-center px-10 py-12 lg:px-14 lg:py-16 bg-white ${imageLeft ? 'md:order-2' : 'md:order-1'}`}
