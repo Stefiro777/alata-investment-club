@@ -1,5 +1,6 @@
 import type { FeaturedReport } from '@/lib/types'
 import Reveal from './Reveal'
+import PdfPreview from './PdfPreview'
 
 export default function FeaturedReports({ reports }: { reports: FeaturedReport[] }) {
   if (reports.length === 0) return null
@@ -24,39 +25,41 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
                 className="grid md:grid-cols-2 border border-black/10"
                 style={{ borderBottom: i < reports.length - 1 ? 'none' : undefined }}
               >
-                {/* ── PDF preview panel ── */}
+                {/* ── PDF viewer panel ── */}
                 <Reveal
                   direction={imageLeft ? 'left' : 'right'}
-                  className={`flex flex-col items-center justify-center bg-[#f5f5f5] px-10 py-14 gap-6 ${imageLeft ? 'md:order-1' : 'md:order-2'}`}
-                  style={{ minHeight: '380px' }}
+                  className={`${imageLeft ? 'md:order-1' : 'md:order-2'}`}
+                  style={{ minHeight: '420px' }}
                 >
-                  {/* Document icon */}
-                  <div className="w-16 h-20 bg-white border border-black/10 flex flex-col items-center justify-center gap-1 shadow-sm flex-shrink-0">
-                    <svg className="w-7 h-7 text-[#1a4a3a]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span className="text-[9px] font-bold tracking-widest uppercase text-[#1a4a3a]/60">PDF</span>
-                  </div>
-
-                  {/* Report title */}
-                  <p className="font-serif text-base font-medium text-[#0a0a0a] text-center leading-snug max-w-[260px]">
-                    {report.title}
-                  </p>
-
-                  {/* View Report button */}
-                  {report.pdf_url && (
-                    <a
-                      href={report.pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-widest uppercase px-6 py-3 transition-colors duration-150"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      View Report
-                    </a>
+                  {report.pdf_url ? (
+                    <div className="w-full h-full flex flex-col" style={{ minHeight: '420px' }}>
+                      <PdfPreview pdfUrl={report.pdf_url} title={report.title} />
+                      {/* View Report link below the canvas */}
+                      <a
+                        href={report.pdf_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 bg-white border-t border-black/10 text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-[11px] font-medium tracking-widest uppercase px-6 py-3 transition-colors duration-150 flex-shrink-0"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Apri in nuova scheda
+                      </a>
+                    </div>
+                  ) : (
+                    /* No PDF — show static placeholder */
+                    <div className="flex flex-col items-center justify-center bg-[#f5f5f5] w-full h-full gap-6 px-10 py-14" style={{ minHeight: '420px' }}>
+                      <div className="w-16 h-20 bg-white border border-black/10 flex flex-col items-center justify-center gap-1 shadow-sm">
+                        <svg className="w-7 h-7 text-[#1a4a3a]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-[9px] font-bold tracking-widest uppercase text-[#1a4a3a]/60">PDF</span>
+                      </div>
+                      <p className="font-serif text-base font-medium text-[#0a0a0a] text-center leading-snug max-w-[260px]">
+                        {report.title}
+                      </p>
+                    </div>
                   )}
                 </Reveal>
 
