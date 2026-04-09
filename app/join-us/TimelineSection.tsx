@@ -162,20 +162,8 @@ function TimelineItem({ step, index }: { step: Step; index: number }) {
 
 export default function TimelineSection() {
   return (
-    <section className="relative py-24 px-6 overflow-hidden" style={{ background: '#f9f9f7' }}>
-      {/* Background image — very low opacity */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'url(/piazzavittoria.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center 70%',
-          opacity: 0.17,
-          mixBlendMode: 'multiply',
-          filter: 'grayscale(100%)',
-        }}
-      />
-      <div className="relative z-10 max-w-3xl mx-auto">
+    <section className="py-24 px-6" style={{ background: '#f9f9f9' }}>
+      <div className="max-w-3xl mx-auto">
 
         {/* Section header */}
         <div className="mb-16">
