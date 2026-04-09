@@ -150,8 +150,8 @@ function AlumniRow({
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }) {
   const [open, setOpen] = useState(false)
-  const [name, setName] = useState(alumni.name)
-  const [role, setRole] = useState(alumni.role)
+  const [name, setName] = useState(alumni.name ?? '')
+  const [role, setRole] = useState(alumni.role ?? '')
   const [graduationYear, setGraduationYear] = useState(alumni.graduation_year ?? '')
   const [linkedinUrl, setLinkedinUrl] = useState(alumni.linkedin_url ?? '')
   const [currentCompany, setCurrentCompany] = useState(alumni.current_company ?? '')
@@ -162,7 +162,7 @@ function AlumniRow({
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !role.trim()) return
+    if (!(name ?? '').trim() || !(role ?? '').trim()) return
     setSaving(true)
     setError(null)
     try {
@@ -170,12 +170,12 @@ function AlumniRow({
       const { data, error } = await supabase
         .from('alumni')
         .update({
-          name: name.trim(),
-          role: role.trim(),
-          graduation_year: graduationYear.trim() || null,
-          linkedin_url: linkedinUrl.trim() || null,
-          current_company: currentCompany.trim() || null,
-          industry: industry || null,
+          name: (name ?? '').trim(),
+          role: (role ?? '').trim(),
+          graduation_year: (graduationYear ?? '').trim() || null,
+          linkedin_url: (linkedinUrl ?? '').trim() || null,
+          current_company: (currentCompany ?? '').trim() || null,
+          industry: (industry ?? '').trim() || null,
         })
         .eq('id', alumni.id)
         .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
