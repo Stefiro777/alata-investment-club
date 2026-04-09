@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import ApplySection from './ApplySection'
 import TimelineSection from './TimelineSection'
+import Reveal from '@/app/components/Reveal'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alatainvestmentclub.com/join-us' },
@@ -44,24 +45,33 @@ export default async function JoinUsPage() {
 
       <TimelineSection />
 
+      {/* ── Cream band separator ── */}
+      <div style={{ height: 4, background: '#f7f5f0' }} />
+
       {/* ── Apply Now ── */}
-      <section id="application-form" className="bg-[#1a4a3a] py-24 sm:py-32 px-6 relative overflow-hidden">
+      <section id="application-form" className="bg-white py-24 sm:py-32 px-6 relative overflow-hidden">
         <div className="relative z-10 max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-[1fr_auto] items-center gap-10">
-            <div>
-              <p className="text-xs tracking-[0.3em] uppercase text-white/40 mb-4">Applications</p>
-              <h2 className="font-serif font-bold text-white leading-[1.05] mb-4"
-                style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
-                Ready to join?
-              </h2>
-              <div className="w-10 h-px bg-white/30 mb-5" />
-              <p className="text-white/65 text-sm leading-relaxed max-w-md">
-                Applications are reviewed on a rolling basis. We look for curiosity, commitment and the drive to grow.
-              </p>
-            </div>
-            <div className="flex lg:justify-end">
-              <ApplySection applicationsOpen={applicationsOpen} />
-            </div>
+            <Reveal>
+              <div>
+                <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: '#9ca3af' }}>Applications</p>
+                <h2
+                  className="font-serif font-bold leading-[1.05] mb-4"
+                  style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#1a4a3a' }}
+                >
+                  Ready to join?
+                </h2>
+                <div className="w-10 h-px mb-5" style={{ background: '#1a4a3a' }} />
+                <p className="text-sm leading-relaxed max-w-md" style={{ color: '#6b7280' }}>
+                  Applications are reviewed on a rolling basis. We look for curiosity, commitment and the drive to grow.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={120} direction="left">
+              <div className="flex lg:justify-end">
+                <ApplySection applicationsOpen={applicationsOpen} />
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>

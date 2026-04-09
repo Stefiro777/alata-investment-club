@@ -39,7 +39,6 @@ const steps: Step[] = [
 function TimelineItem({ step, index }: { step: Step; index: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
-  const isDark = index === 1
 
   useEffect(() => {
     const el = ref.current
@@ -55,128 +54,128 @@ function TimelineItem({ step, index }: { step: Step; index: number }) {
   return (
     <div
       ref={ref}
-      className="relative pl-16 pb-14 last:pb-0"
+      className="relative"
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(28px)',
+        transform: visible ? 'translateY(0)' : 'translateY(32px)',
         transition: 'opacity 0.7s ease, transform 0.7s ease',
-        transitionDelay: `${index * 160}ms`,
+        transitionDelay: `${index * 120}ms`,
       }}
     >
-      {/* Node circle on the line */}
-      <div
-        className="absolute left-0 top-0 w-10 h-10 rounded-full flex items-center justify-center z-10"
-        style={{
-          background: isDark ? 'white' : '#1a4a3a',
-          outline: '2px solid #1a4a3a',
-          outlineOffset: '3px',
-        }}
-      >
-        <span
-          className="font-serif text-sm font-bold"
-          style={{ color: isDark ? '#1a4a3a' : 'white' }}
-        >
-          {step.number}
-        </span>
-      </div>
-
-      {/* Content card */}
-      <div
-        className="p-8"
-        style={{
-          background: isDark ? '#1a4a3a' : '#f7f5f0',
-          border: isDark ? 'none' : '1px solid #e5e7eb',
-          borderLeft: isDark ? 'none' : '3px solid #1a4a3a',
-        }}
-      >
-        {/* Eyebrow + title */}
-        <p
-          className="text-xs tracking-widest uppercase mb-2"
-          style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#9ca3af' }}
-        >
-          Step {step.number}
-        </p>
-        <h3
-          className="font-serif text-2xl font-bold mb-3"
-          style={{ color: isDark ? 'white' : '#0a0a0a' }}
-        >
-          {step.title}
-        </h3>
-        <div
-          className="w-8 h-px mb-5"
-          style={{ background: isDark ? 'rgba(255,255,255,0.25)' : '#1a4a3a' }}
-        />
-
-        {/* Description */}
-        <p
-          className="text-sm leading-relaxed mb-7"
-          style={{ color: isDark ? 'rgba(255,255,255,0.72)' : '#374151' }}
-        >
-          {step.description}
-        </p>
-
-        {/* Skills */}
-        <div>
-          <p
-            className="text-xs tracking-widest uppercase mb-3"
-            style={{ color: isDark ? 'rgba(255,255,255,0.35)' : '#9ca3af' }}
+      {/* Step number — large serif, outside the card */}
+      <div className="flex items-start gap-8 mb-0">
+        <div className="flex-shrink-0 w-16 pt-8 text-right">
+          <span
+            className="font-serif font-bold leading-none select-none"
+            style={{ fontSize: '4rem', color: 'rgba(247,245,240,0.18)', lineHeight: 1 }}
           >
-            Skills
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {step.skills.map(skill => (
-              <span
-                key={skill}
-                className="text-xs px-3 py-1 rounded-full"
-                style={
-                  isDark
-                    ? { border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.78)' }
-                    : { border: '1px solid #1a4a3a', color: '#1a4a3a' }
-                }
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
+            {step.number}
+          </span>
         </div>
 
-        {/* Partner banner (step 02) — bottom of card */}
-        {step.partner && (
-          <div className="flex items-center justify-between gap-3 mt-6 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-            <span className="text-xs tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              In partnership with Syrto — Financial Intelligence
-            </span>
-            <Image
-              src={step.partner.src}
-              alt="Syrto"
-              width={130}
-              height={40}
-              className="object-contain h-10 w-auto"
-            />
+        {/* Card */}
+        <div
+          className="flex-1 mb-10 last:mb-0"
+          style={{
+            background: '#f7f5f0',
+            borderLeft: '3px solid rgba(247,245,240,0.35)',
+          }}
+        >
+          {/* Card inner */}
+          <div className="p-8">
+            {/* Eyebrow */}
+            <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#9ca3af' }}>
+              Step {step.number}
+            </p>
+
+            {/* Title */}
+            <h3 className="font-serif text-2xl font-bold mb-3" style={{ color: '#1a4a3a' }}>
+              {step.title}
+            </h3>
+
+            {/* Divider */}
+            <div className="w-8 h-px mb-5" style={{ background: '#1a4a3a' }} />
+
+            {/* Description */}
+            <p className="text-sm leading-relaxed mb-7" style={{ color: '#374151' }}>
+              {step.description}
+            </p>
+
+            {/* Skills */}
+            <div>
+              <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#9ca3af' }}>
+                Skills
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {step.skills.map(skill => (
+                  <span
+                    key={skill}
+                    className="text-xs px-3 py-1"
+                    style={{ border: '1px solid #1a4a3a', color: '#1a4a3a' }}
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Partner banner (step 02) */}
+            {step.partner && (
+              <div
+                className="flex items-center justify-between gap-3 mt-6 pt-6"
+                style={{ borderTop: '1px solid #e5e7eb' }}
+              >
+                <span className="text-xs tracking-widest uppercase" style={{ color: '#9ca3af' }}>
+                  In partnership with Syrto — Financial Intelligence
+                </span>
+                <Image
+                  src={step.partner.src}
+                  alt="Syrto"
+                  width={130}
+                  height={40}
+                  className="object-contain h-10 w-auto"
+                />
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
+
+      {/* Connector line between steps */}
+      {index < steps.length - 1 && (
+        <div
+          className="absolute"
+          style={{
+            left: '4rem',
+            top: 'calc(100% - 2.5rem)',
+            width: '1px',
+            height: '2.5rem',
+            background: 'rgba(247,245,240,0.2)',
+          }}
+        />
+      )}
     </div>
   )
 }
 
 export default function TimelineSection() {
   return (
-    <section className="py-24 px-6 bg-white">
+    <section className="py-24 px-6" style={{ background: '#1a4a3a' }}>
       <div className="max-w-3xl mx-auto">
 
         {/* Section header */}
         <div className="mb-16">
-          <p className="text-xs tracking-widest uppercase text-[#9ca3af] mb-3">The Process</p>
-          <h2 className="font-serif text-4xl font-bold text-[#0a0a0a]">Your Path at Alata</h2>
-          <div className="w-10 h-px bg-[#1a4a3a] mt-4" />
+          <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'rgba(247,245,240,0.45)' }}>
+            The Process
+          </p>
+          <h2 className="font-serif text-4xl font-bold" style={{ color: '#f7f5f0' }}>
+            Your Path at Alata
+          </h2>
+          <div className="w-10 h-px mt-4" style={{ background: 'rgba(247,245,240,0.35)' }} />
         </div>
 
         {/* Timeline */}
         <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-5 top-5 w-px bg-[#1a4a3a]/20" style={{ bottom: '0' }} />
-
           {steps.map((step, i) => (
             <TimelineItem key={step.number} step={step} index={i} />
           ))}

@@ -98,7 +98,10 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="inline-block bg-white text-[#1a4a3a] text-base font-medium tracking-wide px-12 py-5 hover:bg-white/90 transition-colors duration-150"
+        className="inline-block text-white text-base font-medium tracking-wide px-12 py-5 transition-colors duration-150"
+        style={{ background: '#1a4a3a' }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#2d6b54')}
+        onMouseLeave={e => (e.currentTarget.style.background = '#1a4a3a')}
       >
         Apply Now
       </button>
@@ -159,7 +162,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={firstName}
                         onChange={e => setFirstName(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                     <div>
@@ -171,7 +174,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={lastName}
                         onChange={e => setLastName(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -187,7 +190,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                     <div>
@@ -199,7 +202,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         value={telephoneNumber}
                         onChange={e => setTelephoneNumber(e.target.value)}
                         placeholder="e.g. +39 333 123 4567"
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -214,7 +217,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={yearOfStudy}
                         onChange={e => setYearOfStudy(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors appearance-none"
+                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors appearance-none"
                       >
                         <option value="" disabled>Select…</option>
                         {YEAR_OPTIONS.map(y => (
@@ -232,7 +235,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         value={degreeProgramme}
                         onChange={e => setDegreeProgramme(e.target.value)}
                         placeholder="e.g. Economics"
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -258,7 +261,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         el.style.height = el.scrollHeight + 'px'
                       }}
                       placeholder="Why do you want to join Alata Investment Club?"
-                      className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors resize-none overflow-hidden"
+                      className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors resize-none overflow-hidden"
                       style={{ height: 'auto' }}
                     />
                   </div>
@@ -271,7 +274,10 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                     <button
                       type="submit"
                       disabled={submitting || wordCount > 200}
-                      className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ background: '#1a4a3a' }}
+                      onMouseEnter={e => { if (!submitting && wordCount <= 200) (e.currentTarget as HTMLButtonElement).style.background = '#2d6b54' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#1a4a3a' }}
                     >
                       {submitting ? 'Sending…' : 'Submit Application'}
                     </button>
