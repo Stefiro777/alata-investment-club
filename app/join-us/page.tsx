@@ -22,10 +22,10 @@ export default async function JoinUsPage() {
     <div className="min-h-screen">
 
       {/* ── Hero (split screen) ── */}
-      <section className="flex min-h-[600px] lg:min-h-[680px]">
+      <section className="flex min-h-[500px] lg:min-h-[610px]">
 
-        {/* Left — image */}
-        <div className="relative hidden md:block w-1/2 flex-shrink-0">
+        {/* Left — image with green overlay */}
+        <div className="relative hidden md:block w-1/2 flex-shrink-0 overflow-hidden">
           <Image
             src="/piazzavittoria.jpg"
             alt=""
@@ -33,21 +33,22 @@ export default async function JoinUsPage() {
             className="object-cover"
             priority
           />
+          <div className="absolute inset-0" style={{ background: 'rgba(26,74,58,0.5)' }} />
         </div>
 
-        {/* Right — content */}
-        <div className="flex flex-col justify-center w-full md:w-1/2 px-10 py-20 sm:px-16 lg:px-20" style={{ background: '#f9f9f9' }}>
-          <p className="animate-hero-line text-xs tracking-[0.3em] uppercase mb-6" style={{ color: '#1a4a3a' }}>Join Us</p>
+        {/* Right — solid green, white text */}
+        <div className="flex flex-col justify-center w-full md:w-1/2 px-10 py-20 sm:px-16 lg:px-20 bg-[#1a4a3a]">
+          <p className="animate-hero-line text-xs tracking-[0.3em] uppercase text-white/50 mb-6">Join Us</p>
           <h1
-            className="animate-hero-title font-serif font-bold leading-[1.02] mb-6"
-            style={{ fontSize: 'clamp(2.75rem, 5vw, 5rem)', color: '#0a0a0a' }}
+            className="animate-hero-title font-serif font-bold text-white leading-[1.02] mb-6"
+            style={{ fontSize: 'clamp(2.75rem, 7vw, 5.5rem)' }}
           >
             Become<br />a Member
           </h1>
-          <div className="animate-hero-line w-10 h-px mb-8" style={{ background: '#1a4a3a' }} />
+          <div className="animate-hero-line w-10 h-px bg-white/30 mb-8" />
           <p
-            className="text-base max-w-md leading-relaxed"
-            style={{ color: '#555', animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}
+            className="text-white/65 text-base max-w-lg leading-relaxed"
+            style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}
           >
             Join a meritocratic, collaborative environment where ambition meets finance.
           </p>
