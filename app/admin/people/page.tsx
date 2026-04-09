@@ -1,37 +1,24 @@
-import { createClient, createServiceClient } from '@/lib/supabase-server'
+import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import AdminShell from '../AdminShell'
+import AdminNavbar from '../components/AdminNavbar'
 import TeamClient from '../team/TeamClient'
-import MembersClient from '../members/MembersClient'
+import AlumniSection from '../components/AlumniSection'
+import AlumniCompaniesSection from '../components/AlumniCompaniesSection'
 import type { Alumni, AlumniCompany } from '@/lib/types'
 import type { TeamMember } from '../team/page'
-
-const SUPERADMIN = process.env.SUPERADMIN_EMAIL ?? ''
 
 export default async function AdminPeoplePage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/dashboard')
 
   const { data: adminRow } = await supabase
-    .from('admin_users')
-    .select('email')
-    .eq('email', user.email)
-    .maybeSingle()
-  if (!adminRow) redirect('/login')
-
-  const serviceClient = createServiceClient()
+    .from('admin_users').select('email').eq('email', user.email).maybeSingle()
+  if (!adminRow) redirect('/dashboard')
 
   const [
     { data: teamMembersData },
-    { data: adminUsersData },
-    { data: appSettings },
-    { data: showPricesRow },
-    { data: priceCVRow },
-    { data: priceMasterRow },
-    { data: priceCareerRow },
-    { data: showAlumniRow },
     { data: alumniRaw, error: alumniError },
     { data: alumniCompaniesData },
   ] = await Promise.all([
@@ -40,13 +27,6 @@ export default async function AdminPeoplePage() {
       .select('id, name, role, photo_url, linkedin_url, type, order_index, created_at')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
-    serviceClient.from('admin_users').select('email').order('email', { ascending: true }),
-    supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
-    supabase.from('settings').select('value').eq('key', 'show_prices').maybeSingle(),
-    supabase.from('settings').select('value').eq('key', 'price_cv_review').maybeSingle(),
-    supabase.from('settings').select('value').eq('key', 'price_master_orientation').maybeSingle(),
-    supabase.from('settings').select('value').eq('key', 'price_career_orientation').maybeSingle(),
-    supabase.from('settings').select('value').eq('key', 'show_alumni').maybeSingle(),
     supabase
       .from('alumni')
       .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
@@ -66,20 +46,18 @@ export default async function AdminPeoplePage() {
     : alumniRaw
 
   return (
-    <AdminShell userEmail={user.email ?? ''}>
-      <TeamClient members={(teamMembersData ?? []) as TeamMember[]} />
-      <MembersClient
-        adminUsers={(adminUsersData ?? []).map(r => r.email as string)}
-        superadmin={SUPERADMIN}
-        applicationsOpen={appSettings?.value === 'true'}
-        showPrices={showPricesRow ? showPricesRow.value === 'true' : true}
-        priceCV={priceCVRow?.value ?? '€29,99'}
-        priceMaster={priceMasterRow?.value ?? '€49,99'}
-        priceCareer={priceCareerRow?.value ?? '€49,99'}
-        showAlumni={showAlumniRow?.value === 'true'}
-        alumni={(alumniData ?? []) as Alumni[]}
-        alumniCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]}
-      />
-    </AdminShell>
+    <>
+      <AdminNavbar userEmail={user.email ?? ''} />
+      <main className="bg-[#f9f9f9] min-h-screen">
+        {/* TeamClient has its own max-w-5xl wrapper */}
+        <TeamClient members={(teamMembersData ?? []) as TeamMember[]} />
+        <div className="border-t border-black/10" />
+        <div className="max-w-5xl mx-auto px-8 py-10 space-y-16">
+          <AlumniSection initialAlumni={(alumniData ?? []) as Alumni[]} />
+          <hr className="border-black/10" />
+          <AlumniCompaniesSection initialCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]} />
+        </div>
+      </main>
+    </>
   )
 }

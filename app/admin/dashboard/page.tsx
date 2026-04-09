@@ -1,35 +1,18 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import AdminShell from '../AdminShell'
-import AdminClient from '../AdminClient'
+import AdminNavbar from '../components/AdminNavbar'
+import ResourcesSection from '../components/ResourcesSection'
 import type { Resource } from '@/lib/types'
-
-type Contenuto = {
-  id: number
-  titolo: string
-  descrizione: string | null
-  short_description: string | null
-  full_description: string | null
-  tag: string | null
-  tipo: string
-  data_pubblicazione: string | null
-  link: string | null
-  immagine_url: string | null
-  photos: string[] | null
-}
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/dashboard')
 
   const { data: adminRow } = await supabase
-    .from('admin_users')
-    .select('email')
-    .eq('email', user.email)
-    .maybeSingle()
-  if (!adminRow) redirect('/login')
+    .from('admin_users').select('email').eq('email', user.email).maybeSingle()
+  if (!adminRow) redirect('/dashboard')
 
   const { data: resourcesData } = await supabase
     .from('resources')
@@ -38,8 +21,13 @@ export default async function AdminDashboardPage() {
     .order('created_at', { ascending: true })
 
   return (
-    <AdminShell userEmail={user.email ?? ''}>
-      <AdminClient items={[] as Contenuto[]} resources={(resourcesData ?? []) as Resource[]} partners={[]} />
-    </AdminShell>
+    <>
+      <AdminNavbar userEmail={user.email ?? ''} />
+      <main className="bg-[#f9f9f9] min-h-screen">
+        <div className="max-w-5xl mx-auto px-8 py-10">
+          <ResourcesSection initialResources={(resourcesData ?? []) as Resource[]} />
+        </div>
+      </main>
+    </>
   )
 }

@@ -1,21 +1,8 @@
-'use client'
-
-import { useState } from 'react'
 import type { FeaturedReport } from '@/lib/types'
 import Reveal from './Reveal'
 
 export default function FeaturedReports({ reports }: { reports: FeaturedReport[] }) {
   if (reports.length === 0) return null
-
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
-
-  function toggleExpand(id: string) {
-    setExpandedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) { next.delete(id) } else { next.add(id) }
-      return next
-    })
-  }
 
   return (
     <section className="py-20 sm:py-28 bg-white">
@@ -31,61 +18,45 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
         <div className="space-y-0">
           {reports.map((report, i) => {
             const imageLeft = i % 2 === 0
-            const isExpanded = expandedIds.has(report.id)
-
             return (
               <div
                 key={report.id}
                 className="grid md:grid-cols-2 border border-black/10"
                 style={{ borderBottom: i < reports.length - 1 ? 'none' : undefined }}
               >
-                {/* ── PDF panel ── */}
+                {/* ── PDF preview panel ── */}
                 <Reveal
                   direction={imageLeft ? 'left' : 'right'}
-                  className={`flex flex-col bg-[#f5f5f5] ${imageLeft ? 'md:order-1' : 'md:order-2'}`}
+                  className={`flex flex-col items-center justify-center bg-[#f5f5f5] px-10 py-14 gap-6 ${imageLeft ? 'md:order-1' : 'md:order-2'}`}
+                  style={{ minHeight: '380px' }}
                 >
-                  {report.pdf_url ? (
-                    <>
-                      {/* iframe with animated height */}
-                      <div
-                        style={{
-                          height: isExpanded ? 700 : 400,
-                          transition: 'height 0.35s cubic-bezier(0.22,1,0.36,1)',
-                        }}
-                      >
-                        <iframe
-                          src={report.pdf_url}
-                          title={report.title}
-                          sandbox="allow-scripts allow-same-origin"
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            border: 'none',
-                            display: 'block',
-                            overflow: 'auto',
-                          }}
-                        />
-                      </div>
+                  {/* Document icon */}
+                  <div className="w-16 h-20 bg-white border border-black/10 flex flex-col items-center justify-center gap-1 shadow-sm flex-shrink-0">
+                    <svg className="w-7 h-7 text-[#1a4a3a]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-[9px] font-bold tracking-widest uppercase text-[#1a4a3a]/60">PDF</span>
+                  </div>
 
-                      {/* Expand / collapse toggle */}
-                      <button
-                        onClick={() => toggleExpand(report.id)}
-                        className="flex items-center justify-center gap-2 w-full py-3 text-xs font-medium tracking-wide text-[#1a4a3a] hover:bg-[#1a4a3a]/5 border-t border-black/10 transition-colors duration-150 select-none"
-                      >
-                        <span className="text-base leading-none">{isExpanded ? '▲' : '▼'}</span>
-                        <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
-                      </button>
-                    </>
-                  ) : (
-                    /* Fallback when no PDF is available */
-                    <div
-                      className="flex items-center justify-center bg-[#1a4a3a]/5"
-                      style={{ minHeight: '400px' }}
+                  {/* Report title */}
+                  <p className="font-serif text-base font-medium text-[#0a0a0a] text-center leading-snug max-w-[260px]">
+                    {report.title}
+                  </p>
+
+                  {/* View Report button */}
+                  {report.pdf_url && (
+                    <a
+                      href={report.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-widest uppercase px-6 py-3 transition-colors duration-150"
                     >
-                      <svg className="w-12 h-12 text-[#1a4a3a]/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
-                    </div>
+                      View Report
+                    </a>
                   )}
                 </Reveal>
 
@@ -101,9 +72,15 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
                     {report.title}
                   </h3>
                   <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
-                  <p className="text-[#6b7280] text-sm leading-relaxed mb-8">
+                  <p className="text-[#6b7280] text-sm leading-relaxed mb-4">
                     {report.description}
                   </p>
+                  {report.authors && (
+                    <p className="font-serif italic text-[#374151] text-sm mb-8">
+                      Authors: {report.authors}
+                    </p>
+                  )}
+                  {!report.authors && <div className="mb-8" />}
                   {report.pdf_url && (
                     <div>
                       <a

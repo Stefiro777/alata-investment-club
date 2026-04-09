@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import AdminShell from '../AdminShell'
-import AdminClient from '../AdminClient'
+import AdminNavbar from '../components/AdminNavbar'
+import NewsEventsSection from '../components/NewsEventsSection'
 import FeaturedReportsClient from '../featured-reports/FeaturedReportsClient'
 import type { FeaturedReport } from '@/lib/types'
 
@@ -23,14 +23,11 @@ export default async function AdminContentPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/dashboard')
 
   const { data: adminRow } = await supabase
-    .from('admin_users')
-    .select('email')
-    .eq('email', user.email)
-    .maybeSingle()
-  if (!adminRow) redirect('/login')
+    .from('admin_users').select('email').eq('email', user.email).maybeSingle()
+  if (!adminRow) redirect('/dashboard')
 
   const [
     { data: contenuti },
@@ -48,9 +45,15 @@ export default async function AdminContentPage() {
   ])
 
   return (
-    <AdminShell userEmail={user.email ?? ''}>
-      <AdminClient items={(contenuti ?? []) as Contenuto[]} resources={[]} partners={[]} />
-      <FeaturedReportsClient reports={(featuredReportsData ?? []) as FeaturedReport[]} />
-    </AdminShell>
+    <>
+      <AdminNavbar userEmail={user.email ?? ''} />
+      <main className="bg-[#f9f9f9] min-h-screen">
+        <div className="max-w-5xl mx-auto px-8 py-10">
+          <NewsEventsSection initialItems={(contenuti ?? []) as Contenuto[]} />
+        </div>
+        <div className="border-t border-black/10" />
+        <FeaturedReportsClient reports={(featuredReportsData ?? []) as FeaturedReport[]} />
+      </main>
+    </>
   )
 }
