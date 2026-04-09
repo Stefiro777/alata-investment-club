@@ -4,6 +4,14 @@ import { useState } from 'react'
 import type { Alumni } from '@/lib/types'
 import Reveal from '@/app/components/Reveal'
 
+export const INDUSTRY_OPTIONS = [
+  'Investment Banking', 'Consulting', 'Asset Management', 'Private Equity',
+  'Venture Capital', 'Hedge Fund', 'Big Tech', 'Start-up', 'Audit & Accounting',
+  'Tax & Legal', 'Commercial Banking', 'Private Banking', 'Wealth Management',
+  'Real Estate', 'Corporate Finance', 'Research & Valuation', 'Insurance',
+  'Public Sector', 'Other',
+]
+
 function LinkedInIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -35,6 +43,11 @@ function AlumniCard({ alumni }: { alumni: Alumni }) {
             {alumni.graduation_year && (
               <p className="text-xs text-white/50 mt-1">Class of {alumni.graduation_year}</p>
             )}
+            {alumni.industry && (
+              <span className="inline-block mt-2 text-xs px-2 py-0.5 bg-white/15 text-white/80 tracking-wide">
+                {alumni.industry}
+              </span>
+            )}
           </div>
           {alumni.linkedin_url && (
             <a
@@ -54,7 +67,7 @@ function AlumniCard({ alumni }: { alumni: Alumni }) {
 }
 
 export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
-  const [selected, setSelected] = useState<string>('')
+  const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null)
 
   const sorted = [...alumni].sort((a, b) => {
     const ai = a.order_index ?? null
@@ -65,54 +78,51 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
     return ai - bi
   })
 
-  const companies = Array.from(
-    new Set(sorted.map(a => a.current_company).filter(Boolean) as string[])
-  ).sort((a, b) => a.localeCompare(b))
+  // Only show industry tags that exist in the data
+  const presentIndustries = INDUSTRY_OPTIONS.filter(ind =>
+    sorted.some(a => a.industry === ind)
+  )
 
-  const filtered = selected
-    ? sorted.filter(a => a.current_company === selected)
+  const filtered = selectedIndustry
+    ? sorted.filter(a => a.industry === selectedIndustry)
     : sorted
 
   return (
     <div>
-      {/* Filter bar */}
-      {companies.length > 0 && (
-        <Reveal direction="down" className="flex items-center gap-3 mb-10 flex-wrap">
-          <div className="relative">
-            <select
-              value={selected}
-              onChange={e => setSelected(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-2.5 border border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#1a4a3a] cursor-pointer"
-            >
-              <option value="">All Companies</option>
-              {companies.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <svg
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1a4a3a]"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-
-          {selected && (
+      {/* Industry tag filter */}
+      {presentIndustries.length > 0 && (
+        <Reveal direction="down" className="mb-10">
+          <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setSelected('')}
-              className="flex items-center gap-1.5 text-xs font-medium text-[#1a4a3a] border border-[#1a4a3a] px-3 py-2.5 hover:bg-[#1a4a3a] hover:text-white transition-colors duration-150"
+              onClick={() => setSelectedIndustry(null)}
+              className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150"
+              style={
+                selectedIndustry === null
+                  ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
+                  : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }
+              }
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Tutti
+              All
             </button>
-          )}
-
-          {selected && (
-            <span className="text-xs text-[#9ca3af]">
-              {filtered.length} {filtered.length === 1 ? 'alumni' : 'alumni'}
-            </span>
+            {presentIndustries.map(ind => (
+              <button
+                key={ind}
+                onClick={() => setSelectedIndustry(ind)}
+                className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150"
+                style={
+                  selectedIndustry === ind
+                    ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
+                    : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }
+                }
+              >
+                {ind}
+              </button>
+            ))}
+          </div>
+          {selectedIndustry && (
+            <p className="text-xs text-[#9ca3af] mt-3">
+              {filtered.length} {filtered.length === 1 ? 'alumni' : 'alumni'} in {selectedIndustry}
+            </p>
           )}
         </Reveal>
       )}
@@ -120,7 +130,7 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
       {/* Grid */}
       {filtered.length === 0 ? (
         <p className="text-[#6b7280] text-sm text-center py-8">
-          Nessun alumni per questa azienda.
+          No alumni in this industry yet.
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">

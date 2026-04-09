@@ -5,8 +5,19 @@ export type Alumni = {
   graduation_year: string | null
   linkedin_url: string | null
   current_company: string | null
+  industry: string | null
   order_index?: number | null
   created_at?: string
+}
+
+export type FeaturedReport = {
+  id: string
+  title: string
+  description: string
+  image_url: string | null
+  pdf_url: string | null
+  display_order: number
+  created_at: string
 }
 
 export type AlumniCompany = {

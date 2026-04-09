@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import ReportsCarousel from '../components/ReportsCarousel'
+import FeaturedReports from '../components/FeaturedReports'
 import Reveal from '../components/Reveal'
+import type { FeaturedReport } from '@/lib/types'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alatainvestmentclub.com/reports' },
@@ -11,11 +13,19 @@ export const metadata: Metadata = {
 export default async function ReportsPage() {
   const supabase = await createClient()
 
-  const { data: reports } = await supabase
-    .from('contenuti')
-    .select('*')
-    .eq('tipo', 'report')
-    .order('data_pubblicazione', { ascending: false })
+  const [{ data: reports }, { data: featuredData }] = await Promise.all([
+    supabase
+      .from('contenuti')
+      .select('*')
+      .eq('tipo', 'report')
+      .order('data_pubblicazione', { ascending: false }),
+    supabase
+      .from('featured_reports')
+      .select('id, title, description, image_url, pdf_url, display_order, created_at')
+      .order('display_order', { ascending: true }),
+  ])
+
+  const featured = (featuredData ?? []) as FeaturedReport[]
 
   return (
     <div>
@@ -54,6 +64,9 @@ export default async function ReportsPage() {
           </Reveal>
         </div>
       </section>
+
+      {/* Featured Reports */}
+      {featured.length > 0 && <FeaturedReports reports={featured} />}
     </div>
   )
 }

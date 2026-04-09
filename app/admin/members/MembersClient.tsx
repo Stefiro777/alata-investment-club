@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { Alumni, AlumniCompany } from '@/lib/types'
 
+const INDUSTRY_OPTIONS = [
+  'Investment Banking', 'Consulting', 'Asset Management', 'Private Equity',
+  'Venture Capital', 'Hedge Fund', 'Big Tech', 'Start-up', 'Audit & Accounting',
+  'Tax & Legal', 'Commercial Banking', 'Private Banking', 'Wealth Management',
+  'Real Estate', 'Corporate Finance', 'Research & Valuation', 'Insurance',
+  'Public Sector', 'Other',
+]
+
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-8">
@@ -33,6 +41,7 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
   const [graduationYear, setGraduationYear] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [currentCompany, setCurrentCompany] = useState('')
+  const [industry, setIndustry] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,8 +59,9 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
         graduation_year: graduationYear.trim() || null,
         linkedin_url: linkedinUrl.trim() || null,
         current_company: currentCompany.trim() || null,
+        industry: industry || null,
       })
-      .select('id, name, role, graduation_year, linkedin_url, current_company, order_index, created_at')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
       .single()
     if (error) {
       setError(error.message)
@@ -62,6 +72,7 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
       setGraduationYear('')
       setLinkedinUrl('')
       setCurrentCompany('')
+      setIndustry('')
     }
     setSaving(false)
   }
@@ -96,6 +107,16 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
           placeholder="Current company"
           className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
         />
+        <select
+          value={industry}
+          onChange={e => setIndustry(e.target.value)}
+          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors appearance-none"
+        >
+          <option value="">Industry (optional)</option>
+          {INDUSTRY_OPTIONS.map(opt => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
         <input
           value={linkedinUrl}
           onChange={e => setLinkedinUrl(e.target.value)}
@@ -134,6 +155,7 @@ function AlumniRow({
   const [graduationYear, setGraduationYear] = useState(alumni.graduation_year ?? '')
   const [linkedinUrl, setLinkedinUrl] = useState(alumni.linkedin_url ?? '')
   const [currentCompany, setCurrentCompany] = useState(alumni.current_company ?? '')
+  const [industry, setIndustry] = useState(alumni.industry ?? '')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -152,9 +174,10 @@ function AlumniRow({
         graduation_year: graduationYear.trim() || null,
         linkedin_url: linkedinUrl.trim() || null,
         current_company: currentCompany.trim() || null,
+        industry: industry || null,
       })
       .eq('id', alumni.id)
-      .select('id, name, role, graduation_year, linkedin_url, current_company, order_index, created_at')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
       .single()
     if (error) {
       setError(error.message)
@@ -217,6 +240,12 @@ function AlumniRow({
             <input required value={role} onChange={e => setRole(e.target.value)} placeholder="Role *" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
             <input value={graduationYear} onChange={e => setGraduationYear(e.target.value)} placeholder="Graduation year" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
             <input value={currentCompany} onChange={e => setCurrentCompany(e.target.value)} placeholder="Current company" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
+            <select value={industry} onChange={e => setIndustry(e.target.value)} className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors appearance-none sm:col-span-2">
+              <option value="">Industry (optional)</option>
+              {INDUSTRY_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
             <input value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="LinkedIn URL" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors sm:col-span-2" />
           </div>
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}

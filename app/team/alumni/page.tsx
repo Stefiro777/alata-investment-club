@@ -33,7 +33,7 @@ export default async function AlumniPage() {
   const [{ data: alumniData, error: alumniError }, { data: companiesData }] = await Promise.all([
     supabase
       .from('alumni')
-      .select('id, name, role, graduation_year, linkedin_url, current_company, order_index')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index')
       .order('created_at', { ascending: false }),
     supabase
       .from('alumni_companies')
@@ -45,7 +45,7 @@ export default async function AlumniPage() {
   const alumniList = alumniError
     ? (await supabase
         .from('alumni')
-        .select('id, name, role, graduation_year, linkedin_url, current_company')
+        .select('id, name, role, graduation_year, linkedin_url, current_company, industry')
         .order('created_at', { ascending: false })).data
     : alumniData
 

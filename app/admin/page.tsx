@@ -74,6 +74,13 @@ export default async function AdminPage() {
               Members
             </a>
             <a
+              href="/admin/featured-reports"
+              className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
+              style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
+            >
+              Featured Reports
+            </a>
+            <a
               href="/dashboard"
               className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2"
               style={{ transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
