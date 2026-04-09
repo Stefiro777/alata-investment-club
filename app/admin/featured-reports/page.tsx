@@ -18,7 +18,7 @@ export default async function FeaturedReportsAdminPage() {
 
   const { data } = await supabase
     .from('featured_reports')
-    .select('id, title, description, image_url, pdf_url, display_order, created_at')
+    .select('id, title, description, image_url, pdf_url, authors, display_order, created_at')
     .order('display_order', { ascending: true })
 
   return (

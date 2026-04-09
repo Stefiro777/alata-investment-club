@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import Image from 'next/image'
 import type { FeaturedReport } from '@/lib/types'
 
 // ── Storage upload helpers ──────────────────────────────────────────────────────
@@ -29,24 +28,12 @@ function ReportModal({
 }) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
-  const [imageUrl, setImageUrl] = useState(initial?.image_url ?? '')
+  const [authors, setAuthors] = useState(initial?.authors ?? '')
   const [pdfUrl, setPdfUrl] = useState(initial?.pdf_url ?? '')
-  const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadingPdf, setUploadingPdf] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const imageRef = useRef<HTMLInputElement>(null)
   const pdfRef = useRef<HTMLInputElement>(null)
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploadingImage(true)
-    const result = await uploadFile(file, 'featured-reports')
-    if ('error' in result) setError(result.error)
-    else setImageUrl(result.url)
-    setUploadingImage(false)
-  }
 
   async function handlePdfUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -71,11 +58,11 @@ function ReportModal({
         .update({
           title: title.trim(),
           description: description.trim(),
-          image_url: imageUrl || null,
+          authors: authors.trim() || null,
           pdf_url: pdfUrl || null,
         })
         .eq('id', initial.id)
-        .select('id, title, description, image_url, pdf_url, display_order, created_at')
+        .select('id, title, description, pdf_url, authors, display_order')
         .single()
       if (err) { setError(err.message); setSaving(false); return }
       onSave(data as FeaturedReport)
@@ -85,11 +72,11 @@ function ReportModal({
         .insert({
           title: title.trim(),
           description: description.trim(),
-          image_url: imageUrl || null,
+          authors: authors.trim() || null,
           pdf_url: pdfUrl || null,
           display_order: 999,
         })
-        .select('id, title, description, image_url, pdf_url, display_order, created_at')
+        .select('id, title, description, pdf_url, authors, display_order')
         .single()
       if (err) { setError(err.message); setSaving(false); return }
       onSave(data as FeaturedReport)
@@ -144,33 +131,17 @@ function ReportModal({
             />
           </div>
 
-          {/* Image */}
+          {/* Authors */}
           <div>
             <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-              Cover Image
+              Authors
             </label>
-            <div className="flex gap-3 items-start">
-              <input
-                value={imageUrl}
-                onChange={e => setImageUrl(e.target.value)}
-                placeholder="Image URL or upload"
-                className="flex-1 px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => imageRef.current?.click()}
-                disabled={uploadingImage}
-                className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2.5 transition-colors duration-150 disabled:opacity-50"
-              >
-                {uploadingImage ? '…' : 'Upload'}
-              </button>
-              <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            </div>
-            {imageUrl && (
-              <div className="mt-2 relative w-full h-28 bg-[#f5f5f5] overflow-hidden">
-                <Image src={imageUrl} alt="" fill className="object-cover" />
-              </div>
-            )}
+            <input
+              value={authors}
+              onChange={e => setAuthors(e.target.value)}
+              placeholder="es. Mario Rossi, Luca Bianchi"
+              className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+            />
           </div>
 
           {/* PDF */}
@@ -324,19 +295,6 @@ export default function FeaturedReportsClient({ reports: initialReports }: { rep
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm8-16a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
                 </svg>
-              </div>
-
-              {/* Thumbnail */}
-              <div className="flex-shrink-0 w-16 h-12 bg-[#f5f5f5] overflow-hidden relative">
-                {report.image_url ? (
-                  <Image src={report.image_url} alt={report.title} fill className="object-cover" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-[#d1d5db]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01" />
-                    </svg>
-                  </div>
-                )}
               </div>
 
               {/* Info */}
