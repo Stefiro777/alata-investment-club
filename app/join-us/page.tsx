@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
+import Image from 'next/image'
 import ApplySection from './ApplySection'
 import TimelineSection from './TimelineSection'
 
@@ -20,25 +21,38 @@ export default async function JoinUsPage() {
   return (
     <div className="min-h-screen">
 
-      {/* ── Hero ── */}
-      <section className="relative py-24 sm:py-36 px-6 overflow-hidden" style={{ background: '#1a4a3a' }}>
-        {/* Radial glow */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.05) 0%, transparent 65%)' }} />
-        {/* Decorative large letter */}
-        <div className="relative z-10 max-w-5xl mx-auto">
-          <p className="animate-hero-line text-xs tracking-[0.3em] uppercase text-white/50 mb-6">Join Us</p>
+      {/* ── Hero (split screen) ── */}
+      <section className="flex min-h-[600px] lg:min-h-[680px]">
+
+        {/* Left — image */}
+        <div className="relative hidden md:block w-1/2 flex-shrink-0">
+          <Image
+            src="/piazzavittoria.jpg"
+            alt=""
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
+
+        {/* Right — content */}
+        <div className="flex flex-col justify-center w-full md:w-1/2 px-10 py-20 sm:px-16 lg:px-20" style={{ background: '#f9f9f9' }}>
+          <p className="animate-hero-line text-xs tracking-[0.3em] uppercase mb-6" style={{ color: '#1a4a3a' }}>Join Us</p>
           <h1
-            className="animate-hero-title font-serif font-bold text-white leading-[1.02] mb-6"
-            style={{ fontSize: 'clamp(2.75rem, 7vw, 5.5rem)' }}
+            className="animate-hero-title font-serif font-bold leading-[1.02] mb-6"
+            style={{ fontSize: 'clamp(2.75rem, 5vw, 5rem)', color: '#0a0a0a' }}
           >
             Become<br />a Member
           </h1>
-          <div className="animate-hero-line w-10 h-px bg-white/30 mb-8" />
-          <p className="text-white/65 text-base max-w-lg leading-relaxed"
-            style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
+          <div className="animate-hero-line w-10 h-px mb-8" style={{ background: '#1a4a3a' }} />
+          <p
+            className="text-base max-w-md leading-relaxed"
+            style={{ color: '#555', animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}
+          >
             Join a meritocratic, collaborative environment where ambition meets finance.
           </p>
         </div>
+
       </section>
 
       <TimelineSection />
