@@ -101,14 +101,14 @@ export default async function CareerServicePage() {
       </section>
 
       {/* Services — light */}
-      <section className="py-20 sm:py-28 bg-[#f5f5f5]">
+      <section className="py-20 sm:py-28 bg-[#f7f5f0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid gap-px bg-[#e5e5e5] md:grid-cols-3">
             {services.map((service, i) => (
               <Reveal key={service.id} delay={i * 150} direction="up">
                 <div
                   className="hover-lift p-8 sm:p-10 flex flex-col h-full relative overflow-hidden"
-                  style={{ background: '#f7f5f0', borderTop: '3px solid #1a4a3a' }}
+                  style={{ background: '#ffffff', borderTop: '3px solid #1a4a3a' }}
                 >
                   {/* Decorative number */}
                   <span
