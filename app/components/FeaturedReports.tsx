@@ -29,27 +29,12 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
                 <Reveal
                   direction={imageLeft ? 'left' : 'right'}
                   className={`${imageLeft ? 'md:order-1' : 'md:order-2'}`}
-                  style={{ minHeight: '420px' }}
+                  style={{ borderTop: '3px solid #1a4a3a' }}
                 >
                   {report.pdf_url ? (
-                    <div className="w-full h-full flex flex-col" style={{ minHeight: '420px' }}>
-                      <PdfPreview pdfUrl={report.pdf_url} title={report.title} />
-                      {/* View Report link below the canvas */}
-                      <a
-                        href={report.pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 bg-white border-t border-black/10 text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-[11px] font-medium tracking-widest uppercase px-6 py-3 transition-colors duration-150 flex-shrink-0"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        Apri in nuova scheda
-                      </a>
-                    </div>
+                    <PdfPreview pdfUrl={report.pdf_url} title={report.title} />
                   ) : (
-                    /* No PDF — show static placeholder */
-                    <div className="flex flex-col items-center justify-center bg-[#f5f5f5] w-full h-full gap-6 px-10 py-14" style={{ minHeight: '420px' }}>
+                    <div className="flex flex-col items-center justify-center bg-[#f5f5f5] w-full gap-6 px-10 py-14">
                       <div className="w-16 h-20 bg-white border border-black/10 flex flex-col items-center justify-center gap-1 shadow-sm">
                         <svg className="w-7 h-7 text-[#1a4a3a]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -63,14 +48,27 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
                   )}
                 </Reveal>
 
-                {/* ── Text panel (unchanged) ── */}
+                {/* ── Text panel ── */}
                 <Reveal
                   direction={imageLeft ? 'right' : 'left'}
                   className={`flex flex-col justify-center px-10 py-12 lg:px-14 lg:py-16 bg-white ${imageLeft ? 'md:order-2' : 'md:order-1'}`}
+                  style={{ borderLeft: '3px solid #1a4a3a' }}
                 >
-                  <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-4">
-                    Featured Report
-                  </p>
+                  {/* "FEATURED REPORT" badge */}
+                  <div className="mb-4">
+                    <span
+                      className="inline-block text-white font-medium uppercase"
+                      style={{
+                        background: '#1a4a3a',
+                        fontSize: '0.65rem',
+                        letterSpacing: '0.15em',
+                        padding: '3px 8px',
+                      }}
+                    >
+                      Featured Report
+                    </span>
+                  </div>
+
                   <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#0a0a0a] leading-snug mb-4">
                     {report.title}
                   </h3>
