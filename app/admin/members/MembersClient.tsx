@@ -165,27 +165,35 @@ function AlumniRow({
     if (!name.trim() || !role.trim()) return
     setSaving(true)
     setError(null)
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('alumni')
-      .update({
-        name: name.trim(),
-        role: role.trim(),
-        graduation_year: graduationYear.trim() || null,
-        linkedin_url: linkedinUrl.trim() || null,
-        current_company: currentCompany.trim() || null,
-        industry: industry || null,
-      })
-      .eq('id', alumni.id)
-      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
-      .single()
-    if (error) {
-      setError(error.message)
-    } else {
-      onUpdated(data as Alumni)
-      setOpen(false)
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('alumni')
+        .update({
+          name: name.trim(),
+          role: role.trim(),
+          graduation_year: graduationYear.trim() || null,
+          linkedin_url: linkedinUrl.trim() || null,
+          current_company: currentCompany.trim() || null,
+          industry: industry || null,
+        })
+        .eq('id', alumni.id)
+        .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
+        .single()
+      if (error) {
+        console.error('[AlumniRow] update error:', error)
+        setError(error.message)
+      } else {
+        onUpdated(data as Alumni)
+        setOpen(false)
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error('[AlumniRow] unexpected error:', msg)
+      setError(msg)
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   async function handleDelete() {
