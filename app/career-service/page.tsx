@@ -107,8 +107,8 @@ export default async function CareerServicePage() {
             {services.map((service, i) => (
               <Reveal key={service.id} delay={i * 150} direction="up">
                 <div
-                  className="hover-lift bg-white p-8 sm:p-10 flex flex-col h-full relative overflow-hidden"
-                  style={{ borderTop: '3px solid #1a4a3a' }}
+                  className="hover-lift p-8 sm:p-10 flex flex-col h-full relative overflow-hidden"
+                  style={{ background: '#f7f5f0', borderTop: '3px solid #1a4a3a' }}
                 >
                   {/* Decorative number */}
                   <span
