@@ -220,18 +220,26 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
         )}
       </div>
 
-      {/* ── "Click to expand" hint — collapsed and loaded only ── */}
+      {/* ── "EXPAND REPORT" bar — collapsed and loaded only ── */}
       {!loading && !expanded && canvasHeight > 0 && (
         <div
-          className="flex items-center justify-center gap-1.5 py-2.5 bg-[#f5f5f5] border-t border-black/5 cursor-pointer"
           onClick={() => setExpanded(true)}
+          style={{
+            height: 32,
+            background: '#1a4a3a',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+          }}
         >
-          <svg className="w-3 h-3 text-[#aaa]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-          <span style={{ fontSize: '0.7rem', color: '#888', letterSpacing: '0.05em' }}>
-            Click to expand
+          <span style={{ color: '#fff', fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+            Expand Report
           </span>
+          <svg width="10" height="10" fill="none" stroke="white" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       )}
 
