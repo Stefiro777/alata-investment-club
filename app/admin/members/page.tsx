@@ -41,7 +41,7 @@ export default async function MembersPage() {
     supabase.from('settings').select('value').eq('key', 'show_alumni').maybeSingle(),
     supabase
       .from('alumni')
-      .select('id, name, role, graduation_year, linkedin_url, current_company, order_index, created_at')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
     supabase
@@ -54,7 +54,7 @@ export default async function MembersPage() {
   const alumniData = alumniError
     ? (await supabase
         .from('alumni')
-        .select('id, name, role, graduation_year, linkedin_url, current_company, created_at')
+        .select('id, name, role, graduation_year, linkedin_url, current_company, industry, created_at')
         .order('created_at', { ascending: true })).data
     : alumniRaw
 
