@@ -152,10 +152,16 @@ function AlumniRow({
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(alumni.name ?? '')
   const [role, setRole] = useState(alumni.role ?? '')
-  const [graduationYear, setGraduationYear] = useState(alumni.graduation_year ?? '')
+  const [graduationYear, setGraduationYear] = useState(String(alumni.graduation_year ?? ''))
   const [linkedinUrl, setLinkedinUrl] = useState(alumni.linkedin_url ?? '')
   const [currentCompany, setCurrentCompany] = useState(alumni.current_company ?? '')
-  const [industry, setIndustry] = useState(alumni.industry ?? '')
+  const [industry, setIndustry] = useState<string>(
+    Array.isArray(alumni.industry)
+      ? String(alumni.industry[0] ?? '')
+      : typeof alumni.industry === 'string'
+        ? alumni.industry
+        : ''
+  )
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -170,12 +176,12 @@ function AlumniRow({
       const { data, error } = await supabase
         .from('alumni')
         .update({
-          name: (name ?? '').trim(),
-          role: (role ?? '').trim(),
-          graduation_year: (graduationYear ?? '').trim() || null,
-          linkedin_url: (linkedinUrl ?? '').trim() || null,
-          current_company: (currentCompany ?? '').trim() || null,
-          industry: (industry ?? '').trim() || null,
+          name: String(name ?? '').trim(),
+          role: String(role ?? '').trim(),
+          graduation_year: String(graduationYear ?? '').trim() || null,
+          linkedin_url: String(linkedinUrl ?? '').trim() || null,
+          current_company: String(currentCompany ?? '').trim() || null,
+          industry: String(industry ?? '').trim() || null,
         })
         .eq('id', alumni.id)
         .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
@@ -541,16 +547,16 @@ function AlumniCompanyRow({
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !logoUrl.trim()) return
+    if (!String(name ?? '').trim() || !String(logoUrl ?? '').trim()) return
     setSaving(true)
     setError(null)
     const supabase = createClient()
     const { data, error } = await supabase
       .from('alumni_companies')
       .update({
-        name: name.trim(),
-        logo_url: logoUrl.trim(),
-        website_url: websiteUrl.trim() || null,
+        name: String(name ?? '').trim(),
+        logo_url: String(logoUrl ?? '').trim(),
+        website_url: String(websiteUrl ?? '').trim() || null,
       })
       .eq('id', company.id)
       .select('id, name, logo_url, website_url, created_at')
