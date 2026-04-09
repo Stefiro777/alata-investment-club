@@ -46,26 +46,29 @@ export default async function JoinUsPage() {
       <TimelineSection />
 
       {/* ── Apply Now ── */}
-      <section id="application-form" className="py-24 sm:py-32 px-6" style={{ background: '#1a4a3a' }}>
-        <div className="max-w-3xl mx-auto text-center">
+      <section id="application-form" className="py-20 px-6" style={{ background: '#1a4a3a' }}>
+        <div className="max-w-2xl mx-auto">
+
+          {/* Heading */}
           <Reveal>
-            <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              Applications
-            </p>
-            <h2
-              className="font-serif font-bold leading-[1.05] mb-4"
-              style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#ffffff' }}
-            >
-              Ready to join?
-            </h2>
-            <div className="w-10 h-px mx-auto mb-6" style={{ background: 'rgba(255,255,255,0.3)' }} />
-            <p className="text-sm leading-relaxed mb-10 mx-auto max-w-md" style={{ color: 'rgba(255,255,255,0.65)' }}>
-              Applications are reviewed on a rolling basis. We look for curiosity, commitment and the drive to grow.
-            </p>
-            <div className="flex justify-center">
+            <div className="text-center mb-10">
+              <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                Applications
+              </p>
+              <h2 className="font-serif font-bold mb-4" style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#ffffff' }}>
+                Ready to join?
+              </h2>
+              <div className="w-10 h-px mx-auto" style={{ background: 'rgba(255,255,255,0.3)' }} />
+            </div>
+          </Reveal>
+
+          {/* White form box */}
+          <Reveal delay={100}>
+            <div style={{ background: '#ffffff', padding: '2.5rem' }}>
               <ApplySection applicationsOpen={applicationsOpen} />
             </div>
           </Reveal>
+
         </div>
       </section>
 

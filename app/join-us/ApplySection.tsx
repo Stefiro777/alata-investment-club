@@ -12,7 +12,6 @@ const YEAR_OPTIONS = [
 ]
 
 export default function ApplySection({ applicationsOpen }: { applicationsOpen: boolean }) {
-  const [showModal, setShowModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,11 +36,6 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     setMotivation('')
     setError(null)
     setSubmitted(false)
-  }
-
-  function closeModal() {
-    setShowModal(false)
-    resetForm()
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -74,229 +68,185 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     setSubmitting(false)
   }
 
+  const fieldClass = "w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+
   /* ── Closed state ── */
   if (!applicationsOpen) {
     return (
-      <div className="flex flex-col items-center gap-5">
-        <p className="text-white/80 text-sm max-w-md leading-relaxed">
+      <div className="text-center py-4">
+        <p className="text-sm leading-relaxed mb-6" style={{ color: '#6b7280' }}>
           Applications are currently closed. Follow us to stay updated on the next opening.
         </p>
         <a
           href="https://linktr.ee/alatainvestmentclub"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block bg-white text-[#1a4a3a] text-sm font-medium tracking-wide px-8 py-3.5 hover:bg-white/90 transition-colors duration-150"
+          className="inline-block text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150"
+          style={{ background: '#1a4a3a', color: '#ffffff', border: '1px solid #1a4a3a' }}
         >
-          Follow us →
+          Follow us
         </a>
       </div>
     )
   }
 
-  /* ── Open state ── */
-  return (
-    <>
-      <button
-        onClick={() => setShowModal(true)}
-        className="inline-block text-base font-medium tracking-wide px-12 py-5 transition-colors duration-150"
-        style={{ background: '#ffffff', color: '#1a4a3a', border: '1px solid rgba(255,255,255,0.6)' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f0f0f0' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#ffffff' }}
-      >
-        Apply Now
-      </button>
-
-      {/* ── Modal ── */}
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-          onClick={e => { if (e.target === e.currentTarget) closeModal() }}
+  /* ── Success state ── */
+  if (submitted) {
+    return (
+      <div className="py-10 text-center">
+        <p className="font-serif text-2xl font-bold text-[#0a0a0a] mb-3">
+          Application received.
+        </p>
+        <p className="text-sm mb-6" style={{ color: '#6b7280' }}>
+          Thank you for applying. We will be in touch shortly.
+        </p>
+        <button
+          onClick={resetForm}
+          className="text-sm underline"
+          style={{ color: '#1a4a3a' }}
         >
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl" style={{ background: '#ffffff' }}>
+          Submit another application
+        </button>
+      </div>
+    )
+  }
 
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-8 py-6 border-b border-[#e5e5e5]">
-              <div>
-                <h3 className="font-serif text-xl font-bold text-[#0a0a0a]">Application</h3>
-                <p className="text-xs text-[#6b7280] mt-0.5">Alata Investment Club</p>
-              </div>
-              <button
-                onClick={closeModal}
-                className="text-[#6b7280] hover:text-[#0a0a0a] transition-colors p-1"
-                aria-label="Close"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+  /* ── Form ── */
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
 
-            {/* Modal body */}
-            <div className="px-8 py-6">
-              {submitted ? (
-                <div className="py-8 text-center">
-                  <p className="font-serif text-2xl font-bold text-[#0a0a0a] mb-3">
-                    Application received.
-                  </p>
-                  <p className="text-[#6b7280] text-sm mb-6">
-                    Thank you for applying. We will be in touch shortly.
-                  </p>
-                  <button
-                    onClick={closeModal}
-                    className="text-sm text-[#1a4a3a] hover:underline"
-                  >
-                    Close
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
-
-                  {/* First / Last name */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={firstName}
-                        onChange={e => setFirstName(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                        Last Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={lastName}
-                        onChange={e => setLastName(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email / Telephone */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                        Email <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                        Telephone Number
-                      </label>
-                      <input
-                        type="tel"
-                        value={telephoneNumber}
-                        onChange={e => setTelephoneNumber(e.target.value)}
-                        placeholder="e.g. +39 333 123 4567"
-                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Year of Study / Degree */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                        Year of Study <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        required
-                        value={yearOfStudy}
-                        onChange={e => setYearOfStudy(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors appearance-none"
-                      >
-                        <option value="" disabled>Select…</option>
-                        {YEAR_OPTIONS.map(y => (
-                          <option key={y} value={y}>{y}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
-                        Degree Programme <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={degreeProgramme}
-                        onChange={e => setDegreeProgramme(e.target.value)}
-                        placeholder="e.g. Economics"
-                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Motivation */}
-                  <div>
-                    <div className="flex items-end justify-between mb-2">
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280]">
-                        Motivation <span className="text-red-500">*</span>
-                      </label>
-                      <span className={`text-xs ${wordCount > 200 ? 'text-red-500 font-medium' : 'text-[#6b7280]'}`}>
-                        {wordCount} / 200 words
-                      </span>
-                    </div>
-                    <textarea
-                      required
-                      rows={3}
-                      value={motivation}
-                      onChange={e => setMotivation(e.target.value)}
-                      onInput={e => {
-                        const el = e.target as HTMLTextAreaElement
-                        el.style.height = 'auto'
-                        el.style.height = el.scrollHeight + 'px'
-                      }}
-                      placeholder="Why do you want to join Alata Investment Club?"
-                      className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors resize-none overflow-hidden"
-                      style={{ height: 'auto' }}
-                    />
-                  </div>
-
-                  {error && (
-                    <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
-                  )}
-
-                  <div className="flex items-center gap-4 pt-1">
-                    <button
-                      type="submit"
-                      disabled={submitting || wordCount > 200}
-                      className="text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: '#1a4a3a' }}
-                      onMouseEnter={e => { if (!submitting && wordCount <= 200) (e.currentTarget as HTMLButtonElement).style.background = '#2d6b54' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#1a4a3a' }}
-                    >
-                      {submitting ? 'Sending…' : 'Submit Application'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={closeModal}
-                      className="text-sm text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-
-                </form>
-              )}
-            </div>
-
-          </div>
+      {/* First / Last name */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            First Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={firstName}
+            onChange={e => setFirstName(e.target.value)}
+            className={fieldClass}
+          />
         </div>
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Last Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={lastName}
+            onChange={e => setLastName(e.target.value)}
+            className={fieldClass}
+          />
+        </div>
+      </div>
+
+      {/* Email / Telephone */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className={fieldClass}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Telephone Number
+          </label>
+          <input
+            type="tel"
+            value={telephoneNumber}
+            onChange={e => setTelephoneNumber(e.target.value)}
+            placeholder="e.g. +39 333 123 4567"
+            className={fieldClass}
+          />
+        </div>
+      </div>
+
+      {/* Year of Study / Degree */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Year of Study <span className="text-red-500">*</span>
+          </label>
+          <select
+            required
+            value={yearOfStudy}
+            onChange={e => setYearOfStudy(e.target.value)}
+            className={fieldClass + ' appearance-none'}
+          >
+            <option value="" disabled>Select…</option>
+            {YEAR_OPTIONS.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            Degree Programme <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={degreeProgramme}
+            onChange={e => setDegreeProgramme(e.target.value)}
+            placeholder="e.g. Economics"
+            className={fieldClass}
+          />
+        </div>
+      </div>
+
+      {/* Motivation */}
+      <div>
+        <div className="flex items-end justify-between mb-2">
+          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280]">
+            Motivation <span className="text-red-500">*</span>
+          </label>
+          <span className={`text-xs ${wordCount > 200 ? 'text-red-500 font-medium' : 'text-[#6b7280]'}`}>
+            {wordCount} / 200 words
+          </span>
+        </div>
+        <textarea
+          required
+          rows={4}
+          value={motivation}
+          onChange={e => setMotivation(e.target.value)}
+          onInput={e => {
+            const el = e.target as HTMLTextAreaElement
+            el.style.height = 'auto'
+            el.style.height = el.scrollHeight + 'px'
+          }}
+          placeholder="Why do you want to join Alata Investment Club?"
+          className={fieldClass + ' resize-none overflow-hidden'}
+          style={{ height: 'auto' }}
+        />
+      </div>
+
+      {error && (
+        <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
       )}
-    </>
+
+      <div className="pt-1">
+        <button
+          type="submit"
+          disabled={submitting || wordCount > 200}
+          className="text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: '#1a4a3a', border: '1px solid rgba(255,255,255,0.3)' }}
+          onMouseEnter={e => { if (!submitting && wordCount <= 200) (e.currentTarget as HTMLButtonElement).style.background = '#2d6b54' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#1a4a3a' }}
+        >
+          {submitting ? 'Sending…' : 'Submit Application'}
+        </button>
+      </div>
+
+    </form>
   )
 }
