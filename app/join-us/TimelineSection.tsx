@@ -63,7 +63,6 @@ function PhaseRow({ step, index }: { step: Step; index: number }) {
     opacity: visible ? 1 : 0,
     transform: visible ? 'none' : 'translateX(40px)',
     transition: 'opacity 650ms cubic-bezier(0.16,1,0.3,1) 80ms, transform 650ms cubic-bezier(0.16,1,0.3,1) 80ms',
-    borderLeft: '1px solid #e5e5e5',
   }
 
   const TitlePanel = () => (
@@ -92,19 +91,7 @@ function PhaseRow({ step, index }: { step: Step; index: number }) {
       </h3>
 
       {/* Decorative line */}
-      <div style={{ width: '2rem', height: '1px', background: '#1a4a3a', marginTop: '1.25rem' }} />
-    </div>
-  )
-
-  const DescPanel = () => (
-    <div className="px-8 lg:px-14 py-16">
-      {/* Description */}
-      <p
-        className="leading-relaxed mb-6"
-        style={{ fontSize: '1rem', color: '#444444', maxWidth: '28rem' }}
-      >
-        {step.description}
-      </p>
+      <div style={{ width: '2rem', height: '1px', background: '#1a4a3a', marginTop: '1.25rem', marginBottom: '1.25rem' }} />
 
       {/* Skills */}
       <div className="flex flex-wrap gap-2">
@@ -124,6 +111,18 @@ function PhaseRow({ step, index }: { step: Step; index: number }) {
           </span>
         ))}
       </div>
+    </div>
+  )
+
+  const DescPanel = () => (
+    <div className="px-8 lg:px-14 py-16">
+      {/* Description */}
+      <p
+        className="leading-relaxed"
+        style={{ fontSize: '1rem', color: '#444444', maxWidth: '28rem' }}
+      >
+        {step.description}
+      </p>
 
       {/* Partner (step 02) */}
       {step.partner && (
