@@ -98,10 +98,10 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="inline-block text-white text-base font-medium tracking-wide px-12 py-5 transition-colors duration-150"
-        style={{ background: '#1a4a3a' }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#2d6b54')}
-        onMouseLeave={e => (e.currentTarget.style.background = '#1a4a3a')}
+        className="inline-block text-base font-medium tracking-wide px-12 py-5 transition-colors duration-150"
+        style={{ background: '#ffffff', color: '#1a4a3a', border: '1px solid rgba(255,255,255,0.6)' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f0f0f0' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#ffffff' }}
       >
         Apply Now
       </button>
@@ -112,7 +112,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
           onClick={e => { if (e.target === e.currentTarget) closeModal() }}
         >
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl" style={{ background: '#f7f5f0' }}>
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl" style={{ background: '#ffffff' }}>
 
             {/* Modal header */}
             <div className="flex items-center justify-between px-8 py-6 border-b border-[#e5e5e5]">
@@ -162,7 +162,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={firstName}
                         onChange={e => setFirstName(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                     <div>
@@ -174,7 +174,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={lastName}
                         onChange={e => setLastName(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -190,7 +190,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                     <div>
@@ -202,7 +202,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         value={telephoneNumber}
                         onChange={e => setTelephoneNumber(e.target.value)}
                         placeholder="e.g. +39 333 123 4567"
-                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -217,7 +217,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={yearOfStudy}
                         onChange={e => setYearOfStudy(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors appearance-none"
+                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors appearance-none"
                       >
                         <option value="" disabled>Select…</option>
                         {YEAR_OPTIONS.map(y => (
@@ -235,7 +235,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         value={degreeProgramme}
                         onChange={e => setDegreeProgramme(e.target.value)}
                         placeholder="e.g. Economics"
-                        className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -261,7 +261,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         el.style.height = el.scrollHeight + 'px'
                       }}
                       placeholder="Why do you want to join Alata Investment Club?"
-                      className="w-full px-4 py-3 border border-[#1a4a3a] focus:outline-none text-sm text-[#0a0a0a] bg-white transition-colors resize-none overflow-hidden"
+                      className="w-full px-4 py-3 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors resize-none overflow-hidden"
                       style={{ height: 'auto' }}
                     />
                   </div>

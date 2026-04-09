@@ -45,34 +45,27 @@ export default async function JoinUsPage() {
 
       <TimelineSection />
 
-      {/* ── Cream band separator ── */}
-      <div style={{ height: 4, background: '#f7f5f0' }} />
-
       {/* ── Apply Now ── */}
-      <section id="application-form" className="bg-white py-24 sm:py-32 px-6 relative overflow-hidden">
-        <div className="relative z-10 max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-[1fr_auto] items-center gap-10">
-            <Reveal>
-              <div>
-                <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: '#9ca3af' }}>Applications</p>
-                <h2
-                  className="font-serif font-bold leading-[1.05] mb-4"
-                  style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#1a4a3a' }}
-                >
-                  Ready to join?
-                </h2>
-                <div className="w-10 h-px mb-5" style={{ background: '#1a4a3a' }} />
-                <p className="text-sm leading-relaxed max-w-md" style={{ color: '#6b7280' }}>
-                  Applications are reviewed on a rolling basis. We look for curiosity, commitment and the drive to grow.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={120} direction="left">
-              <div className="flex lg:justify-end">
-                <ApplySection applicationsOpen={applicationsOpen} />
-              </div>
-            </Reveal>
-          </div>
+      <section id="application-form" className="py-24 sm:py-32 px-6" style={{ background: '#1a4a3a' }}>
+        <div className="max-w-3xl mx-auto text-center">
+          <Reveal>
+            <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Applications
+            </p>
+            <h2
+              className="font-serif font-bold leading-[1.05] mb-4"
+              style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#ffffff' }}
+            >
+              Ready to join?
+            </h2>
+            <div className="w-10 h-px mx-auto mb-6" style={{ background: 'rgba(255,255,255,0.3)' }} />
+            <p className="text-sm leading-relaxed mb-10 mx-auto max-w-md" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              Applications are reviewed on a rolling basis. We look for curiosity, commitment and the drive to grow.
+            </p>
+            <div className="flex justify-center">
+              <ApplySection applicationsOpen={applicationsOpen} />
+            </div>
+          </Reveal>
         </div>
       </section>
 

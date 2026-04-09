@@ -36,152 +36,142 @@ const steps: Step[] = [
   },
 ]
 
-function TimelineItem({ step, index }: { step: Step; index: number }) {
+function PhaseRow({ step, index }: { step: Step; index: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
+
+  const textLeft = index % 2 === 0
+  const textBg = index % 2 === 0 ? '#ffffff' : '#f9f9f9'
+
+  // Text slides in from its side, deco slides from opposite side
+  const textSlide = textLeft ? -48 : 48
+  const decoSlide = textLeft ? 48 : -48
+  const delay = index * 100
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const observer = new IntersectionObserver(
+    const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setVisible(true) },
-      { threshold: 0.1 }
+      { threshold: 0.08 }
     )
-    observer.observe(el)
-    return () => observer.disconnect()
+    obs.observe(el)
+    return () => obs.disconnect()
   }, [])
 
   return (
-    <div
-      ref={ref}
-      className="relative"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(32px)',
-        transition: 'opacity 0.7s ease, transform 0.7s ease',
-        transitionDelay: `${index * 120}ms`,
-      }}
-    >
-      {/* Step number — large serif, outside the card */}
-      <div className="flex items-start gap-8 mb-0">
-        <div className="flex-shrink-0 w-16 pt-8 text-right">
+    <div ref={ref} className="grid md:grid-cols-2" style={{ minHeight: 400 }}>
+
+      {/* ── Text panel ── */}
+      <div
+        className={`flex flex-col justify-center px-10 lg:px-16 py-16 ${textLeft ? 'md:order-1' : 'md:order-2'}`}
+        style={{
+          background: textBg,
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'none' : `translateX(${textSlide}px)`,
+          transition: `opacity 700ms cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 700ms cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+        }}
+      >
+        <p className="text-xs tracking-widest uppercase mb-4" style={{ color: '#9ca3af' }}>
+          Step {step.number}
+        </p>
+
+        {/* Number + Title inline */}
+        <div className="flex items-baseline gap-3 mb-1">
           <span
             className="font-serif font-bold leading-none select-none"
-            style={{ fontSize: '4rem', color: 'rgba(247,245,240,0.18)', lineHeight: 1 }}
+            style={{ fontSize: '3.5rem', color: '#1a4a3a', opacity: 0.15, lineHeight: 1 }}
           >
             {step.number}
           </span>
+          <h3 className="font-serif text-2xl font-bold" style={{ color: '#1a4a3a' }}>
+            {step.title}
+          </h3>
         </div>
 
-        {/* Card */}
-        <div
-          className="flex-1 mb-10 last:mb-0"
-          style={{
-            background: '#f7f5f0',
-            borderLeft: '3px solid rgba(247,245,240,0.35)',
-          }}
-        >
-          {/* Card inner */}
-          <div className="p-8">
-            {/* Eyebrow */}
-            <p className="text-xs tracking-widest uppercase mb-2" style={{ color: '#9ca3af' }}>
-              Step {step.number}
-            </p>
+        <div className="w-8 h-px my-5" style={{ background: '#1a4a3a' }} />
 
-            {/* Title */}
-            <h3 className="font-serif text-2xl font-bold mb-3" style={{ color: '#1a4a3a' }}>
-              {step.title}
-            </h3>
+        <p className="text-sm leading-relaxed mb-6" style={{ color: '#374151' }}>
+          {step.description}
+        </p>
 
-            {/* Divider */}
-            <div className="w-8 h-px mb-5" style={{ background: '#1a4a3a' }} />
+        {/* Skills */}
+        <div className="flex flex-wrap gap-2">
+          {step.skills.map(skill => (
+            <span
+              key={skill}
+              className="text-xs px-3 py-1"
+              style={{ border: '1px solid #1a4a3a', color: '#1a4a3a' }}
+            >
+              {skill}
+            </span>
+          ))}
+        </div>
 
-            {/* Description */}
-            <p className="text-sm leading-relaxed mb-7" style={{ color: '#374151' }}>
-              {step.description}
-            </p>
-
-            {/* Skills */}
-            <div>
-              <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#9ca3af' }}>
-                Skills
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {step.skills.map(skill => (
-                  <span
-                    key={skill}
-                    className="text-xs px-3 py-1"
-                    style={{ border: '1px solid #1a4a3a', color: '#1a4a3a' }}
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Partner banner (step 02) */}
-            {step.partner && (
-              <div
-                className="flex items-center justify-between gap-3 mt-6 pt-6"
-                style={{ borderTop: '1px solid #e5e7eb' }}
-              >
-                <span className="text-xs tracking-widest uppercase" style={{ color: '#9ca3af' }}>
-                  In partnership with Syrto — Financial Intelligence
-                </span>
-                <Image
-                  src={step.partner.src}
-                  alt="Syrto"
-                  width={130}
-                  height={40}
-                  className="object-contain h-10 w-auto"
-                />
-              </div>
-            )}
+        {/* Partner (step 02) */}
+        {step.partner && (
+          <div
+            className="flex items-center gap-4 mt-6 pt-5"
+            style={{ borderTop: '1px solid #e5e7eb' }}
+          >
+            <span className="text-xs tracking-widest uppercase" style={{ color: '#9ca3af' }}>
+              In partnership with Syrto
+            </span>
+            <Image
+              src={step.partner.src}
+              alt="Syrto"
+              width={110}
+              height={36}
+              className="object-contain h-9 w-auto"
+            />
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Connector line between steps */}
-      {index < steps.length - 1 && (
-        <div
-          className="absolute"
+      {/* ── Decorative panel ── */}
+      <div
+        className={`relative flex items-center justify-center overflow-hidden ${textLeft ? 'md:order-2' : 'md:order-1'}`}
+        style={{
+          background: '#1a4a3a',
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'none' : `translateX(${decoSlide}px)`,
+          transition: `opacity 700ms cubic-bezier(0.16,1,0.3,1) ${delay + 80}ms, transform 700ms cubic-bezier(0.16,1,0.3,1) ${delay + 80}ms`,
+          minHeight: 300,
+        }}
+      >
+        <span
+          className="font-serif font-bold select-none pointer-events-none absolute"
           style={{
-            left: '4rem',
-            top: 'calc(100% - 2.5rem)',
-            width: '1px',
-            height: '2.5rem',
-            background: 'rgba(247,245,240,0.2)',
+            fontSize: 'clamp(9rem, 16vw, 14rem)',
+            color: 'rgba(255,255,255,0.06)',
+            lineHeight: 1,
           }}
-        />
-      )}
+        >
+          {step.number}
+        </span>
+      </div>
+
     </div>
   )
 }
 
 export default function TimelineSection() {
   return (
-    <section className="py-24 px-6" style={{ background: '#1a4a3a' }}>
-      <div className="max-w-3xl mx-auto">
+    <section>
 
-        {/* Section header */}
-        <div className="mb-16">
-          <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'rgba(247,245,240,0.45)' }}>
-            The Process
-          </p>
-          <h2 className="font-serif text-4xl font-bold" style={{ color: '#f7f5f0' }}>
-            Your Path at Alata
-          </h2>
-          <div className="w-10 h-px mt-4" style={{ background: 'rgba(247,245,240,0.35)' }} />
+      {/* Section header */}
+      <div className="bg-white py-16 px-6">
+        <div className="max-w-7xl mx-auto px-0 lg:px-8">
+          <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#9ca3af' }}>The Process</p>
+          <h2 className="font-serif text-4xl font-bold" style={{ color: '#0a0a0a' }}>Your Path at Alata</h2>
+          <div className="w-10 h-px mt-4" style={{ background: '#1a4a3a' }} />
         </div>
-
-        {/* Timeline */}
-        <div className="relative">
-          {steps.map((step, i) => (
-            <TimelineItem key={step.number} step={step} index={i} />
-          ))}
-        </div>
-
       </div>
+
+      {steps.map((step, i) => (
+        <PhaseRow key={step.number} step={step} index={i} />
+      ))}
+
     </section>
   )
 }
