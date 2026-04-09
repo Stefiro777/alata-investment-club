@@ -84,7 +84,7 @@ function TimelineItem({ step, index }: { step: Step; index: number }) {
       <div
         className="p-8"
         style={{
-          background: isDark ? '#1a4a3a' : 'white',
+          background: isDark ? '#1a4a3a' : '#f7f5f0',
           border: isDark ? 'none' : '1px solid #e5e7eb',
           borderLeft: isDark ? 'none' : '3px solid #1a4a3a',
         }}
@@ -162,7 +162,7 @@ function TimelineItem({ step, index }: { step: Step; index: number }) {
 
 export default function TimelineSection() {
   return (
-    <section className="py-24 px-6" style={{ background: '#f7f5f0' }}>
+    <section className="py-24 px-6 bg-white">
       <div className="max-w-3xl mx-auto">
 
         {/* Section header */}
