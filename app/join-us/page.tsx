@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import ApplySection from './ApplySection'
 import TimelineSection from './TimelineSection'
-import Reveal from '@/app/components/Reveal'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alatainvestmentclub.com/join-us' },
@@ -46,29 +45,24 @@ export default async function JoinUsPage() {
       <TimelineSection />
 
       {/* ── Apply Now ── */}
-      <section id="application-form" className="py-20 px-6" style={{ background: '#1a4a3a' }}>
-        <div className="max-w-2xl mx-auto">
-
-          {/* Heading */}
-          <Reveal>
-            <div className="text-center mb-10">
-              <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Applications
-              </p>
-              <h2 className="font-serif font-bold mb-4" style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#ffffff' }}>
+      <section id="application-form" className="bg-[#1a4a3a] py-24 sm:py-32 px-6 relative overflow-hidden">
+        <div className="relative z-10 max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-[1fr_auto] items-center gap-10">
+            <div>
+              <p className="text-xs tracking-[0.3em] uppercase text-white/40 mb-4">Applications</p>
+              <h2 className="font-serif font-bold text-white leading-[1.05] mb-4"
+                style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
                 Ready to join?
               </h2>
-              <div className="w-10 h-px mx-auto" style={{ background: 'rgba(255,255,255,0.3)' }} />
+              <div className="w-10 h-px bg-white/30 mb-5" />
+              <p className="text-white/65 text-sm leading-relaxed max-w-md">
+                Applications are reviewed on a rolling basis. We look for curiosity, commitment and the drive to grow.
+              </p>
             </div>
-          </Reveal>
-
-          {/* White form box */}
-          <Reveal delay={100}>
-            <div style={{ background: '#ffffff', padding: '2.5rem' }}>
+            <div className="flex lg:justify-end">
               <ApplySection applicationsOpen={applicationsOpen} />
             </div>
-          </Reveal>
-
+          </div>
         </div>
       </section>
 

@@ -57,46 +57,88 @@ function PhaseRow({ step, index }: { step: Step; index: number }) {
   const leftStyle: React.CSSProperties = {
     opacity: visible ? 1 : 0,
     transform: visible ? 'none' : 'translateX(-40px)',
-    transition: `opacity 650ms cubic-bezier(0.16,1,0.3,1) 0ms, transform 650ms cubic-bezier(0.16,1,0.3,1) 0ms`,
+    transition: 'opacity 650ms cubic-bezier(0.16,1,0.3,1) 0ms, transform 650ms cubic-bezier(0.16,1,0.3,1) 0ms',
   }
   const rightStyle: React.CSSProperties = {
     opacity: visible ? 1 : 0,
     transform: visible ? 'none' : 'translateX(40px)',
-    transition: `opacity 650ms cubic-bezier(0.16,1,0.3,1) 80ms, transform 650ms cubic-bezier(0.16,1,0.3,1) 80ms`,
+    transition: 'opacity 650ms cubic-bezier(0.16,1,0.3,1) 80ms, transform 650ms cubic-bezier(0.16,1,0.3,1) 80ms',
     borderLeft: '1px solid #e5e5e5',
   }
 
   const TitlePanel = () => (
     <div className="px-8 lg:px-14 py-16">
-      <p className="text-xs tracking-[0.2em] uppercase mb-3" style={{ color: '#9ca3af' }}>
+      {/* Step label */}
+      <p
+        style={{
+          fontFamily: 'inherit',
+          fontSize: '0.7rem',
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: '#1a4a3a',
+          opacity: 0.6,
+          marginBottom: '0.75rem',
+        }}
+      >
         Step {step.number}
       </p>
-      <h3 className="font-serif font-bold leading-tight" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', color: '#1a4a3a' }}>
+
+      {/* Title */}
+      <h3
+        className="font-serif font-bold leading-tight"
+        style={{ fontSize: '2.25rem', color: '#1a4a3a' }}
+      >
         {step.title}
       </h3>
-      <div className="w-8 h-px mt-5" style={{ background: '#1a4a3a' }} />
+
+      {/* Decorative line */}
+      <div style={{ width: '2rem', height: '1px', background: '#1a4a3a', marginTop: '1.25rem' }} />
     </div>
   )
 
   const DescPanel = () => (
     <div className="px-8 lg:px-14 py-16">
-      <p className="text-sm leading-[1.85] mb-6" style={{ color: '#333333' }}>
+      {/* Description */}
+      <p
+        className="leading-relaxed mb-6"
+        style={{ fontSize: '1rem', color: '#444444', maxWidth: '28rem' }}
+      >
         {step.description}
       </p>
+
+      {/* Skills */}
       <div className="flex flex-wrap gap-2">
         {step.skills.map(skill => (
           <span
             key={skill}
-            className="text-xs px-3 py-1"
-            style={{ border: '1px solid #d1d5db', color: '#6b7280' }}
+            style={{
+              fontSize: '0.7rem',
+              letterSpacing: '0.05em',
+              padding: '0.25rem 0.75rem',
+              border: '1px solid #1a4a3a',
+              color: '#1a4a3a',
+              background: 'transparent',
+            }}
           >
             {skill}
           </span>
         ))}
       </div>
+
+      {/* Partner (step 02) */}
       {step.partner && (
-        <div className="flex items-center gap-4 mt-6 pt-5" style={{ borderTop: '1px solid #e5e7eb' }}>
-          <span className="text-xs tracking-widest uppercase" style={{ color: '#9ca3af' }}>
+        <div
+          className="flex items-center gap-4 mt-6 pt-5"
+          style={{ borderTop: '1px solid #e5e7eb' }}
+        >
+          <span
+            style={{
+              fontSize: '0.7rem',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: '#9ca3af',
+            }}
+          >
             In partnership with Syrto
           </span>
           <Image
