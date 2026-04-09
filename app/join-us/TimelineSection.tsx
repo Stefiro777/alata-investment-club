@@ -162,7 +162,7 @@ function TimelineItem({ step, index }: { step: Step; index: number }) {
 
 export default function TimelineSection() {
   return (
-    <section className="py-24 px-6" style={{ background: '#f9f9f9' }}>
+    <section className="py-24 px-6" style={{ background: '#f7f5f0' }}>
       <div className="max-w-3xl mx-auto">
 
         {/* Section header */}

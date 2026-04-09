@@ -46,11 +46,6 @@ export default async function JoinUsPage() {
 
       {/* ── Apply Now ── */}
       <section id="application-form" className="bg-[#1a4a3a] py-24 sm:py-32 px-6 relative overflow-hidden">
-        <span
-          className="absolute -top-8 -left-4 font-serif font-bold leading-none text-white select-none pointer-events-none hidden lg:block"
-          style={{ fontSize: '18rem', opacity: 0.03, letterSpacing: '-0.05em' }}
-          aria-hidden="true"
-        >→</span>
         <div className="relative z-10 max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-[1fr_auto] items-center gap-10">
             <div>
