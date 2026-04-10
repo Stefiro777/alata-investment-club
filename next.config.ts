@@ -11,8 +11,10 @@ const CSP = [
   "img-src 'self' data: blob: https://iyigyfygsalvvveeeheq.supabase.co https://*.supabase.co https://*.supabase.in https://api.brandfetch.io https://cdn.brandfetch.io https://asset.brandfetch.io https://media.licdn.com https://*.licdn.com https://*.cdninstagram.com",
   // XHR/fetch: Supabase API, Vercel Analytics, Clarity
   "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://vitals.vercel-insights.com https://va.vercel-scripts.com https://www.clarity.ms https://c.bing.com",
-  // Calendly embeds
-  "frame-src https://calendly.com https://assets.calendly.com",
+  // Calendly embeds + PDF preview via blob: and Supabase storage
+  "frame-src 'self' blob: https://calendly.com https://assets.calendly.com https://iyigyfygsalvvveeeheq.supabase.co",
+  // PDF <object>/<embed> preview: blob: URLs and Supabase storage
+  "object-src 'self' blob: https://iyigyfygsalvvveeeheq.supabase.co",
   // Prevent clickjacking (redundant with X-Frame-Options but defence-in-depth)
   "frame-ancestors 'none'",
 ].join('; ')
