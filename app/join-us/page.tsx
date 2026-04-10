@@ -24,7 +24,7 @@ export default async function JoinUsPage() {
       {/* ── Hero ── */}
       <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
         <Image src="/piazzavittoria.jpg" alt="" fill className="object-cover grayscale" style={{ objectPosition: 'center 60%' }} priority />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.55)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.91)' }} />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Join Us</p>
