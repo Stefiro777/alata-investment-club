@@ -1,10 +1,13 @@
 import { createServiceClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function POST(req: NextRequest) {
   try {
     const { partnerId } = await req.json() as { partnerId?: string }
     if (!partnerId) return NextResponse.json({ error: 'partnerId required' }, { status: 400 })
+    if (!UUID_REGEX.test(partnerId)) return NextResponse.json({ error: 'invalid partnerId' }, { status: 400 })
 
     const serviceClient = createServiceClient()
     const { data, error: fetchError } = await serviceClient

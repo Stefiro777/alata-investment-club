@@ -1,5 +1,22 @@
 import { Resend } from 'resend'
+import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+
+function isValidWebhookSecret(provided: string, expected: string): boolean {
+  try {
+    const a = Buffer.from(provided, 'utf8')
+    const b = Buffer.from(expected, 'utf8')
+    // timingSafeEqual requires equal-length buffers; pad to avoid length oracle
+    if (a.length !== b.length) {
+      // Still run a dummy comparison to avoid timing differences on length check alone
+      timingSafeEqual(b, b)
+      return false
+    }
+    return timingSafeEqual(a, b)
+  } catch {
+    return false
+  }
+}
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -89,9 +106,10 @@ function buildHtml(record: ApplicationRecord): string {
 }
 
 export async function POST(req: NextRequest) {
-  // Verify webhook secret
-  const secret = req.headers.get('x-webhook-secret')
-  if (!secret || secret !== process.env.WEBHOOK_SECRET) {
+  // Verify webhook secret using constant-time comparison to prevent timing attacks
+  const provided = req.headers.get('x-webhook-secret')
+  const expected = process.env.WEBHOOK_SECRET
+  if (!provided || !expected || !isValidWebhookSecret(provided, expected)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -1,10 +1,28 @@
 import type { NextConfig } from 'next'
 
+const CSP = [
+  "default-src 'self'",
+  // Next.js inline scripts + Clarity + Calendly + Vercel
+  "script-src 'self' 'unsafe-inline' https://www.clarity.ms https://c.bing.com https://calendly.com https://assets.calendly.com https://va.vercel-scripts.com https://vercel.live",
+  // Inline styles + Google Fonts
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  // Images: Supabase storage, Brandfetch logos, data URIs, blobs
+  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://cdn.brandfetch.io https://asset.brandfetch.io",
+  // XHR/fetch: Supabase API, Vercel Analytics, Clarity
+  "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://vitals.vercel-insights.com https://va.vercel-scripts.com https://www.clarity.ms https://c.bing.com",
+  // Calendly embeds
+  "frame-src https://calendly.com https://assets.calendly.com",
+  // Prevent clickjacking (redundant with X-Frame-Options but defence-in-depth)
+  "frame-ancestors 'none'",
+].join('; ')
+
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Content-Security-Policy', value: CSP },
 ]
 
 const nextConfig: NextConfig = {

@@ -7,8 +7,7 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      console.error('Auth failed:', authError)
-      return NextResponse.json({ error: 'auth failed', detail: authError }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data: adminRow } = await supabase
@@ -17,8 +16,7 @@ export async function POST(req: NextRequest) {
       .eq('email', user.email)
       .maybeSingle()
     if (!adminRow) {
-      console.error('Not admin:', user.email)
-      return NextResponse.json({ error: 'not admin' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const { items } = await req.json() as { items: { id: string; order_index: number }[] }
@@ -35,8 +33,7 @@ export async function POST(req: NextRequest) {
 
     const failed = results.find(r => r.error)
     if (failed?.error) {
-      console.error('Update failed:', failed.error)
-      return NextResponse.json({ error: 'update failed', detail: failed.error }, { status: 500 })
+      return NextResponse.json({ error: 'update failed' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
