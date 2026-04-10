@@ -7,8 +7,8 @@ const CSP = [
   // Inline styles + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  // Images: Supabase storage, Brandfetch logos, data URIs, blobs
-  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://cdn.brandfetch.io https://asset.brandfetch.io",
+  // Images: Supabase storage, Brandfetch logos, LinkedIn CDN (featured report thumbnails via Make), data URIs, blobs
+  "img-src 'self' data: blob: https://iyigyfygsalvvveeeheq.supabase.co https://*.supabase.co https://*.supabase.in https://api.brandfetch.io https://cdn.brandfetch.io https://asset.brandfetch.io https://media.licdn.com https://*.licdn.com https://*.cdninstagram.com",
   // XHR/fetch: Supabase API, Vercel Analytics, Clarity
   "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://vitals.vercel-insights.com https://va.vercel-scripts.com https://www.clarity.ms https://c.bing.com",
   // Calendly embeds
