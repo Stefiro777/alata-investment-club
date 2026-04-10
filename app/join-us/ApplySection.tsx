@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 
 const YEAR_OPTIONS = [
@@ -24,6 +25,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
   const [yearOfStudy, setYearOfStudy] = useState('')
   const [degreeProgramme, setDegreeProgramme] = useState('')
   const [motivation, setMotivation] = useState('')
+  const [privacyConsent, setPrivacyConsent] = useState(false)
 
   const wordCount = motivation.trim().split(/\s+/).filter(Boolean).length
 
@@ -35,6 +37,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     setYearOfStudy('')
     setDegreeProgramme('')
     setMotivation('')
+    setPrivacyConsent(false)
     setError(null)
     setSubmitted(false)
   }
@@ -263,6 +266,30 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                     />
                   </div>
 
+                  {/* Privacy consent */}
+                  <div className="flex items-start gap-3 pt-1">
+                    <input
+                      type="checkbox"
+                      id="privacy-consent"
+                      required
+                      checked={privacyConsent}
+                      onChange={e => setPrivacyConsent(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#1a4a3a]"
+                    />
+                    <label htmlFor="privacy-consent" className="text-xs text-[#6b7280] leading-relaxed cursor-pointer">
+                      I have read and accept the{' '}
+                      <Link
+                        href="/privacy-policy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#1a4a3a] underline hover:text-[#123a2d]"
+                      >
+                        Privacy Policy
+                      </Link>{' '}
+                      and consent to the processing of my personal data for the purpose of evaluating my application.
+                    </label>
+                  </div>
+
                   {error && (
                     <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
                   )}
@@ -270,7 +297,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                   <div className="flex items-center gap-4 pt-1">
                     <button
                       type="submit"
-                      disabled={submitting || wordCount > 200}
+                      disabled={submitting || wordCount > 200 || !privacyConsent}
                       className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? 'Sending…' : 'Submit Application'}

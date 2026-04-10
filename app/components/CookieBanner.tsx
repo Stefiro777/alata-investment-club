@@ -11,6 +11,9 @@ export default function CookieBanner() {
 
   function handle(choice: 'accepted' | 'declined') {
     localStorage.setItem('cookie-consent', choice)
+    if (choice === 'accepted') {
+      window.dispatchEvent(new Event('cookie-consent-updated'))
+    }
     setVisible(false)
   }
 

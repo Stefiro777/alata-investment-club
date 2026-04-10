@@ -215,7 +215,15 @@ export default function RootLayout({
               <p className="text-white/40 text-xs">
                 Alatabrixiaic@gmail.com
               </p>
-              <CookiePolicy />
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/privacy-policy"
+                  className="text-xs text-white/40 hover:text-white/80 transition-colors tracking-wide"
+                >
+                  Privacy Policy
+                </Link>
+                <CookiePolicy />
+              </div>
             </div>
           </div>
         </footer>
