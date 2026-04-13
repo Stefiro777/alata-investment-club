@@ -8,12 +8,12 @@ export default function Clarity() {
   const [shouldLoad, setShouldLoad] = useState(false)
 
   useEffect(() => {
-    if (localStorage.getItem('cookie-consent') === 'accepted') {
+    if (sessionStorage.getItem('cookie-consent') === 'accepted') {
       setShouldLoad(true)
     }
 
     function onConsentUpdated() {
-      if (localStorage.getItem('cookie-consent') === 'accepted') {
+      if (sessionStorage.getItem('cookie-consent') === 'accepted') {
         setShouldLoad(true)
       }
     }

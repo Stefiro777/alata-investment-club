@@ -6,11 +6,11 @@ export default function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (!localStorage.getItem('cookie-consent')) setVisible(true)
+    if (!sessionStorage.getItem('cookie-consent')) setVisible(true)
   }, [])
 
   function handle(choice: 'accepted' | 'declined') {
-    localStorage.setItem('cookie-consent', choice)
+    sessionStorage.setItem('cookie-consent', choice)
     if (choice === 'accepted') {
       window.dispatchEvent(new Event('cookie-consent-updated'))
     }
