@@ -52,7 +52,7 @@ export default function ReviewsSection({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reviews.map((review, i) => (
             <Reveal key={review.id} direction="up" delay={i * 80}>
-              <div className="relative border-l-4 border-[#1a4a3a] p-8 flex flex-col gap-4 h-full" style={{ backgroundColor: '#f5f0e8' }}>
+              <div className="relative border border-[#1a4a3a] border-l-4 p-8 flex flex-col gap-4 h-full" style={{ backgroundColor: '#f5f0e8' }}>
                 <span className="absolute top-3 right-4 font-serif text-7xl text-[#1a4a3a] opacity-20 leading-none pointer-events-none select-none">&ldquo;</span>
                 {review.rating != null && <StarRating rating={review.rating} />}
                 <p className="text-gray-600 text-sm leading-relaxed italic flex-1">

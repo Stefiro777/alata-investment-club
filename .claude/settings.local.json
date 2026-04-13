@@ -43,7 +43,9 @@
       "Bash(\"C:\\\\Users\\\\finul\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\python.exe\" skills/ui-ux-pro-max/scripts/search.py \"investment club finance premium boutique minimal editorial\" --design-system -p \"Alata Investment Club\")",
       "Read(//tmp/**)",
       "Bash(npx tsc:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(ls C:/Users/finul/Desktop/alata-investment-club/public/*.jpg C:/Users/finul/Desktop/alata-investment-club/public/*.jpeg C:/Users/finul/Desktop/alata-investment-club/public/*.png)",
+      "Bash(xargs -I{} basename {})"
     ]
   }
 }
