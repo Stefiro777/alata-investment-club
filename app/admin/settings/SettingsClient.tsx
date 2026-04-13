@@ -22,6 +22,8 @@ export default function SettingsClient({
   priceMaster: initialPriceMaster,
   priceCareer: initialPriceCareer,
   showAlumni,
+  showAlumniReviews,
+  showEventsReviews,
 }: {
   adminUsers: string[]
   superadmin: string
@@ -31,6 +33,8 @@ export default function SettingsClient({
   priceMaster: string
   priceCareer: string
   showAlumni: boolean
+  showAlumniReviews: boolean
+  showEventsReviews: boolean
 }) {
   const router = useRouter()
 
@@ -46,6 +50,14 @@ export default function SettingsClient({
   const [alumniVisible, setAlumniVisible] = useState(showAlumni)
   const [togglingAlumni, setTogglingAlumni] = useState(false)
   const [alumniToggleSaved, setAlumniToggleSaved] = useState(false)
+
+  const [alumniReviewsVisible, setAlumniReviewsVisible] = useState(showAlumniReviews)
+  const [togglingAlumniReviews, setTogglingAlumniReviews] = useState(false)
+  const [alumniReviewsSaved, setAlumniReviewsSaved] = useState(false)
+
+  const [eventsReviewsVisible, setEventsReviewsVisible] = useState(showEventsReviews)
+  const [togglingEventsReviews, setTogglingEventsReviews] = useState(false)
+  const [eventsReviewsSaved, setEventsReviewsSaved] = useState(false)
 
   const [priceCV, setPriceCV] = useState(initialPriceCV)
   const [priceMaster, setPriceMaster] = useState(initialPriceMaster)
@@ -103,6 +115,32 @@ export default function SettingsClient({
     setAlumniVisible(newValue)
     setTogglingAlumni(false)
     setAlumniToggleSaved(true)
+  }
+
+  async function handleToggleAlumniReviews() {
+    setTogglingAlumniReviews(true)
+    setAlumniReviewsSaved(false)
+    const supabase = createClient()
+    const newValue = !alumniReviewsVisible
+    await supabase
+      .from('settings')
+      .upsert({ key: 'show_alumni_reviews', value: newValue ? 'true' : 'false' }, { onConflict: 'key' })
+    setAlumniReviewsVisible(newValue)
+    setTogglingAlumniReviews(false)
+    setAlumniReviewsSaved(true)
+  }
+
+  async function handleToggleEventsReviews() {
+    setTogglingEventsReviews(true)
+    setEventsReviewsSaved(false)
+    const supabase = createClient()
+    const newValue = !eventsReviewsVisible
+    await supabase
+      .from('settings')
+      .upsert({ key: 'show_events_reviews', value: newValue ? 'true' : 'false' }, { onConflict: 'key' })
+    setEventsReviewsVisible(newValue)
+    setTogglingEventsReviews(false)
+    setEventsReviewsSaved(true)
   }
 
   async function handleSavePrices(e: React.FormEvent) {
@@ -257,6 +295,56 @@ export default function SettingsClient({
                 aria-checked={alumniVisible}
               >
                 <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${alumniVisible ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="border-t border-black/5" />
+
+          {/* Show Alumni Reviews */}
+          <div className="flex items-center justify-between gap-6">
+            <div>
+              <p className="text-sm font-medium text-[#0a0a0a]">Show Alumni Reviews</p>
+              <p className="text-xs text-[#6b7280] mt-0.5">
+                Mostra o nasconde la sezione recensioni in{' '}
+                <span className="font-medium">/team/alumni</span>.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {alumniReviewsSaved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+              <button
+                onClick={handleToggleAlumniReviews}
+                disabled={togglingAlumniReviews}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${alumniReviewsVisible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                role="switch"
+                aria-checked={alumniReviewsVisible}
+              >
+                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${alumniReviewsVisible ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="border-t border-black/5" />
+
+          {/* Show Events Reviews */}
+          <div className="flex items-center justify-between gap-6">
+            <div>
+              <p className="text-sm font-medium text-[#0a0a0a]">Show Events Reviews</p>
+              <p className="text-xs text-[#6b7280] mt-0.5">
+                Mostra o nasconde la sezione recensioni in{' '}
+                <span className="font-medium">/events</span>.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {eventsReviewsSaved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+              <button
+                onClick={handleToggleEventsReviews}
+                disabled={togglingEventsReviews}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${eventsReviewsVisible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                role="switch"
+                aria-checked={eventsReviewsVisible}
+              >
+                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${eventsReviewsVisible ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
             </div>
           </div>

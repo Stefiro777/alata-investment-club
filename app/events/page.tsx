@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import EventsGrid from './EventsGrid'
+import EventsReviewsWrapper from './EventsReviewsWrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +47,8 @@ export default async function EventsPage() {
           )}
         </div>
       </section>
+
+      <EventsReviewsWrapper />
     </div>
   )
 }

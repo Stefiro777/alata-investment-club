@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation'
 import AdminNavbar from '../components/AdminNavbar'
 import NewsEventsSection from '../components/NewsEventsSection'
 import FeaturedReportsClient from '../featured-reports/FeaturedReportsClient'
-import type { FeaturedReport } from '@/lib/types'
+import ReviewsAdminSection from '../components/ReviewsAdminSection'
+import type { FeaturedReport, Review } from '@/lib/types'
 
 type Contenuto = {
   id: number
@@ -32,6 +33,7 @@ export default async function AdminContentPage() {
   const [
     { data: contenuti },
     { data: featuredReportsData },
+    { data: reviewsData },
   ] = await Promise.all([
     supabase
       .from('contenuti')
@@ -42,6 +44,10 @@ export default async function AdminContentPage() {
       .from('featured_reports')
       .select('id, title, description, pdf_url, authors, display_order')
       .order('display_order', { ascending: true }),
+    supabase
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false }),
   ])
 
   return (
@@ -53,6 +59,8 @@ export default async function AdminContentPage() {
         </div>
         <div className="border-t border-black/10" />
         <FeaturedReportsClient reports={(featuredReportsData ?? []) as FeaturedReport[]} />
+        <div className="border-t border-black/10" />
+        <ReviewsAdminSection initialReviews={(reviewsData ?? []) as Review[]} />
       </main>
     </>
   )

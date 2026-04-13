@@ -25,6 +25,8 @@ export default async function AdminSettingsPage() {
     { data: priceMasterRow },
     { data: priceCareerRow },
     { data: showAlumniRow },
+    { data: showAlumniReviewsRow },
+    { data: showEventsReviewsRow },
   ] = await Promise.all([
     serviceClient.from('admin_users').select('email').order('email', { ascending: true }),
     supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
@@ -33,6 +35,8 @@ export default async function AdminSettingsPage() {
     supabase.from('settings').select('value').eq('key', 'price_master_orientation').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'price_career_orientation').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'show_alumni').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'show_alumni_reviews').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'show_events_reviews').maybeSingle(),
   ])
 
   return (
@@ -48,6 +52,8 @@ export default async function AdminSettingsPage() {
           priceMaster={priceMasterRow?.value ?? '€49,99'}
           priceCareer={priceCareerRow?.value ?? '€49,99'}
           showAlumni={showAlumniRow?.value === 'true'}
+          showAlumniReviews={showAlumniReviewsRow?.value === 'true'}
+          showEventsReviews={showEventsReviewsRow?.value === 'true'}
         />
       </main>
     </>

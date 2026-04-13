@@ -52,3 +52,14 @@ export type Resource = {
   created_at: string
 }
 
+export type Review = {
+  id: string
+  type: 'alumni' | 'events'
+  author_name: string
+  author_role?: string | null
+  content: string
+  rating?: number | null
+  visible: boolean
+  created_at: string
+}
+

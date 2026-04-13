@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import AlumniGrid from './AlumniGrid'
+import AlumniReviewsWrapper from './AlumniReviewsWrapper'
 import Reveal from '@/app/components/Reveal'
 import type { Alumni } from '@/lib/types'
 
@@ -157,6 +158,8 @@ export default async function AlumniPage() {
           </Reveal>
         </section>
       )}
+
+      <AlumniReviewsWrapper />
     </div>
   )
 }
