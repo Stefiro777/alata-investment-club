@@ -125,7 +125,7 @@ function LoginForm() {
                   <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280]">
                     Password
                   </label>
-                  <Link href="/reset-password" className="underline-grow text-xs text-[#1a4a3a]">
+                  <Link href="/forgot-password" className="underline-grow text-xs text-[#1a4a3a]">
                     Forgot password?
                   </Link>
                 </div>
