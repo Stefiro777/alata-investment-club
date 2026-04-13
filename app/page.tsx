@@ -81,7 +81,7 @@ export default async function HomePage() {
                 </h1>
                 {/* Sottotitolo: delay 200ms */}
                 <p
-                  className="font-serif italic text-base text-[#1a4a3a] opacity-70 mt-1 tracking-widest mb-8"
+                  className="font-serif italic text-base text-white opacity-70 mt-1 tracking-widest mb-8"
                   style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.2s both' }}
                 >
                   Est. 2023
