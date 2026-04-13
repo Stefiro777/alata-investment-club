@@ -9,7 +9,7 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex gap-0.5 text-base">
       {[1, 2, 3, 4, 5].map(i => (
-        <span key={i} className={i <= rating ? 'text-[#1a4a3a]' : 'text-gray-200'}>
+        <span key={i} className={i <= rating ? 'text-[#1a4a3a]' : 'text-[#1a4a3a] opacity-20'}>
           ★
         </span>
       ))}
@@ -52,15 +52,16 @@ export default function ReviewsSection({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reviews.map((review, i) => (
             <Reveal key={review.id} direction="up" delay={i * 80}>
-              <div className="border border-gray-200 p-6 flex flex-col gap-4 h-full">
+              <div className="relative border-l-4 border-[#1a4a3a] p-8 flex flex-col gap-4 h-full" style={{ backgroundColor: '#f5f0e8' }}>
+                <span className="absolute top-3 right-4 font-serif text-7xl text-[#1a4a3a] opacity-20 leading-none pointer-events-none select-none">&ldquo;</span>
                 {review.rating != null && <StarRating rating={review.rating} />}
-                <p className="text-gray-700 text-sm italic flex-1">
+                <p className="text-gray-600 text-sm leading-relaxed italic flex-1">
                   &ldquo;{review.content}&rdquo;
                 </p>
-                <div className="border-t border-gray-200 pt-4">
-                  <p className="font-serif text-[#1a4a3a] font-semibold">{review.author_name}</p>
+                <div className="border-t border-[#1a4a3a]/20 pt-4">
+                  <p className="font-serif text-[#1a4a3a] font-bold text-lg">{review.author_name}</p>
                   {review.author_role && (
-                    <p className="text-gray-400 text-xs mt-0.5">{review.author_role}</p>
+                    <p className="text-[#1a4a3a]/60 text-xs uppercase tracking-widest mt-0.5">{review.author_role}</p>
                   )}
                 </div>
               </div>
