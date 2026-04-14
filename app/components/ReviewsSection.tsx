@@ -50,24 +50,27 @@ export default function ReviewsSection({
           <h2 className="font-serif text-5xl font-bold text-[#1a4a3a] text-left">{title}</h2>
           <div className="w-12 h-px bg-[#1a4a3a] mt-4 mb-16" />
         </Reveal>
-        <div className={reviews.length === 1
-          ? 'max-w-2xl mx-auto'
-          : 'grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto'
-        }>
+
+        <div>
           {reviews.map((review, i) => (
             <Reveal key={review.id} direction="up" delay={i * 80}>
-              <div className="relative bg-white border border-[#1a4a3a] border-l-4 border-l-[#1a4a3a] p-10 flex flex-col gap-4 h-full">
-                <span className="absolute top-0 right-4 font-serif text-9xl text-[#1a4a3a] opacity-10 leading-none pointer-events-none select-none">&ldquo;</span>
-                {review.rating != null && <StarRating rating={review.rating} />}
-                <p className="text-gray-700 text-base leading-relaxed flex-1">
-                  &ldquo;{review.content}&rdquo;
+              <div className={`py-8 px-0${i < reviews.length - 1 ? ' border-b border-[#1a4a3a]/10' : ''}`}>
+                {review.rating != null && (
+                  <div className="mb-3">
+                    <StarRating rating={review.rating} />
+                  </div>
+                )}
+                <span className="block font-serif text-8xl text-[#1a4a3a] opacity-20 leading-none ml-8">
+                  &ldquo;
+                </span>
+                <p className="text-gray-700 text-base leading-relaxed max-w-2xl">
+                  {review.content}
                 </p>
-                <div className="border-t border-[#1a4a3a]/20 mt-auto pt-4">
-                  <p className="font-serif text-[#1a4a3a] text-xl font-bold">{review.author_name}</p>
-                  {review.author_role && (
-                    <p className="text-xs uppercase tracking-widest text-gray-400 mt-0.5">{review.author_role}</p>
-                  )}
-                </div>
+                <div className="border-t border-[#1a4a3a]/20 my-6 max-w-2xl" />
+                <p className="font-serif text-[#1a4a3a] text-xl font-bold">{review.author_name}</p>
+                {review.author_role && (
+                  <p className="text-xs uppercase tracking-widest text-gray-400 mt-1">{review.author_role}</p>
+                )}
               </div>
             </Reveal>
           ))}
