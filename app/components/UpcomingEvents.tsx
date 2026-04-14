@@ -21,16 +21,10 @@ function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
       </span>
     )
   }
-  if (status === 'coming_soon') {
-    return (
-      <span className="inline-block border border-gray-400 text-gray-500 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
-        Coming Soon
-      </span>
-    )
-  }
+  // coming_soon
   return (
-    <span className="inline-block bg-[#1a4a3a] text-white text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
-      Open
+    <span className="inline-block border border-gray-400 text-gray-500 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
+      Coming Soon
     </span>
   )
 }
@@ -79,7 +73,7 @@ export default function UpcomingEvents() {
               const isLast = i === events.length - 1
               return (
                 <div key={event.id}>
-                  <div className="group flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-10 py-8 transition-colors duration-200 hover:bg-gray-100 px-2 -mx-2">
+                  <div className="group flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-6 py-8 transition-colors duration-200 hover:bg-gray-100 px-2 -mx-2">
 
                     {/* Date block */}
                     <div className="flex-shrink-0 w-16 sm:w-20">
@@ -103,29 +97,32 @@ export default function UpcomingEvents() {
                       )}
                     </div>
 
-                    {/* Badge + action */}
-                    <div className="flex-shrink-0 flex flex-col items-start sm:items-end gap-3 pt-1">
-                      <StatusBadge status={event.status} />
-                      {event.status === 'open' && (
-                        <>
-                          {event.action_type === 'link' && event.action_link ? (
-                            <a
-                              href={event.action_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs tracking-widest uppercase text-[#1a4a3a] hover:text-[#123a2d] transition-colors duration-150 flex items-center gap-1.5"
-                            >
-                              Register →
-                            </a>
-                          ) : event.action_type === 'form' ? (
-                            <button
-                              onClick={() => setModalEvent(event)}
-                              className="text-xs tracking-widest uppercase text-[#1a4a3a] hover:text-[#123a2d] transition-colors duration-150 flex items-center gap-1.5"
-                            >
-                              Register →
-                            </button>
-                          ) : null}
-                        </>
+                    {/* Action */}
+                    <div className="flex-shrink-0 flex items-center">
+                      {event.status === 'open' ? (
+                        event.action_type === 'link' && event.action_link ? (
+                          <a
+                            href={event.action_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-150 cursor-pointer"
+                          >
+                            Open
+                          </a>
+                        ) : event.action_type === 'form' ? (
+                          <button
+                            onClick={() => setModalEvent(event)}
+                            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-150 cursor-pointer"
+                          >
+                            Open
+                          </button>
+                        ) : (
+                          <span className="bg-[#1a4a3a] text-white text-sm font-medium tracking-widest uppercase px-5 py-2">
+                            Open
+                          </span>
+                        )
+                      ) : (
+                        <StatusBadge status={event.status} />
                       )}
                     </div>
                   </div>
