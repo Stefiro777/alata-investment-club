@@ -16,14 +16,14 @@ function formatDate(dateStr: string) {
 function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
   if (status === 'completed') {
     return (
-      <span className="inline-block border border-gray-600 text-gray-500 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
+      <span className="inline-block text-gray-400 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
         Completed
       </span>
     )
   }
   if (status === 'coming_soon') {
     return (
-      <span className="inline-block border border-[#1a4a3a] text-[#1a4a3a] text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
+      <span className="inline-block border border-gray-400 text-gray-500 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
         Coming Soon
       </span>
     )
@@ -60,13 +60,13 @@ export default function UpcomingEvents() {
 
   return (
     <>
-      <section className="bg-[#0d0d0d] py-20 sm:py-28">
+      <section className="bg-[#f5f5f3] py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
           {/* Header */}
           <div className="mb-14">
             <p className="text-xs tracking-[0.3em] uppercase text-[#1a4a3a] mb-4">Agenda</p>
-            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-white">
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-black">
               Upcoming Events
             </h2>
             <div className="w-10 h-px bg-[#1a4a3a] mt-5" />
@@ -79,25 +79,25 @@ export default function UpcomingEvents() {
               const isLast = i === events.length - 1
               return (
                 <div key={event.id}>
-                  <div className="group flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-10 py-8 transition-colors duration-200 hover:bg-white/[0.03] px-2 -mx-2">
+                  <div className="group flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-10 py-8 transition-colors duration-200 hover:bg-gray-100 px-2 -mx-2">
 
                     {/* Date block */}
                     <div className="flex-shrink-0 w-16 sm:w-20">
                       <p className="text-[10px] tracking-[0.25em] uppercase text-[#1a4a3a] font-medium leading-none mb-1">
                         {month}
                       </p>
-                      <p className="font-serif text-5xl font-bold text-white leading-none">
+                      <p className="font-serif text-5xl font-bold text-black leading-none">
                         {day}
                       </p>
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-serif text-xl text-white leading-snug">
+                      <h3 className="font-serif text-xl text-black leading-snug">
                         {event.title}
                       </h3>
                       {event.description && (
-                        <p className="text-gray-400 text-sm mt-1.5 leading-relaxed max-w-xl">
+                        <p className="text-gray-500 text-sm mt-1.5 leading-relaxed max-w-xl">
                           {event.description}
                         </p>
                       )}
@@ -113,16 +113,16 @@ export default function UpcomingEvents() {
                               href={event.action_link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs tracking-widest uppercase text-white/60 hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                              className="text-xs tracking-widest uppercase text-[#1a4a3a] hover:text-[#123a2d] transition-colors duration-150 flex items-center gap-1.5"
                             >
-                              Register <span className="text-[#1a4a3a]">→</span>
+                              Register →
                             </a>
                           ) : event.action_type === 'form' ? (
                             <button
                               onClick={() => setModalEvent(event)}
-                              className="text-xs tracking-widest uppercase text-white/60 hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                              className="text-xs tracking-widest uppercase text-[#1a4a3a] hover:text-[#123a2d] transition-colors duration-150 flex items-center gap-1.5"
                             >
-                              Register <span className="text-[#1a4a3a]">→</span>
+                              Register →
                             </button>
                           ) : null}
                         </>
@@ -132,7 +132,7 @@ export default function UpcomingEvents() {
 
                   {/* Divider */}
                   {!isLast && (
-                    <div className="h-px bg-white/[0.07]" />
+                    <div className="h-px bg-gray-200" />
                   )}
                 </div>
               )
