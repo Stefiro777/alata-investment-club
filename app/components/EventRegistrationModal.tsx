@@ -4,11 +4,11 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 
 const ANNI = [
-  'Primo anno triennale',
-  'Secondo anno triennale',
-  'Terzo anno triennale',
-  'Primo anno magistrale',
-  'Secondo anno magistrale',
+  '1st year Bachelor',
+  '2nd year Bachelor',
+  '3rd year Bachelor',
+  '1st year Master',
+  '2nd year Master',
 ]
 
 interface EventRegistrationModalProps {
@@ -100,7 +100,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
               {/* Nome + Cognome */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className={labelClass}>Nome *</label>
+                  <label className={labelClass}>First Name *</label>
                   <input
                     required
                     value={nome}
@@ -110,7 +110,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Cognome *</label>
+                  <label className={labelClass}>Last Name *</label>
                   <input
                     required
                     value={cognome}
@@ -135,7 +135,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Telefono</label>
+                  <label className={labelClass}>Phone</label>
                   <input
                     type="tel"
                     value={telefono}
@@ -148,14 +148,14 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
 
               {/* Anno di studio */}
               <div>
-                <label className={labelClass}>Anno di studio *</label>
+                <label className={labelClass}>Year of Study *</label>
                 <select
                   required
                   value={anno}
                   onChange={e => setAnno(e.target.value)}
                   className="w-full bg-[#f5f5f3] border-0 border-b border-gray-300 focus:border-[#1a4a3a] focus:outline-none text-black text-sm py-2.5 transition-colors"
                 >
-                  <option value="" disabled className="bg-[#f5f5f3] text-gray-400">Seleziona anno</option>
+                  <option value="" disabled className="bg-[#f5f5f3] text-gray-400">Select year</option>
                   {ANNI.map(a => (
                     <option key={a} value={a} className="bg-[#f5f5f3] text-black">{a}</option>
                   ))}
@@ -165,8 +165,8 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
               {/* Motivazione */}
               <div>
                 <label className={labelClass}>
-                  Motivazione *{' '}
-                  <span className="text-gray-400 normal-case tracking-normal">(max 500 caratteri)</span>
+                  Motivation *{' '}
+                  <span className="text-gray-400 normal-case tracking-normal">(max 500 characters)</span>
                 </label>
                 <textarea
                   required
@@ -174,7 +174,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   maxLength={500}
                   value={motivazione}
                   onChange={e => setMotivazione(e.target.value)}
-                  placeholder="Perché vuoi partecipare a questo evento?"
+                  placeholder="Why do you want to attend this event?"
                   className="w-full bg-transparent border-b border-gray-300 focus:border-[#1a4a3a] focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors resize-none"
                 />
                 <p className="text-right text-xs text-gray-400 mt-1">{motivazione.length}/500</p>
