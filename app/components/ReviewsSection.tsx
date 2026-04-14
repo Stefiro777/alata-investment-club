@@ -48,7 +48,7 @@ export default function ReviewsSection({
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <Reveal direction="up">
           <h2 className="font-serif text-5xl font-bold text-[#1a4a3a] text-left">{title}</h2>
-          <div className="w-12 h-px bg-[#1a4a3a] mt-4 mb-16" />
+          <div className="w-12 h-px bg-[#1a4a3a] mt-4 mb-8" />
         </Reveal>
 
         <div>
@@ -60,12 +60,14 @@ export default function ReviewsSection({
                     <StarRating rating={review.rating} />
                   </div>
                 )}
-                <span className="block font-serif text-8xl text-[#1a4a3a] opacity-20 leading-none ml-8">
-                  &ldquo;
-                </span>
-                <p className="text-gray-700 text-base leading-relaxed max-w-2xl">
-                  {review.content}
-                </p>
+                <div className="relative max-w-2xl">
+                  <span className="absolute top-0 right-0 font-serif text-7xl text-[#1a4a3a] opacity-15 leading-none pointer-events-none select-none">
+                    &ldquo;
+                  </span>
+                  <p className="text-gray-700 text-base leading-relaxed pr-12">
+                    {review.content}
+                  </p>
+                </div>
                 <div className="border-t border-[#1a4a3a]/20 my-6 max-w-2xl" />
                 <p className="font-serif text-[#1a4a3a] text-xl font-bold">{review.author_name}</p>
                 {review.author_role && (
