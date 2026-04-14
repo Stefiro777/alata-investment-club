@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase'
 
 const ANNI = [
   '1st year Bachelor',
@@ -33,19 +32,23 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { error: insertError } = await supabase.from('event_registrations').insert({
-      event_id: event.id,
-      nome: nome.trim(),
-      cognome: cognome.trim(),
-      email: email.trim(),
-      telefono: telefono.trim() || null,
-      anno_di_studio: anno,
-      motivazione: motivazione.trim(),
+    const res = await fetch('/api/event-registrations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_id: event.id,
+        nome: nome.trim(),
+        cognome: cognome.trim(),
+        email: email.trim(),
+        telefono: telefono.trim() || null,
+        anno_di_studio: anno,
+        motivazione: motivazione.trim(),
+      }),
     })
+    const json = await res.json()
 
-    if (insertError) {
-      setError(insertError.message)
+    if (!res.ok) {
+      setError(json.error ?? 'Something went wrong. Please try again.')
     } else {
       setSuccess(true)
     }

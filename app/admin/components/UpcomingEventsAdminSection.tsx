@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
 
@@ -48,20 +48,19 @@ function RegistrationsModal({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch on mount
-  useState(() => {
-    const supabase = createClient()
-    supabase
-      .from('event_registrations')
-      .select('*')
-      .eq('event_id', event.id)
-      .order('created_at', { ascending: false })
+  useEffect(() => {
+    fetch(`/api/event-registrations?event_id=${event.id}`)
+      .then(res => res.json())
       .then(({ data, error: err }) => {
-        if (err) setError(err.message)
+        if (err) setError(err)
         else setRegs((data ?? []) as EventRegistration[])
         setLoading(false)
       })
-  })
+      .catch(err => {
+        setError(err.message ?? 'Failed to load registrations')
+        setLoading(false)
+      })
+  }, [event.id])
 
   return (
     <div
