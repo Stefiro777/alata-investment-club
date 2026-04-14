@@ -1,10 +1,11 @@
-import { createClient } from '@/lib/supabase-server'
+import { createClient, createServiceClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import AdminNavbar from '../components/AdminNavbar'
 import NewsEventsSection from '../components/NewsEventsSection'
 import FeaturedReportsClient from '../featured-reports/FeaturedReportsClient'
 import ReviewsAdminSection from '../components/ReviewsAdminSection'
-import type { FeaturedReport, Review } from '@/lib/types'
+import UpcomingEventsAdminSection from '../components/UpcomingEventsAdminSection'
+import type { FeaturedReport, Review, UpcomingEvent } from '@/lib/types'
 
 type Contenuto = {
   id: number
@@ -30,10 +31,13 @@ export default async function AdminContentPage() {
     .from('admin_users').select('email').eq('email', user.email).maybeSingle()
   if (!adminRow) redirect('/dashboard')
 
+  const serviceClient = createServiceClient()
+
   const [
     { data: contenuti },
     { data: featuredReportsData },
     { data: reviewsData },
+    { data: upcomingEventsData },
   ] = await Promise.all([
     supabase
       .from('contenuti')
@@ -48,6 +52,10 @@ export default async function AdminContentPage() {
       .from('reviews')
       .select('*')
       .order('created_at', { ascending: false }),
+    serviceClient
+      .from('upcoming_events')
+      .select('*')
+      .order('date', { ascending: true }),
   ])
 
   return (
@@ -61,6 +69,8 @@ export default async function AdminContentPage() {
         <FeaturedReportsClient reports={(featuredReportsData ?? []) as FeaturedReport[]} />
         <div className="border-t border-black/10" />
         <ReviewsAdminSection initialReviews={(reviewsData ?? []) as Review[]} />
+        <div className="border-t border-black/10" />
+        <UpcomingEventsAdminSection initialEvents={(upcomingEventsData ?? []) as UpcomingEvent[]} />
       </main>
     </>
   )

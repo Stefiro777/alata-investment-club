@@ -52,6 +52,30 @@ export type Resource = {
   created_at: string
 }
 
+export type UpcomingEvent = {
+  id: string
+  date: string
+  title: string
+  description: string | null
+  status: 'open' | 'coming_soon' | 'completed'
+  action_type: 'form' | 'link' | null
+  action_link: string | null
+  display_order: number | null
+  created_at: string
+}
+
+export type EventRegistration = {
+  id: string
+  event_id: string
+  nome: string
+  cognome: string
+  email: string
+  telefono: string | null
+  anno_di_studio: string
+  motivazione: string
+  created_at: string
+}
+
 export type Review = {
   id: string
   type: 'alumni' | 'events'

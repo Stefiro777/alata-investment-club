@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import EventsGrid from './EventsGrid'
 import EventsReviewsWrapper from './EventsReviewsWrapper'
+import UpcomingEvents from '@/app/components/UpcomingEvents'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,6 +35,12 @@ export default async function EventsPage() {
           </div>
         </div>
       </section>
+
+      {/* Upcoming Events — dark agenda section */}
+      <UpcomingEvents />
+
+      {/* Divider */}
+      <div className="h-px bg-[#e5e5e5]" />
 
       {/* Grid with search */}
       <section className="py-20 sm:py-28 bg-white">
