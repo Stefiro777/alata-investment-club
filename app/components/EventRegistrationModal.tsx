@@ -59,22 +59,23 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
   })
 
   const inputClass =
-    'w-full bg-transparent border-0 border-b border-white/20 focus:border-[#1a4a3a] focus:outline-none text-white text-sm py-2.5 placeholder-white/30 transition-colors'
+    'w-full bg-transparent border-0 border-b border-gray-300 focus:border-[#1a4a3a] focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors'
+
+  const labelClass = 'block text-xs tracking-widest uppercase text-black mb-2'
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.80)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-[#0d0d0d] border border-[#1a4a3a] w-full max-w-xl max-h-[92vh] overflow-y-auto">
+      <div className="bg-[#f5f5f3] border border-[#1a4a3a] w-full max-w-xl max-h-[92vh] overflow-y-auto">
         {/* Double-border inner frame */}
         <div className="border border-[#1a4a3a]/30 m-3 p-8">
 
           {/* Header */}
           <div className="mb-8">
-            <p className="text-xs tracking-[0.25em] uppercase text-[#1a4a3a] mb-3">Registration</p>
-            <h2 className="font-serif text-2xl font-bold text-white leading-snug">{event.title}</h2>
+            <p className="text-xs tracking-widest uppercase text-[#1a4a3a] mb-3">Registration</p>
+            <h2 className="font-serif text-2xl font-bold text-black leading-snug">{event.title}</h2>
             <p className="text-gray-500 text-xs mt-1 tracking-wide">{formattedDate}</p>
             <div className="w-8 h-px bg-[#1a4a3a] mt-4" />
           </div>
@@ -82,8 +83,8 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
           {success ? (
             <div className="py-8 text-center space-y-6">
               <div className="w-12 h-px bg-[#1a4a3a] mx-auto" />
-              <p className="font-serif text-xl text-white">Registration received.</p>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="font-serif text-xl text-black">Registration received.</p>
+              <p className="text-gray-500 text-sm leading-relaxed">
                 We&apos;ll be in touch with further details.
               </p>
               <div className="w-12 h-px bg-[#1a4a3a] mx-auto" />
@@ -99,7 +100,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
               {/* Nome + Cognome */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-white/40 mb-2">Nome *</label>
+                  <label className={labelClass}>Nome *</label>
                   <input
                     required
                     value={nome}
@@ -109,7 +110,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-white/40 mb-2">Cognome *</label>
+                  <label className={labelClass}>Cognome *</label>
                   <input
                     required
                     value={cognome}
@@ -123,7 +124,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
               {/* Email + Telefono */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-white/40 mb-2">Email *</label>
+                  <label className={labelClass}>Email *</label>
                   <input
                     required
                     type="email"
@@ -134,7 +135,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-white/40 mb-2">Telefono</label>
+                  <label className={labelClass}>Telefono</label>
                   <input
                     type="tel"
                     value={telefono}
@@ -147,25 +148,25 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
 
               {/* Anno di studio */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-white/40 mb-2">Anno di studio *</label>
+                <label className={labelClass}>Anno di studio *</label>
                 <select
                   required
                   value={anno}
                   onChange={e => setAnno(e.target.value)}
-                  className="w-full bg-transparent border-0 border-b border-white/20 focus:border-[#1a4a3a] focus:outline-none text-white text-sm py-2.5 transition-colors"
-                  style={{ colorScheme: 'dark' }}
+                  className="w-full bg-[#f5f5f3] border-0 border-b border-gray-300 focus:border-[#1a4a3a] focus:outline-none text-black text-sm py-2.5 transition-colors"
                 >
-                  <option value="" disabled className="bg-[#0d0d0d]">Seleziona anno</option>
+                  <option value="" disabled className="bg-[#f5f5f3] text-gray-400">Seleziona anno</option>
                   {ANNI.map(a => (
-                    <option key={a} value={a} className="bg-[#0d0d0d]">{a}</option>
+                    <option key={a} value={a} className="bg-[#f5f5f3] text-black">{a}</option>
                   ))}
                 </select>
               </div>
 
               {/* Motivazione */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-white/40 mb-2">
-                  Motivazione * <span className="text-white/20 normal-case tracking-normal">(max 500 caratteri)</span>
+                <label className={labelClass}>
+                  Motivazione *{' '}
+                  <span className="text-gray-400 normal-case tracking-normal">(max 500 caratteri)</span>
                 </label>
                 <textarea
                   required
@@ -174,20 +175,20 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   value={motivazione}
                   onChange={e => setMotivazione(e.target.value)}
                   placeholder="Perché vuoi partecipare a questo evento?"
-                  className="w-full bg-transparent border-b border-white/20 focus:border-[#1a4a3a] focus:outline-none text-white text-sm py-2.5 placeholder-white/30 transition-colors resize-none"
+                  className="w-full bg-transparent border-b border-gray-300 focus:border-[#1a4a3a] focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors resize-none"
                 />
-                <p className="text-right text-xs text-white/20 mt-1">{motivazione.length}/500</p>
+                <p className="text-right text-xs text-gray-400 mt-1">{motivazione.length}/500</p>
               </div>
 
               {error && (
-                <p className="text-red-400 text-xs border-l-2 border-red-500 pl-3 py-1">{error}</p>
+                <p className="text-red-500 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
               )}
 
-              <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="text-xs tracking-widest uppercase text-white/40 hover:text-white/70 transition-colors"
+                  className="text-xs tracking-widest uppercase text-gray-500 hover:text-black transition-colors"
                 >
                   Cancel
                 </button>
