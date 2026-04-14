@@ -44,24 +44,28 @@ export default function ReviewsSection({
   if (loading || reviews.length === 0) return null
 
   return (
-    <section className="py-20 bg-white border-t border-gray-100">
+    <section className="py-20 bg-[#f5f5f0] border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <Reveal direction="up">
-          <h2 className="font-serif text-4xl font-bold text-[#1a4a3a] mb-12">{title}</h2>
+          <h2 className="font-serif text-5xl font-bold text-[#1a4a3a] text-left">{title}</h2>
+          <div className="w-12 h-px bg-[#1a4a3a] mt-4 mb-16" />
         </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={reviews.length === 1
+          ? 'max-w-2xl mx-auto'
+          : 'grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto'
+        }>
           {reviews.map((review, i) => (
             <Reveal key={review.id} direction="up" delay={i * 80}>
-              <div className="relative border border-[#1a4a3a] border-l-4 p-8 flex flex-col gap-4 h-full" style={{ backgroundColor: '#f5f0e8' }}>
-                <span className="absolute top-3 right-4 font-serif text-7xl text-[#1a4a3a] opacity-20 leading-none pointer-events-none select-none">&ldquo;</span>
+              <div className="relative bg-white border border-[#1a4a3a] border-l-4 border-l-[#1a4a3a] p-10 flex flex-col gap-4 h-full">
+                <span className="absolute top-0 right-4 font-serif text-9xl text-[#1a4a3a] opacity-10 leading-none pointer-events-none select-none">&ldquo;</span>
                 {review.rating != null && <StarRating rating={review.rating} />}
-                <p className="text-gray-600 text-sm leading-relaxed italic flex-1">
+                <p className="text-gray-700 text-base leading-relaxed flex-1">
                   &ldquo;{review.content}&rdquo;
                 </p>
-                <div className="border-t border-[#1a4a3a]/20 pt-4">
-                  <p className="font-serif text-[#1a4a3a] font-bold text-lg">{review.author_name}</p>
+                <div className="border-t border-[#1a4a3a]/20 mt-auto pt-4">
+                  <p className="font-serif text-[#1a4a3a] text-xl font-bold">{review.author_name}</p>
                   {review.author_role && (
-                    <p className="text-[#1a4a3a]/60 text-xs uppercase tracking-widest mt-0.5">{review.author_role}</p>
+                    <p className="text-xs uppercase tracking-widest text-gray-400 mt-0.5">{review.author_role}</p>
                   )}
                 </div>
               </div>
