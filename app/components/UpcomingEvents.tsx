@@ -39,7 +39,7 @@ export default function UpcomingEvents() {
     supabase
       .from('upcoming_events')
       .select('*')
-      .order('date', { ascending: true })
+      .order('display_order', { ascending: true, nullsFirst: false })
       .then(({ data }) => {
         if (!data) { setLoading(false); return }
         const today = new Date().toISOString().split('T')[0]

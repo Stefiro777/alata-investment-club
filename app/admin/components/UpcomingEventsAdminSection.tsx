@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
 
@@ -23,7 +23,6 @@ type FormState = {
   status: UpcomingEvent['status']
   action_type: 'form' | 'link' | ''
   action_link: string
-  display_order: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -33,7 +32,6 @@ const EMPTY_FORM: FormState = {
   status: 'coming_soon',
   action_type: '',
   action_link: '',
-  display_order: '',
 }
 
 // ── Registrations Modal ──────────────────────────────────────────────────────
@@ -153,7 +151,7 @@ function EventFormModal({
       status: form.status,
       action_type: (form.action_type || null) as 'form' | 'link' | null,
       action_link: form.action_type === 'link' ? (form.action_link.trim() || null) : null,
-      display_order: form.display_order ? parseInt(form.display_order) : null,
+      ...(!initial.id ? { display_order: 999 } : {}),
     }
 
     if (initial.id) {
@@ -194,16 +192,10 @@ function EventFormModal({
           <button onClick={onClose} className="text-[#6b7280] hover:text-[#0a0a0a] text-xl leading-none transition-colors">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Date + Display Order */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Date *</label>
-              <input type="date" required value={form.date} onChange={e => set('date', e.target.value)} className={inputClass} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Display Order</label>
-              <input type="number" value={form.display_order} onChange={e => set('display_order', e.target.value)} placeholder="0" className={inputClass} />
-            </div>
+          {/* Date */}
+          <div>
+            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Date *</label>
+            <input type="date" required value={form.date} onChange={e => set('date', e.target.value)} className={inputClass} />
           </div>
 
           {/* Title */}
@@ -261,6 +253,20 @@ function EventFormModal({
   )
 }
 
+// ── Drag handle icon ─────────────────────────────────────────────────────────
+function DragHandle() {
+  return (
+    <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" className="text-[#9ca3af]">
+      <circle cx="4" cy="3" r="1.5" />
+      <circle cx="8" cy="3" r="1.5" />
+      <circle cx="4" cy="8" r="1.5" />
+      <circle cx="8" cy="8" r="1.5" />
+      <circle cx="4" cy="13" r="1.5" />
+      <circle cx="8" cy="13" r="1.5" />
+    </svg>
+  )
+}
+
 // ── Main Section ─────────────────────────────────────────────────────────────
 export default function UpcomingEventsAdminSection({
   initialEvents,
@@ -271,6 +277,8 @@ export default function UpcomingEventsAdminSection({
   const [formModal, setFormModal] = useState<(FormState & { id?: string }) | null>(null)
   const [regsModal, setRegsModal] = useState<UpcomingEvent | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [orderSaved, setOrderSaved] = useState(false)
+  const dragIndex = useRef<number | null>(null)
 
   function openAdd() {
     setFormModal({ ...EMPTY_FORM })
@@ -285,7 +293,6 @@ export default function UpcomingEventsAdminSection({
       status: ev.status,
       action_type: ev.action_type ?? '',
       action_link: ev.action_link ?? '',
-      display_order: ev.display_order != null ? String(ev.display_order) : '',
     })
   }
 
@@ -294,7 +301,7 @@ export default function UpcomingEventsAdminSection({
       const exists = prev.find(e => e.id === saved.id)
       return exists
         ? prev.map(e => (e.id === saved.id ? saved : e))
-        : [saved, ...prev]
+        : [...prev, saved]
     })
     setFormModal(null)
   }
@@ -306,11 +313,44 @@ export default function UpcomingEventsAdminSection({
     setDeleteConfirm(null)
   }
 
+  function onDragStart(i: number) {
+    dragIndex.current = i
+  }
+
+  async function onDrop(i: number) {
+    const from = dragIndex.current
+    dragIndex.current = null
+    if (from === null || from === i) return
+
+    const reordered = [...events]
+    const [moved] = reordered.splice(from, 1)
+    reordered.splice(i, 0, moved)
+    setEvents(reordered)
+
+    const items = reordered.map((ev, idx) => ({ id: ev.id, display_order: idx }))
+    const res = await fetch('/api/upcoming-events/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    })
+    if (res.ok) {
+      setOrderSaved(true)
+      setTimeout(() => setOrderSaved(false), 2500)
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-8 py-10">
       <SectionHeading title="Upcoming Events" />
 
-      <div className="flex justify-end mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="h-6">
+          {orderSaved && (
+            <span className="text-xs text-[#1a4a3a] font-medium tracking-wide animate-pulse">
+              ✓ Order saved
+            </span>
+          )}
+        </div>
         <button
           onClick={openAdd}
           className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-150"
@@ -326,6 +366,7 @@ export default function UpcomingEventsAdminSection({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-black/10 bg-[#f9f9f9]">
+                <th className="px-4 py-3 w-8" />
                 {['Date', 'Title', 'Status', 'Action', 'Azioni'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide whitespace-nowrap">
                     {h}
@@ -334,73 +375,80 @@ export default function UpcomingEventsAdminSection({
               </tr>
             </thead>
             <tbody>
-              {events
-                .slice()
-                .sort((a, b) => a.date.localeCompare(b.date))
-                .map(ev => (
-                  <tr key={ev.id} className="border-b border-black/5 last:border-0 hover:bg-[#fafafa] transition-colors">
-                    <td className="px-4 py-3 font-medium text-[#0a0a0a] whitespace-nowrap">{ev.date}</td>
-                    <td className="px-4 py-3 text-[#0a0a0a] max-w-[200px]">
-                      <span title={ev.title}>
-                        {ev.title.length > 50 ? ev.title.slice(0, 50) + '…' : ev.title}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 ${
-                        ev.status === 'open'
-                          ? 'bg-[#1a4a3a] text-white'
-                          : ev.status === 'completed'
-                          ? 'border border-gray-300 text-gray-500'
-                          : 'border border-[#1a4a3a] text-[#1a4a3a]'
-                      }`}>
-                        {ev.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#6b7280] text-xs">
-                      {ev.action_type ?? '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <button
-                          onClick={() => setRegsModal(ev)}
-                          className="border border-[#6b7280] text-[#6b7280] hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150 whitespace-nowrap"
-                        >
-                          Registrations
-                        </button>
-                        <button
-                          onClick={() => openEdit(ev)}
-                          className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150"
-                        >
-                          Edit
-                        </button>
-                        {deleteConfirm === ev.id ? (
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-red-600">Confirm?</span>
-                            <button
-                              onClick={() => handleDelete(ev.id)}
-                              className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-150"
-                            >
-                              Yes
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm(null)}
-                              className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-150"
-                            >
-                              No
-                            </button>
-                          </div>
-                        ) : (
+              {events.map((ev, i) => (
+                <tr
+                  key={ev.id}
+                  draggable
+                  onDragStart={() => onDragStart(i)}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={() => onDrop(i)}
+                  className="border-b border-black/5 last:border-0 hover:bg-[#fafafa] transition-colors"
+                >
+                  <td className="px-4 py-3 cursor-grab active:cursor-grabbing">
+                    <DragHandle />
+                  </td>
+                  <td className="px-4 py-3 font-medium text-[#0a0a0a] whitespace-nowrap">{ev.date}</td>
+                  <td className="px-4 py-3 text-[#0a0a0a] max-w-[200px]">
+                    <span title={ev.title}>
+                      {ev.title.length > 50 ? ev.title.slice(0, 50) + '…' : ev.title}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 ${
+                      ev.status === 'open'
+                        ? 'bg-[#1a4a3a] text-white'
+                        : ev.status === 'completed'
+                        ? 'border border-gray-300 text-gray-500'
+                        : 'border border-[#1a4a3a] text-[#1a4a3a]'
+                    }`}>
+                      {ev.status.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-[#6b7280] text-xs">
+                    {ev.action_type ?? '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => setRegsModal(ev)}
+                        className="border border-[#6b7280] text-[#6b7280] hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150 whitespace-nowrap"
+                      >
+                        Registrations
+                      </button>
+                      <button
+                        onClick={() => openEdit(ev)}
+                        className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150"
+                      >
+                        Edit
+                      </button>
+                      {deleteConfirm === ev.id ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-red-600">Confirm?</span>
                           <button
-                            onClick={() => setDeleteConfirm(ev.id)}
-                            className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150"
+                            onClick={() => handleDelete(ev.id)}
+                            className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-150"
                           >
-                            Delete
+                            Yes
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <button
+                            onClick={() => setDeleteConfirm(null)}
+                            className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-150"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setDeleteConfirm(ev.id)}
+                          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
