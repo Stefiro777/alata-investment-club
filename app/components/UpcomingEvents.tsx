@@ -16,14 +16,14 @@ function formatDate(dateStr: string) {
 function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
   if (status === 'completed') {
     return (
-      <span className="inline-block text-gray-400 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
+      <span className="inline-block text-white/40 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
         Completed
       </span>
     )
   }
   // coming_soon
   return (
-    <span className="inline-block border border-gray-400 text-gray-500 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
+    <span className="inline-block border border-white/40 text-white/60 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
       Coming Soon
     </span>
   )
@@ -73,25 +73,25 @@ export default function UpcomingEvents() {
               const isLast = i === events.length - 1
               return (
                 <div key={event.id}>
-                  <div className="group flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-6 py-8 transition-colors duration-200 hover:bg-gray-100 px-2 -mx-2">
+                  <div className="group flex flex-col sm:flex-row sm:items-center gap-6 py-8 bg-[#1a4a3a] hover:bg-[#153d30] transition-colors duration-200 px-6">
 
                     {/* Date block */}
                     <div className="flex-shrink-0 w-16 sm:w-20">
-                      <p className="text-[10px] tracking-[0.25em] uppercase text-[#1a4a3a] font-medium leading-none mb-1">
+                      <p className="text-[10px] tracking-[0.25em] uppercase text-white font-medium leading-none mb-1">
                         {month}
                       </p>
-                      <p className="font-serif text-5xl font-bold text-black leading-none">
+                      <p className="font-serif text-5xl font-bold text-white leading-none">
                         {day}
                       </p>
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-serif text-xl text-black leading-snug">
+                      <h3 className="font-serif text-xl text-white font-bold leading-snug">
                         {event.title}
                       </h3>
                       {event.description && (
-                        <p className="text-gray-500 text-sm mt-1.5 leading-relaxed max-w-xl">
+                        <p className="text-white/70 text-sm mt-1.5 leading-relaxed max-w-xl">
                           {event.description}
                         </p>
                       )}
@@ -105,19 +105,19 @@ export default function UpcomingEvents() {
                             href={event.action_link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-150 cursor-pointer"
+                            className="bg-white hover:bg-gray-100 text-[#1a4a3a] text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-150 cursor-pointer"
                           >
                             Open
                           </a>
                         ) : event.action_type === 'form' ? (
                           <button
                             onClick={() => setModalEvent(event)}
-                            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-150 cursor-pointer"
+                            className="bg-white hover:bg-gray-100 text-[#1a4a3a] text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-150 cursor-pointer"
                           >
                             Open
                           </button>
                         ) : (
-                          <span className="bg-[#1a4a3a] text-white text-sm font-medium tracking-widest uppercase px-5 py-2">
+                          <span className="bg-white text-[#1a4a3a] text-sm font-medium tracking-widest uppercase px-5 py-2">
                             Open
                           </span>
                         )
@@ -129,7 +129,7 @@ export default function UpcomingEvents() {
 
                   {/* Divider */}
                   {!isLast && (
-                    <div className="h-px bg-gray-200" />
+                    <div className="h-px bg-white/10" />
                   )}
                 </div>
               )
