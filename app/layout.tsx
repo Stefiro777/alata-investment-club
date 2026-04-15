@@ -76,7 +76,7 @@ export default function RootLayout({
     <html lang="en" className={`${cormorant.variable} ${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         {/* Navbar */}
-        <header className="bg-[#1a4a3a] shadow-md sticky top-0 z-50">
+        <header className="bg-[#1a4a3a] shadow-md sticky top-0 z-[100]">
           <nav className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Logo + nome */}
@@ -106,7 +106,7 @@ export default function RootLayout({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 hidden group-hover:block z-50">
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 hidden group-hover:block z-[100]">
                         <div className="bg-[#123a2d] border border-white/10 shadow-xl min-w-[190px] py-1">
                           {link.subLinks.map(sub => (
                             <Link

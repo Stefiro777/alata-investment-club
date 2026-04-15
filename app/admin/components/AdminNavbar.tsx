@@ -15,18 +15,9 @@ export default function AdminNavbar({ userEmail: _ }: { userEmail: string }) {
 
   return (
     <nav
-      className="sticky top-0 z-50 w-full bg-white flex items-center px-8"
+      className="sticky top-0 z-40 w-full bg-white flex items-center px-8"
       style={{ height: '56px', borderBottom: '1px solid #e5e5e5' }}
     >
-      {/* Logo */}
-      <a
-        href="/admin/settings"
-        className="font-serif text-[#1a4a3a] mr-10 flex-shrink-0"
-        style={{ fontSize: '1.375rem', letterSpacing: '-0.01em' }}
-      >
-        Alata
-      </a>
-
       {/* Nav links */}
       <div className="flex items-stretch h-full flex-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
         {NAV.map(item => {
