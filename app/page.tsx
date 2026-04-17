@@ -276,7 +276,7 @@ export default async function HomePage() {
 
               <Reveal direction="left" delay={200}>
                 <a
-                  href="mailto:Alatabrixiaic@gmail.com"
+                  href="mailto:info@alatainvestmentclub.com"
                   className="flex items-center gap-4 group"
                 >
                   <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
@@ -285,7 +285,7 @@ export default async function HomePage() {
                   <div>
                     <p className="text-xs tracking-widest uppercase text-white/50 mb-0.5">Email</p>
                     <p className="text-white text-sm font-medium group-hover:text-white/70 transition-colors">
-                      Alatabrixiaic@gmail.com
+                      info@alatainvestmentclub.com
                     </p>
                   </div>
                 </a>

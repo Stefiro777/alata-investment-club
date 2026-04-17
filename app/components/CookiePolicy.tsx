@@ -79,8 +79,8 @@ export default function CookiePolicy() {
                 <h3 className="font-semibold text-[#0a0a0a] mb-1">Contact</h3>
                 <p>
                   For any questions regarding this Cookie Policy, please contact us at{' '}
-                  <a href="mailto:Alatabrixiaic@gmail.com" className="text-[#1a4a3a] underline">
-                    Alatabrixiaic@gmail.com
+                  <a href="mailto:info@alatainvestmentclub.com" className="text-[#1a4a3a] underline">
+                    info@alatainvestmentclub.com
                   </a>.
                 </p>
               </section>

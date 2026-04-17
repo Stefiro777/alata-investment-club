@@ -199,7 +199,7 @@ export default function RootLayout({
                   <LinkedInIcon className="w-5 h-5" />
                 </a>
                 <a
-                  href="mailto:Alatabrixiaic@gmail.com"
+                  href="mailto:info@alatainvestmentclub.com"
                   aria-label="Email"
                   className="text-white/60 hover:text-white transition-colors"
                 >
@@ -213,7 +213,7 @@ export default function RootLayout({
                 &copy; 2023 Alata Investment Club
               </p>
               <p className="text-white/40 text-xs">
-                Alatabrixiaic@gmail.com
+                info@alatainvestmentclub.com
               </p>
               <div className="flex items-center gap-4">
                 <Link
