@@ -178,7 +178,7 @@ function LoginForm() {
             <p className="text-center text-xs text-[#6b7280] mt-6 pt-6 border-t border-[#f5f5f5]">
               Don&apos;t have an account?{' '}
               <a
-                href="mailto:alatabrixiaic@gmail.com"
+                href="mailto:info@alatainvestmentclub.com"
                 className="underline-grow text-[#1a4a3a] font-medium"
               >
                 Contact the administrator.

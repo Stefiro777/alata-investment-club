@@ -162,8 +162,8 @@ function AcceptInviteForm() {
                 <p className="text-red-600 text-sm border-l-2 border-red-400 pl-3 py-1">{tokenError}</p>
                 <p className="text-xs text-[#6b7280]">
                   Contact{' '}
-                  <a href="mailto:alatabrixiaic@gmail.com" className="text-[#1a4a3a] hover:underline">
-                    alatabrixiaic@gmail.com
+                  <a href="mailto:info@alatainvestmentclub.com" className="text-[#1a4a3a] hover:underline">
+                    info@alatainvestmentclub.com
                   </a>{' '}
                   to receive a new invitation.
                 </p>

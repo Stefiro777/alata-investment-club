@@ -20,7 +20,7 @@ function isValidWebhookSecret(provided: string, expected: string): boolean {
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const NOTIFY_TO = 'alatabrixiaic@gmail.com'
+const NOTIFY_TO = 'info@alatainvestmentclub.com'
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
 
 interface ApplicationRecord {

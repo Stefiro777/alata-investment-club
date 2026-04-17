@@ -95,7 +95,7 @@ export default async function PartnersPage() {
             Whether you&rsquo;re a financial institution, a company that shares our values, or an organization looking to connect with the next generation of finance talent — we&rsquo;d love to hear from you.
           </p>
           <a
-            href="mailto:alatabrixiaic@gmail.com"
+            href="mailto:info@alatainvestmentclub.com"
             className="inline-block bg-white text-[#1a4a3a] font-medium text-sm tracking-wide px-8 py-4 hover:bg-white/90 transition-colors duration-150"
           >
             Get in Touch

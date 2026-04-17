@@ -27,8 +27,8 @@ export default function PrivacyPolicyPage() {
             </p>
             <p className="mt-2">
               For any privacy-related requests, contact us at:{' '}
-              <a href="mailto:alatabrixiaic@gmail.com" className="text-[#1a4a3a] underline">
-                alatabrixiaic@gmail.com
+              <a href="mailto:info@alatainvestmentclub.com" className="text-[#1a4a3a] underline">
+                info@alatainvestmentclub.com
               </a>
             </p>
           </section>
@@ -103,8 +103,8 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, contact us at{' '}
-              <a href="mailto:alatabrixiaic@gmail.com" className="text-[#1a4a3a] underline">
-                alatabrixiaic@gmail.com
+              <a href="mailto:info@alatainvestmentclub.com" className="text-[#1a4a3a] underline">
+                info@alatainvestmentclub.com
               </a>.
             </p>
           </section>
@@ -124,8 +124,8 @@ export default function PrivacyPolicyPage() {
             <h2 className="font-serif text-xl font-bold text-[#0a0a0a] mb-3">8. Contact</h2>
             <p>
               For any questions or concerns regarding this Privacy Policy, please write to us at{' '}
-              <a href="mailto:alatabrixiaic@gmail.com" className="text-[#1a4a3a] underline">
-                alatabrixiaic@gmail.com
+              <a href="mailto:info@alatainvestmentclub.com" className="text-[#1a4a3a] underline">
+                info@alatainvestmentclub.com
               </a>.
             </p>
           </section>
