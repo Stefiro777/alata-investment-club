@@ -105,7 +105,7 @@ export default async function AlumniPage() {
 
       {/* Where Our Alumni Work Today — marquee */}
       {companies.length > 0 && (
-        <section className="py-16 bg-[#f5f5f5] border-t border-[#e5e5e5] overflow-hidden">
+        <section className="py-16 bg-[#f5f5f0] border-t border-[#e5e5e5] overflow-hidden">
           <style>{`
             @keyframes alumni-companies-scroll {
               from { transform: translateX(0); }

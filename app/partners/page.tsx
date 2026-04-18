@@ -46,7 +46,7 @@ export default async function PartnersPage() {
       </section>
 
       {/* Why Partner */}
-      <section className="py-20 sm:py-28 bg-[#f5f5f5]">
+      <section className="py-20 sm:py-28 bg-[#f5f5f0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <Reveal direction="up">
             <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Collaboration</p>

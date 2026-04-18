@@ -126,7 +126,7 @@ export default async function TeamPage() {
       </section>
 
       {/* Management */}
-      <section className="py-20 sm:py-28 bg-[#f5f5f5] border-t border-[#e5e5e5]">
+      <section className="py-20 sm:py-28 bg-[#f5f5f0] border-t border-[#e5e5e5]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <Reveal>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-10">Management</h2>
