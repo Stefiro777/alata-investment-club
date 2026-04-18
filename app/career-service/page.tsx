@@ -101,7 +101,7 @@ export default async function CareerServicePage() {
       </section>
 
       {/* Services — light */}
-      <section className="py-20 sm:py-28 bg-[#f7f5f0]">
+      <section className="py-20 sm:py-28 bg-[#D6D3CE]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid gap-px bg-[#e5e5e5] md:grid-cols-3">
             {services.map((service, i) => (

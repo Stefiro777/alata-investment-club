@@ -112,7 +112,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
           onClick={e => { if (e.target === e.currentTarget) closeModal() }}
         >
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl" style={{ background: '#f7f5f0' }}>
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl" style={{ background: '#D6D3CE' }}>
 
             {/* Modal header */}
             <div className="flex items-center justify-between px-8 py-6 border-b border-[#e5e5e5]">
