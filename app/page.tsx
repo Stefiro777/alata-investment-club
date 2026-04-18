@@ -155,7 +155,7 @@ export default async function HomePage() {
       </div>
 
       {/* About — What We Value */}
-      <section className="bg-[#f5f5f0] pt-10 sm:pt-12 pb-10 sm:pb-12">
+      <section className="bg-gray-100 pt-10 sm:pt-12 pb-10 sm:pb-12">
         <div className="max-w-5xl mx-auto px-6 lg:px-8">
           <Reveal direction="up">
             <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
