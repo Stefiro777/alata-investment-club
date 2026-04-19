@@ -44,7 +44,7 @@ export default function ReviewsSection({
   if (loading || reviews.length === 0) return null
 
   return (
-    <section className="py-20 bg-[#D6D3CE] border-t border-gray-200">
+    <section className="py-20 bg-[#f5f5f0] border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <Reveal direction="up">
           <h2 className="font-serif text-5xl font-bold text-[#1a4a3a] text-left">{title}</h2>

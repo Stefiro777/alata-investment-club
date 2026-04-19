@@ -54,7 +54,7 @@ export default function UpcomingEvents() {
 
   return (
     <>
-      <section className="bg-[#D6D3CE] py-20 sm:py-28">
+      <section className="bg-[#f5f5f0] py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
           {/* Header */}
