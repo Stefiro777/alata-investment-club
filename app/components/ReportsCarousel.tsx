@@ -195,7 +195,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage - 1)}
                 disabled={safePage === 0}
-                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-[#1a4a3a] hover:text-[#1a4a3a] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center bg-[#1a4a3a] hover:bg-[#143d30] text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                 aria-label="Previous"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,7 +221,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage + 1)}
                 disabled={safePage === totalPages - 1}
-                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-[#1a4a3a] hover:text-[#1a4a3a] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center bg-[#1a4a3a] hover:bg-[#143d30] text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                 aria-label="Next"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
