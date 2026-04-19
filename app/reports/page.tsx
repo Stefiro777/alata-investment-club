@@ -49,7 +49,7 @@ export default async function ReportsPage() {
       </section>
 
       {/* Carousel */}
-      <section className="py-20 sm:py-28 bg-gray-100">
+      <section className="py-20 sm:py-28 bg-[#f5f5f0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <Reveal className="mb-14">
             <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Publications</p>
