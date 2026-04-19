@@ -167,7 +167,7 @@ function WelcomeView({
           href="https://www.notion.so/Alata-Investment-Club-3c27ba5ab1374113b820efffa536723e"
           target="_blank"
           rel="noopener noreferrer"
-          className="group bg-[#f5f5f0] border border-black/10 hover:border-[#1a4a3a] hover:shadow-md p-7 flex flex-col gap-4 transition-all duration-150"
+          className="group bg-white border border-black/10 hover:border-[#1a4a3a] hover:shadow-md p-7 flex flex-col gap-4 transition-all duration-150"
         >
           <div className="flex items-start justify-between gap-4">
             <div className="w-10 h-10 bg-white border border-black/10 flex items-center justify-center flex-shrink-0 group-hover:border-[#1a4a3a] transition-colors duration-150">
@@ -187,7 +187,7 @@ function WelcomeView({
         </a>
 
         {/* Master Calendar */}
-        <div className="bg-[#f5f5f0] border border-black/10 p-7 flex flex-col gap-4">
+        <div className="bg-white border border-black/10 p-7 flex flex-col gap-4">
           <div className="w-10 h-10 bg-white border border-black/10 flex items-center justify-center flex-shrink-0">
             <svg className="w-5 h-5 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
