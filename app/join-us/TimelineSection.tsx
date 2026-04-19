@@ -41,7 +41,7 @@ function PhaseRow({ step, index }: { step: Step; index: number }) {
   const [visible, setVisible] = useState(false)
 
   const titleLeft = index % 2 === 0
-  const rowBg = index % 2 === 0 ? '#ffffff' : '#f9f9f9'
+  const rowBg = index % 2 === 0 ? '#ffffff' : '#f3f4f6'
 
   useEffect(() => {
     const el = ref.current
