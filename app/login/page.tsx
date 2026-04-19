@@ -76,7 +76,7 @@ function LoginForm() {
       {/* Right — form panel */}
       <div
         className="w-full md:w-1/2 flex items-center justify-center py-16 px-6 sm:px-12"
-        style={{ background: '#D6D3CE', animation: 'heroFadeIn 0.7s ease 0.1s both' }}
+        style={{ background: '#f5f5f0', animation: 'heroFadeIn 0.7s ease 0.1s both' }}
       >
         <div className="w-full max-w-sm">
           {/* Logo */}
@@ -92,8 +92,8 @@ function LoginForm() {
                 />
               </div>
             </Link>
-            <h1 className="font-serif text-2xl font-light text-[#0a0a0a] mt-6">Members Area</h1>
-            <p className="text-[#6b7280] text-sm mt-1">
+            <h1 className="font-serif text-2xl font-light text-black mt-6">Members Area</h1>
+            <p className="text-black text-sm mt-1">
               Sign in to access exclusive materials.
             </p>
           </div>
@@ -105,7 +105,7 @@ function LoginForm() {
           >
             <form onSubmit={handleSubmit} className="space-y-5">
               <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.38s both' }}>
-                <label htmlFor="email" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                <label htmlFor="email" className="block text-xs font-medium tracking-wide uppercase text-black mb-2">
                   Email
                 </label>
                 <input
@@ -122,7 +122,7 @@ function LoginForm() {
 
               <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.46s both' }}>
                 <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280]">
+                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-black">
                     Password
                   </label>
                   <Link href="/forgot-password" className="underline-grow text-xs text-[#1a4a3a]">
@@ -175,7 +175,7 @@ function LoginForm() {
               </div>
             </form>
 
-            <p className="text-center text-xs text-[#6b7280] mt-6 pt-6 border-t border-[#f5f5f5]">
+            <p className="text-center text-xs text-black mt-6 pt-6 border-t border-[#f5f5f5]">
               Don&apos;t have an account?{' '}
               <a
                 href="mailto:info@alatainvestmentclub.com"
@@ -187,7 +187,7 @@ function LoginForm() {
           </div>
 
           <div className="mt-6 text-center" style={{ animation: 'heroFadeUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.6s both' }}>
-            <Link href="/" className="underline-grow text-xs text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors">
+            <Link href="/" className="underline-grow text-xs text-black hover:text-[#0a0a0a] tracking-wide transition-colors">
               ← Back to homepage
             </Link>
           </div>
