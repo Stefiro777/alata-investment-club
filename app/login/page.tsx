@@ -76,7 +76,7 @@ function LoginForm() {
       {/* Right — form panel */}
       <div
         className="w-full md:w-1/2 flex items-center justify-center py-16 px-6 sm:px-12"
-        style={{ background: '#D6D3CE', animation: 'heroFadeIn 0.7s ease 0.1s both' }}
+        style={{ background: '#f5f5f0', animation: 'heroFadeIn 0.7s ease 0.1s both' }}
       >
         <div className="w-full max-w-sm">
           {/* Logo */}
