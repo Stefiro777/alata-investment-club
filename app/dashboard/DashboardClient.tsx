@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import type { Resource } from '@/lib/types'
+import CalendarEventsList from './CalendarEventsList'
 
 type View = 'welcome' | 'masters' | 'career' | 'education' | 'forbes' | 'documenti'
 
@@ -160,14 +161,13 @@ function WelcomeView({
         </p>
       </div>
 
-      {/* Workspace + Calendar */}
-      <div className="grid sm:grid-cols-2 gap-4 mb-14">
-        {/* Notion Workspace */}
+      {/* Notion Workspace */}
+      <div className="mb-10">
         <a
           href="https://www.notion.so/Alata-Investment-Club-3c27ba5ab1374113b820efffa536723e"
           target="_blank"
           rel="noopener noreferrer"
-          className="group bg-white border border-black/10 hover:border-[#1a4a3a] hover:shadow-md p-7 flex flex-col gap-4 transition-all duration-150"
+          className="group bg-white border border-black/10 hover:border-[#1a4a3a] hover:shadow-md p-7 flex flex-col gap-4 transition-all duration-150 max-w-sm"
         >
           <div className="flex items-start justify-between gap-4">
             <div className="w-10 h-10 bg-white border border-black/10 flex items-center justify-center flex-shrink-0 group-hover:border-[#1a4a3a] transition-colors duration-150">
@@ -181,24 +181,30 @@ function WelcomeView({
           </div>
           <div className="flex-1">
             <p className="font-serif text-xl font-bold text-[#1a4a3a] leading-snug mb-1">Notion Workspace</p>
-            <p className="text-sm text-gray-600 leading-relaxed">Documents, notes and club resources.</p>
+            <p className="text-sm text-gray-600 leading-relaxed">Tracks all tasks assigned to the club&apos;s divisions.</p>
           </div>
           <span className="text-xs font-medium text-[#1a4a3a] tracking-wide group-hover:underline">Open →</span>
         </a>
+      </div>
 
-        {/* Master Calendar */}
-        <div className="bg-white border border-black/10 p-7 flex flex-col gap-4">
-          <div className="w-10 h-10 bg-white border border-black/10 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      {/* Upcoming Events */}
+      <div className="mb-14">
+        <div className="flex items-end justify-between gap-4 mb-1">
+          <h3 className="font-serif text-2xl font-bold text-[#1a4a3a]">Upcoming Events</h3>
+          <a
+            href="https://www.notion.so/1c4baca2197248999054618cc7f2e8dc?v=32d8bea508ff46bba4d91f5685762c69"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-[#1a4a3a] hover:underline flex items-center gap-1 flex-shrink-0 pb-0.5"
+          >
+            Open Master Calendar in Notion
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-          </div>
-          <div className="flex-1">
-            <p className="font-serif text-xl font-bold text-[#1a4a3a] leading-snug mb-1">Master Calendar</p>
-            <p className="text-sm text-gray-600 leading-relaxed">Coming soon — sync in progress.</p>
-          </div>
-          <span className="text-xs text-gray-400 tracking-wide">Integration via Make</span>
+          </a>
         </div>
+        <div className="w-8 h-px bg-[#1a4a3a] mb-4" />
+        <CalendarEventsList />
       </div>
 
       {/* Quick access cards */}
