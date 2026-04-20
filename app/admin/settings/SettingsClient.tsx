@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import SyncCalendarButton from '../components/SyncCalendarButton'
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -426,6 +427,12 @@ export default function SettingsClient({
             <p className="text-[#1a4a3a] text-xs border-l-2 border-[#1a4a3a] pl-3 py-1 mt-4">Invite sent!</p>
           )}
         </div>
+      </section>
+
+      {/* ══ System Tools ══════════════════════════════════════════════════════ */}
+      <section id="system-tools">
+        <SectionHeading title="System Tools" />
+        <SyncCalendarButton />
       </section>
 
       {/* ══ Admin Users ═══════════════════════════════════════════════════════ */}
