@@ -167,30 +167,20 @@ function WelcomeView({
           href="https://www.notion.so/Alata-Investment-Club-3c27ba5ab1374113b820efffa536723e"
           target="_blank"
           rel="noopener noreferrer"
-          className="group bg-white border border-black/10 hover:border-[#1a4a3a] hover:shadow-md p-7 flex flex-col gap-4 transition-all duration-150 max-w-sm"
+          className="group bg-white border border-black/10 hover:border-[#1a4a3a] hover:shadow-md px-5 py-3.5 inline-flex items-center gap-4 transition-all duration-150"
         >
-          <div className="flex items-start justify-between gap-4">
-            <div className="w-10 h-10 bg-white border border-black/10 flex items-center justify-center flex-shrink-0 group-hover:border-[#1a4a3a] transition-colors duration-150">
-              <svg className="w-5 h-5 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <svg className="w-4 h-4 text-[#9ca3af] group-hover:text-[#1a4a3a] transition-colors duration-150 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </div>
           <div className="flex-1">
-            <p className="font-serif text-xl font-bold text-[#1a4a3a] leading-snug mb-1">Notion Workspace</p>
-            <p className="text-sm text-gray-600 leading-relaxed">Tracks all tasks assigned to the club&apos;s divisions.</p>
+            <p className="font-serif text-base font-bold text-[#1a4a3a] leading-snug">Notion Workspace</p>
+            <p className="text-xs text-gray-500 leading-relaxed">Tracks all tasks assigned to the club&apos;s divisions.</p>
           </div>
-          <span className="text-xs font-medium text-[#1a4a3a] tracking-wide group-hover:underline">Open →</span>
+          <span className="text-xs font-medium text-[#1a4a3a] tracking-wide group-hover:underline flex-shrink-0">Open →</span>
         </a>
       </div>
 
-      {/* Upcoming Events */}
+      {/* Deadlines & Events */}
       <div className="mb-14">
         <div className="flex items-end justify-between gap-4 mb-1">
-          <h3 className="font-serif text-2xl font-bold text-[#1a4a3a]">Upcoming Events</h3>
+          <h3 className="font-serif text-2xl font-bold text-[#1a4a3a]">Deadlines &amp; Events</h3>
           <a
             href="https://www.notion.so/1c4baca2197248999054618cc7f2e8dc?v=32d8bea508ff46bba4d91f5685762c69"
             target="_blank"

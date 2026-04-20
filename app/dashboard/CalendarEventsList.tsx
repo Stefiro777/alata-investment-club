@@ -46,14 +46,14 @@ export default function CalendarEventsList() {
   }
 
   return (
-    <div className="divide-y divide-black/5">
+    <div className="flex flex-col gap-2">
       {events.map(event => (
         <a
           key={event.notion_page_id}
           href={event.notion_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-start justify-between gap-6 py-5 hover:bg-black/[0.02] transition-colors -mx-2 px-2"
+          className="group flex items-start justify-between gap-6 bg-white border border-black/10 hover:border-[#1a4a3a] px-5 py-4 transition-colors duration-150"
         >
           <div className="flex-1 min-w-0">
             <p className="font-serif text-base font-semibold text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors leading-snug">
