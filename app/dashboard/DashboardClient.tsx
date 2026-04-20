@@ -199,7 +199,8 @@ function WelcomeView({
 
       {/* Quick access cards */}
       <div className="mb-16">
-        <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-6">Club Resources</p>
+        <h3 className="font-serif text-2xl font-bold text-[#1a4a3a] mb-1">Club Resources</h3>
+        <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {CATEGORIES.map(cat => {
             const Icon = cat.icon
