@@ -179,8 +179,8 @@ function WelcomeView({
 
       {/* Deadlines & Events */}
       <div className="mb-14">
-        <div className="flex items-end justify-between gap-4 mb-2">
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af]">Deadlines &amp; Events</p>
+        <div className="flex items-end justify-between gap-4 mb-1">
+          <h3 className="font-serif text-2xl font-bold text-[#0a0a0a]">Deadlines &amp; Events</h3>
           <a
             href="https://www.notion.so/1c4baca2197248999054618cc7f2e8dc?v=32d8bea508ff46bba4d91f5685762c69"
             target="_blank"
@@ -193,15 +193,13 @@ function WelcomeView({
             </svg>
           </a>
         </div>
-        <h3 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-1">Upcoming Events</h3>
         <div className="w-8 h-px bg-[#1a4a3a] mb-4" />
         <CalendarEventsList />
       </div>
 
       {/* Quick access cards */}
       <div className="mb-16">
-        <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-2">Club Resources</p>
-        <h3 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-1">Resources</h3>
+        <h3 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-1">Club Resources</h3>
         <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {CATEGORIES.map(cat => {
@@ -229,8 +227,7 @@ function WelcomeView({
       {/* Recently added */}
       {recent.length > 0 && (
         <div>
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-2">Recently Added</p>
-          <h3 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-1">Latest Resources</h3>
+          <h3 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-1">Recently Added</h3>
           <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
             {recent.map(r => (
