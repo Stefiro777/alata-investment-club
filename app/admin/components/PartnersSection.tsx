@@ -21,6 +21,7 @@ async function uploadPartnerLogo(file: File): Promise<{ url: string } | { error:
   const res = await fetch('/api/admin/upload-partner-logo', { method: 'POST', body: formData })
   const json = await res.json()
   if (!res.ok) return { error: json.error ?? 'Upload failed' }
+  console.log('[uploadPartnerLogo] url ricevuto:', json.url)
   return { url: json.url }
 }
 
