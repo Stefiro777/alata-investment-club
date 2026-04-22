@@ -16,12 +16,12 @@ function SectionHeading({ title }: { title: string }) {
 // ── Partner helpers ───────────────────────────────────────────────────────────
 
 async function uploadPartnerLogo(file: File): Promise<{ url: string } | { error: string }> {
-  const supabase = createClient()
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name.replace(/\s+/g, '_')}`
-  const { data, error } = await supabase.storage.from('partners').upload(path, file, { upsert: false })
-  if (error) return { error: error.message }
-  const { data: { publicUrl } } = supabase.storage.from('partners').getPublicUrl(data.path)
-  return { url: publicUrl }
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch('/api/admin/upload-partner-logo', { method: 'POST', body: formData })
+  const json = await res.json()
+  if (!res.ok) return { error: json.error ?? 'Upload failed' }
+  return { url: json.url }
 }
 
 function PartnerInsertForm({ onInserted }: { onInserted: (p: Partner) => void }) {
