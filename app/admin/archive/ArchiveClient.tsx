@@ -54,7 +54,7 @@ function TagSelector({ selected, onChange }: { selected: string[]; onChange: (ta
             key={tag}
             type="button"
             onClick={() => toggle(tag)}
-            className={`text-xs px-3 py-1 border transition-colors ${selected.includes(tag) ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'border-[#e5e5e5] text-[#6b7280] hover:border-[#1a4a3a]'}`}
+            className={`text-xs px-3 py-1 border transition-colors ${selected.includes(tag) ? 'bg-forest text-white border-forest' : 'border-line text-ink-500 hover:border-forest'}`}
           >
             {tag}
           </button>
@@ -62,7 +62,7 @@ function TagSelector({ selected, onChange }: { selected: string[]; onChange: (ta
         {/* Custom tags already added */}
         {selected.filter(t => !PRESET_TAGS.includes(t)).map(tag => (
           <button key={tag} type="button" onClick={() => toggle(tag)}
-            className="text-xs px-3 py-1 border bg-[#1a4a3a]/10 text-[#1a4a3a] border-[#1a4a3a]/30 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors">
+            className="text-xs px-3 py-1 border bg-[#1a4a3a]/10 text-forest border-forest/30 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors">
             {tag} ×
           </button>
         ))}
@@ -72,7 +72,7 @@ function TagSelector({ selected, onChange }: { selected: string[]; onChange: (ta
         onChange={e => setCustom(e.target.value)}
         onKeyDown={addCustom}
         placeholder="Tag personalizzato (premi Invio)"
-        className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
+        className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
       />
     </div>
   )
@@ -138,9 +138,9 @@ function AddDocModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="bg-white w-full max-w-xl max-h-[92vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-center justify-between px-8 py-6 border-b border-[#e5e5e5]">
-          <h3 className="font-serif text-xl font-bold text-[#0a0a0a]">Aggiungi documento</h3>
-          <button onClick={onClose} className="text-[#6b7280] hover:text-[#0a0a0a] p-1">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-line">
+          <h3 className="font-serif text-xl font-bold text-ink-900">Aggiungi documento</h3>
+          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -150,33 +150,33 @@ function AddDocModal({
         <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5">
           {/* File upload first */}
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#6b7280] mb-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">
               File * (PDF, DOCX, immagini)
             </label>
             <div className="flex gap-3 items-center">
               <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-                className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase px-4 py-2.5 transition-colors disabled:opacity-50 whitespace-nowrap">
+                className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-4 py-2.5 transition-colors disabled:opacity-50 whitespace-nowrap">
                 {uploading ? 'Uploading…' : 'Scegli file'}
               </button>
-              {fileName && <span className="text-xs text-[#6b7280] truncate flex-1">{fileName}</span>}
+              {fileName && <span className="text-xs text-ink-500 truncate flex-1">{fileName}</span>}
               <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,image/*" className="hidden" onChange={handleFile} />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#6b7280] mb-2">Titolo *</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Titolo *</label>
             <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Titolo documento"
-              className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white" />
+              className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white" />
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#6b7280] mb-2">Descrizione</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Descrizione</label>
             <textarea rows={2} value={description} onChange={e => setDescription(e.target.value)} placeholder="Breve descrizione…"
-              className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white resize-none" />
+              className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white resize-none" />
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#6b7280] mb-2">Tag</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Tag</label>
             <TagSelector selected={tags} onChange={setTags} />
           </div>
 
@@ -184,10 +184,10 @@ function AddDocModal({
 
           <div className="flex items-center gap-4 pt-1">
             <button type="submit" disabled={saving || !fileUrl}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50">
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50">
               {saving ? 'Saving…' : 'Aggiungi documento'}
             </button>
-            <button type="button" onClick={onClose} className="text-sm text-[#6b7280] hover:text-[#0a0a0a]">Annulla</button>
+            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Annulla</button>
           </div>
         </form>
       </div>
@@ -207,28 +207,28 @@ function DocRow({ doc, onDelete }: { doc: Doc; onDelete: () => void }) {
   return (
     <div className="flex items-start gap-4 px-6 py-4 border-b border-black/5 last:border-b-0 hover:bg-[#f9f9f9] transition-colors">
       {/* Type icon */}
-      <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center border ${isPdf ? 'border-red-200 bg-red-50' : isDoc ? 'border-blue-200 bg-blue-50' : 'border-[#e5e5e5] bg-[#f5f5f5]'}`}>
+      <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center border ${isPdf ? 'border-red-200 bg-red-50' : isDoc ? 'border-blue-200 bg-blue-50' : 'border-line bg-paper-stone'}`}>
         <span className="text-[9px] font-bold uppercase tracking-widest">{ext}</span>
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-[#0a0a0a]">{doc.title}</p>
-        {doc.description && <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2">{doc.description}</p>}
+        <p className="text-sm font-semibold text-ink-900">{doc.title}</p>
+        {doc.description && <p className="text-xs text-ink-500 mt-0.5 line-clamp-2">{doc.description}</p>}
         <div className="flex flex-wrap gap-1 mt-1.5">
           {doc.tags.map(tag => (
-            <span key={tag} className="text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 border border-[#e5e5e5] text-[#6b7280]">
+            <span key={tag} className="text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 border border-line text-ink-500">
               {tag}
             </span>
           ))}
         </div>
-        <p className="text-[10px] text-[#9ca3af] mt-1">
+        <p className="text-[10px] text-ink-400 mt-1">
           {doc.uploaded_by} · {new Date(doc.created_at).toLocaleDateString('it-IT')}
         </p>
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
         <a href={doc.file_url} target="_blank" rel="noopener noreferrer"
-          className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors">
+          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors">
           Download
         </a>
         <button
@@ -266,14 +266,14 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
   return (
     <div className="max-w-5xl mx-auto px-8 py-10">
       <div className="mb-8">
-        <h2 className="font-serif text-2xl font-bold text-[#0a0a0a]">Archivio Documenti</h2>
-        <div className="w-10 h-0.5 bg-[#1a4a3a] mt-2" />
-        <p className="text-xs text-[#6b7280] mt-3">Documenti interni — PDF, DOCX, immagini. Visibile solo agli admin.</p>
+        <h2 className="font-serif text-2xl font-bold text-ink-900">Archivio Documenti</h2>
+        <div className="w-10 h-0.5 bg-forest mt-2" />
+        <p className="text-xs text-ink-500 mt-3">Documenti interni — PDF, DOCX, immagini. Visibile solo agli admin.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <button onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide uppercase px-6 py-2.5 transition-colors">
+          className="inline-flex items-center gap-2 bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide uppercase px-6 py-2.5 transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
@@ -285,13 +285,13 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => setActiveTag(null)}
-              className={`text-xs px-3 py-1.5 border transition-colors ${!activeTag ? 'bg-[#0a0a0a] text-white border-[#0a0a0a]' : 'border-[#e5e5e5] text-[#6b7280] hover:border-[#0a0a0a]'}`}
+              className={`text-xs px-3 py-1.5 border transition-colors ${!activeTag ? 'bg-[#0a0a0a] text-white border-[#0a0a0a]' : 'border-line text-ink-500 hover:border-[#0a0a0a]'}`}
             >
               Tutti
             </button>
             {allTags.map(tag => (
               <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                className={`text-xs px-3 py-1.5 border transition-colors ${activeTag === tag ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'border-[#e5e5e5] text-[#6b7280] hover:border-[#1a4a3a]'}`}>
+                className={`text-xs px-3 py-1.5 border transition-colors ${activeTag === tag ? 'bg-forest text-white border-forest' : 'border-line text-ink-500 hover:border-forest'}`}>
                 {tag}
               </button>
             ))}
@@ -300,11 +300,11 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
       </div>
 
       {filtered.length === 0 ? (
-        <div className="bg-white border border-black/10 px-6 py-12 text-center text-sm text-[#6b7280]">
+        <div className="bg-white border border-line-faint px-6 py-12 text-center text-sm text-ink-500">
           {activeTag ? `Nessun documento con tag "${activeTag}".` : 'Nessun documento ancora. Carica il primo!'}
         </div>
       ) : (
-        <div className="bg-white border border-black/10">
+        <div className="bg-white border border-line-faint">
           {filtered.map(doc => (
             <DocRow key={doc.id} doc={doc} onDelete={() => handleDelete(doc.id)} />
           ))}

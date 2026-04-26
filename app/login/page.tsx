@@ -100,7 +100,7 @@ function LoginForm() {
 
           {/* Form card */}
           <div
-            className="bg-white p-8 border border-[#e5e5e5]"
+            className="bg-white p-8 border border-line"
             style={{ animation: 'heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.3s both' }}
           >
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -116,7 +116,7 @@ function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                  className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
                 />
               </div>
 
@@ -125,7 +125,7 @@ function LoginForm() {
                   <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-black">
                     Password
                   </label>
-                  <Link href="/forgot-password" className="underline-grow text-xs text-[#1a4a3a]">
+                  <Link href="/forgot-password" className="underline-grow text-xs text-forest">
                     Forgot password?
                   </Link>
                 </div>
@@ -137,12 +137,12 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                  className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
                 />
               </div>
 
               {successMsg && (
-                <p className="text-[#1a4a3a] text-xs border-l-2 border-[#1a4a3a] pl-3 py-1">
+                <p className="text-forest text-xs border-l-2 border-forest pl-3 py-1">
                   {successMsg}
                 </p>
               )}
@@ -157,7 +157,7 @@ function LoginForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  className="w-full bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide py-3.5 px-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                   style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1)' }}
                 >
                   {loading ? (
@@ -179,7 +179,7 @@ function LoginForm() {
               Don&apos;t have an account?{' '}
               <a
                 href="mailto:info@alatainvestmentclub.com"
-                className="underline-grow text-[#1a4a3a] font-medium"
+                className="underline-grow text-forest font-medium"
               >
                 Contact the administrator.
               </a>
@@ -187,7 +187,7 @@ function LoginForm() {
           </div>
 
           <div className="mt-6 text-center" style={{ animation: 'heroFadeUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.6s both' }}>
-            <Link href="/" className="underline-grow text-xs text-black hover:text-[#0a0a0a] tracking-wide transition-colors">
+            <Link href="/" className="underline-grow text-xs text-black hover:text-ink-900 tracking-wide transition-colors">
               ← Back to homepage
             </Link>
           </div>

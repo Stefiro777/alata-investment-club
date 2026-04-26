@@ -186,7 +186,7 @@ function EventDetailModal({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center text-[#6b7280] hover:text-[#0a0a0a] transition-colors text-lg"
+          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center text-ink-500 hover:text-ink-900 transition-colors text-lg"
           aria-label="Chiudi"
         >
           ✕
@@ -209,18 +209,18 @@ function EventDetailModal({
         <div className="p-8">
           <div className="flex items-center gap-3 mb-4 flex-wrap">
             {item.data_pubblicazione && (
-              <span className="text-[#6b7280] text-xs tracking-widest uppercase">
+              <span className="text-ink-500 text-xs tracking-widest uppercase">
                 {formatDate(item.data_pubblicazione)}
               </span>
             )}
             {item.tag && (
-              <span className="text-xs px-2.5 py-0.5 bg-[#1a4a3a] text-white tracking-wide">
+              <span className="text-xs px-2.5 py-0.5 bg-forest text-white tracking-wide">
                 {item.tag}
               </span>
             )}
           </div>
 
-          <h2 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-6 leading-snug">
+          <h2 className="font-serif text-2xl font-bold text-ink-900 mb-6 leading-snug">
             {item.titolo}
           </h2>
 
@@ -235,7 +235,7 @@ function EventDetailModal({
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-6 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
+              className="inline-flex items-center gap-1.5 mt-6 text-forest text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
             >
               Read on LinkedIn
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,10 +266,10 @@ function EventCard({
   const hasText = !!(item.full_description || item.descrizione)
 
   return (
-    <article className="group flex flex-col h-full border border-black/10 border-l-4 border-l-[#1a4a3a] hover:border-[#1a4a3a] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+    <article className="group flex flex-col h-full border border-line-faint border-l-4 border-l-[#1a4a3a] hover:border-forest overflow-hidden transition-all duration-base hover:-translate-y-1 hover:shadow-lg" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* Photo area */}
       <div
-        className={`relative h-64 bg-[#f5f5f5] overflow-hidden ${hasGallery ? 'cursor-pointer' : ''}`}
+        className={`relative h-64 bg-paper-stone overflow-hidden ${hasGallery ? 'cursor-pointer' : ''}`}
         onClick={hasGallery ? () => onOpenGallery(item) : undefined}
       >
         {coverPhoto ? (
@@ -286,7 +286,7 @@ function EventCard({
           </>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-[#1a4a3a]/5">
-            <svg className="w-10 h-10 text-[#1a4a3a]/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-10 h-10 text-forest/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
@@ -307,23 +307,23 @@ function EventCard({
       <div className="p-6 flex flex-col flex-1">
         <div className="flex items-center justify-between gap-2 mb-3">
           {item.data_pubblicazione ? (
-            <span className="text-[#6b7280] text-xs tracking-widest uppercase">
+            <span className="text-ink-500 text-xs tracking-widest uppercase">
               {formatDate(item.data_pubblicazione)}
             </span>
           ) : <span />}
           {item.tag && (
-            <span className="shrink-0 text-xs px-2.5 py-0.5 bg-[#1a4a3a] text-white tracking-wide">
+            <span className="shrink-0 text-xs px-2.5 py-0.5 bg-forest text-white tracking-wide">
               {item.tag}
             </span>
           )}
         </div>
 
-        <h3 className="font-serif text-lg font-medium text-[#0a0a0a] leading-snug mb-3 group-hover:text-[#1a4a3a] transition-colors flex-1">
+        <h3 className="font-serif text-lg font-medium text-ink-900 leading-snug mb-3 group-hover:text-forest transition-colors flex-1">
           {item.titolo}
         </h3>
 
         {(item.short_description || item.descrizione) && (
-          <p className="text-[#6b7280] text-sm leading-relaxed mb-4">
+          <p className="text-ink-500 text-sm leading-relaxed mb-4">
             {item.short_description ?? item.descrizione}
           </p>
         )}
@@ -334,7 +334,7 @@ function EventCard({
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] transition-colors duration-150"
+              className="inline-flex items-center gap-1.5 text-ink-500 text-xs font-medium tracking-wide uppercase hover:text-forest transition-colors duration-fast"
               onClick={e => e.stopPropagation()}
             >
               LinkedIn
@@ -347,7 +347,7 @@ function EventCard({
             {hasGallery && (
               <button
                 onClick={() => onOpenGallery(item)}
-                className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs font-medium tracking-wide uppercase hover:text-[#1a4a3a] transition-colors"
+                className="inline-flex items-center gap-1.5 text-ink-500 text-xs font-medium tracking-wide uppercase hover:text-forest transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -358,7 +358,7 @@ function EventCard({
             {(hasText || coverPhoto) && (
               <button
                 onClick={() => onOpenDetail(item)}
-                className="inline-flex items-center gap-1.5 text-[#1a4a3a] text-xs font-medium tracking-wide uppercase relative after:absolute after:bottom-[-2px] after:left-0 after:h-px after:w-0 after:bg-[#1a4a3a] hover:after:w-full after:transition-all after:duration-300 hover:gap-3 transition-all duration-150"
+                className="inline-flex items-center gap-1.5 text-forest text-xs font-medium tracking-wide uppercase relative after:absolute after:bottom-[-2px] after:left-0 after:h-px after:w-0 after:bg-forest hover:after:w-full after:transition-all after:duration-300 hover:gap-3 transition-all duration-150"
               >
                 Read more
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -445,7 +445,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
       {/* Search bar */}
       <div className="relative mb-10 max-w-md">
         <svg
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b7280]"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -457,7 +457,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
           value={query}
           onChange={handleSearch}
           placeholder="Search events…"
-          className="w-full pl-10 pr-4 py-3 border border-black/10 focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] placeholder-[#6b7280] bg-white transition-colors"
+          className="w-full pl-10 pr-4 py-3 border border-line-faint focus:outline-none focus:border-forest text-sm text-ink-900 placeholder-[#6b7280] bg-white transition-colors"
         />
       </div>
 
@@ -469,7 +469,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
             <button
               key={label}
               onClick={() => handleTag(value)}
-              className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150"
+              className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast"
               style={
                 active
                   ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
@@ -484,14 +484,14 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
 
       {/* Results count */}
       {!query.trim() && !activeTag && (
-        <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-10">
+        <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-10">
           {items.length} {items.length === 1 ? 'item' : 'items'}
         </p>
       )}
 
       {/* Grid or empty state */}
       {filtered.length === 0 ? (
-        <div className="py-20 text-center text-[#6b7280]">
+        <div className="py-20 text-center text-ink-500">
           <p className="text-sm tracking-wide">No events found.</p>
         </div>
       ) : (
@@ -513,7 +513,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage - 1)}
                 disabled={safePage === 0}
-                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-[#1a4a3a] hover:text-[#1a4a3a] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-forest hover:text-forest disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                 aria-label="Previous"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -527,10 +527,10 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
                   key={i}
                   onClick={() => goTo(i)}
                   aria-label={`Page ${i + 1}`}
-                  className={`rounded-full transition-all duration-300 ${
+                  className={`rounded-full transition-all duration-base ${
                     i === safePage
-                      ? 'w-2.5 h-2.5 bg-[#1a4a3a]'
-                      : 'w-2 h-2 bg-transparent border border-[#1a4a3a]/40 hover:border-[#1a4a3a]/70'
+                      ? 'w-2.5 h-2.5 bg-forest'
+                      : 'w-2 h-2 bg-transparent border border-forest/40 hover:border-forest/70'
                   }`}
                 />
               ))}
@@ -539,7 +539,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage + 1)}
                 disabled={safePage === totalPages - 1}
-                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-[#1a4a3a] hover:text-[#1a4a3a] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-forest hover:text-forest disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                 aria-label="Next"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

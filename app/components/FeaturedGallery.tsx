@@ -82,7 +82,7 @@ function GalleryPanel({ media }: { media: MediaItem[] }) {
 
   if (media.length === 0) {
     return (
-      <div className="flex items-center justify-center bg-[#f5f5f5] h-72 text-[#9ca3af] text-sm">
+      <div className="flex items-center justify-center bg-paper-stone h-72 text-ink-400 text-sm">
         No media
       </div>
     )
@@ -92,10 +92,10 @@ function GalleryPanel({ media }: { media: MediaItem[] }) {
 
   return (
     <div>
-      <div className="overflow-hidden bg-[#f5f5f5]" style={{ boxShadow: '0 4px 32px rgba(0,0,0,0.10)' }}>
+      <div className="overflow-hidden bg-paper-stone" style={{ boxShadow: '0 4px 32px rgba(0,0,0,0.10)' }}>
         <MediaDisplay item={current} />
         {current.caption && (
-          <p className="text-xs text-[#6b7280] px-4 py-2 bg-white border-t border-black/5">{current.caption}</p>
+          <p className="text-xs text-ink-500 px-4 py-2 bg-white border-t border-black/5">{current.caption}</p>
         )}
       </div>
       {media.length > 1 && (
@@ -104,7 +104,7 @@ function GalleryPanel({ media }: { media: MediaItem[] }) {
             <button
               key={i}
               onClick={() => setActive(i)}
-              className={`flex-shrink-0 border-2 transition-colors overflow-hidden ${i === active ? 'border-[#1a4a3a]' : 'border-transparent opacity-60 hover:opacity-80'}`}
+              className={`flex-shrink-0 border-2 transition-colors overflow-hidden ${i === active ? 'border-forest' : 'border-transparent opacity-60 hover:opacity-80'}`}
               style={{ width: 56, height: 40 }}
               title={m.caption ?? `Item ${i + 1}`}
             >
@@ -113,7 +113,7 @@ function GalleryPanel({ media }: { media: MediaItem[] }) {
                 <img src={m.url} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-[#1a4a3a]/10 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-[#1a4a3a]" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-forest" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
@@ -183,7 +183,7 @@ function GallerySection({
             </FadeSlide>
 
             <FadeSlide visible={textVisible} delay={s(2)} xOffset={xText}>
-              <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
+              <div className="w-8 h-px bg-forest mb-6" />
             </FadeSlide>
 
             <FadeSlide visible={textVisible} delay={s(3)} xOffset={xText}>
@@ -225,9 +225,9 @@ export default function FeaturedGallery({
     <div>
       <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-24 mb-16">
         <Reveal>
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">{subtitle}</p>
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] mb-4">{title}</h2>
-          <div className="w-10 h-px bg-[#1a4a3a]" />
+          <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">{subtitle}</p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-4">{title}</h2>
+          <div className="w-10 h-px bg-forest" />
         </Reveal>
       </div>
 

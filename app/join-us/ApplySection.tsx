@@ -88,7 +88,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
           href="https://linktr.ee/alatainvestmentclub"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block bg-white text-[#1a4a3a] text-sm font-medium tracking-wide px-8 py-3.5 hover:bg-white/90 transition-colors duration-150"
+          className="inline-block bg-white text-forest text-sm font-medium tracking-wide px-8 py-3.5 hover:bg-white/90 transition-colors duration-fast"
         >
           Follow us →
         </a>
@@ -101,7 +101,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="inline-block bg-white text-[#1a4a3a] text-base font-medium tracking-wide px-12 py-5 hover:bg-white/90 transition-colors duration-150"
+        className="inline-block bg-white text-forest text-base font-medium tracking-wide px-12 py-5 hover:bg-white/90 transition-colors duration-fast"
       >
         Apply Now
       </button>
@@ -115,14 +115,14 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
           <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl" style={{ background: '#D6D3CE' }}>
 
             {/* Modal header */}
-            <div className="flex items-center justify-between px-8 py-6 border-b border-[#e5e5e5]">
+            <div className="flex items-center justify-between px-8 py-6 border-b border-line">
               <div>
-                <h3 className="font-serif text-xl font-bold text-[#0a0a0a]">Application</h3>
-                <p className="text-xs text-[#6b7280] mt-0.5">Alata Investment Club</p>
+                <h3 className="font-serif text-xl font-bold text-ink-900">Application</h3>
+                <p className="text-xs text-ink-500 mt-0.5">Alata Investment Club</p>
               </div>
               <button
                 onClick={closeModal}
-                className="text-[#6b7280] hover:text-[#0a0a0a] transition-colors p-1"
+                className="text-ink-500 hover:text-ink-900 transition-colors p-1"
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,15 +135,15 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
             <div className="px-8 py-6">
               {submitted ? (
                 <div className="py-8 text-center">
-                  <p className="font-serif text-2xl font-bold text-[#0a0a0a] mb-3">
+                  <p className="font-serif text-2xl font-bold text-ink-900 mb-3">
                     Application received.
                   </p>
-                  <p className="text-[#6b7280] text-sm mb-6">
+                  <p className="text-ink-500 text-sm mb-6">
                     Thank you for applying. We will be in touch shortly.
                   </p>
                   <button
                     onClick={closeModal}
-                    className="text-sm text-[#1a4a3a] hover:underline"
+                    className="text-sm text-forest hover:underline"
                   >
                     Close
                   </button>
@@ -154,7 +154,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                   {/* First / Last name */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                      <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         First Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -162,11 +162,11 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={firstName}
                         onChange={e => setFirstName(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                      <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         Last Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -174,7 +174,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={lastName}
                         onChange={e => setLastName(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -182,7 +182,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                   {/* Email / Telephone */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                      <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         Email <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -190,11 +190,11 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                      <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         Telephone Number
                       </label>
                       <input
@@ -202,7 +202,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         value={telephoneNumber}
                         onChange={e => setTelephoneNumber(e.target.value)}
                         placeholder="e.g. +39 333 123 4567"
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -210,14 +210,14 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                   {/* Year of Study / Degree */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                      <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         Year of Study <span className="text-red-500">*</span>
                       </label>
                       <select
                         required
                         value={yearOfStudy}
                         onChange={e => setYearOfStudy(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors appearance-none"
+                        className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors appearance-none"
                       >
                         <option value="" disabled>Select…</option>
                         {YEAR_OPTIONS.map(y => (
@@ -226,7 +226,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                      <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         Degree Programme <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -235,7 +235,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         value={degreeProgramme}
                         onChange={e => setDegreeProgramme(e.target.value)}
                         placeholder="e.g. Economics"
-                        className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                        className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                       />
                     </div>
                   </div>
@@ -243,10 +243,10 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                   {/* Motivation */}
                   <div>
                     <div className="flex items-end justify-between mb-2">
-                      <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280]">
+                      <label className="block text-xs font-medium tracking-wide uppercase text-ink-500">
                         Motivation <span className="text-red-500">*</span>
                       </label>
-                      <span className={`text-xs ${wordCount > 200 ? 'text-red-500 font-medium' : 'text-[#6b7280]'}`}>
+                      <span className={`text-xs ${wordCount > 200 ? 'text-red-500 font-medium' : 'text-ink-500'}`}>
                         {wordCount} / 200 words
                       </span>
                     </div>
@@ -261,7 +261,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         el.style.height = el.scrollHeight + 'px'
                       }}
                       placeholder="Why do you want to join Alata Investment Club?"
-                      className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors resize-none overflow-hidden"
+                      className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors resize-none overflow-hidden"
                       style={{ height: 'auto' }}
                     />
                   </div>
@@ -276,13 +276,13 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                       onChange={e => setPrivacyConsent(e.target.checked)}
                       className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#1a4a3a]"
                     />
-                    <label htmlFor="privacy-consent" className="text-xs text-[#6b7280] leading-relaxed cursor-pointer">
+                    <label htmlFor="privacy-consent" className="text-xs text-ink-500 leading-relaxed cursor-pointer">
                       I have read and accept the{' '}
                       <Link
                         href="/privacy-policy"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#1a4a3a] underline hover:text-[#123a2d]"
+                        className="text-forest underline hover:text-[#123a2d]"
                       >
                         Privacy Policy
                       </Link>{' '}
@@ -298,14 +298,14 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                     <button
                       type="submit"
                       disabled={submitting || wordCount > 200 || !privacyConsent}
-                      className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? 'Sending…' : 'Submit Application'}
                     </button>
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="text-sm text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors"
+                      className="text-sm text-ink-500 hover:text-ink-900 tracking-wide transition-colors"
                     >
                       Cancel
                     </button>

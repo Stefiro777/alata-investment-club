@@ -47,19 +47,19 @@ function PhotoInput({
 
   return (
     <div>
-      <label className="block text-xs text-[#6b7280] mb-1">Photo</label>
+      <label className="block text-xs text-ink-500 mb-1">Photo</label>
       <div className="flex gap-2 items-center">
         <input
           value={currentUrl}
           onChange={e => onChange(e.target.value)}
-          className="flex-1 px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
+          className="flex-1 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
           placeholder="https://… or upload below"
         />
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
-          className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-3 py-2 transition-colors duration-150 disabled:opacity-50 whitespace-nowrap"
+          className="flex-shrink-0 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-2 transition-colors duration-fast disabled:opacity-50 whitespace-nowrap"
         >
           {uploading ? 'Uploading…' : 'Upload'}
         </button>
@@ -68,7 +68,7 @@ function PhotoInput({
       {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
       {currentUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={currentUrl} alt="preview" className="mt-2 h-14 w-14 rounded-full object-cover object-top border border-[#e5e5e5]" />
+        <img src={currentUrl} alt="preview" className="mt-2 h-14 w-14 rounded-full object-cover object-top border border-line" />
       )}
     </div>
   )
@@ -120,7 +120,7 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150"
+        className="flex items-center gap-2 bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -131,26 +131,26 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-black/10 p-6 space-y-4">
-      <p className="text-sm font-medium text-[#0a0a0a]">New member</p>
+    <form onSubmit={handleSubmit} className="bg-white border border-line-faint p-6 space-y-4">
+      <p className="text-sm font-medium text-ink-900">New member</p>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs text-[#6b7280] mb-1">Name *</label>
+          <label className="block text-xs text-ink-500 mb-1">Name *</label>
           <input
             required
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm"
+            className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm"
             placeholder="John Doe"
           />
         </div>
         <div>
-          <label className="block text-xs text-[#6b7280] mb-1">Role *</label>
+          <label className="block text-xs text-ink-500 mb-1">Role *</label>
           <input
             required
             value={role}
             onChange={e => setRole(e.target.value)}
-            className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm"
+            className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm"
             placeholder="President"
           />
         </div>
@@ -158,11 +158,11 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
           <PhotoInput currentUrl={photoUrl} onChange={setPhotoUrl} />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs text-[#6b7280] mb-1">LinkedIn URL</label>
+          <label className="block text-xs text-ink-500 mb-1">LinkedIn URL</label>
           <input
             value={linkedinUrl}
             onChange={e => setLinkedinUrl(e.target.value)}
-            className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm"
+            className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm"
             placeholder="https://linkedin.com/in/…"
           />
         </div>
@@ -172,14 +172,14 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
         <button
           type="submit"
           disabled={saving}
-          className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50"
+          className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50"
         >
           {saving ? '…' : 'Save'}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-xs text-[#6b7280] hover:text-[#0a0a0a] transition-colors"
+          className="text-xs text-ink-500 hover:text-ink-900 transition-colors"
         >
           Cancel
         </button>
@@ -254,12 +254,12 @@ function MemberRow({
       onDragStart={dragHandlers ? e => dragHandlers.onDragStart(e, member.id) : undefined}
       onDragOver={dragHandlers ? e => dragHandlers.onDragOver(e, member.id) : undefined}
       onDrop={dragHandlers ? e => dragHandlers.onDrop(e) : undefined}
-      className="bg-white border border-black/10"
+      className="bg-white border border-line-faint"
     >
       {/* Header row */}
       <div className="flex items-center gap-3 px-4 py-3">
         {dragHandlers && (
-          <div className="cursor-grab active:cursor-grabbing text-[#9ca3af] hover:text-[#1a4a3a] transition-colors flex-shrink-0">
+          <div className="cursor-grab active:cursor-grabbing text-ink-400 hover:text-forest transition-colors flex-shrink-0">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <circle cx="7" cy="5" r="1.5" /><circle cx="13" cy="5" r="1.5" />
               <circle cx="7" cy="10" r="1.5" /><circle cx="13" cy="10" r="1.5" />
@@ -271,24 +271,24 @@ function MemberRow({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={member.photo_url} alt={member.name} className="w-8 h-8 rounded-full object-cover object-top flex-shrink-0" />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-[#1a4a3a] flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-forest flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-medium">{member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#0a0a0a] truncate">{member.name}</p>
-          <p className="text-xs text-[#6b7280] truncate">{member.role}</p>
+          <p className="text-sm font-medium text-ink-900 truncate">{member.name}</p>
+          <p className="text-xs text-ink-500 truncate">{member.role}</p>
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-shrink-0 text-xs text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1.5 hover:bg-[#1a4a3a] hover:text-white transition-colors duration-150"
+          className="flex-shrink-0 text-xs text-forest border border-forest px-3 py-1.5 hover:bg-forest hover:text-white transition-colors duration-fast"
         >
           {expanded ? 'Close' : 'Edit'}
         </button>
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="flex-shrink-0 text-xs text-red-500 border border-red-300 px-3 py-1.5 hover:bg-red-500 hover:text-white transition-colors duration-150 disabled:opacity-40"
+          className="flex-shrink-0 text-xs text-red-500 border border-red-300 px-3 py-1.5 hover:bg-red-500 hover:text-white transition-colors duration-fast disabled:opacity-40"
         >
           {deleting ? '…' : 'Delete'}
         </button>
@@ -296,33 +296,33 @@ function MemberRow({
 
       {/* Edit form */}
       {expanded && (
-        <form onSubmit={handleUpdate} className="border-t border-black/5 px-4 py-4 space-y-3 bg-[#fafafa]">
+        <form onSubmit={handleUpdate} className="border-t border-black/5 px-4 py-4 space-y-3 bg-paper-cool">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-[#6b7280] mb-1">Name</label>
+              <label className="block text-xs text-ink-500 mb-1">Name</label>
               <input
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
+                className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
               />
             </div>
             <div>
-              <label className="block text-xs text-[#6b7280] mb-1">Role</label>
+              <label className="block text-xs text-ink-500 mb-1">Role</label>
               <input
                 value={role}
                 onChange={e => setRole(e.target.value)}
-                className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
+                className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
               />
             </div>
             <div className="col-span-2">
               <PhotoInput currentUrl={photoUrl} onChange={setPhotoUrl} />
             </div>
             <div className="col-span-2">
-              <label className="block text-xs text-[#6b7280] mb-1">LinkedIn URL</label>
+              <label className="block text-xs text-ink-500 mb-1">LinkedIn URL</label>
               <input
                 value={linkedinUrl}
                 onChange={e => setLinkedinUrl(e.target.value)}
-                className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
+                className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
                 placeholder="https://linkedin.com/in/…"
               />
             </div>
@@ -332,11 +332,11 @@ function MemberRow({
             <button
               type="submit"
               disabled={saving}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-150 disabled:opacity-50"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-fast disabled:opacity-50"
             >
               {saving ? '…' : 'Save'}
             </button>
-            {saved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+            {saved && <span className="text-xs text-forest font-medium">Saved</span>}
           </div>
         </form>
       )}
@@ -425,22 +425,22 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
           className="flex items-center gap-3 group text-left"
         >
           <div>
-            <h2 className="font-serif text-2xl font-bold text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors">
+            <h2 className="font-serif text-2xl font-bold text-ink-900 group-hover:text-forest transition-colors">
               {title}
-              <span className="ml-2 text-base font-normal text-[#9ca3af]">({members.length})</span>
+              <span className="ml-2 text-base font-normal text-ink-400">({members.length})</span>
             </h2>
-            <div className="w-10 h-0.5 bg-[#1a4a3a] mt-2" />
+            <div className="w-10 h-0.5 bg-forest mt-2" />
           </div>
           <svg
-            className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0 mt-1"
+            className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0 mt-1"
             style={{ transform: listOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        {savingOrder && <span className="text-xs text-[#6b7280]">Saving order…</span>}
-        {orderSaved && <span className="text-xs text-[#1a4a3a] font-medium">Order saved</span>}
+        {savingOrder && <span className="text-xs text-ink-500">Saving order…</span>}
+        {orderSaved && <span className="text-xs text-forest font-medium">Order saved</span>}
       </div>
 
       {/* Collapsible body */}
@@ -448,7 +448,7 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
         <div style={{ overflow: 'hidden' }}>
           {/* Search */}
           <div className="relative mb-4 mt-2">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
             </svg>
             <input
@@ -456,12 +456,12 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by name or role…"
-              className="w-full pl-9 pr-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
+              className="w-full pl-9 pr-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
             />
           </div>
 
           {filtered.length === 0 ? (
-            <p className="text-sm text-[#6b7280] mb-6">
+            <p className="text-sm text-ink-500 mb-6">
               {search.trim() ? 'No results.' : 'No members yet.'}
             </p>
           ) : (

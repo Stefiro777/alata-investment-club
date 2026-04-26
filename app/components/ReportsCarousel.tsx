@@ -75,17 +75,17 @@ function ReportCard({ item }: { item: Contenuto }) {
   const preview = getPreview(item.descrizione ?? item.titolo)
 
   return (
-    <article className="flex flex-col bg-white border border-black/10 hover:border-black/25 hover:shadow-md transition-all duration-200 p-6 h-full">
+    <article className="flex flex-col bg-white border border-line-faint hover:border-black/25 hover:shadow-md transition-all duration-fast p-6 h-full">
       {item.data_pubblicazione && (
-        <span className="text-[#6b7280] text-xs tracking-widest uppercase mb-3">
+        <span className="text-ink-500 text-xs tracking-widest uppercase mb-3">
           {formatDate(item.data_pubblicazione)}
         </span>
       )}
-      <h3 className="font-serif text-xl font-bold text-[#0a0a0a] leading-snug mb-3">
+      <h3 className="font-serif text-xl font-bold text-ink-900 leading-snug mb-3">
         {title}
       </h3>
       {preview && (
-        <p className="text-[#6b7280] text-sm leading-relaxed flex-1">
+        <p className="text-ink-500 text-sm leading-relaxed flex-1">
           {preview}
         </p>
       )}
@@ -95,7 +95,7 @@ function ReportCard({ item }: { item: Contenuto }) {
             href={getLinkedInUrl(item.link)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 border border-[#1a4a3a] text-[#1a4a3a] bg-transparent hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
+            className="inline-flex items-center justify-center gap-1.5 border border-forest text-forest bg-transparent hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast"
           >
             Read on LinkedIn
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +156,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
       {/* Search bar */}
       <div className="relative mb-10 max-w-md">
         <svg
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b7280]"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -168,13 +168,13 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
           value={search}
           onChange={handleSearch}
           placeholder="Search reports…"
-          className="w-full pl-10 pr-4 py-3 border border-black/10 focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] placeholder-[#6b7280] bg-white transition-colors"
+          className="w-full pl-10 pr-4 py-3 border border-line-faint focus:outline-none focus:border-forest text-sm text-ink-900 placeholder-[#6b7280] bg-white transition-colors"
         />
       </div>
 
       {/* No results */}
       {filtered.length === 0 ? (
-        <div className="py-16 text-center text-[#6b7280]">
+        <div className="py-16 text-center text-ink-500">
           <p className="text-sm tracking-wide">No results found.</p>
         </div>
       ) : (
@@ -195,7 +195,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage - 1)}
                 disabled={safePage === 0}
-                className="w-9 h-9 flex items-center justify-center bg-[#1a4a3a] hover:bg-[#143d30] text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center bg-forest hover:bg-[#143d30] text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                 aria-label="Previous"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,10 +209,10 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
                   key={i}
                   onClick={() => goTo(i)}
                   aria-label={`Page ${i + 1}`}
-                  className={`rounded-full transition-all duration-300 ${
+                  className={`rounded-full transition-all duration-base ${
                     i === safePage
-                      ? 'w-2.5 h-2.5 bg-[#1a4a3a]'
-                      : 'w-2 h-2 bg-transparent border border-[#1a4a3a]/40 hover:border-[#1a4a3a]/70'
+                      ? 'w-2.5 h-2.5 bg-forest'
+                      : 'w-2 h-2 bg-transparent border border-forest/40 hover:border-forest/70'
                   }`}
                 />
               ))}
@@ -221,7 +221,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage + 1)}
                 disabled={safePage === totalPages - 1}
-                className="w-9 h-9 flex items-center justify-center bg-[#1a4a3a] hover:bg-[#143d30] text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center bg-forest hover:bg-[#143d30] text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                 aria-label="Next"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -35,9 +35,9 @@ export default async function DashboardPage() {
     'Member'
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="min-h-screen bg-paper-stone">
       {/* Top bar */}
-      <div className="bg-[#1a4a3a] text-white sticky top-0 z-40">
+      <div className="bg-forest text-white sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <a href="/" className="font-serif font-bold text-white text-base leading-tight hover:text-white/80 transition-colors">
@@ -50,7 +50,7 @@ export default async function DashboardPage() {
             {isAdmin && (
               <a
                 href="/admin"
-                className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150"
+                className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast"
               >
                 Admin Panel
               </a>

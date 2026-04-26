@@ -8,8 +8,8 @@ import SyncCalendarButton from '../components/SyncCalendarButton'
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-8">
-      <h2 className="font-serif text-2xl font-bold text-[#1a4a3a]">{title}</h2>
-      <div className="w-8 h-px bg-[#1a4a3a] mt-2" />
+      <h2 className="font-serif text-2xl font-bold text-forest">{title}</h2>
+      <div className="w-8 h-px bg-forest mt-2" />
     </div>
   )
 }
@@ -225,22 +225,22 @@ export default function SettingsClient({
       <section id="settings">
         <SectionHeading title="Settings" />
 
-        <div className="bg-white border border-black/10 p-8 space-y-6">
+        <div className="bg-white border border-line-faint p-8 space-y-6">
           {/* Applications Open */}
           <div className="flex items-center justify-between gap-6">
             <div>
-              <p className="text-sm font-medium text-[#0a0a0a]">Applications Open</p>
-              <p className="text-xs text-[#6b7280] mt-0.5">
+              <p className="text-sm font-medium text-ink-900">Applications Open</p>
+              <p className="text-xs text-ink-500 mt-0.5">
                 Enables or disables the application form on{' '}
                 <span className="font-medium">/join-us</span>.
               </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
-              {settingsSaved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+              {settingsSaved && <span className="text-xs text-forest font-medium">Saved</span>}
               <button
                 onClick={handleToggleApplications}
                 disabled={togglingApps}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${appsOpen ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-fast ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${appsOpen ? 'bg-forest' : 'bg-[#d1d5db]'}`}
                 role="switch"
                 aria-checked={appsOpen}
               >
@@ -254,18 +254,18 @@ export default function SettingsClient({
           {/* Show Prices */}
           <div className="flex items-center justify-between gap-6">
             <div>
-              <p className="text-sm font-medium text-[#0a0a0a]">Show Prices – Career Service</p>
-              <p className="text-xs text-[#6b7280] mt-0.5">
+              <p className="text-sm font-medium text-ink-900">Show Prices – Career Service</p>
+              <p className="text-xs text-ink-500 mt-0.5">
                 Mostra o nasconde i prezzi nella pagina{' '}
                 <span className="font-medium">/career-service</span>.
               </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
-              {priceToggleSaved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+              {priceToggleSaved && <span className="text-xs text-forest font-medium">Saved</span>}
               <button
                 onClick={handleTogglePrices}
                 disabled={togglingPrices}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${pricesVisible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-fast ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${pricesVisible ? 'bg-forest' : 'bg-[#d1d5db]'}`}
                 role="switch"
                 aria-checked={pricesVisible}
               >
@@ -279,19 +279,19 @@ export default function SettingsClient({
           {/* Show Alumni Page */}
           <div className="flex items-center justify-between gap-6">
             <div>
-              <p className="text-sm font-medium text-[#0a0a0a]">Show Alumni Page</p>
-              <p className="text-xs text-[#6b7280] mt-0.5">
+              <p className="text-sm font-medium text-ink-900">Show Alumni Page</p>
+              <p className="text-xs text-ink-500 mt-0.5">
                 Enables or disables the{' '}
                 <span className="font-medium">/team/alumni</span> page and the link in{' '}
                 <span className="font-medium">/team</span>.
               </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
-              {alumniToggleSaved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+              {alumniToggleSaved && <span className="text-xs text-forest font-medium">Saved</span>}
               <button
                 onClick={handleToggleAlumni}
                 disabled={togglingAlumni}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${alumniVisible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-fast ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${alumniVisible ? 'bg-forest' : 'bg-[#d1d5db]'}`}
                 role="switch"
                 aria-checked={alumniVisible}
               >
@@ -305,18 +305,18 @@ export default function SettingsClient({
           {/* Show Alumni Reviews */}
           <div className="flex items-center justify-between gap-6">
             <div>
-              <p className="text-sm font-medium text-[#0a0a0a]">Show Alumni Reviews</p>
-              <p className="text-xs text-[#6b7280] mt-0.5">
+              <p className="text-sm font-medium text-ink-900">Show Alumni Reviews</p>
+              <p className="text-xs text-ink-500 mt-0.5">
                 Mostra o nasconde la sezione recensioni in{' '}
                 <span className="font-medium">/team/alumni</span>.
               </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
-              {alumniReviewsSaved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+              {alumniReviewsSaved && <span className="text-xs text-forest font-medium">Saved</span>}
               <button
                 onClick={handleToggleAlumniReviews}
                 disabled={togglingAlumniReviews}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${alumniReviewsVisible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-fast ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${alumniReviewsVisible ? 'bg-forest' : 'bg-[#d1d5db]'}`}
                 role="switch"
                 aria-checked={alumniReviewsVisible}
               >
@@ -330,18 +330,18 @@ export default function SettingsClient({
           {/* Show Events Reviews */}
           <div className="flex items-center justify-between gap-6">
             <div>
-              <p className="text-sm font-medium text-[#0a0a0a]">Show Events Reviews</p>
-              <p className="text-xs text-[#6b7280] mt-0.5">
+              <p className="text-sm font-medium text-ink-900">Show Events Reviews</p>
+              <p className="text-xs text-ink-500 mt-0.5">
                 Mostra o nasconde la sezione recensioni in{' '}
                 <span className="font-medium">/events</span>.
               </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
-              {eventsReviewsSaved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+              {eventsReviewsSaved && <span className="text-xs text-forest font-medium">Saved</span>}
               <button
                 onClick={handleToggleEventsReviews}
                 disabled={togglingEventsReviews}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${eventsReviewsVisible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-fast ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${eventsReviewsVisible ? 'bg-forest' : 'bg-[#d1d5db]'}`}
                 role="switch"
                 aria-checked={eventsReviewsVisible}
               >
@@ -354,8 +354,8 @@ export default function SettingsClient({
 
           {/* Prezzi Career Service */}
           <div>
-            <p className="text-sm font-medium text-[#0a0a0a] mb-1">Prezzi Career Service</p>
-            <p className="text-xs text-[#6b7280] mb-4">
+            <p className="text-sm font-medium text-ink-900 mb-1">Prezzi Career Service</p>
+            <p className="text-xs text-ink-500 mb-4">
               Valori mostrati nella pagina <span className="font-medium">/career-service</span>.
             </p>
             <form onSubmit={handleSavePrices} className="space-y-3">
@@ -365,12 +365,12 @@ export default function SettingsClient({
                 { label: 'Career Orientation', value: priceCareer, setter: setPriceCareer },
               ].map(({ label, value, setter }) => (
                 <div key={label} className="flex items-center gap-4">
-                  <span className="text-xs text-[#6b7280] w-40 flex-shrink-0">{label}</span>
+                  <span className="text-xs text-ink-500 w-40 flex-shrink-0">{label}</span>
                   <input
                     type="text"
                     value={value}
                     onChange={e => setter(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                    className="flex-1 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                     placeholder="€29,99"
                   />
                 </div>
@@ -382,11 +382,11 @@ export default function SettingsClient({
                 <button
                   type="submit"
                   disabled={savingPrices}
-                  className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {savingPrices ? '…' : 'Save Prices'}
                 </button>
-                {pricesSaved && <span className="text-xs text-[#1a4a3a] font-medium">Saved</span>}
+                {pricesSaved && <span className="text-xs text-forest font-medium">Saved</span>}
               </div>
             </form>
           </div>
@@ -397,8 +397,8 @@ export default function SettingsClient({
       <section id="invite-member">
         <SectionHeading title="Invite Member" />
 
-        <div className="bg-white border border-black/10 p-8">
-          <p className="text-sm text-[#6b7280] mb-6">
+        <div className="bg-white border border-line-faint p-8">
+          <p className="text-sm text-ink-500 mb-6">
             Send an invitation link by email. The new member will set their password by clicking the link.
           </p>
 
@@ -409,12 +409,12 @@ export default function SettingsClient({
               value={inviteEmail}
               onChange={e => setInviteEmail(e.target.value)}
               placeholder="member@email.com"
-              className="flex-1 px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+              className="flex-1 px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
             />
             <button
               type="submit"
               disabled={inviting}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-3 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {inviting ? '…' : 'Send Invite'}
             </button>
@@ -424,7 +424,7 @@ export default function SettingsClient({
             <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1 mt-4">{inviteError}</p>
           )}
           {inviteSuccess && (
-            <p className="text-[#1a4a3a] text-xs border-l-2 border-[#1a4a3a] pl-3 py-1 mt-4">Invite sent!</p>
+            <p className="text-forest text-xs border-l-2 border-forest pl-3 py-1 mt-4">Invite sent!</p>
           )}
         </div>
       </section>
@@ -439,7 +439,7 @@ export default function SettingsClient({
       <section id="admin-users">
         <SectionHeading title="Admin Users" />
 
-        <div className="bg-white border border-black/10 p-8 space-y-6">
+        <div className="bg-white border border-line-faint p-8 space-y-6">
           <form onSubmit={handleAddAdmin} className="flex gap-3">
             <input
               type="email"
@@ -447,12 +447,12 @@ export default function SettingsClient({
               value={newAdminEmail}
               onChange={e => setNewAdminEmail(e.target.value)}
               placeholder="new@email.com"
-              className="flex-1 px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+              className="flex-1 px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
             />
             <button
               type="submit"
               disabled={addingAdmin}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-3 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {addingAdmin ? '…' : 'Add Admin'}
             </button>
@@ -465,17 +465,17 @@ export default function SettingsClient({
           <div className="space-y-px bg-black/5 rounded-sm">
             {adminUsers.map(email => (
               <div key={email} className="bg-white px-6 py-4 flex items-center justify-between gap-6">
-                <span className="text-sm text-[#0a0a0a] font-medium">
+                <span className="text-sm text-ink-900 font-medium">
                   {email}
                   {email === superadmin && (
-                    <span className="ml-2 text-xs text-[#1a4a3a] tracking-widest uppercase">superadmin</span>
+                    <span className="ml-2 text-xs text-forest tracking-widest uppercase">superadmin</span>
                   )}
                 </span>
                 {email !== superadmin && (
                   <button
                     onClick={() => handleRemoveAdmin(email)}
                     disabled={removingEmail === email}
-                    className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {removingEmail === email ? '…' : 'Remove'}
                   </button>

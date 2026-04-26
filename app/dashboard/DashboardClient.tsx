@@ -95,23 +95,23 @@ function ResourceCard({ resource }: { resource: Resource }) {
       href={resource.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group p-6 border border-black/10 hover:border-[#1a4a3a] bg-white flex flex-col gap-4 transition-colors duration-150 h-full"
+      className="group p-6 border border-line-faint hover:border-forest bg-white flex flex-col gap-4 transition-colors duration-fast h-full"
     >
-      <div className="w-10 h-10 bg-[#f5f5f5] flex items-center justify-center group-hover:bg-[#1a4a3a] transition-colors duration-150 flex-shrink-0">
+      <div className="w-10 h-10 bg-paper-stone flex items-center justify-center group-hover:bg-forest transition-colors duration-fast flex-shrink-0">
         {resource.is_folder
-          ? <FolderIcon className="w-5 h-5 text-[#1a4a3a] group-hover:text-white transition-colors duration-150" />
-          : <FileIcon className="w-5 h-5 text-[#1a4a3a] group-hover:text-white transition-colors duration-150" />
+          ? <FolderIcon className="w-5 h-5 text-forest group-hover:text-white transition-colors duration-fast" />
+          : <FileIcon className="w-5 h-5 text-forest group-hover:text-white transition-colors duration-fast" />
         }
       </div>
       <div className="flex-1">
-        <p className="font-serif text-lg font-semibold text-[#0a0a0a] group-hover:text-[#1a4a3a] leading-snug transition-colors duration-150">
+        <p className="font-serif text-lg font-semibold text-ink-900 group-hover:text-forest leading-snug transition-colors duration-fast">
           {resource.title}
         </p>
         {resource.description && (
-          <p className="text-sm text-[#6b7280] mt-1 leading-relaxed">{resource.description}</p>
+          <p className="text-sm text-ink-500 mt-1 leading-relaxed">{resource.description}</p>
         )}
       </div>
-      <svg className="w-4 h-4 text-[#9ca3af] group-hover:text-[#1a4a3a] mt-auto transition-colors duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 text-ink-400 group-hover:text-forest mt-auto transition-colors duration-fast" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
       </svg>
     </a>
@@ -151,12 +151,12 @@ function WelcomeView({
     <div className="py-16 sm:py-20">
       {/* Greeting */}
       <div className="mb-14">
-        <p className="text-xs tracking-[0.2em] uppercase text-[#1a4a3a] mb-3">Members Area</p>
-        <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] mb-4">
+        <p className="text-xs tracking-[0.2em] uppercase text-forest mb-3">Members Area</p>
+        <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-4">
           Welcome back, {displayName}
         </h2>
-        <div className="w-12 h-px bg-[#1a4a3a] mb-8" />
-        <p className="font-serif italic text-2xl sm:text-3xl text-[#0a0a0a]/70 leading-snug">
+        <div className="w-12 h-px bg-forest mb-8" />
+        <p className="font-serif italic text-2xl sm:text-3xl text-ink-900/70 leading-snug">
           &ldquo;Great investments start with great people.&rdquo;
         </p>
       </div>
@@ -167,25 +167,25 @@ function WelcomeView({
           href="https://www.notion.so/Alata-Investment-Club-3c27ba5ab1374113b820efffa536723e"
           target="_blank"
           rel="noopener noreferrer"
-          className="group bg-white border border-black/10 hover:border-[#1a4a3a] hover:shadow-md px-5 py-3.5 inline-flex items-center gap-4 transition-all duration-150"
+          className="group bg-white border border-line-faint hover:border-forest hover:shadow-md px-5 py-3.5 inline-flex items-center gap-4 transition-all duration-150"
         >
           <div className="flex-1">
-            <p className="font-serif text-base font-bold text-[#1a4a3a] leading-snug">Notion Workspace</p>
+            <p className="font-serif text-base font-bold text-forest leading-snug">Notion Workspace</p>
             <p className="text-xs text-gray-500 leading-relaxed">Tracks all tasks assigned to the club&apos;s divisions.</p>
           </div>
-          <span className="text-xs font-medium text-[#1a4a3a] tracking-wide group-hover:underline flex-shrink-0">Open →</span>
+          <span className="text-xs font-medium text-forest tracking-wide group-hover:underline flex-shrink-0">Open →</span>
         </a>
       </div>
 
       {/* Deadlines & Events */}
       <div className="mb-14">
         <div className="flex items-end justify-between gap-4 mb-1">
-          <h3 className="font-serif text-2xl font-bold text-[#0a0a0a]">Deadlines &amp; Events</h3>
+          <h3 className="font-serif text-2xl font-bold text-ink-900">Deadlines &amp; Events</h3>
           <a
             href="https://www.notion.so/1c4baca2197248999054618cc7f2e8dc?v=32d8bea508ff46bba4d91f5685762c69"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-[#1a4a3a] hover:underline flex items-center gap-1 flex-shrink-0 pb-0.5"
+            className="text-xs text-forest hover:underline flex items-center gap-1 flex-shrink-0 pb-0.5"
           >
             Open Master Calendar in Notion
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,14 +193,14 @@ function WelcomeView({
             </svg>
           </a>
         </div>
-        <div className="w-8 h-px bg-[#1a4a3a] mb-4" />
+        <div className="w-8 h-px bg-forest mb-4" />
         <CalendarEventsList />
       </div>
 
       {/* Quick access cards */}
       <div className="mb-16">
-        <h3 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-1">Club Resources</h3>
-        <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
+        <h3 className="font-serif text-2xl font-bold text-ink-900 mb-1">Club Resources</h3>
+        <div className="w-8 h-px bg-forest mb-6" />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {CATEGORIES.map(cat => {
             const Icon = cat.icon
@@ -209,15 +209,15 @@ function WelcomeView({
               <button
                 key={cat.id}
                 onClick={() => onNavigate(cat.id)}
-                className="group text-left p-5 border border-black/10 hover:border-[#1a4a3a] bg-white transition-colors duration-150"
+                className="group text-left p-5 border border-line-faint hover:border-forest bg-white transition-colors duration-fast"
               >
-                <div className="w-10 h-10 bg-[#f5f5f5] group-hover:bg-[#1a4a3a] flex items-center justify-center transition-colors duration-150 mb-4">
-                  <Icon className="w-5 h-5 text-[#1a4a3a] group-hover:text-white transition-colors duration-150" />
+                <div className="w-10 h-10 bg-paper-stone group-hover:bg-forest flex items-center justify-center transition-colors duration-fast mb-4">
+                  <Icon className="w-5 h-5 text-forest group-hover:text-white transition-colors duration-fast" />
                 </div>
-                <p className="font-serif text-base font-bold text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors leading-tight mb-1">
+                <p className="font-serif text-base font-bold text-ink-900 group-hover:text-forest transition-colors leading-tight mb-1">
                   {cat.label}
                 </p>
-                <p className="text-xs text-[#9ca3af]">{count} {count === 1 ? 'resource' : 'resources'}</p>
+                <p className="text-xs text-ink-400">{count} {count === 1 ? 'resource' : 'resources'}</p>
               </button>
             )
           })}
@@ -227,12 +227,12 @@ function WelcomeView({
       {/* Recently added */}
       {recent.length > 0 && (
         <div>
-          <h3 className="font-serif text-2xl font-bold text-[#0a0a0a] mb-1">Recently Added</h3>
-          <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
+          <h3 className="font-serif text-2xl font-bold text-ink-900 mb-1">Recently Added</h3>
+          <div className="w-8 h-px bg-forest mb-6" />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
             {recent.map(r => (
               <div key={r.id} className="relative h-full">
-                <span className="absolute top-3 right-3 text-[10px] font-medium tracking-wider uppercase text-white bg-[#1a4a3a] px-2 py-0.5 z-10">
+                <span className="absolute top-3 right-3 text-[10px] font-medium tracking-wider uppercase text-white bg-forest px-2 py-0.5 z-10">
                   {CATEGORY_LABELS[r.category] ?? r.category}
                 </span>
                 <ResourceCard resource={r} />
@@ -244,8 +244,8 @@ function WelcomeView({
 
       {/* Full index */}
       {CATEGORIES.some(c => resources.some(r => r.category === c.id)) && (
-        <div className="mt-16 pt-10 border-t border-black/10">
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-8">All Sections</p>
+        <div className="mt-16 pt-10 border-t border-line-faint">
+          <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-8">All Sections</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-8 gap-y-8">
             {CATEGORIES.map(cat => {
               const hasResources = resources.some(r => r.category === cat.id)
@@ -255,7 +255,7 @@ function WelcomeView({
                 <div key={cat.id}>
                   <button
                     onClick={() => onNavigate(cat.id)}
-                    className="font-serif text-sm font-bold text-[#0a0a0a] hover:text-[#1a4a3a] transition-colors text-left leading-snug mb-3 block"
+                    className="font-serif text-sm font-bold text-ink-900 hover:text-forest transition-colors text-left leading-snug mb-3 block"
                   >
                     {cat.label}
                   </button>
@@ -265,7 +265,7 @@ function WelcomeView({
                         <li key={sub}>
                           <button
                             onClick={() => onNavigate(cat.id, sub)}
-                            className="text-xs text-[#6b7280] hover:text-[#1a4a3a] transition-colors text-left leading-snug"
+                            className="text-xs text-ink-500 hover:text-forest transition-colors text-left leading-snug"
                           >
                             {sub}
                           </button>
@@ -294,19 +294,19 @@ function SubcategoryGroup({ name, resources }: { name: string; resources: Resour
         onClick={() => setOpen(v => !v)}
         className="flex items-center gap-3 w-full text-left mb-0 group"
       >
-        <h3 className="font-serif text-xl font-bold text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors">
+        <h3 className="font-serif text-xl font-bold text-ink-900 group-hover:text-forest transition-colors">
           {name}
         </h3>
-        <span className="text-xs text-[#9ca3af]">{resources.length}</span>
+        <span className="text-xs text-ink-400">{resources.length}</span>
         <svg
-          className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0 ml-auto"
+          className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0 ml-auto"
           style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      <div className="w-8 h-px bg-[#1a4a3a] mt-2 mb-5" />
+      <div className="w-8 h-px bg-forest mt-2 mb-5" />
       <div
         style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}
       >
@@ -370,7 +370,7 @@ function SectionView({
       {/* Back */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-xs font-medium text-[#6b7280] hover:text-[#1a4a3a] transition-colors mb-10 uppercase tracking-wide"
+        className="flex items-center gap-2 text-xs font-medium text-ink-500 hover:text-forest transition-colors mb-10 uppercase tracking-wide"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -380,10 +380,10 @@ function SectionView({
 
       {/* Header */}
       <div className="mb-10">
-        <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Exclusive Access</p>
-        <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-1">{cat.label}</h2>
-        <div className="w-10 h-px bg-[#1a4a3a] mt-3 mb-4" />
-        <p className="text-sm text-[#6b7280]">{cat.description}</p>
+        <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">Exclusive Access</p>
+        <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-1">{cat.label}</h2>
+        <div className="w-10 h-px bg-forest mt-3 mb-4" />
+        <p className="text-sm text-ink-500">{cat.description}</p>
       </div>
 
       {hasGroups && (
@@ -393,7 +393,7 @@ function SectionView({
               key={name}
               type="button"
               onClick={() => document.getElementById(subId(name))?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-              className="px-4 py-1.5 text-xs font-medium tracking-wide border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white transition-colors duration-150"
+              className="px-4 py-1.5 text-xs font-medium tracking-wide border border-forest text-forest hover:bg-forest hover:text-white transition-colors duration-fast"
             >
               {name}
             </button>
@@ -402,7 +402,7 @@ function SectionView({
       )}
 
       {sectionResources.length === 0 ? (
-        <p className="text-sm text-[#6b7280]">No resources yet.</p>
+        <p className="text-sm text-ink-500">No resources yet.</p>
       ) : hasGroups ? (
         <div className="space-y-10">
           {/* Ungrouped resources first (no subcategory) */}

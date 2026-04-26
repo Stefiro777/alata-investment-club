@@ -23,7 +23,7 @@ function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
   }
   // coming_soon
   return (
-    <span className="inline-block bg-[#1a4a3a] text-white border border-white/20 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
+    <span className="inline-block bg-forest text-white border border-white/20 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
       Coming Soon
     </span>
   )
@@ -59,11 +59,11 @@ export default function UpcomingEvents() {
 
           {/* Header */}
           <div className="mb-14">
-            <p className="text-xs tracking-[0.3em] uppercase text-[#1a4a3a] mb-4">Agenda</p>
+            <p className="text-xs tracking-[0.3em] uppercase text-forest mb-4">Agenda</p>
             <h2 className="font-serif text-4xl sm:text-5xl font-bold text-black">
               Upcoming Events
             </h2>
-            <div className="w-10 h-px bg-[#1a4a3a] mt-5" />
+            <div className="w-10 h-px bg-forest mt-5" />
           </div>
 
           {/* Event rows */}
@@ -73,7 +73,7 @@ export default function UpcomingEvents() {
               const isLast = i === events.length - 1
               return (
                 <div key={event.id}>
-                  <div className="group flex flex-col sm:flex-row sm:items-center gap-6 py-8 bg-[#1a4a3a] hover:bg-[#153d30] transition-colors duration-200 px-6">
+                  <div className="group flex flex-col sm:flex-row sm:items-center gap-6 py-8 bg-forest hover:bg-[#153d30] transition-colors duration-fast px-6">
 
                     {/* Date block */}
                     <div className="flex-shrink-0 w-16 sm:w-20">
@@ -105,19 +105,19 @@ export default function UpcomingEvents() {
                             href={event.action_link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-white hover:bg-gray-100 text-[#1a4a3a] text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-150 cursor-pointer"
+                            className="bg-white hover:bg-gray-100 text-forest text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-fast cursor-pointer"
                           >
                             Open
                           </a>
                         ) : event.action_type === 'form' ? (
                           <button
                             onClick={() => setModalEvent(event)}
-                            className="bg-white hover:bg-gray-100 text-[#1a4a3a] text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-150 cursor-pointer"
+                            className="bg-white hover:bg-gray-100 text-forest text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-fast cursor-pointer"
                           >
                             Open
                           </button>
                         ) : (
-                          <span className="bg-white text-[#1a4a3a] text-sm font-medium tracking-widest uppercase px-5 py-2">
+                          <span className="bg-white text-forest text-sm font-medium tracking-widest uppercase px-5 py-2">
                             Open
                           </span>
                         )

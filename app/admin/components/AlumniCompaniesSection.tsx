@@ -7,8 +7,8 @@ import type { AlumniCompany } from '@/lib/types'
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-8">
-      <h2 className="font-serif text-2xl font-bold text-[#1a4a3a]">{title}</h2>
-      <div className="w-8 h-px bg-[#1a4a3a] mt-2" />
+      <h2 className="font-serif text-2xl font-bold text-forest">{title}</h2>
+      <div className="w-8 h-px bg-forest mt-2" />
     </div>
   )
 }
@@ -76,46 +76,46 @@ function AlumniCompanyInsertForm({ onInserted }: { onInserted: (c: AlumniCompany
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-black/10 p-6 space-y-4">
-      <p className="text-xs font-medium tracking-wide text-[#6b7280] uppercase mb-2">Add Company</p>
+    <form onSubmit={handleSubmit} className="bg-white border border-line-faint p-6 space-y-4">
+      <p className="text-xs font-medium tracking-wide text-ink-500 uppercase mb-2">Add Company</p>
       <div className="grid sm:grid-cols-2 gap-4">
         <input
           required
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder="Company name *"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
         />
         <input
           value={websiteUrl}
           onChange={e => setWebsiteUrl(e.target.value)}
           placeholder="Website URL"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
         />
       </div>
 
       {/* Logo */}
       <div className="space-y-2">
-        <p className="text-xs text-[#6b7280]">Logo *</p>
+        <p className="text-xs text-ink-500">Logo *</p>
         <div className="flex gap-3 items-start">
           <input
             value={logoUrl}
             onChange={e => setLogoUrl(e.target.value)}
             placeholder="Logo URL or upload below"
-            className="flex-1 px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+            className="flex-1 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
           />
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150 disabled:opacity-50"
+            className="flex-shrink-0 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-50"
           >
             {uploading ? '…' : 'Upload'}
           </button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
         </div>
         {logoUrl && (
-          <img src={logoUrl} alt="preview" className="h-10 object-contain border border-black/10 p-1 bg-white" />
+          <img src={logoUrl} alt="preview" className="h-10 object-contain border border-line-faint p-1 bg-white" />
         )}
       </div>
 
@@ -123,7 +123,7 @@ function AlumniCompanyInsertForm({ onInserted }: { onInserted: (c: AlumniCompany
       <button
         type="submit"
         disabled={saving || !logoUrl}
-        className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {saving ? '…' : 'Add Company'}
       </button>
@@ -202,24 +202,24 @@ function AlumniCompanyRow({
   return (
     <div className="bg-white border-b border-black/5 last:border-b-0">
       <div className="px-6 py-4 flex items-center gap-4">
-        <img src={company.logo_url} alt={company.name} className="w-10 h-10 object-contain flex-shrink-0 border border-black/10 p-1" />
+        <img src={company.logo_url} alt={company.name} className="w-10 h-10 object-contain flex-shrink-0 border border-line-faint p-1" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#0a0a0a] truncate">{company.name}</p>
+          <p className="text-sm font-medium text-ink-900 truncate">{company.name}</p>
           {company.website_url && (
-            <p className="text-xs text-[#6b7280] truncate">{company.website_url}</p>
+            <p className="text-xs text-ink-500 truncate">{company.website_url}</p>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => setOpen(o => !o)}
-            className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-150"
+            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast"
           >
             {open ? 'Close' : 'Edit'}
           </button>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-150 disabled:opacity-40"
+            className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast disabled:opacity-40"
           >
             {deleting ? '…' : 'Delete'}
           </button>
@@ -229,31 +229,31 @@ function AlumniCompanyRow({
       {open && (
         <form onSubmit={handleSave} className="px-6 pb-5 pt-2 border-t border-black/5 space-y-3">
           <div className="grid sm:grid-cols-2 gap-3">
-            <input required value={name} onChange={e => setName(e.target.value)} placeholder="Company name *" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
-            <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="Website URL" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
+            <input required value={name} onChange={e => setName(e.target.value)} placeholder="Company name *" className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors" />
+            <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="Website URL" className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors" />
           </div>
           <div className="flex gap-3 items-start">
             <input
               value={logoUrl}
               onChange={e => setLogoUrl(e.target.value)}
               placeholder="Logo URL *"
-              className="flex-1 px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors"
+              className="flex-1 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors"
             />
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150 disabled:opacity-50"
+              className="flex-shrink-0 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-50"
             >
               {uploading ? '…' : 'Upload'}
             </button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
           </div>
           {logoUrl && (
-            <img src={logoUrl} alt="preview" className="h-10 object-contain border border-black/10 p-1 bg-white" />
+            <img src={logoUrl} alt="preview" className="h-10 object-contain border border-line-faint p-1 bg-white" />
           )}
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
-          <button type="submit" disabled={saving || !logoUrl} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-150 disabled:opacity-50">
+          <button type="submit" disabled={saving || !logoUrl} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-fast disabled:opacity-50">
             {saving ? '…' : 'Save'}
           </button>
         </form>
@@ -279,13 +279,13 @@ export default function AlumniCompaniesSection({ initialCompanies }: { initialCo
           <button
             type="button"
             onClick={() => setCompaniesListOpen(v => !v)}
-            className="flex items-center gap-3 w-full text-left group border border-black/10 bg-white px-4 py-3 hover:border-[#1a4a3a] transition-colors duration-150"
+            className="flex items-center gap-3 w-full text-left group border border-line-faint bg-white px-4 py-3 hover:border-forest transition-colors duration-fast"
           >
-            <span className="text-sm font-medium text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors flex-1">
+            <span className="text-sm font-medium text-ink-900 group-hover:text-forest transition-colors flex-1">
               Loghi aziende ({companiesList.length})
             </span>
             <svg
-              className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0"
+              className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
               style={{ transform: companiesListOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
               fill="none" stroke="currentColor" viewBox="0 0 24 24"
             >
@@ -296,7 +296,7 @@ export default function AlumniCompaniesSection({ initialCompanies }: { initialCo
             <div style={{ overflow: 'hidden' }}>
               <div className="bg-black/5 rounded-sm mt-4">
                 {companiesList.length === 0 ? (
-                  <div className="bg-white px-6 py-8 text-center text-sm text-[#6b7280]">No companies yet.</div>
+                  <div className="bg-white px-6 py-8 text-center text-sm text-ink-500">No companies yet.</div>
                 ) : (
                   companiesList.map(c => (
                     <AlumniCompanyRow

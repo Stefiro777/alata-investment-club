@@ -62,7 +62,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
   })
 
   const inputClass =
-    'w-full bg-transparent border-0 border-b border-gray-300 focus:border-[#1a4a3a] focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors'
+    'w-full bg-transparent border-0 border-b border-gray-300 focus:border-forest focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors'
 
   const labelClass = 'block text-xs tracking-widest uppercase text-black mb-2'
 
@@ -71,29 +71,29 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-[#f5f5f3] border border-[#1a4a3a] w-full max-w-xl max-h-[92vh] overflow-y-auto">
+      <div className="bg-[#f5f5f3] border border-forest w-full max-w-xl max-h-[92vh] overflow-y-auto">
         {/* Double-border inner frame */}
-        <div className="border border-[#1a4a3a]/30 m-3 p-8">
+        <div className="border border-forest/30 m-3 p-8">
 
           {/* Header */}
           <div className="mb-8">
-            <p className="text-xs tracking-widest uppercase text-[#1a4a3a] mb-3">Registration</p>
+            <p className="text-xs tracking-widest uppercase text-forest mb-3">Registration</p>
             <h2 className="font-serif text-2xl font-bold text-black leading-snug">{event.title}</h2>
             <p className="text-gray-500 text-xs mt-1 tracking-wide">{formattedDate}</p>
-            <div className="w-8 h-px bg-[#1a4a3a] mt-4" />
+            <div className="w-8 h-px bg-forest mt-4" />
           </div>
 
           {success ? (
             <div className="py-8 text-center space-y-6">
-              <div className="w-12 h-px bg-[#1a4a3a] mx-auto" />
+              <div className="w-12 h-px bg-forest mx-auto" />
               <p className="font-serif text-xl text-black">Registration received.</p>
               <p className="text-gray-500 text-sm leading-relaxed">
                 We&apos;ll be in touch with further details.
               </p>
-              <div className="w-12 h-px bg-[#1a4a3a] mx-auto" />
+              <div className="w-12 h-px bg-forest mx-auto" />
               <button
                 onClick={onClose}
-                className="mt-4 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-widest uppercase px-8 py-3 transition-colors duration-150"
+                className="mt-4 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-widest uppercase px-8 py-3 transition-colors duration-fast"
               >
                 Close
               </button>
@@ -156,7 +156,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   required
                   value={anno}
                   onChange={e => setAnno(e.target.value)}
-                  className="w-full bg-[#f5f5f3] border-0 border-b border-gray-300 focus:border-[#1a4a3a] focus:outline-none text-black text-sm py-2.5 transition-colors"
+                  className="w-full bg-[#f5f5f3] border-0 border-b border-gray-300 focus:border-forest focus:outline-none text-black text-sm py-2.5 transition-colors"
                 >
                   <option value="" disabled className="bg-[#f5f5f3] text-gray-400">Select year</option>
                   {ANNI.map(a => (
@@ -178,7 +178,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   value={motivazione}
                   onChange={e => setMotivazione(e.target.value)}
                   placeholder="Why do you want to attend this event?"
-                  className="w-full bg-transparent border-b border-gray-300 focus:border-[#1a4a3a] focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors resize-none"
+                  className="w-full bg-transparent border-b border-gray-300 focus:border-forest focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors resize-none"
                 />
                 <p className="text-right text-xs text-gray-400 mt-1">{motivazione.length}/500</p>
               </div>
@@ -198,7 +198,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-widest uppercase px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-8 py-3 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? '…' : 'Register'}
                 </button>

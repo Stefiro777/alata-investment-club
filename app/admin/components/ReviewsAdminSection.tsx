@@ -7,18 +7,18 @@ import type { Review } from '@/lib/types'
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-8">
-      <h2 className="font-serif text-2xl font-bold text-[#1a4a3a]">{title}</h2>
-      <div className="w-8 h-px bg-[#1a4a3a] mt-2" />
+      <h2 className="font-serif text-2xl font-bold text-forest">{title}</h2>
+      <div className="w-8 h-px bg-forest mt-2" />
     </div>
   )
 }
 
 function StarDisplay({ rating }: { rating: number | null | undefined }) {
-  if (rating == null) return <span className="text-xs text-[#6b7280]">—</span>
+  if (rating == null) return <span className="text-xs text-ink-500">—</span>
   return (
     <span className="text-sm">
       {[1, 2, 3, 4, 5].map(i => (
-        <span key={i} className={i <= rating ? 'text-[#1a4a3a]' : 'text-gray-200'}>★</span>
+        <span key={i} className={i <= rating ? 'text-forest' : 'text-gray-200'}>★</span>
       ))}
     </span>
   )
@@ -145,15 +145,15 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
       <SectionHeading title="Reviews" />
 
       {/* Tabs */}
-      <div className="flex border-b border-black/10 mb-6">
+      <div className="flex border-b border-line-faint mb-6">
         {(['alumni', 'events'] as TabType[]).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 text-sm font-medium tracking-wide transition-colors duration-150 ${
+            className={`px-6 py-3 text-sm font-medium tracking-wide transition-colors duration-fast ${
               activeTab === tab
-                ? 'border-b-2 border-[#1a4a3a] text-[#1a4a3a]'
-                : 'text-[#6b7280] hover:text-[#0a0a0a]'
+                ? 'border-b-2 border-forest text-forest'
+                : 'text-ink-500 hover:text-ink-900'
             }`}
           >
             {tab === 'alumni' ? 'Alumni Reviews' : 'Events Reviews'}
@@ -165,34 +165,34 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
       <div className="flex justify-end mb-4">
         <button
           onClick={openAdd}
-          className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-150"
+          className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-fast"
         >
           + Add Review
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-black/10 overflow-x-auto">
+      <div className="bg-white border border-line-faint overflow-x-auto">
         {filtered.length === 0 ? (
-          <p className="text-sm text-[#6b7280] text-center py-10">No reviews yet.</p>
+          <p className="text-sm text-ink-500 text-center py-10">No reviews yet.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-black/10 bg-[#f9f9f9]">
-                <th className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide">Nome</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide">Ruolo</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide">Contenuto</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide">Rating</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide">Visibile</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide">Azioni</th>
+              <tr className="border-b border-line-faint bg-[#f9f9f9]">
+                <th className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide">Nome</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide">Ruolo</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide">Contenuto</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide">Rating</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide">Visibile</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide">Azioni</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(review => (
-                <tr key={review.id} className="border-b border-black/5 last:border-0 hover:bg-[#fafafa] transition-colors">
-                  <td className="px-4 py-3 font-medium text-[#0a0a0a] whitespace-nowrap">{review.author_name}</td>
-                  <td className="px-4 py-3 text-[#6b7280] whitespace-nowrap">{review.author_role ?? '—'}</td>
-                  <td className="px-4 py-3 text-[#0a0a0a] max-w-[200px]">
+                <tr key={review.id} className="border-b border-black/5 last:border-0 hover:bg-paper-cool transition-colors">
+                  <td className="px-4 py-3 font-medium text-ink-900 whitespace-nowrap">{review.author_name}</td>
+                  <td className="px-4 py-3 text-ink-500 whitespace-nowrap">{review.author_role ?? '—'}</td>
+                  <td className="px-4 py-3 text-ink-900 max-w-[200px]">
                     <span className="line-clamp-2" title={review.content}>
                       {review.content.length > 60 ? review.content.slice(0, 60) + '…' : review.content}
                     </span>
@@ -204,7 +204,7 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                     <button
                       onClick={() => handleToggleVisible(review)}
                       disabled={togglingId === review.id}
-                      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${review.visible ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer border-2 border-transparent transition-colors duration-fast ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${review.visible ? 'bg-forest' : 'bg-[#d1d5db]'}`}
                       role="switch"
                       aria-checked={review.visible}
                     >
@@ -215,7 +215,7 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEdit(review)}
-                        className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150"
+                        className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
                       >
                         Modifica
                       </button>
@@ -224,13 +224,13 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                           <span className="text-xs text-red-600">Conferma?</span>
                           <button
                             onClick={() => handleDelete(review.id)}
-                            className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-150"
+                            className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
                           >
                             Sì
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
-                            className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-150"
+                            className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
                           >
                             No
                           </button>
@@ -238,7 +238,7 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                       ) : (
                         <button
                           onClick={() => setDeleteConfirm(review.id)}
-                          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150"
+                          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
                         >
                           Elimina
                         </button>
@@ -255,13 +255,13 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
       {/* Modal */}
       {modal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white border border-black/10 w-full max-w-lg mx-4 p-8 shadow-xl">
-            <h3 className="font-serif text-xl font-bold text-[#1a4a3a] mb-6">
+          <div className="bg-white border border-line-faint w-full max-w-lg mx-4 p-8 shadow-xl">
+            <h3 className="font-serif text-xl font-bold text-forest mb-6">
               {modal.editing ? 'Modifica Recensione' : 'Aggiungi Recensione'}
             </h3>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">
+                <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">
                   Author Name *
                 </label>
                 <input
@@ -269,22 +269,22 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                   value={formAuthorName}
                   onChange={e => setFormAuthorName(e.target.value)}
                   placeholder="Nome autore"
-                  className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                  className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">
+                <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">
                   Author Role
                 </label>
                 <input
                   value={formAuthorRole}
                   onChange={e => setFormAuthorRole(e.target.value)}
                   placeholder="Ruolo / Azienda (opzionale)"
-                  className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                  className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">
+                <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">
                   Content *
                 </label>
                 <textarea
@@ -293,17 +293,17 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                   value={formContent}
                   onChange={e => setFormContent(e.target.value)}
                   placeholder="Testo della recensione"
-                  className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors resize-none"
+                  className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors resize-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">
+                <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">
                   Rating
                 </label>
                 <select
                   value={formRating}
                   onChange={e => setFormRating(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                  className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                 >
                   <option value="">— nessun rating —</option>
                   {[1, 2, 3, 4, 5].map(n => (
@@ -319,7 +319,7 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                     onChange={e => setFormVisible(e.target.checked)}
                     className="w-4 h-4 accent-[#1a4a3a]"
                   />
-                  <span className="text-sm text-[#0a0a0a]">Visibile</span>
+                  <span className="text-sm text-ink-900">Visibile</span>
                 </label>
               </div>
 
@@ -331,14 +331,14 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-150"
+                  className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-fast"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? '…' : 'Salva'}
                 </button>

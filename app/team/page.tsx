@@ -28,19 +28,19 @@ function MemberCard({ member }: { member: TeamMember }) {
   return (
     <div className="member-card-simple bg-white overflow-hidden flex flex-col" style={{ border: '1px solid #1a4a3a' }}>
       {/* Photo section — centered with double green ring */}
-      <div className="flex justify-center items-center py-5 bg-[#f5f5f5]" style={{ minHeight: '160px' }}>
+      <div className="flex justify-center items-center py-5 bg-paper-stone" style={{ minHeight: '160px' }}>
         <div className="relative w-32 h-32 rounded-full overflow-hidden bg-[#e0e0e0] ring-2 ring-[#1a4a3a] ring-offset-2 ring-offset-[#f5f5f5]">
           {member.photo_url ? (
             <Image src={member.photo_url} alt={member.name} fill className="member-photo object-cover object-top" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="font-serif text-2xl text-[#1a4a3a]">{initials(member.name)}</span>
+              <span className="font-serif text-2xl text-forest">{initials(member.name)}</span>
             </div>
           )}
         </div>
       </div>
       {/* Info bar — always visible */}
-      <div className="p-4 bg-[#1a4a3a] flex-grow">
+      <div className="p-4 bg-forest flex-grow">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-serif text-lg font-bold text-white">{member.name}</h3>
           {member.linkedin_url && (
@@ -98,10 +98,10 @@ export default async function TeamPage() {
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <Reveal>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-10">Board of Directors</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Board of Directors</h2>
           </Reveal>
           {bod.length === 0 ? (
-            <p className="text-[#6b7280] text-sm">No members to display.</p>
+            <p className="text-ink-500 text-sm">No members to display.</p>
           ) : (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-6 max-w-xl mx-auto">
@@ -126,13 +126,13 @@ export default async function TeamPage() {
       </section>
 
       {/* Management */}
-      <section className="py-20 sm:py-28 bg-gray-100 border-t border-[#e5e5e5]">
+      <section className="py-20 sm:py-28 bg-gray-100 border-t border-line">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <Reveal>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-10">Management</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Management</h2>
           </Reveal>
           {management.length === 0 ? (
-            <p className="text-[#6b7280] text-sm">No members to display.</p>
+            <p className="text-ink-500 text-sm">No members to display.</p>
           ) : (
             <div className="flex flex-wrap justify-center gap-6 max-w-[54.75rem] mx-auto">
               {management.map((m, i) => (
@@ -147,20 +147,20 @@ export default async function TeamPage() {
 
       {/* Meet our Alumni */}
       {showAlumni && (
-        <section className="py-20 bg-white border-t border-[#e5e5e5]">
+        <section className="py-20 bg-white border-t border-line">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-8">
             <Reveal direction="right">
-              <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Past Members</p>
-              <h2 className="font-serif text-3xl font-bold text-[#0a0a0a] mb-3">Meet our Alumni</h2>
-              <div className="w-10 h-px bg-[#1a4a3a]" />
-              <p className="text-[#6b7280] text-sm leading-relaxed mt-4 max-w-lg">
+              <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">Past Members</p>
+              <h2 className="font-serif text-3xl font-bold text-ink-900 mb-3">Meet our Alumni</h2>
+              <div className="w-10 h-px bg-forest" />
+              <p className="text-ink-500 text-sm leading-relaxed mt-4 max-w-lg">
                 Discover the former members who helped build Alata Investment Club and are now making an impact across the financial industry.
               </p>
             </Reveal>
             <Reveal direction="left" delay={100}>
               <Link
                 href="/team/alumni"
-                className="inline-flex items-center gap-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-200 whitespace-nowrap"
+                className="inline-flex items-center gap-3 bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-fast whitespace-nowrap"
               >
                 View Alumni
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

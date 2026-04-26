@@ -96,20 +96,20 @@ export default function UpdatePasswordPage() {
                 />
               </div>
             </Link>
-            <h1 className="font-serif text-2xl font-light text-[#0a0a0a] mt-6">Update Password</h1>
-            <p className="text-[#6b7280] text-sm mt-1">
+            <h1 className="font-serif text-2xl font-light text-ink-900 mt-6">Update Password</h1>
+            <p className="text-ink-500 text-sm mt-1">
               Choose a new password for your account.
             </p>
           </div>
 
           {/* Form card */}
-          <div className="bg-white p-8 border border-[#e5e5e5]">
+          <div className="bg-white p-8 border border-line">
             {!sessionReady ? (
-              <p className="text-sm text-[#6b7280] text-center py-4">Verifying reset link…</p>
+              <p className="text-sm text-ink-500 text-center py-4">Verifying reset link…</p>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                     New Password
                   </label>
                   <input
@@ -119,12 +119,12 @@ export default function UpdatePasswordPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="confirm" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                  <label htmlFor="confirm" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                     Confirm Password
                   </label>
                   <input
@@ -134,7 +134,7 @@ export default function UpdatePasswordPage() {
                     value={confirm}
                     onChange={e => setConfirm(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
                   />
                 </div>
 
@@ -145,7 +145,7 @@ export default function UpdatePasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  className="w-full bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-fast flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                 >
                   {loading ? (
                     <>
@@ -164,7 +164,7 @@ export default function UpdatePasswordPage() {
           </div>
 
           <div className="mt-6 text-center">
-            <Link href="/login" className="text-xs text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors">
+            <Link href="/login" className="text-xs text-ink-500 hover:text-ink-900 tracking-wide transition-colors">
               ← Back to sign in
             </Link>
           </div>

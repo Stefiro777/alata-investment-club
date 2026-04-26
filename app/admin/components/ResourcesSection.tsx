@@ -15,8 +15,8 @@ const RESOURCE_CATEGORIES = [
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-8">
-      <h2 className="font-serif text-2xl font-bold text-[#1a4a3a]">{title}</h2>
-      <div className="w-8 h-px bg-[#1a4a3a] mt-2" />
+      <h2 className="font-serif text-2xl font-bold text-forest">{title}</h2>
+      <div className="w-8 h-px bg-forest mt-2" />
     </div>
   )
 }
@@ -83,24 +83,24 @@ function ResourceInsertForm({ onInserted }: { onInserted: (r: Resource) => void 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280]">Nuova risorsa</p>
+      <p className="text-xs tracking-[0.2em] uppercase text-ink-500">Nuova risorsa</p>
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">Titolo <span className="text-red-500">*</span></label>
-          <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="Guida ai Master" className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
+          <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">Titolo <span className="text-red-500">*</span></label>
+          <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="Guida ai Master" className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors" />
         </div>
         <div>
-          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">Categoria <span className="text-red-500">*</span></label>
-          <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors">
+          <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">Categoria <span className="text-red-500">*</span></label>
+          <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors">
             {RESOURCE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
         </div>
       </div>
       <div>
-        <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">URL <span className="text-red-500">*</span></label>
+        <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">URL <span className="text-red-500">*</span></label>
         <div className="flex gap-2">
-          <input type="url" required value={url} onChange={e => setUrl(e.target.value)} placeholder="https://drive.google.com/..." className="flex-1 px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
-          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-4 py-3 transition-colors duration-150 disabled:opacity-50 whitespace-nowrap">
+          <input type="url" required value={url} onChange={e => setUrl(e.target.value)} placeholder="https://drive.google.com/..." className="flex-1 px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors" />
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex-shrink-0 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-4 py-3 transition-colors duration-fast disabled:opacity-50 whitespace-nowrap">
             {uploading ? 'Uploading…' : 'Upload file'}
           </button>
           <input ref={fileRef} type="file" className="hidden" onChange={handleFileUpload} />
@@ -109,21 +109,21 @@ function ResourceInsertForm({ onInserted }: { onInserted: (r: Resource) => void 
       </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">Sottocategoria (opzionale)</label>
-          <input type="text" value={subcategory} onChange={e => setSubcategory(e.target.value)} placeholder="Es. Prep Colloqui" className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
+          <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">Sottocategoria (opzionale)</label>
+          <input type="text" value={subcategory} onChange={e => setSubcategory(e.target.value)} placeholder="Es. Prep Colloqui" className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors" />
         </div>
         <div>
-          <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">Descrizione (opzionale)</label>
-          <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Breve descrizione…" className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
+          <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">Descrizione (opzionale)</label>
+          <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Breve descrizione…" className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors" />
         </div>
       </div>
       <label className="flex items-center gap-3 cursor-pointer">
         <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-[#1a4a3a]" />
-        <span className="text-sm text-[#0a0a0a]">È una cartella (folder)</span>
+        <span className="text-sm text-ink-900">È una cartella (folder)</span>
       </label>
       {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
-      {success && <p className="text-[#1a4a3a] text-xs border-l-2 border-[#1a4a3a] pl-3 py-1">Risorsa aggiunta.</p>}
-      <button type="submit" disabled={submitting} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+      {success && <p className="text-forest text-xs border-l-2 border-forest pl-3 py-1">Risorsa aggiunta.</p>}
+      <button type="submit" disabled={submitting} className="bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide px-8 py-3 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed">
         {submitting ? 'Saving…' : 'Aggiungi'}
       </button>
     </form>
@@ -190,7 +190,7 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
     <div className={`bg-white ${expanded ? 'ring-1 ring-[#1a4a3a]' : 'border-b border-black/5'}`}>
       <div className="px-4 py-4 flex items-center gap-3">
         {showDragHandle && (
-          <div className="cursor-grab active:cursor-grabbing text-[#9ca3af] hover:text-[#1a4a3a] transition-colors flex-shrink-0">
+          <div className="cursor-grab active:cursor-grabbing text-ink-400 hover:text-forest transition-colors flex-shrink-0">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <circle cx="7" cy="5" r="1.5" /><circle cx="13" cy="5" r="1.5" />
               <circle cx="7" cy="10" r="1.5" /><circle cx="13" cy="10" r="1.5" />
@@ -200,17 +200,17 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-serif text-sm font-medium text-[#0a0a0a] truncate">{resource.title}</p>
-            {resource.is_folder && <span className="text-xs px-2 py-0.5 border border-[#9ca3af] text-[#9ca3af]">folder</span>}
-            {resource.subcategory && <span className="text-xs px-2 py-0.5 border border-[#1a4a3a] text-[#1a4a3a]">{resource.subcategory}</span>}
+            <p className="font-serif text-sm font-medium text-ink-900 truncate">{resource.title}</p>
+            {resource.is_folder && <span className="text-xs px-2 py-0.5 border border-[#9ca3af] text-ink-400">folder</span>}
+            {resource.subcategory && <span className="text-xs px-2 py-0.5 border border-forest text-forest">{resource.subcategory}</span>}
           </div>
-          {resource.description && <p className="text-xs text-[#6b7280] mt-0.5 truncate">{resource.description}</p>}
+          {resource.description && <p className="text-xs text-ink-500 mt-0.5 truncate">{resource.description}</p>}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={() => setExpanded(v => !v)} className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150">
+          <button onClick={() => setExpanded(v => !v)} className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast">
             {expanded ? 'Chiudi' : 'Modifica'}
           </button>
-          <button onClick={handleDelete} disabled={deleting} className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-150 disabled:opacity-40">
+          <button onClick={handleDelete} disabled={deleting} className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40">
             {deleting ? '…' : 'Elimina'}
           </button>
         </div>
@@ -219,14 +219,14 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
         <form onSubmit={handleUpdate} className="px-6 pb-6 pt-4 space-y-3 border-t border-black/8">
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-1">Titolo</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white" />
+              <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-1">Titolo</label>
+              <input value={title} onChange={e => setTitle(e.target.value)} className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white" />
             </div>
             <div>
-              <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-1">URL</label>
+              <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-1">URL</label>
               <div className="flex gap-2">
-                <input value={url} onChange={e => setUrl(e.target.value)} className="flex-1 px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white" />
-                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-3 py-2 transition-colors duration-150 disabled:opacity-50 whitespace-nowrap">
+                <input value={url} onChange={e => setUrl(e.target.value)} className="flex-1 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white" />
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex-shrink-0 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-2 transition-colors duration-fast disabled:opacity-50 whitespace-nowrap">
                   {uploading ? '…' : 'Upload'}
                 </button>
                 <input ref={fileRef} type="file" className="hidden" onChange={handleFileUpload} />
@@ -234,24 +234,24 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
               {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
             </div>
             <div>
-              <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-1">Sottocategoria</label>
-              <input value={subcategory} onChange={e => setSubcategory(e.target.value)} placeholder="Es. Prep Colloqui" className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white" />
+              <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-1">Sottocategoria</label>
+              <input value={subcategory} onChange={e => setSubcategory(e.target.value)} placeholder="Es. Prep Colloqui" className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white" />
             </div>
             <div>
-              <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-1">Descrizione</label>
-              <input value={description} onChange={e => setDescription(e.target.value)} className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white" />
+              <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-1">Descrizione</label>
+              <input value={description} onChange={e => setDescription(e.target.value)} className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white" />
             </div>
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-[#1a4a3a]" />
-            <span className="text-sm text-[#0a0a0a]">È una cartella</span>
+            <span className="text-sm text-ink-900">È una cartella</span>
           </label>
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
           <div className="flex items-center gap-3">
-            <button type="submit" disabled={saving} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-150 disabled:opacity-50">
+            <button type="submit" disabled={saving} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-fast disabled:opacity-50">
               {saving ? '…' : 'Salva'}
             </button>
-            {saved && <span className="text-xs text-[#1a4a3a] font-medium">Salvato</span>}
+            {saved && <span className="text-xs text-forest font-medium">Salvato</span>}
           </div>
         </form>
       )}
@@ -270,23 +270,23 @@ function CollapsibleListSection({
   return (
     <div>
       <button type="button" onClick={onToggle} className="flex items-center gap-3 group mb-0 w-full text-left">
-        <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280]">{label} ({totalCount})</p>
-        <svg className="w-3.5 h-3.5 text-[#9ca3af] transition-transform duration-200 flex-shrink-0" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <p className="text-xs tracking-[0.2em] uppercase text-ink-500">{label} ({totalCount})</p>
+        <svg className="w-3.5 h-3.5 text-ink-400 transition-transform duration-200 flex-shrink-0" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
         <div style={{ overflow: 'hidden' }}>
           <div className="relative mt-4 mb-4">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <input type="text" value={search} onChange={e => onSearch(e.target.value)} placeholder="Search..." className="w-full pl-9 pr-4 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
+            <input type="text" value={search} onChange={e => onSearch(e.target.value)} placeholder="Search..." className="w-full pl-9 pr-4 py-2.5 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors" />
           </div>
           {totalCount === 0 ? (
-            <p className="text-[#6b7280] text-sm pb-1">{emptyMessage}</p>
+            <p className="text-ink-500 text-sm pb-1">{emptyMessage}</p>
           ) : filteredCount === 0 ? (
-            <p className="text-[#6b7280] text-sm pb-1">No results for &ldquo;{search}&rdquo;.</p>
+            <p className="text-ink-500 text-sm pb-1">No results for &ldquo;{search}&rdquo;.</p>
           ) : (
             <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">{children}</div>
           )}
@@ -340,25 +340,25 @@ function ResourceDraggableList({
   return (
     <div>
       <button type="button" onClick={onToggle} className="flex items-center gap-3 group mb-0 w-full text-left">
-        <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280]">{label} ({resources.length})</p>
-        {savingOrder && <span className="text-xs text-[#9ca3af]">Saving…</span>}
+        <p className="text-xs tracking-[0.2em] uppercase text-ink-500">{label} ({resources.length})</p>
+        {savingOrder && <span className="text-xs text-ink-400">Saving…</span>}
         {orderError && <span className="text-xs text-red-500">{orderError}</span>}
-        <svg className="w-3.5 h-3.5 text-[#9ca3af] transition-transform duration-200 flex-shrink-0" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3.5 h-3.5 text-ink-400 transition-transform duration-200 flex-shrink-0" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
         <div style={{ overflow: 'hidden' }}>
           <div className="relative mt-4 mb-4">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <input type="text" value={search} onChange={e => onSearch(e.target.value)} placeholder="Search..." className="w-full pl-9 pr-4 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors" />
+            <input type="text" value={search} onChange={e => onSearch(e.target.value)} placeholder="Search..." className="w-full pl-9 pr-4 py-2.5 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors" />
           </div>
           {resources.length === 0 ? (
-            <p className="text-[#6b7280] text-sm pb-1">Nessuna risorsa per questa categoria.</p>
+            <p className="text-ink-500 text-sm pb-1">Nessuna risorsa per questa categoria.</p>
           ) : filtered.length === 0 ? (
-            <p className="text-[#6b7280] text-sm pb-1">No results for &ldquo;{search}&rdquo;.</p>
+            <p className="text-ink-500 text-sm pb-1">No results for &ldquo;{search}&rdquo;.</p>
           ) : (
             <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">
               {filtered.map((r, i) => (
@@ -426,20 +426,20 @@ function SubcategoryOrderPanel({
 
   return (
     <div>
-      <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">Ordine sottocategorie</p>
+      <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">Ordine sottocategorie</p>
       <div className="space-y-px bg-black/5 rounded-sm overflow-hidden">
         {subcategoryNames.map(name => (
           <div key={name} className="bg-white flex items-center gap-4 px-4 py-3">
-            <span className="flex-1 text-sm text-[#0a0a0a]">{name}</span>
+            <span className="flex-1 text-sm text-ink-900">{name}</span>
             <input
               type="number"
               value={orders[name] ?? 0}
               onChange={e => setOrders(prev => ({ ...prev, [name]: parseInt(e.target.value) || 0 }))}
               onBlur={() => handleBlur(name)}
-              className="w-20 px-2 py-1.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-center bg-white"
+              className="w-20 px-2 py-1.5 border border-line focus:outline-none focus:border-forest text-sm text-center bg-white"
             />
-            {saving[name] && <span className="text-xs text-[#9ca3af] w-10">…</span>}
-            {saved[name] && <span className="text-xs text-[#1a4a3a] font-medium w-10">Saved</span>}
+            {saving[name] && <span className="text-xs text-ink-400 w-10">…</span>}
+            {saved[name] && <span className="text-xs text-forest font-medium w-10">Saved</span>}
             {errors[name] && <span className="text-xs text-red-500 truncate max-w-[12rem]">{errors[name]}</span>}
           </div>
         ))}
@@ -480,15 +480,15 @@ export default function ResourcesSection({ initialResources }: { initialResource
   return (
     <section id="resources">
       <SectionHeading title="Risorse Dashboard" />
-      <div className="bg-white border border-black/10 p-8 space-y-8">
+      <div className="bg-white border border-line-faint p-8 space-y-8">
         {/* Category tabs */}
         <div className="flex flex-wrap gap-2">
           {RESOURCE_CATEGORIES.map(c => (
             <button
               key={c.id}
               onClick={() => { setActiveCat(c.id); setResourcesOpen(false); setResourcesSearch('') }}
-              className={`px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150 ${
-                activeCat === c.id ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white'
+              className={`px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast ${
+                activeCat === c.id ? 'bg-forest text-white border-forest' : 'border-forest text-forest hover:bg-forest hover:text-white'
               }`}
             >
               {c.label} ({resourcesList.filter(r => r.category === c.id).length})
@@ -496,11 +496,11 @@ export default function ResourcesSection({ initialResources }: { initialResource
           ))}
         </div>
 
-        <div className="border-t border-black/10" />
+        <div className="border-t border-line-faint" />
 
         <ResourceInsertForm onInserted={handleResourceInserted} />
 
-        <div className="border-t border-black/10" />
+        <div className="border-t border-line-faint" />
 
         <ResourceDraggableList
           label={`Risorse — ${RESOURCE_CATEGORIES.find(c => c.id === activeCat)?.label}`}

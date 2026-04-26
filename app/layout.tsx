@@ -76,7 +76,7 @@ export default function RootLayout({
     <html lang="en" className={`${cormorant.variable} ${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         {/* Navbar */}
-        <header className="bg-[#1a4a3a] shadow-md sticky top-0 z-[100]">
+        <header className="bg-forest shadow-md sticky top-0 z-[100]">
           <nav className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Logo + nome */}
@@ -100,7 +100,7 @@ export default function RootLayout({
                 {navLinks.map((link) =>
                   link.subLinks ? (
                     <div key={link.href} className="relative group">
-                      <button className={`flex items-center gap-1 text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-150 ${link.label === 'Team' ? 'font-bold' : 'font-medium'}`}>
+                      <button className={`flex items-center gap-1 text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-fast ${link.label === 'Team' ? 'font-bold' : 'font-medium'}`}>
                         {link.label}
                         <svg className="w-3 h-3 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -124,7 +124,7 @@ export default function RootLayout({
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-150 ${
+                      className={`text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-fast ${
                         link.label === 'Career Service' ? 'font-bold' : 'font-medium'
                       }`}
                     >
@@ -147,7 +147,7 @@ export default function RootLayout({
         <CookieBanner />
 
         {/* Footer */}
-        <footer className="bg-[#1a4a3a] text-white border-t border-white/20">
+        <footer className="bg-forest text-white border-t border-white/20">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
               {/* Logo + nome */}

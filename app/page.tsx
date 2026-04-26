@@ -114,11 +114,11 @@ export default async function HomePage() {
       </section>
 
       {/* Description — white band */}
-      <section className="bg-white py-16 sm:py-20 border-b border-[#e5e5e5]">
+      <section className="bg-white py-16 sm:py-20 border-b border-line">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <Reveal direction="up">
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-6">Who We Are</h2>
-            <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed max-w-3xl">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-6">Who We Are</h2>
+            <p className="text-ink-500 text-base sm:text-lg leading-relaxed max-w-3xl">
               Alata is an Investment Club of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
             </p>
           </Reveal>
@@ -134,21 +134,21 @@ export default async function HomePage() {
       <div className="bg-white grid md:grid-cols-2 divide-y md:divide-y-0">
         {/* Vision: entra da sinistra */}
         <Reveal direction="left" className="px-8 lg:px-14 py-20 sm:py-24">
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-3">
             Our Vision
           </h2>
-          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5" />
-          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
+          <div className="w-10 h-0.5 bg-forest mb-5" />
+          <p className="text-ink-500 text-base sm:text-lg leading-relaxed">
             A community where ambition meets opportunity, regardless of where you start.
           </p>
         </Reveal>
         {/* Mission: entra da destra */}
         <Reveal direction="right" className="px-8 lg:px-14 py-20 sm:py-24 relative before:hidden md:before:block before:absolute before:left-0 before:top-10 before:bottom-10 before:w-px before:bg-black/10">
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-3">
             Our Mission
           </h2>
-          <div className="w-10 h-0.5 bg-[#1a4a3a] mb-5" />
-          <p className="text-[#6b7280] text-base sm:text-lg leading-relaxed">
+          <div className="w-10 h-0.5 bg-forest mb-5" />
+          <p className="text-ink-500 text-base sm:text-lg leading-relaxed">
             Alata was born from a simple idea: the best conversations about finance happen between people who are genuinely curious. We bring together the most ambitious students at UniBS to share knowledge, challenge each other, and grow, inside and outside the classroom.
           </p>
         </Reveal>
@@ -158,10 +158,10 @@ export default async function HomePage() {
       <section className="bg-gray-100 pt-10 sm:pt-12 pb-10 sm:pb-12">
         <div className="max-w-5xl mx-auto px-6 lg:px-8">
           <Reveal direction="up">
-            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] mb-3">
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-3">
               What We Value
             </h2>
-            <div className="w-10 h-0.5 bg-[#1a4a3a] mb-10" />
+            <div className="w-10 h-0.5 bg-forest mb-10" />
           </Reveal>
           <div className="grid md:grid-cols-3 gap-6 items-stretch">
             {[
@@ -170,7 +170,7 @@ export default async function HomePage() {
               { label: 'Ambition', body: "We think big about what a university club can be. And we're building accordingly." },
             ].map(({ label, body }, i) => (
               <Reveal key={label} direction="up" delay={i * 150} className="h-full">
-                <div className="bg-[#1a4a3a] p-8 h-full">
+                <div className="bg-forest p-8 h-full">
                   <h3 className="font-serif text-2xl font-bold text-white mb-3">{label}</h3>
                   <p className="text-white/65 text-sm leading-relaxed">{body}</p>
                 </div>
@@ -183,14 +183,14 @@ export default async function HomePage() {
       {/* News & Events */}
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <Reveal direction="up" className="mb-12 border-b border-[#e5e5e5] pb-6 flex items-end justify-between gap-6">
+          <Reveal direction="up" className="mb-12 border-b border-line pb-6 flex items-end justify-between gap-6">
             <div>
-              <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-2">Latest</p>
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">News &amp; Events</h2>
+              <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-2">Latest</p>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900">News &amp; Events</h2>
             </div>
             <Link
               href="/events"
-              className="shrink-0 inline-flex items-center gap-2 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-semibold tracking-wide uppercase px-6 py-2.5 transition-colors duration-150"
+              className="shrink-0 inline-flex items-center gap-2 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-semibold tracking-wide uppercase px-6 py-2.5 transition-colors duration-fast"
             >
               See all events
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +200,7 @@ export default async function HomePage() {
           </Reveal>
 
           {!eventi || eventi.length === 0 ? (
-            <div className="py-20 text-center text-[#6b7280]">
+            <div className="py-20 text-center text-ink-500">
               <p className="text-sm tracking-wide">No events or updates available at the moment.</p>
             </div>
           ) : (
@@ -219,7 +219,7 @@ export default async function HomePage() {
       <PartnersMarquee title="Partners & Sponsors" partners={partnersData ?? []} />
 
       {/* Contact Us */}
-      <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">
+      <section className="py-20 sm:py-28 bg-forest text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             {/* Testo da destra */}

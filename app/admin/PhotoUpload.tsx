@@ -61,8 +61,8 @@ export default function PhotoUpload({ initialPhotos = [], onChange }: Props) {
     <div>
       {/* Drop zone */}
       <div
-        className={`border-2 border-dashed p-8 text-center cursor-pointer transition-colors duration-150 ${
-          isDragOver ? 'border-[#1a4a3a] bg-[#1a4a3a]/5' : 'border-[#e5e5e5] hover:border-[#1a4a3a]'
+        className={`border-2 border-dashed p-8 text-center cursor-pointer transition-colors duration-fast ${
+          isDragOver ? 'border-forest bg-[#1a4a3a]/5' : 'border-line hover:border-forest'
         }`}
         onClick={() => fileInputRef.current?.click()}
         onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
@@ -81,14 +81,14 @@ export default function PhotoUpload({ initialPhotos = [], onChange }: Props) {
           className="hidden"
           onChange={e => addFiles(e.target.files)}
         />
-        <svg className="w-8 h-8 mx-auto text-[#9ca3af] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-8 h-8 mx-auto text-ink-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        <p className="text-sm text-[#6b7280]">
+        <p className="text-sm text-ink-500">
           Drag & drop, or{' '}
-          <span className="text-[#1a4a3a] underline">click to select</span>
+          <span className="text-forest underline">click to select</span>
         </p>
-        <p className="text-xs text-[#9ca3af] mt-1">
+        <p className="text-xs text-ink-400 mt-1">
           Più immagini supportate · Trascina per riordinare · La prima è la copertina
         </p>
       </div>
@@ -105,13 +105,13 @@ export default function PhotoUpload({ initialPhotos = [], onChange }: Props) {
                 onDragStart={e => onDragStart(e, idx)}
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => onDrop(e, idx)}
-                className="relative aspect-square group cursor-grab active:cursor-grabbing overflow-hidden border-2 border-transparent hover:border-[#1a4a3a] transition-colors"
+                className="relative aspect-square group cursor-grab active:cursor-grabbing overflow-hidden border-2 border-transparent hover:border-forest transition-colors"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" />
 
                 {idx === 0 && (
-                  <span className="absolute top-1 left-1 bg-[#1a4a3a] text-white text-[9px] font-semibold px-1.5 py-0.5 tracking-wider uppercase pointer-events-none">
+                  <span className="absolute top-1 left-1 bg-forest text-white text-[9px] font-semibold px-1.5 py-0.5 tracking-wider uppercase pointer-events-none">
                     Cover
                   </span>
                 )}

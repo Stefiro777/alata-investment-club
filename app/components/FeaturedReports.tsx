@@ -89,14 +89,14 @@ function ReportSection({
             {report.pdf_url ? (
               <PdfPreview pdfUrl={report.pdf_url} title={report.title} />
             ) : (
-              <div className="flex flex-col items-center justify-center bg-[#f5f5f5] gap-6 px-10 py-14">
-                <div className="w-16 h-20 bg-white border border-black/10 flex flex-col items-center justify-center gap-1 shadow-sm">
-                  <svg className="w-7 h-7 text-[#1a4a3a]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-col items-center justify-center bg-paper-stone gap-6 px-10 py-14">
+                <div className="w-16 h-20 bg-white border border-line-faint flex flex-col items-center justify-center gap-1 shadow-sm">
+                  <svg className="w-7 h-7 text-forest/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <span className="text-[9px] font-bold tracking-widest uppercase text-[#1a4a3a]/60">PDF</span>
+                  <span className="text-[9px] font-bold tracking-widest uppercase text-forest/60">PDF</span>
                 </div>
-                <p className="font-serif text-base font-medium text-[#0a0a0a] text-center leading-snug max-w-[260px]">
+                <p className="font-serif text-base font-medium text-ink-900 text-center leading-snug max-w-[260px]">
                   {report.title}
                 </p>
               </div>
@@ -132,7 +132,7 @@ function ReportSection({
 
             {/* Decorative line */}
             <FadeSlide visible={textVisible} delay={s(2)} xOffset={xText}>
-              <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
+              <div className="w-8 h-px bg-forest mb-6" />
             </FadeSlide>
 
             {/* Description */}
@@ -195,11 +195,11 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
       {/* Section title */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-24 mb-16">
         <Reveal>
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">In Evidence</p>
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] mb-4">
+          <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">In Evidence</p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-4">
             Featured Reports
           </h2>
-          <div className="w-10 h-px bg-[#1a4a3a]" />
+          <div className="w-10 h-px bg-forest" />
         </Reveal>
       </div>
 

@@ -87,7 +87,7 @@ export default function StatsSection() {
   }, [])
 
   return (
-    <section className="bg-[#1a4a3a] py-20">
+    <section className="bg-forest py-20">
       <div ref={ref} className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-2 lg:grid-cols-4">
           {stats.map(({ value, label }, i) => (

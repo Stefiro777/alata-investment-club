@@ -152,24 +152,24 @@ function AcceptInviteForm() {
                 />
               </div>
             </Link>
-            <h1 className="font-serif text-2xl font-light text-[#0a0a0a] mt-6">Create Your Account</h1>
-            <p className="text-[#6b7280] text-sm mt-1">Set a password to complete your registration.</p>
+            <h1 className="font-serif text-2xl font-light text-ink-900 mt-6">Create Your Account</h1>
+            <p className="text-ink-500 text-sm mt-1">Set a password to complete your registration.</p>
           </div>
 
-          <div className="bg-white p-8 border border-[#e5e5e5]">
+          <div className="bg-white p-8 border border-line">
             {tokenError ? (
               <div className="space-y-4">
                 <p className="text-red-600 text-sm border-l-2 border-red-400 pl-3 py-1">{tokenError}</p>
-                <p className="text-xs text-[#6b7280]">
+                <p className="text-xs text-ink-500">
                   Contact{' '}
-                  <a href="mailto:info@alatainvestmentclub.com" className="text-[#1a4a3a] hover:underline">
+                  <a href="mailto:info@alatainvestmentclub.com" className="text-forest hover:underline">
                     info@alatainvestmentclub.com
                   </a>{' '}
                   to receive a new invitation.
                 </p>
               </div>
             ) : !sessionReady ? (
-              <div className="flex items-center justify-center gap-2 py-6 text-sm text-[#6b7280]">
+              <div className="flex items-center justify-center gap-2 py-6 text-sm text-ink-500">
                 <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -179,7 +179,7 @@ function AcceptInviteForm() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="fullName" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                  <label htmlFor="fullName" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                     Full Name
                   </label>
                   <input
@@ -189,12 +189,12 @@ function AcceptInviteForm() {
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                     Password
                   </label>
                   <input
@@ -204,12 +204,12 @@ function AcceptInviteForm() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="confirm" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                  <label htmlFor="confirm" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                     Confirm Password
                   </label>
                   <input
@@ -219,7 +219,7 @@ function AcceptInviteForm() {
                     value={confirm}
                     onChange={e => setConfirm(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
                   />
                 </div>
 
@@ -230,7 +230,7 @@ function AcceptInviteForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  className="w-full bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-fast flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                 >
                   {loading ? (
                     <>
@@ -249,7 +249,7 @@ function AcceptInviteForm() {
           </div>
 
           <div className="mt-6 text-center">
-            <Link href="/" className="text-xs text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors">
+            <Link href="/" className="text-xs text-ink-500 hover:text-ink-900 tracking-wide transition-colors">
               ← Back to homepage
             </Link>
           </div>

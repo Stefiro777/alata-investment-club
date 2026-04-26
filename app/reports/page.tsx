@@ -52,10 +52,10 @@ export default async function ReportsPage() {
       <section className="py-20 sm:py-28 bg-[#f5f5f0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <Reveal className="mb-14">
-            <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Publications</p>
-            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#0a0a0a] mb-3">Our Research</h2>
-            <div className="w-10 h-px bg-[#1a4a3a] mb-5" />
-            <p className="text-[#6b7280] text-sm max-w-xl leading-relaxed">
+            <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">Publications</p>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-3">Our Research</h2>
+            <div className="w-10 h-px bg-forest mb-5" />
+            <p className="text-ink-500 text-sm max-w-xl leading-relaxed">
               Browse our latest reports, analyses and insights produced by Alata Investment Club members.
             </p>
           </Reveal>

@@ -15,8 +15,8 @@ const INDUSTRY_OPTIONS = [
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-8">
-      <h2 className="font-serif text-2xl font-bold text-[#1a4a3a]">{title}</h2>
-      <div className="w-8 h-px bg-[#1a4a3a] mt-2" />
+      <h2 className="font-serif text-2xl font-bold text-forest">{title}</h2>
+      <div className="w-8 h-px bg-forest mt-2" />
     </div>
   )
 }
@@ -66,39 +66,39 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-black/10 p-6 space-y-4">
-      <p className="text-xs font-medium tracking-wide text-[#6b7280] uppercase mb-2">Add Alumni</p>
+    <form onSubmit={handleSubmit} className="bg-white border border-line-faint p-6 space-y-4">
+      <p className="text-xs font-medium tracking-wide text-ink-500 uppercase mb-2">Add Alumni</p>
       <div className="grid sm:grid-cols-2 gap-4">
         <input
           required
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder="Full name *"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
         />
         <input
           required
           value={role}
           onChange={e => setRole(e.target.value)}
           placeholder="Role / position *"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
         />
         <input
           value={graduationYear}
           onChange={e => setGraduationYear(e.target.value)}
           placeholder="Graduation year (e.g. 2023)"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
         />
         <input
           value={currentCompany}
           onChange={e => setCurrentCompany(e.target.value)}
           placeholder="Current company"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+          className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
         />
         <select
           value={industry}
           onChange={e => setIndustry(e.target.value)}
-          className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] focus:border-[#1a4a3a] text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors"
+          className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors"
           style={{ accentColor: '#1a4a3a' }}
         >
           <option value="" disabled className="text-gray-400">Select industry</option>
@@ -110,14 +110,14 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
           value={linkedinUrl}
           onChange={e => setLinkedinUrl(e.target.value)}
           placeholder="LinkedIn URL"
-          className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors sm:col-span-2"
+          className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors sm:col-span-2"
         />
       </div>
       {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
       <button
         type="submit"
         disabled={saving}
-        className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {saving ? '…' : 'Add Alumni'}
       </button>
@@ -205,7 +205,7 @@ function AlumniRow({
         {/* Drag handle */}
         <div
           {...dragHandleProps}
-          className="flex-shrink-0 cursor-grab active:cursor-grabbing text-[#d1d5db] hover:text-[#9ca3af] touch-none"
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing text-ink-300 hover:text-ink-400 touch-none"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm8-16a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
@@ -213,8 +213,8 @@ function AlumniRow({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#0a0a0a] truncate">{alumni.name}</p>
-          <p className="text-xs text-[#6b7280] truncate">
+          <p className="text-sm font-medium text-ink-900 truncate">{alumni.name}</p>
+          <p className="text-xs text-ink-500 truncate">
             {alumni.role}{alumni.current_company ? ` · ${alumni.current_company}` : ''}{alumni.graduation_year ? ` · ${alumni.graduation_year}` : ''}
           </p>
         </div>
@@ -222,14 +222,14 @@ function AlumniRow({
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => setOpen(o => !o)}
-            className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-150"
+            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast"
           >
             {open ? 'Close' : 'Edit'}
           </button>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-150 disabled:opacity-40"
+            className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast disabled:opacity-40"
           >
             {deleting ? '…' : 'Delete'}
           </button>
@@ -239,14 +239,14 @@ function AlumniRow({
       {open && (
         <form onSubmit={handleSave} className="px-6 pb-5 pt-2 border-t border-black/5 space-y-3">
           <div className="grid sm:grid-cols-2 gap-3">
-            <input required value={name} onChange={e => setName(e.target.value)} placeholder="Full name *" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
-            <input required value={role} onChange={e => setRole(e.target.value)} placeholder="Role *" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
-            <input value={graduationYear} onChange={e => setGraduationYear(e.target.value)} placeholder="Graduation year" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
-            <input value={currentCompany} onChange={e => setCurrentCompany(e.target.value)} placeholder="Current company" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors" />
+            <input required value={name} onChange={e => setName(e.target.value)} placeholder="Full name *" className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors" />
+            <input required value={role} onChange={e => setRole(e.target.value)} placeholder="Role *" className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors" />
+            <input value={graduationYear} onChange={e => setGraduationYear(e.target.value)} placeholder="Graduation year" className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors" />
+            <input value={currentCompany} onChange={e => setCurrentCompany(e.target.value)} placeholder="Current company" className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors" />
             <select
               value={industry}
               onChange={e => setIndustry(e.target.value)}
-              className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] focus:border-[#1a4a3a] text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors sm:col-span-2"
+              className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors sm:col-span-2"
               style={{ accentColor: '#1a4a3a' }}
             >
               <option value="" disabled className="text-gray-400">Select industry</option>
@@ -254,10 +254,10 @@ function AlumniRow({
                 <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
-            <input value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="LinkedIn URL" className="px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white transition-colors sm:col-span-2" />
+            <input value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="LinkedIn URL" className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors sm:col-span-2" />
           </div>
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
-          <button type="submit" disabled={saving} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-150 disabled:opacity-50">
+          <button type="submit" disabled={saving} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-fast disabled:opacity-50">
             {saving ? '…' : 'Save'}
           </button>
         </form>
@@ -332,13 +332,13 @@ function AlumniList({ alumni: initialAlumni }: { alumni: Alumni[] }) {
       <button
         type="button"
         onClick={() => setListOpen(v => !v)}
-        className="flex items-center gap-3 w-full text-left group border border-black/10 bg-white px-4 py-3 hover:border-[#1a4a3a] transition-colors duration-150"
+        className="flex items-center gap-3 w-full text-left group border border-line-faint bg-white px-4 py-3 hover:border-forest transition-colors duration-fast"
       >
-        <span className="text-sm font-medium text-[#0a0a0a] group-hover:text-[#1a4a3a] transition-colors flex-1">
+        <span className="text-sm font-medium text-ink-900 group-hover:text-forest transition-colors flex-1">
           Alumni ({list.length})
         </span>
         <svg
-          className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0"
+          className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
           style={{ transform: listOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
@@ -351,7 +351,7 @@ function AlumniList({ alumni: initialAlumni }: { alumni: Alumni[] }) {
         <div style={{ overflow: 'hidden' }}>
           {/* Search */}
           <div className="relative mb-3">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
             </svg>
             <input
@@ -359,13 +359,13 @@ function AlumniList({ alumni: initialAlumni }: { alumni: Alumni[] }) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by name, role or company…"
-              className="w-full pl-9 pr-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white"
+              className="w-full pl-9 pr-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
             />
           </div>
 
           <div className="bg-black/5 rounded-sm">
             {filtered.length === 0 ? (
-              <div className="bg-white px-6 py-8 text-center text-sm text-[#6b7280]">
+              <div className="bg-white px-6 py-8 text-center text-sm text-ink-500">
                 {search.trim() ? 'No results.' : 'No alumni yet.'}
               </div>
             ) : (

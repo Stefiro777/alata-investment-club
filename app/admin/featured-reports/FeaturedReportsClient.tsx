@@ -90,11 +90,11 @@ function ReportModal({
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="bg-white w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-center justify-between px-8 py-6 border-b border-[#e5e5e5]">
-          <h3 className="font-serif text-xl font-bold text-[#0a0a0a]">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-line">
+          <h3 className="font-serif text-xl font-bold text-ink-900">
             {initial ? 'Edit Featured Report' : 'Add Featured Report'}
           </h3>
-          <button onClick={onClose} className="text-[#6b7280] hover:text-[#0a0a0a] transition-colors p-1">
+          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 transition-colors p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -104,7 +104,7 @@ function ReportModal({
         <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5">
           {/* Title */}
           <div>
-            <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -112,13 +112,13 @@ function ReportModal({
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Report title"
-              className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+              className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -127,26 +127,26 @@ function ReportModal({
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Brief description of the report…"
-              className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors resize-none"
+              className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors resize-none"
             />
           </div>
 
           {/* Authors */}
           <div>
-            <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
               Authors
             </label>
             <input
               value={authors}
               onChange={e => setAuthors(e.target.value)}
               placeholder="es. Mario Rossi, Luca Bianchi"
-              className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+              className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
             />
           </div>
 
           {/* PDF */}
           <div>
-            <label className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+            <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
               PDF File
             </label>
             <div className="flex gap-3 items-start">
@@ -154,20 +154,20 @@ function ReportModal({
                 value={pdfUrl}
                 onChange={e => setPdfUrl(e.target.value)}
                 placeholder="PDF URL or upload"
-                className="flex-1 px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors"
+                className="flex-1 px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
               />
               <button
                 type="button"
                 onClick={() => pdfRef.current?.click()}
                 disabled={uploadingPdf}
-                className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2.5 transition-colors duration-150 disabled:opacity-50"
+                className="flex-shrink-0 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2.5 transition-colors duration-fast disabled:opacity-50"
               >
                 {uploadingPdf ? '…' : 'Upload'}
               </button>
               <input ref={pdfRef} type="file" accept="application/pdf" className="hidden" onChange={handlePdfUpload} />
             </div>
             {pdfUrl && (
-              <p className="mt-1 text-xs text-[#6b7280] truncate">{pdfUrl}</p>
+              <p className="mt-1 text-xs text-ink-500 truncate">{pdfUrl}</p>
             )}
           </div>
 
@@ -179,11 +179,11 @@ function ReportModal({
             <button
               type="submit"
               disabled={saving}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors duration-150 disabled:opacity-50"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors duration-fast disabled:opacity-50"
             >
               {saving ? 'Saving…' : initial ? 'Save Changes' : 'Add Report'}
             </button>
-            <button type="button" onClick={onClose} className="text-sm text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors">
+            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900 tracking-wide transition-colors">
               Cancel
             </button>
           </div>
@@ -258,16 +258,16 @@ export default function FeaturedReportsClient({ reports: initialReports }: { rep
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-8 py-10">
       <div className="mb-8">
-        <h2 className="font-serif text-2xl font-bold text-[#0a0a0a]">Featured Reports</h2>
-        <div className="w-10 h-0.5 bg-[#1a4a3a] mt-2" />
-        <p className="text-xs text-[#6b7280] mt-3">
+        <h2 className="font-serif text-2xl font-bold text-ink-900">Featured Reports</h2>
+        <div className="w-10 h-0.5 bg-forest mt-2" />
+        <p className="text-xs text-ink-500 mt-3">
           These reports appear on the public /reports page with alternating image–text layout. Drag to reorder.
         </p>
       </div>
 
       <button
         onClick={openAdd}
-        className="mb-6 inline-flex items-center gap-2 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide uppercase px-6 py-2.5 transition-colors duration-150"
+        className="mb-6 inline-flex items-center gap-2 bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide uppercase px-6 py-2.5 transition-colors duration-fast"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -276,11 +276,11 @@ export default function FeaturedReportsClient({ reports: initialReports }: { rep
       </button>
 
       {list.length === 0 ? (
-        <div className="bg-white border border-black/10 px-6 py-12 text-center text-sm text-[#6b7280]">
+        <div className="bg-white border border-line-faint px-6 py-12 text-center text-sm text-ink-500">
           No featured reports yet. Add one above.
         </div>
       ) : (
-        <div className="bg-white border border-black/10">
+        <div className="bg-white border border-line-faint">
           {list.map((report, i) => (
             <div
               key={report.id}
@@ -291,7 +291,7 @@ export default function FeaturedReportsClient({ reports: initialReports }: { rep
               className="flex items-center gap-4 px-6 py-4 border-b border-black/5 last:border-b-0 hover:bg-[#f9f9f9] transition-colors"
             >
               {/* Drag handle */}
-              <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-[#d1d5db] hover:text-[#9ca3af] touch-none">
+              <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-ink-300 hover:text-ink-400 touch-none">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm8-16a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
                 </svg>
@@ -299,11 +299,11 @@ export default function FeaturedReportsClient({ reports: initialReports }: { rep
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#0a0a0a] truncate">{report.title}</p>
-                <p className="text-xs text-[#6b7280] truncate mt-0.5">{report.description}</p>
+                <p className="text-sm font-medium text-ink-900 truncate">{report.title}</p>
+                <p className="text-xs text-ink-500 truncate mt-0.5">{report.description}</p>
                 <div className="flex items-center gap-3 mt-1">
                   {report.pdf_url && (
-                    <span className="text-xs text-[#1a4a3a] flex items-center gap-1">
+                    <span className="text-xs text-forest flex items-center gap-1">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
@@ -317,14 +317,14 @@ export default function FeaturedReportsClient({ reports: initialReports }: { rep
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => openEdit(report)}
-                  className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-150"
+                  className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(report.id, report.title)}
                   disabled={deletingId === report.id}
-                  className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-150 disabled:opacity-40"
+                  className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast disabled:opacity-40"
                 >
                   {deletingId === report.id ? '…' : 'Delete'}
                 </button>

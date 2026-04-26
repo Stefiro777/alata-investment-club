@@ -7,8 +7,8 @@ import type { UpcomingEvent, EventRegistration } from '@/lib/types'
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-8">
-      <h2 className="font-serif text-2xl font-bold text-[#1a4a3a]">{title}</h2>
-      <div className="w-8 h-px bg-[#1a4a3a] mt-2" />
+      <h2 className="font-serif text-2xl font-bold text-forest">{title}</h2>
+      <div className="w-8 h-px bg-forest mt-2" />
     </div>
   )
 }
@@ -66,32 +66,32 @@ function RegistrationsModal({
       style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white border border-black/10 w-full max-w-4xl max-h-[85vh] flex flex-col shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
+      <div className="bg-white border border-line-faint w-full max-w-4xl max-h-[85vh] flex flex-col shadow-xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line-faint">
           <div>
-            <p className="font-serif text-lg font-bold text-[#1a4a3a]">Registrations</p>
-            <p className="text-xs text-[#6b7280] mt-0.5">{event.title} — {event.date}</p>
+            <p className="font-serif text-lg font-bold text-forest">Registrations</p>
+            <p className="text-xs text-ink-500 mt-0.5">{event.title} — {event.date}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-[#6b7280] hover:text-[#0a0a0a] text-xl leading-none transition-colors"
+            className="text-ink-500 hover:text-ink-900 text-xl leading-none transition-colors"
           >
             ✕
           </button>
         </div>
         <div className="overflow-auto flex-1 p-6">
           {loading ? (
-            <p className="text-sm text-[#6b7280] text-center py-10">Loading…</p>
+            <p className="text-sm text-ink-500 text-center py-10">Loading…</p>
           ) : error ? (
             <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
           ) : regs && regs.length === 0 ? (
-            <p className="text-sm text-[#6b7280] text-center py-10">No registrations yet.</p>
+            <p className="text-sm text-ink-500 text-center py-10">No registrations yet.</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-black/10 bg-[#f9f9f9]">
+                <tr className="border-b border-line-faint bg-[#f9f9f9]">
                   {['Nome', 'Cognome', 'Email', 'Telefono', 'Anno', 'Data'].map(h => (
-                    <th key={h} className="text-left px-3 py-2 text-xs font-medium text-[#6b7280] uppercase tracking-wide whitespace-nowrap">
+                    <th key={h} className="text-left px-3 py-2 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
                       {h}
                     </th>
                   ))}
@@ -99,13 +99,13 @@ function RegistrationsModal({
               </thead>
               <tbody>
                 {regs?.map(r => (
-                  <tr key={r.id} className="border-b border-black/5 last:border-0 hover:bg-[#fafafa]">
-                    <td className="px-3 py-2.5 text-[#0a0a0a] font-medium">{r.nome}</td>
-                    <td className="px-3 py-2.5 text-[#0a0a0a]">{r.cognome}</td>
-                    <td className="px-3 py-2.5 text-[#6b7280]">{r.email}</td>
-                    <td className="px-3 py-2.5 text-[#6b7280]">{r.telefono ?? '—'}</td>
-                    <td className="px-3 py-2.5 text-[#6b7280] whitespace-nowrap">{r.anno_di_studio}</td>
-                    <td className="px-3 py-2.5 text-[#6b7280] whitespace-nowrap">
+                  <tr key={r.id} className="border-b border-black/5 last:border-0 hover:bg-paper-cool">
+                    <td className="px-3 py-2.5 text-ink-900 font-medium">{r.nome}</td>
+                    <td className="px-3 py-2.5 text-ink-900">{r.cognome}</td>
+                    <td className="px-3 py-2.5 text-ink-500">{r.email}</td>
+                    <td className="px-3 py-2.5 text-ink-500">{r.telefono ?? '—'}</td>
+                    <td className="px-3 py-2.5 text-ink-500 whitespace-nowrap">{r.anno_di_studio}</td>
+                    <td className="px-3 py-2.5 text-ink-500 whitespace-nowrap">
                       {new Date(r.created_at).toLocaleDateString('it-IT')}
                     </td>
                   </tr>
@@ -176,7 +176,7 @@ function EventFormModal({
   }
 
   const inputClass =
-    'w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#0a0a0a] bg-white transition-colors'
+    'w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors'
 
   return (
     <div
@@ -184,36 +184,36 @@ function EventFormModal({
       style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white border border-black/10 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
-          <p className="font-serif text-lg font-bold text-[#1a4a3a]">
+      <div className="bg-white border border-line-faint w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line-faint">
+          <p className="font-serif text-lg font-bold text-forest">
             {initial.id ? 'Edit Event' : 'Add Event'}
           </p>
-          <button onClick={onClose} className="text-[#6b7280] hover:text-[#0a0a0a] text-xl leading-none transition-colors">✕</button>
+          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 text-xl leading-none transition-colors">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Date */}
           <div>
-            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Date *</label>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Date *</label>
             <input type="date" required value={form.date} onChange={e => set('date', e.target.value)} className={inputClass} />
           </div>
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Title *</label>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Title *</label>
             <input required value={form.title} onChange={e => set('title', e.target.value)} placeholder="Event title" className={inputClass} />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Description</label>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Description</label>
             <textarea rows={3} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Brief description" className={`${inputClass} resize-none`} />
           </div>
 
           {/* Status + Action Type */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Status *</label>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Status *</label>
               <select value={form.status} onChange={e => set('status', e.target.value as UpcomingEvent['status'])} className={inputClass}>
                 {STATUS_OPTIONS.map(s => (
                   <option key={s} value={s}>{s.replace('_', ' ')}</option>
@@ -221,7 +221,7 @@ function EventFormModal({
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Action Type</label>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Action Type</label>
               <select value={form.action_type} onChange={e => set('action_type', e.target.value)} className={inputClass}>
                 <option value="">— none —</option>
                 {ACTION_OPTIONS.map(a => <option key={a} value={a}>{a}</option>)}
@@ -232,7 +232,7 @@ function EventFormModal({
           {/* Action Link (only when type = link) */}
           {form.action_type === 'link' && (
             <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-1">Action Link</label>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Action Link</label>
               <input value={form.action_link} onChange={e => set('action_link', e.target.value)} placeholder="https://..." className={inputClass} />
             </div>
           )}
@@ -240,10 +240,10 @@ function EventFormModal({
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
-            <button type="button" onClick={onClose} className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-150">
+            <button type="button" onClick={onClose} className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-fast">
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={saving} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed">
               {saving ? '…' : 'Save'}
             </button>
           </div>
@@ -256,7 +256,7 @@ function EventFormModal({
 // ── Drag handle icon ─────────────────────────────────────────────────────────
 function DragHandle() {
   return (
-    <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" className="text-[#9ca3af]">
+    <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" className="text-ink-400">
       <circle cx="4" cy="3" r="1.5" />
       <circle cx="8" cy="3" r="1.5" />
       <circle cx="4" cy="8" r="1.5" />
@@ -346,29 +346,29 @@ export default function UpcomingEventsAdminSection({
       <div className="flex items-center justify-between mb-4">
         <div className="h-6">
           {orderSaved && (
-            <span className="text-xs text-[#1a4a3a] font-medium tracking-wide animate-pulse">
+            <span className="text-xs text-forest font-medium tracking-wide animate-pulse">
               ✓ Order saved
             </span>
           )}
         </div>
         <button
           onClick={openAdd}
-          className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-150"
+          className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-fast"
         >
           + Add Event
         </button>
       </div>
 
-      <div className="bg-white border border-black/10 overflow-x-auto">
+      <div className="bg-white border border-line-faint overflow-x-auto">
         {events.length === 0 ? (
-          <p className="text-sm text-[#6b7280] text-center py-10">No upcoming events.</p>
+          <p className="text-sm text-ink-500 text-center py-10">No upcoming events.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-black/10 bg-[#f9f9f9]">
+              <tr className="border-b border-line-faint bg-[#f9f9f9]">
                 <th className="px-4 py-3 w-8" />
                 {['Date', 'Title', 'Status', 'Action', 'Azioni'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide whitespace-nowrap">
+                  <th key={h} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -382,13 +382,13 @@ export default function UpcomingEventsAdminSection({
                   onDragStart={() => onDragStart(i)}
                   onDragOver={e => e.preventDefault()}
                   onDrop={() => onDrop(i)}
-                  className="border-b border-black/5 last:border-0 hover:bg-[#fafafa] transition-colors"
+                  className="border-b border-black/5 last:border-0 hover:bg-paper-cool transition-colors"
                 >
                   <td className="px-4 py-3 cursor-grab active:cursor-grabbing">
                     <DragHandle />
                   </td>
-                  <td className="px-4 py-3 font-medium text-[#0a0a0a] whitespace-nowrap">{ev.date}</td>
-                  <td className="px-4 py-3 text-[#0a0a0a] max-w-[200px]">
+                  <td className="px-4 py-3 font-medium text-ink-900 whitespace-nowrap">{ev.date}</td>
+                  <td className="px-4 py-3 text-ink-900 max-w-[200px]">
                     <span title={ev.title}>
                       {ev.title.length > 50 ? ev.title.slice(0, 50) + '…' : ev.title}
                     </span>
@@ -396,28 +396,28 @@ export default function UpcomingEventsAdminSection({
                   <td className="px-4 py-3">
                     <span className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 ${
                       ev.status === 'open'
-                        ? 'bg-[#1a4a3a] text-white'
+                        ? 'bg-forest text-white'
                         : ev.status === 'completed'
                         ? 'border border-gray-300 text-gray-500'
-                        : 'border border-[#1a4a3a] text-[#1a4a3a]'
+                        : 'border border-forest text-forest'
                     }`}>
                       {ev.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#6b7280] text-xs">
+                  <td className="px-4 py-3 text-ink-500 text-xs">
                     {ev.action_type ?? '—'}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <button
                         onClick={() => setRegsModal(ev)}
-                        className="border border-[#6b7280] text-[#6b7280] hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150 whitespace-nowrap"
+                        className="border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast whitespace-nowrap"
                       >
                         Registrations
                       </button>
                       <button
                         onClick={() => openEdit(ev)}
-                        className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150"
+                        className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
                       >
                         Edit
                       </button>
@@ -426,13 +426,13 @@ export default function UpcomingEventsAdminSection({
                           <span className="text-xs text-red-600">Confirm?</span>
                           <button
                             onClick={() => handleDelete(ev.id)}
-                            className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-150"
+                            className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
                           >
                             Yes
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
-                            className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-150"
+                            className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
                           >
                             No
                           </button>
@@ -440,7 +440,7 @@ export default function UpcomingEventsAdminSection({
                       ) : (
                         <button
                           onClick={() => setDeleteConfirm(ev.id)}
-                          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-150"
+                          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
                         >
                           Delete
                         </button>

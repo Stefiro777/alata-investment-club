@@ -54,7 +54,7 @@ export default async function EventsPage() {
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           {!eventi || eventi.length === 0 ? (
-            <div className="py-20 text-center text-[#6b7280]">
+            <div className="py-20 text-center text-ink-500">
               <p className="text-sm tracking-wide">No events or updates available at the moment.</p>
             </div>
           ) : (

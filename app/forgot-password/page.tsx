@@ -69,22 +69,22 @@ export default function ForgotPasswordPage() {
                 />
               </div>
             </Link>
-            <h1 className="font-serif text-2xl font-light text-[#0a0a0a] mt-6">Reset Password</h1>
-            <p className="text-[#6b7280] text-sm mt-1">
+            <h1 className="font-serif text-2xl font-light text-ink-900 mt-6">Reset Password</h1>
+            <p className="text-ink-500 text-sm mt-1">
               Enter your email to receive a reset link.
             </p>
           </div>
 
           {/* Form card */}
-          <div className="bg-white p-8 border border-[#e5e5e5]">
+          <div className="bg-white p-8 border border-line">
             {sent ? (
-              <p className="text-[#1a4a3a] text-sm border-l-2 border-[#1a4a3a] pl-3 py-1">
+              <p className="text-forest text-sm border-l-2 border-forest pl-3 py-1">
                 Check your email for the reset link.
               </p>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="email" className="block text-xs font-medium tracking-wide uppercase text-[#6b7280] mb-2">
+                  <label htmlFor="email" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                     Email
                   </label>
                   <input
@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full px-4 py-3 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-[#0a0a0a] placeholder-[#d1d5db] text-sm transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
                   />
                 </div>
 
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  className="w-full bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-fast flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                 >
                   {loading ? (
                     <>
@@ -125,7 +125,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           <div className="mt-6 text-center">
-            <Link href="/login" className="text-xs text-[#6b7280] hover:text-[#0a0a0a] tracking-wide transition-colors">
+            <Link href="/login" className="text-xs text-ink-500 hover:text-ink-900 tracking-wide transition-colors">
               ← Back to sign in
             </Link>
           </div>

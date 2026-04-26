@@ -69,10 +69,10 @@ export default function PartnersMarquee({
       `}</style>
       <Reveal direction="up" className="flex flex-col items-center mb-8">
         {subtitle && (
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">{subtitle}</p>
+          <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">{subtitle}</p>
         )}
-        <h2 className="font-serif text-4xl font-bold text-[#0a0a0a]">{title}</h2>
-        <div className="w-[60px] h-[3px] bg-[#1a4a3a] mt-3" />
+        <h2 className="font-serif text-4xl font-bold text-ink-900">{title}</h2>
+        <div className="w-[60px] h-[3px] bg-forest mt-3" />
       </Reveal>
       <Reveal direction="up" delay={200}>
         <div className="overflow-hidden">

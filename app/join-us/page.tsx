@@ -45,7 +45,7 @@ export default async function JoinUsPage() {
       <TimelineSection />
 
       {/* ── Apply Now ── */}
-      <section id="application-form" className="bg-[#1a4a3a] py-24 sm:py-32 px-6 relative overflow-hidden">
+      <section id="application-form" className="bg-forest py-24 sm:py-32 px-6 relative overflow-hidden">
         <div className="relative z-10 max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-[1fr_auto] items-center gap-10">
             <div>

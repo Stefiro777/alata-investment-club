@@ -24,16 +24,16 @@ export default function ContentTabs({
   return (
     <div>
       {/* Tab bar */}
-      <div className="sticky top-[56px] z-20 bg-white border-b border-black/10 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+      <div className="sticky top-[56px] z-20 bg-white border-b border-line-faint overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
         <div className="max-w-5xl mx-auto px-8 flex items-center gap-0">
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActive(tab.id)}
-              className={`px-6 py-4 text-xs font-medium tracking-widest uppercase whitespace-nowrap border-b-2 transition-colors duration-150 ${
+              className={`px-6 py-4 text-xs font-medium tracking-widest uppercase whitespace-nowrap border-b-2 transition-colors duration-fast ${
                 active === tab.id
-                  ? 'border-[#1a4a3a] text-[#1a4a3a]'
-                  : 'border-transparent text-[#6b7280] hover:text-[#0a0a0a] hover:border-black/20'
+                  ? 'border-forest text-forest'
+                  : 'border-transparent text-ink-500 hover:text-ink-900 hover:border-black/20'
               }`}
             >
               {tab.label}

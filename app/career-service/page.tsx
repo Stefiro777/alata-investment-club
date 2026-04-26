@@ -112,39 +112,39 @@ export default async function CareerServicePage() {
                 >
                   {/* Decorative number */}
                   <span
-                    className="absolute -bottom-5 -right-3 font-serif font-bold leading-none text-[#1a4a3a] select-none pointer-events-none"
+                    className="absolute -bottom-5 -right-3 font-serif font-bold leading-none text-forest select-none pointer-events-none"
                     style={{ fontSize: '9rem', opacity: 0.05 }}
                     aria-hidden="true"
                   >{service.number}</span>
 
                   {/* Service number + title */}
                   <div className="mb-6 relative">
-                    <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-2">{service.number}</p>
+                    <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-2">{service.number}</p>
                     <div className="flex items-baseline justify-between gap-4">
-                      <h2 className="font-serif text-2xl font-medium text-[#0a0a0a]">
+                      <h2 className="font-serif text-2xl font-medium text-ink-900">
                         {service.title}
                       </h2>
                       {showPrices ? (
-                        <span className="font-serif text-2xl font-medium text-[#1a4a3a] flex-shrink-0">
+                        <span className="font-serif text-2xl font-medium text-forest flex-shrink-0">
                           {prices[service.id]}
                         </span>
                       ) : (
-                        <span className="text-xs font-medium tracking-wide uppercase text-[#6b7280] flex-shrink-0">
+                        <span className="text-xs font-medium tracking-wide uppercase text-ink-500 flex-shrink-0">
                           Contact us
                         </span>
                       )}
                     </div>
-                    <div className="w-8 h-px bg-[#1a4a3a] mt-3" />
+                    <div className="w-8 h-px bg-forest mt-3" />
                   </div>
 
                   <div className="relative">
-                    <p className="text-[#6b7280] text-sm leading-relaxed">{service.description}</p>
+                    <p className="text-ink-500 text-sm leading-relaxed">{service.description}</p>
                   </div>
 
                   <ul className="space-y-2.5 flex-1 mt-6 relative">
                     {service.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-sm text-[#0a0a0a]">
-                        <span className="w-1 h-1 rounded-full bg-[#1a4a3a] flex-shrink-0 mt-2" />
+                      <li key={feature} className="flex items-start gap-3 text-sm text-ink-900">
+                        <span className="w-1 h-1 rounded-full bg-forest flex-shrink-0 mt-2" />
                         {feature}
                       </li>
                     ))}
@@ -154,7 +154,7 @@ export default async function CareerServicePage() {
                     href={service.calendlyUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 w-full border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-sm font-medium tracking-wide py-3.5 px-6 mt-6 relative"
+                    className="inline-flex items-center justify-center gap-2 w-full border border-forest text-forest hover:bg-forest hover:text-white text-sm font-medium tracking-wide py-3.5 px-6 mt-6 relative"
                     style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
                   >
                     Book now
@@ -170,21 +170,21 @@ export default async function CareerServicePage() {
       </section>
 
       {/* Linktree — white */}
-      <section className="py-20 bg-white border-t border-[#e5e5e5]">
+      <section className="py-20 bg-white border-t border-line">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <Reveal>
-            <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-4">Follow us</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-4">
+            <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">Follow us</p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-4">
               All our links in one place
             </h2>
-            <p className="text-[#6b7280] text-sm leading-relaxed mb-10">
+            <p className="text-ink-500 text-sm leading-relaxed mb-10">
               Follow Alata Investment Club on social media, access our resources, and stay updated on our activities.
             </p>
             <a
               href={LINKTREE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-200"
+              className="inline-flex items-center gap-3 bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-fast"
             >
               Visit our Linktree
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

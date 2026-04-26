@@ -88,9 +88,9 @@ export default function ResourcesSection() {
     <div>
       {/* Header */}
       <div className="mb-10">
-        <p className="text-xs tracking-[0.2em] uppercase text-[#6b7280] mb-3">Exclusive Access</p>
-        <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">Resources</h2>
-        <div className="w-10 h-px bg-[#1a4a3a] mt-4" />
+        <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-3">Exclusive Access</p>
+        <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900">Resources</h2>
+        <div className="w-10 h-px bg-forest mt-4" />
       </div>
 
       {/* Quick nav */}
@@ -99,10 +99,10 @@ export default function ResourcesSection() {
           <button
             key={cat}
             onClick={() => goTo(i)}
-            className={`px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150 ${
+            className={`px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast ${
               i === active
-                ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
-                : 'border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white'
+                ? 'bg-forest text-white border-forest'
+                : 'border-forest text-forest hover:bg-forest hover:text-white'
             }`}
           >
             {cat}
@@ -114,7 +114,7 @@ export default function ResourcesSection() {
       <div className="flex items-center gap-6 mb-8">
         <button
           onClick={prev}
-          className="w-10 h-10 flex items-center justify-center bg-[#1a4a3a] text-white hover:bg-[#123a2d] transition-colors duration-150 flex-shrink-0"
+          className="w-10 h-10 flex items-center justify-center bg-forest text-white hover:bg-forest-deep transition-colors duration-fast flex-shrink-0"
           aria-label="Sezione precedente"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,13 +123,13 @@ export default function ResourcesSection() {
         </button>
 
         <div>
-          <h3 className="font-serif text-2xl font-bold text-[#0a0a0a]">{category}</h3>
-          <div className="w-10 h-[2px] bg-[#1a4a3a] mt-2" />
+          <h3 className="font-serif text-2xl font-bold text-ink-900">{category}</h3>
+          <div className="w-10 h-[2px] bg-forest mt-2" />
         </div>
 
         <button
           onClick={next}
-          className="w-10 h-10 flex items-center justify-center bg-[#1a4a3a] text-white hover:bg-[#123a2d] transition-colors duration-150 flex-shrink-0"
+          className="w-10 h-10 flex items-center justify-center bg-forest text-white hover:bg-forest-deep transition-colors duration-fast flex-shrink-0"
           aria-label="Sezione successiva"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,18 +152,18 @@ export default function ResourcesSection() {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group p-8 border border-black/10 hover:border-[#1a4a3a] bg-white flex flex-col gap-4 transition-colors duration-150"
+            className="group p-8 border border-line-faint hover:border-forest bg-white flex flex-col gap-4 transition-colors duration-fast"
           >
-            <div className="w-10 h-10 bg-[#f5f5f5] flex items-center justify-center group-hover:bg-[#1a4a3a] transition-colors duration-150">
+            <div className="w-10 h-10 bg-paper-stone flex items-center justify-center group-hover:bg-forest transition-colors duration-fast">
               {isFolder
-                ? <FolderIcon className="w-5 h-5 text-[#1a4a3a] group-hover:text-white transition-colors duration-150" />
-                : <FileIcon   className="w-5 h-5 text-[#1a4a3a] group-hover:text-white transition-colors duration-150" />
+                ? <FolderIcon className="w-5 h-5 text-forest group-hover:text-white transition-colors duration-fast" />
+                : <FileIcon   className="w-5 h-5 text-forest group-hover:text-white transition-colors duration-fast" />
               }
             </div>
-            <p className="font-serif text-xl font-semibold text-[#0a0a0a] group-hover:text-[#1a4a3a] leading-snug transition-colors duration-150">
+            <p className="font-serif text-xl font-semibold text-ink-900 group-hover:text-forest leading-snug transition-colors duration-fast">
               {label}
             </p>
-            <svg className="w-4 h-4 text-[#6b7280] group-hover:text-[#1a4a3a] mt-auto transition-colors duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-ink-500 group-hover:text-forest mt-auto transition-colors duration-fast" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </a>

@@ -29,9 +29,9 @@ function PartnersGrid({
     <section className={`py-20 sm:py-28 ${bg}`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <Reveal direction="up">
-          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">{subtitle}</p>
-          <h2 className="font-serif text-4xl font-bold text-[#0a0a0a] mb-2">{title}</h2>
-          <div className="w-10 h-px bg-[#1a4a3a] mb-12" />
+          <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">{subtitle}</p>
+          <h2 className="font-serif text-4xl font-bold text-ink-900 mb-2">{title}</h2>
+          <div className="w-10 h-px bg-forest mb-12" />
         </Reveal>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {partners.map((p, i) => (
@@ -53,17 +53,17 @@ function PartnersGrid({
 
 function PartnerCard({ partner }: { partner: Partner }) {
   return (
-    <div className="bg-white border border-black/10 p-8 hover-lift h-full flex flex-col">
+    <div className="bg-white border border-line-faint p-8 hover-lift h-full flex flex-col">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={partner.logo_url}
         alt={partner.name}
         className="h-12 w-auto object-contain mb-6 self-start"
       />
-      <div className="w-8 h-px bg-[#1a4a3a] mb-4" />
-      <h3 className="font-serif text-lg font-bold text-[#0a0a0a] mb-3">{partner.name}</h3>
+      <div className="w-8 h-px bg-forest mb-4" />
+      <h3 className="font-serif text-lg font-bold text-ink-900 mb-3">{partner.name}</h3>
       {partner.description && (
-        <p className="text-sm text-[#6b7280] leading-relaxed flex-1">{partner.description}</p>
+        <p className="text-sm text-ink-500 leading-relaxed flex-1">{partner.description}</p>
       )}
     </div>
   )
@@ -119,9 +119,9 @@ export default async function PartnersPage() {
       <section className="py-20 sm:py-28 bg-[#f5f5f0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <Reveal direction="up">
-            <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Collaboration</p>
-            <h2 className="font-serif text-4xl font-bold text-[#0a0a0a] mb-2">Why Partner with Us</h2>
-            <div className="w-10 h-px bg-[#1a4a3a] mb-12" />
+            <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">Collaboration</p>
+            <h2 className="font-serif text-4xl font-bold text-ink-900 mb-2">Why Partner with Us</h2>
+            <div className="w-10 h-px bg-forest mb-12" />
           </Reveal>
           <div className="grid sm:grid-cols-3 gap-6 items-stretch">
             {[
@@ -139,10 +139,10 @@ export default async function PartnersPage() {
               },
             ].map(({ title, body }, i) => (
               <Reveal key={title} direction="up" delay={i * 120} className="h-full">
-                <div className="bg-white border border-black/10 p-8 hover-lift h-full">
-                  <div className="w-8 h-px bg-[#1a4a3a] mb-6" />
-                  <h3 className="font-serif text-xl font-bold text-[#0a0a0a] mb-3">{title}</h3>
-                  <p className="text-sm text-[#6b7280] leading-relaxed">{body}</p>
+                <div className="bg-white border border-line-faint p-8 hover-lift h-full">
+                  <div className="w-8 h-px bg-forest mb-6" />
+                  <h3 className="font-serif text-xl font-bold text-ink-900 mb-3">{title}</h3>
+                  <p className="text-sm text-ink-500 leading-relaxed">{body}</p>
                 </div>
               </Reveal>
             ))}
@@ -165,7 +165,7 @@ export default async function PartnersPage() {
       <PartnersGrid partners={sponsors} subtitle="Supported by" title="Sponsors" bg="bg-[#f5f5f0]" />
 
       {/* CTA */}
-      <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">
+      <section className="py-20 sm:py-28 bg-forest text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Get in touch</p>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold mb-6">
@@ -177,7 +177,7 @@ export default async function PartnersPage() {
           </p>
           <a
             href="mailto:info@alatainvestmentclub.com"
-            className="inline-block bg-white text-[#1a4a3a] font-medium text-sm tracking-wide px-8 py-4 hover:bg-white/90 transition-colors duration-150"
+            className="inline-block bg-white text-forest font-medium text-sm tracking-wide px-8 py-4 hover:bg-white/90 transition-colors duration-fast"
           >
             Get in Touch
           </a>

@@ -94,7 +94,7 @@ export default async function AlumniPage() {
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           {alumni.length === 0 ? (
-            <p className="text-[#6b7280] text-sm text-center py-8">
+            <p className="text-ink-500 text-sm text-center py-8">
               No alumni to display yet.
             </p>
           ) : (
@@ -105,7 +105,7 @@ export default async function AlumniPage() {
 
       {/* Where Our Alumni Work Today — marquee */}
       {companies.length > 0 && (
-        <section className="py-16 bg-gray-100 border-t border-[#e5e5e5] overflow-hidden">
+        <section className="py-16 bg-gray-100 border-t border-line overflow-hidden">
           <style>{`
             @keyframes alumni-companies-scroll {
               from { transform: translateX(0); }
@@ -117,11 +117,11 @@ export default async function AlumniPage() {
           `}</style>
 
           <Reveal direction="up" className="flex flex-col items-center mb-10">
-            <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">Career Placements</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#0a0a0a]">
+            <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">Career Placements</p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900">
               Where Our Alumni Work Today
             </h2>
-            <div className="w-10 h-px bg-[#1a4a3a] mt-4" />
+            <div className="w-10 h-px bg-forest mt-4" />
           </Reveal>
 
           <Reveal direction="up" delay={200}>

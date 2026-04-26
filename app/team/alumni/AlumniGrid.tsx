@@ -27,7 +27,7 @@ function AlumniCard({ alumni }: { alumni: Alumni }) {
       className="bg-white overflow-hidden flex flex-col"
       style={{ border: '1px solid #1a4a3a' }}
     >
-      <div className="p-4 bg-[#1a4a3a] flex-grow">
+      <div className="p-4 bg-forest flex-grow">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="font-serif text-base font-bold text-white leading-tight">{alumni.name}</h3>
@@ -95,7 +95,7 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedIndustry(null)}
-              className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150"
+              className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast"
               style={
                 selectedIndustry === null
                   ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
@@ -108,7 +108,7 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
               <button
                 key={ind}
                 onClick={() => setSelectedIndustry(ind)}
-                className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-150"
+                className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast"
                 style={
                   selectedIndustry === ind
                     ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
@@ -120,7 +120,7 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
             ))}
           </div>
           {selectedIndustry && (
-            <p className="text-xs text-[#9ca3af] mt-3">
+            <p className="text-xs text-ink-400 mt-3">
               {filtered.length} {filtered.length === 1 ? 'alumni' : 'alumni'} in {selectedIndustry}
             </p>
           )}
@@ -129,7 +129,7 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <p className="text-[#6b7280] text-sm text-center py-8">
+        <p className="text-ink-500 text-sm text-center py-8">
           No alumni in this industry yet.
         </p>
       ) : (

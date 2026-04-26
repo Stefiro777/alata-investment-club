@@ -9,14 +9,14 @@ interface Props {
 
 function PdfFallback({ title }: { title: string }) {
   return (
-    <div className="flex flex-col items-center justify-center bg-[#f5f5f5] w-full gap-6 px-10 py-14">
-      <div className="w-16 h-20 bg-white border border-black/10 flex flex-col items-center justify-center gap-1 shadow-sm flex-shrink-0">
-        <svg className="w-7 h-7 text-[#1a4a3a]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="flex flex-col items-center justify-center bg-paper-stone w-full gap-6 px-10 py-14">
+      <div className="w-16 h-20 bg-white border border-line-faint flex flex-col items-center justify-center gap-1 shadow-sm flex-shrink-0">
+        <svg className="w-7 h-7 text-forest/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <span className="text-[9px] font-bold tracking-widest uppercase text-[#1a4a3a]/60">PDF</span>
+        <span className="text-[9px] font-bold tracking-widest uppercase text-forest/60">PDF</span>
       </div>
-      <p className="font-serif text-base font-medium text-[#0a0a0a] text-center leading-snug max-w-[260px]">
+      <p className="font-serif text-base font-medium text-ink-900 text-center leading-snug max-w-[260px]">
         {title}
       </p>
     </div>
@@ -150,7 +150,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
   }
 
   return (
-    <div ref={containerRef} className="w-full bg-[#f5f5f5]">
+    <div ref={containerRef} className="w-full bg-paper-stone">
 
       {/* ── Canvas container — height animates on expand/collapse ── */}
       <div
@@ -164,9 +164,9 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
       >
         {/* Loading spinner */}
         {loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#f5f5f5] gap-4">
-            <div className="w-8 h-8 border-2 border-[#1a4a3a]/20 border-t-[#1a4a3a] rounded-full animate-spin" />
-            <span className="text-xs text-[#9ca3af] tracking-wide">Caricamento PDF…</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-paper-stone gap-4">
+            <div className="w-8 h-8 border-2 border-forest/20 border-t-[#1a4a3a] rounded-full animate-spin" />
+            <span className="text-xs text-ink-400 tracking-wide">Caricamento PDF…</span>
           </div>
         )}
 
@@ -212,7 +212,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
           >
             {totalPages > 1 && (
               <span
-                className="text-[10px] font-medium text-[#6b7280] bg-white/90 px-2 py-1"
+                className="text-[10px] font-medium text-ink-500 bg-white/90 px-2 py-1"
                 style={{ border: '1px solid rgba(0,0,0,0.08)' }}
               >
                 {currentPage} / {totalPages}

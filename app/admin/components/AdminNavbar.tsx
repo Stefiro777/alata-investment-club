@@ -45,7 +45,7 @@ export default function AdminNavbar({ userEmail: _ }: { userEmail: string }) {
       {/* Back link */}
       <a
         href="/dashboard"
-        className="flex-shrink-0 ml-8 transition-colors duration-100 hover:text-[#1a4a3a]"
+        className="flex-shrink-0 ml-8 transition-colors duration-100 hover:text-forest"
         style={{ fontSize: '0.75rem', color: '#4a4a4a', letterSpacing: '0.02em' }}
       >
         ← Back to Dashboard

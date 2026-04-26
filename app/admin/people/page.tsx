@@ -51,10 +51,10 @@ export default async function AdminPeoplePage() {
       <main className="bg-[#f9f9f9] min-h-screen">
         {/* TeamClient has its own max-w-5xl wrapper */}
         <TeamClient members={(teamMembersData ?? []) as TeamMember[]} />
-        <div className="border-t border-black/10" />
+        <div className="border-t border-line-faint" />
         <div className="max-w-5xl mx-auto px-8 py-10 space-y-16">
           <AlumniSection initialAlumni={(alumniData ?? []) as Alumni[]} />
-          <hr className="border-black/10" />
+          <hr className="border-line-faint" />
           <AlumniCompaniesSection initialCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]} />
         </div>
       </main>

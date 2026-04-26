@@ -86,11 +86,11 @@ export default async function AdminContentPage() {
       <div className="max-w-5xl mx-auto px-8 py-10">
         <NewsEventsSection initialItems={(contenuti ?? []) as Contenuto[]} />
       </div>
-      <div className="border-t border-black/10" />
+      <div className="border-t border-line-faint" />
       <UpcomingEventsAdminSection initialEvents={(upcomingEventsData ?? []) as UpcomingEvent[]} />
-      <div className="border-t border-black/10" />
+      <div className="border-t border-line-faint" />
       <ReviewsAdminSection initialReviews={(reviewsData ?? []) as Review[]} />
-      <div className="border-t border-black/10" />
+      <div className="border-t border-line-faint" />
       <FeaturedGalleryAdminClient
         items={(featuredEventsData ?? []) as FeaturedGalleryItem[]}
         table="featured_events"
@@ -106,7 +106,7 @@ export default async function AdminContentPage() {
       <div className="max-w-5xl mx-auto px-8 py-10">
         <PartnersSection initialPartners={(partnersData ?? []) as Partner[]} />
       </div>
-      <div className="border-t border-black/10" />
+      <div className="border-t border-line-faint" />
       <FeaturedGalleryAdminClient
         items={(featuredPartnersData ?? []) as FeaturedGalleryItem[]}
         table="featured_partners"
