@@ -29,6 +29,8 @@ function PartnerInsertForm({ onInserted }: { onInserted: (p: Partner) => void })
   const [name, setName] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
   const [websiteUrl, setWebsiteUrl] = useState('')
+  const [description, setDescription] = useState('')
+  const [type, setType] = useState<'sponsor' | 'partner'>('sponsor')
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,22 +53,48 @@ function PartnerInsertForm({ onInserted }: { onInserted: (p: Partner) => void })
     const supabase = createClient()
     const { data, error } = await supabase
       .from('partners')
-      .insert({ name: name.trim(), logo_url: logoUrl.trim(), website_url: websiteUrl.trim() || null })
-      .select('id, name, logo_url, website_url, order_index, created_at')
+      .insert({
+        name: name.trim(),
+        logo_url: logoUrl.trim(),
+        website_url: websiteUrl.trim() || null,
+        description: description.trim() || null,
+        type,
+      })
+      .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at')
       .single()
     if (error) { setError(error.message) } else {
       onInserted(data as Partner)
-      setName(''); setLogoUrl(''); setWebsiteUrl('')
+      setName(''); setLogoUrl(''); setWebsiteUrl(''); setDescription(''); setType('sponsor')
     }
     setSaving(false)
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Type selector */}
+      <div>
+        <label className="block text-xs text-[#6b7280] mb-2">Type *</label>
+        <div className="flex gap-2">
+          {(['sponsor', 'partner'] as const).map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setType(t)}
+              className={`text-xs font-medium uppercase tracking-wide px-4 py-2 border transition-colors ${type === t ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'border-[#e5e5e5] text-[#6b7280] hover:border-[#1a4a3a]'}`}
+            >
+              {t === 'sponsor' ? 'Sponsor' : 'Partner'}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-[#9ca3af] mt-1">
+          {type === 'sponsor' ? 'Appare nel logo marquee (Sponsors)' : 'Appare nelle card con descrizione (Partners)'}
+        </p>
+      </div>
+
       <div className="grid sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-[#6b7280] mb-1">Name *</label>
-          <input required value={name} onChange={e => setName(e.target.value)} placeholder="Partner name"
+          <input required value={name} onChange={e => setName(e.target.value)} placeholder="Nome partner"
             className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white" />
         </div>
         <div>
@@ -90,11 +118,19 @@ function PartnerInsertForm({ onInserted }: { onInserted: (p: Partner) => void })
             <img src={logoUrl} alt="preview" className="mt-2 h-10 object-contain border border-[#e5e5e5] p-1 bg-white" />
           )}
         </div>
+        {type === 'partner' && (
+          <div className="sm:col-span-2">
+            <label className="block text-xs text-[#6b7280] mb-1">Description</label>
+            <textarea rows={3} value={description} onChange={e => setDescription(e.target.value)}
+              placeholder="Breve descrizione del partner (visibile nella card pubblica)…"
+              className="w-full px-3 py-2.5 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white resize-none" />
+          </div>
+        )}
       </div>
       {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
       <button type="submit" disabled={saving || !logoUrl}
         className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-150 disabled:opacity-50">
-        {saving ? '…' : 'Add Partner'}
+        {saving ? '…' : 'Add'}
       </button>
     </form>
   )
@@ -110,6 +146,8 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
   const [name, setName] = useState(partner.name)
   const [logoUrl, setLogoUrl] = useState(partner.logo_url)
   const [websiteUrl, setWebsiteUrl] = useState(partner.website_url ?? '')
+  const [description, setDescription] = useState(partner.description ?? '')
+  const [type, setType] = useState<'sponsor' | 'partner'>(partner.type ?? 'sponsor')
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -133,10 +171,16 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
     const supabase = createClient()
     const { error: err } = await supabase
       .from('partners')
-      .update({ name: name.trim(), logo_url: logoUrl.trim(), website_url: websiteUrl.trim() || null })
+      .update({
+        name: name.trim(),
+        logo_url: logoUrl.trim(),
+        website_url: websiteUrl.trim() || null,
+        description: description.trim() || null,
+        type,
+      })
       .eq('id', partner.id)
     if (err) { setError(err.message) } else {
-      onUpdated({ ...partner, name: name.trim(), logo_url: logoUrl.trim(), website_url: websiteUrl.trim() || null })
+      onUpdated({ ...partner, name: name.trim(), logo_url: logoUrl.trim(), website_url: websiteUrl.trim() || null, description: description.trim() || null, type })
       setSaved(true); setTimeout(() => setSaved(false), 2500)
     }
     setSaving(false)
@@ -167,6 +211,9 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-[#0a0a0a] truncate">{partner.name}</p>
+            <span className={`flex-shrink-0 text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 ${partner.type === 'partner' ? 'bg-[#1a4a3a]/10 text-[#1a4a3a]' : 'bg-gray-100 text-gray-600'}`}>
+              {partner.type === 'partner' ? 'Partner' : 'Sponsor'}
+            </span>
             <span className="flex-shrink-0 text-xs bg-gray-100 text-gray-600 px-2 py-0.5">{partner.click_count ?? 0} click</span>
           </div>
           {partner.website_url && <p className="text-xs text-[#6b7280] truncate">{partner.website_url}</p>}
@@ -182,6 +229,18 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
       </div>
       {expanded && (
         <form onSubmit={handleUpdate} className="border-t border-black/5 px-4 py-4 space-y-3 bg-[#fafafa]">
+          {/* Type */}
+          <div>
+            <label className="block text-xs text-[#6b7280] mb-2">Type</label>
+            <div className="flex gap-2">
+              {(['sponsor', 'partner'] as const).map(t => (
+                <button key={t} type="button" onClick={() => setType(t)}
+                  className={`text-xs font-medium uppercase tracking-wide px-3 py-1.5 border transition-colors ${type === t ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'border-[#e5e5e5] text-[#6b7280] hover:border-[#1a4a3a]'}`}>
+                  {t === 'sponsor' ? 'Sponsor' : 'Partner'}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-[#6b7280] mb-1">Name</label>
@@ -209,6 +268,14 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
                 <img src={logoUrl} alt="preview" className="mt-2 h-10 object-contain border border-[#e5e5e5] p-1 bg-white" />
               )}
             </div>
+            {type === 'partner' && (
+              <div className="sm:col-span-2">
+                <label className="block text-xs text-[#6b7280] mb-1">Description</label>
+                <textarea rows={3} value={description} onChange={e => setDescription(e.target.value)}
+                  placeholder="Breve descrizione…"
+                  className="w-full px-3 py-2 border border-[#e5e5e5] focus:outline-none focus:border-[#1a4a3a] text-sm bg-white resize-none" />
+              </div>
+            )}
           </div>
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
           <div className="flex items-center gap-3">

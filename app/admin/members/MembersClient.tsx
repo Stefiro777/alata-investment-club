@@ -770,6 +770,7 @@ export default function MembersClient({
   const [addingAdmin, setAddingAdmin] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
   const [removingEmail, setRemovingEmail] = useState<string | null>(null)
+  const [isAdminListOpen, setIsAdminListOpen] = useState(false)
 
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1073,10 +1074,31 @@ export default function MembersClient({
       {/* ══════════════════════════════════════
           Admin Users
       ══════════════════════════════════════ */}
-      <section id="admin-users">
-        <SectionHeading title="Admin Users" />
+      <div id="admin-users">
 
-        <div className="bg-white border border-black/10 p-8 space-y-6">
+        {/* Header row */}
+        <button
+          onClick={() => setIsAdminListOpen(!isAdminListOpen)}
+          className="flex items-center justify-between w-full text-left py-2"
+        >
+          <h2 className="text-2xl font-serif">Admin Users</h2>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#9ca3af"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ transform: isAdminListOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {/* Add admin — always visible */}
+        <div className="bg-white border border-black/10 p-6 space-y-4 mb-2">
           <form onSubmit={handleAddAdmin} className="flex gap-3">
             <input
               type="email"
@@ -1094,12 +1116,14 @@ export default function MembersClient({
               {addingAdmin ? '…' : 'Add Admin'}
             </button>
           </form>
-
           {adminError && (
             <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{adminError}</p>
           )}
+        </div>
 
-          <div className="space-y-px bg-black/5 rounded-sm">
+        {/* Email list — shown only when open */}
+        {isAdminListOpen && (
+          <div className="space-y-px bg-black/5">
             {adminUsers.map(email => (
               <div key={email} className="bg-white px-6 py-4 flex items-center justify-between gap-6">
                 <span className="text-sm text-[#0a0a0a] font-medium">
@@ -1120,8 +1144,9 @@ export default function MembersClient({
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        )}
+
+      </div>
 
     </div>
   )

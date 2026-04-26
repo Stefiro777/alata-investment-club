@@ -5,7 +5,10 @@ import NewsEventsSection from '../components/NewsEventsSection'
 import FeaturedReportsClient from '../featured-reports/FeaturedReportsClient'
 import ReviewsAdminSection from '../components/ReviewsAdminSection'
 import UpcomingEventsAdminSection from '../components/UpcomingEventsAdminSection'
-import type { FeaturedReport, Review, UpcomingEvent } from '@/lib/types'
+import FeaturedGalleryAdminClient from '../components/FeaturedGalleryAdminClient'
+import PartnersSection from '../components/PartnersSection'
+import ContentTabs from './ContentTabs'
+import type { FeaturedReport, Review, UpcomingEvent, FeaturedGalleryItem, Partner } from '@/lib/types'
 
 type Contenuto = {
   id: number
@@ -38,6 +41,9 @@ export default async function AdminContentPage() {
     { data: featuredReportsData },
     { data: reviewsData },
     { data: upcomingEventsData },
+    { data: featuredEventsData },
+    { data: featuredPartnersData },
+    { data: partnersData },
   ] = await Promise.all([
     supabase
       .from('contenuti')
@@ -56,21 +62,70 @@ export default async function AdminContentPage() {
       .from('upcoming_events')
       .select('*')
       .order('date', { ascending: true }),
+    supabase
+      .from('featured_events')
+      .select('id, title, description, authors, media, display_order')
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('featured_partners')
+      .select('id, title, description, authors, media, display_order')
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('partners')
+      .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
   ])
+
+  const reportsContent = (
+    <FeaturedReportsClient reports={(featuredReportsData ?? []) as FeaturedReport[]} />
+  )
+
+  const eventsContent = (
+    <>
+      <div className="max-w-5xl mx-auto px-8 py-10">
+        <NewsEventsSection initialItems={(contenuti ?? []) as Contenuto[]} />
+      </div>
+      <div className="border-t border-black/10" />
+      <UpcomingEventsAdminSection initialEvents={(upcomingEventsData ?? []) as UpcomingEvent[]} />
+      <div className="border-t border-black/10" />
+      <ReviewsAdminSection initialReviews={(reviewsData ?? []) as Review[]} />
+      <div className="border-t border-black/10" />
+      <FeaturedGalleryAdminClient
+        items={(featuredEventsData ?? []) as FeaturedGalleryItem[]}
+        table="featured_events"
+        bucket="event-gallery"
+        heading="Featured Events Gallery"
+        description="Appear on /events with media gallery. Drag to reorder."
+      />
+    </>
+  )
+
+  const partnersContent = (
+    <>
+      <div className="max-w-5xl mx-auto px-8 py-10">
+        <PartnersSection initialPartners={(partnersData ?? []) as Partner[]} />
+      </div>
+      <div className="border-t border-black/10" />
+      <FeaturedGalleryAdminClient
+        items={(featuredPartnersData ?? []) as FeaturedGalleryItem[]}
+        table="featured_partners"
+        bucket="partner-gallery"
+        heading="Featured Partners Gallery"
+        description="Appear on /partners with media gallery. Drag to reorder."
+      />
+    </>
+  )
 
   return (
     <>
       <AdminNavbar userEmail={user.email ?? ''} />
       <main className="bg-[#f9f9f9] min-h-screen">
-        <div className="max-w-5xl mx-auto px-8 py-10">
-          <NewsEventsSection initialItems={(contenuti ?? []) as Contenuto[]} />
-        </div>
-        <div className="border-t border-black/10" />
-        <FeaturedReportsClient reports={(featuredReportsData ?? []) as FeaturedReport[]} />
-        <div className="border-t border-black/10" />
-        <ReviewsAdminSection initialReviews={(reviewsData ?? []) as Review[]} />
-        <div className="border-t border-black/10" />
-        <UpcomingEventsAdminSection initialEvents={(upcomingEventsData ?? []) as UpcomingEvent[]} />
+        <ContentTabs
+          reportsContent={reportsContent}
+          eventsContent={eventsContent}
+          partnersContent={partnersContent}
+        />
       </main>
     </>
   )

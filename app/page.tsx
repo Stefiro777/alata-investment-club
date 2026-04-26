@@ -215,8 +215,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Our Partners */}
-      <PartnersMarquee partners={partnersData ?? []} />
+      {/* Partners & Sponsors */}
+      <PartnersMarquee title="Partners & Sponsors" partners={partnersData ?? []} />
 
       {/* Contact Us */}
       <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">

@@ -3,17 +3,25 @@ import Image from 'next/image'
 import EventsGrid from './EventsGrid'
 import EventsReviewsWrapper from './EventsReviewsWrapper'
 import UpcomingEvents from '@/app/components/UpcomingEvents'
+import FeaturedGallery from '@/app/components/FeaturedGallery'
+import type { FeaturedGalleryItem } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
 export default async function EventsPage() {
   const supabase = await createClient()
 
-  const { data: eventi } = await supabase
-    .from('contenuti')
-    .select('*')
-    .in('tipo', ['evento', 'aggiornamento'])
-    .order('data_pubblicazione', { ascending: false })
+  const [{ data: eventi }, { data: featuredEvents }] = await Promise.all([
+    supabase
+      .from('contenuti')
+      .select('*')
+      .in('tipo', ['evento', 'aggiornamento'])
+      .order('data_pubblicazione', { ascending: false }),
+    supabase
+      .from('featured_events')
+      .select('id, title, description, authors, media, display_order')
+      .order('display_order', { ascending: true }),
+  ])
 
   return (
     <div>
@@ -54,6 +62,14 @@ export default async function EventsPage() {
           )}
         </div>
       </section>
+
+      {/* Featured Events Gallery */}
+      <FeaturedGallery
+        items={(featuredEvents ?? []) as FeaturedGalleryItem[]}
+        sectionLabel="Featured Event"
+        title="Featured Events"
+        subtitle="Highlights"
+      />
 
       <EventsReviewsWrapper />
     </div>

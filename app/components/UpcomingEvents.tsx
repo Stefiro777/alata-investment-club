@@ -23,7 +23,7 @@ function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
   }
   // coming_soon
   return (
-    <span className="inline-block bg-white text-[#1a4a3a] border border-white text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
+    <span className="inline-block bg-[#1a4a3a] text-white border border-white/20 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
       Coming Soon
     </span>
   )

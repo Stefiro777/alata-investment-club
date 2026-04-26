@@ -1,9 +1,12 @@
 import type { NextConfig } from 'next'
 
+const isDev = process.env.NODE_ENV === 'development'
+
 const CSP = [
   "default-src 'self'",
   // Next.js inline scripts + Clarity + Calendly + Vercel + unpkg (PDF.js worker)
-  "script-src 'self' 'unsafe-inline' https://cdn.clarity.ms https://www.clarity.ms https://c.bing.com https://calendly.com https://assets.calendly.com https://va.vercel-scripts.com https://vercel.live https://unpkg.com",
+  // 'unsafe-eval' is added only in development for HMR / fast-refresh
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://cdn.clarity.ms https://www.clarity.ms https://c.bing.com https://calendly.com https://assets.calendly.com https://va.vercel-scripts.com https://vercel.live https://unpkg.com`,
   // Inline styles + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
@@ -13,8 +16,8 @@ const CSP = [
   "connect-src 'self' https://iyigyfygsalvvveeeheq.supabase.co https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://vitals.vercel-insights.com https://va.vercel-scripts.com https://www.clarity.ms https://c.bing.com https://unpkg.com",
   // PDF.js Web Worker loaded from unpkg at runtime
   "worker-src 'self' blob: https://unpkg.com",
-  // Calendly embeds + PDF preview via blob: and Supabase storage
-  "frame-src 'self' blob: https://calendly.com https://assets.calendly.com https://iyigyfygsalvvveeeheq.supabase.co",
+  // Calendly embeds + PDF preview via blob: and Supabase storage + YouTube/Vimeo gallery embeds
+  "frame-src 'self' blob: https://calendly.com https://assets.calendly.com https://iyigyfygsalvvveeeheq.supabase.co https://www.youtube.com https://player.vimeo.com",
   // PDF <object>/<embed> preview: blob: URLs and Supabase storage
   "object-src 'self' blob: https://iyigyfygsalvvveeeheq.supabase.co",
   // Prevent clickjacking (redundant with X-Frame-Options but defence-in-depth)

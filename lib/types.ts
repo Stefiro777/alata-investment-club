@@ -34,6 +34,8 @@ export type Partner = {
   name: string
   logo_url: string
   website_url: string | null
+  description: string | null
+  type: 'sponsor' | 'partner'
   order_index: number | null
   click_count: number
   created_at: string
@@ -85,5 +87,21 @@ export type Review = {
   rating?: number | null
   visible: boolean
   created_at: string
+}
+
+export type MediaItem = {
+  type: 'image' | 'video'
+  url: string
+  caption?: string
+}
+
+export type FeaturedGalleryItem = {
+  id: string
+  title: string
+  description: string
+  authors: string | null
+  media: MediaItem[]
+  display_order: number
+  created_at?: string
 }
 

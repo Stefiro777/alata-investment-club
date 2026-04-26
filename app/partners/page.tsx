@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import PartnersMarquee from '@/app/components/PartnersMarquee'
 import { createClient } from '@/lib/supabase-server'
 import Reveal from '@/app/components/Reveal'
+import FeaturedGallery from '@/app/components/FeaturedGallery'
+import type { FeaturedGalleryItem, Partner } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,13 +11,82 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://alatainvestmentclub.com/partners' },
 }
 
+// ── Shared grid ───────────────────────────────────────────────────────────────
+
+function PartnersGrid({
+  partners,
+  subtitle,
+  title,
+  bg = 'bg-white',
+}: {
+  partners: Partner[]
+  subtitle: string
+  title: string
+  bg?: string
+}) {
+  if (partners.length === 0) return null
+  return (
+    <section className={`py-20 sm:py-28 ${bg}`}>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <Reveal direction="up">
+          <p className="text-xs tracking-[0.2em] uppercase text-[#9ca3af] mb-3">{subtitle}</p>
+          <h2 className="font-serif text-4xl font-bold text-[#0a0a0a] mb-2">{title}</h2>
+          <div className="w-10 h-px bg-[#1a4a3a] mb-12" />
+        </Reveal>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {partners.map((p, i) => (
+            <Reveal key={p.id} direction="up" delay={i * 80} className="h-full">
+              {p.website_url ? (
+                <a href={p.website_url} target="_blank" rel="noopener noreferrer" className="block h-full">
+                  <PartnerCard partner={p} />
+                </a>
+              ) : (
+                <PartnerCard partner={p} />
+              )}
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function PartnerCard({ partner }: { partner: Partner }) {
+  return (
+    <div className="bg-white border border-black/10 p-8 hover-lift h-full flex flex-col">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={partner.logo_url}
+        alt={partner.name}
+        className="h-12 w-auto object-contain mb-6 self-start"
+      />
+      <div className="w-8 h-px bg-[#1a4a3a] mb-4" />
+      <h3 className="font-serif text-lg font-bold text-[#0a0a0a] mb-3">{partner.name}</h3>
+      {partner.description && (
+        <p className="text-sm text-[#6b7280] leading-relaxed flex-1">{partner.description}</p>
+      )}
+    </div>
+  )
+}
+
 export default async function PartnersPage() {
   const supabase = await createClient()
-  const { data: partnersData } = await supabase
-    .from('partners')
-    .select('id, name, logo_url, website_url, order_index')
-    .order('order_index', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: true })
+  const [{ data: allPartners }, { data: featuredPartners }] = await Promise.all([
+    supabase
+      .from('partners')
+      .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('featured_partners')
+      .select('id, title, description, authors, media, display_order')
+      .order('display_order', { ascending: true }),
+  ])
+
+  const partners = (allPartners ?? []) as Partner[]
+  const sponsors = partners.filter(p => p.type === 'sponsor' || !p.type)
+  const strategicPartners = partners.filter(p => p.type === 'partner')
+
   return (
     <div>
       {/* Hero */}
@@ -80,8 +150,19 @@ export default async function PartnersPage() {
         </div>
       </section>
 
-      {/* Current Partners — shared component, same data as homepage */}
-      <PartnersMarquee title="Our Current Partners" subtitle="Trusted by" partners={partnersData ?? []} />
+      {/* Featured Partners Gallery */}
+      <FeaturedGallery
+        items={(featuredPartners ?? []) as FeaturedGalleryItem[]}
+        sectionLabel="Partner Spotlight"
+        title="Partner Spotlights"
+        subtitle="In Evidence"
+      />
+
+      {/* Strategic Partners */}
+      <PartnersGrid partners={strategicPartners} subtitle="Strategic" title="Partners" bg="bg-white" />
+
+      {/* Sponsors — same card layout, alternating background */}
+      <PartnersGrid partners={sponsors} subtitle="Supported by" title="Sponsors" bg="bg-[#f5f5f0]" />
 
       {/* CTA */}
       <section className="py-20 sm:py-28 bg-[#1a4a3a] text-white">

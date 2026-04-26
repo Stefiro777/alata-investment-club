@@ -35,12 +35,21 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
   const [error, setError] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [canvasHeight, setCanvasHeight] = useState(0)
+  // Incremented each time a new PDF is ready to render; drives the render effect.
+  const [pdfReady, setPdfReady] = useState(0)
 
   const renderPage = useCallback(async (pdf: any, pageNum: number) => {
     const canvas = canvasRef.current
     if (!canvas) return
+    // Cancel any in-flight render and wait for it to actually stop before
+    // touching the canvas again — this is what prevents the double-render crash.
     if (renderTaskRef.current) {
-      try { renderTaskRef.current.cancel() } catch {}
+      try {
+        renderTaskRef.current.cancel()
+        await renderTaskRef.current.promise
+      } catch {
+        // RenderingCancelledException is expected; swallow it.
+      }
       renderTaskRef.current = null
     }
     try {
@@ -56,6 +65,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
       const task = page.render({ canvasContext: ctx, viewport })
       renderTaskRef.current = task
       await task.promise
+      renderTaskRef.current = null
     } catch (err: any) {
       if (err?.name !== 'RenderingCancelledException') {
         console.error('[PdfPreview] render error:', err)
@@ -63,12 +73,15 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
     }
   }, [])
 
+  // Load the PDF document. Does NOT call renderPage directly — state updates
+  // batch together and the render effect below owns all rendering.
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
         setLoading(true)
         setError(false)
+        setPdfReady(0)
         const pdfjsLib = await import('pdfjs-dist')
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
@@ -81,7 +94,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
         pdfRef.current = pdf
         setTotalPages(pdf.numPages)
         setCurrentPage(1)
-        await renderPage(pdf, 1)
+        setPdfReady(v => v + 1) // signals the render effect to run
       } catch (err) {
         if (!cancelled) {
           console.error('[PdfPreview] load error:', err)
@@ -92,14 +105,22 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
       }
     }
     load()
-    return () => { cancelled = true }
-  }, [pdfUrl, renderPage])
-
-  useEffect(() => {
-    if (pdfRef.current && totalPages > 0) {
-      renderPage(pdfRef.current, currentPage)
+    return () => {
+      cancelled = true
+      // Cancel any in-flight render when the URL changes or component unmounts.
+      if (renderTaskRef.current) {
+        try { renderTaskRef.current.cancel() } catch {}
+        renderTaskRef.current = null
+      }
     }
-  }, [currentPage, totalPages, renderPage])
+  }, [pdfUrl])
+
+  // Single effect responsible for all rendering. Runs when the PDF becomes
+  // ready (pdfReady bumped) or when the user navigates pages (currentPage).
+  useEffect(() => {
+    if (!pdfReady || !pdfRef.current) return
+    renderPage(pdfRef.current, currentPage)
+  }, [currentPage, pdfReady, renderPage])
 
   if (error) return <PdfFallback title={title} />
 
