@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 
 const stats = [
-  { value: 80,  label: 'Members' },
+  { value: 100, label: 'Members' },
   { value: 20,  label: 'Calls with IB, PE & Consulting professionals' },
   { value: 500, label: 'Analyses published' },
-  { value: 740, label: 'LinkedIn followers' },
+  { value: 800, label: 'LinkedIn followers' },
 ]
 
 function useCountUp(target: number, duration: number, active: boolean) {
