@@ -195,7 +195,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage - 1)}
                 disabled={safePage === 0}
-                className="w-9 h-9 flex items-center justify-center bg-forest hover:bg-[#143d30] text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center bg-paper border border-line text-ink-900 hover:border-forest hover:text-forest disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                 aria-label="Previous"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +212,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
                   className={`rounded-full transition-all duration-base ${
                     i === safePage
                       ? 'w-2.5 h-2.5 bg-forest'
-                      : 'w-2 h-2 bg-forest/30 hover:bg-forest/50'
+                      : 'w-2 h-2 bg-ink-300'
                   }`}
                 />
               ))}
@@ -221,7 +221,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage + 1)}
                 disabled={safePage === totalPages - 1}
-                className="w-9 h-9 flex items-center justify-center bg-forest hover:bg-[#143d30] text-white disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center bg-paper border border-line text-ink-900 hover:border-forest hover:text-forest disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
                 aria-label="Next"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
