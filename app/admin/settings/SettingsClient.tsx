@@ -78,7 +78,7 @@ export default function SettingsClient({
   const [addingAdmin, setAddingAdmin] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
   const [removingEmail, setRemovingEmail] = useState<string | null>(null)
-  const [isAdminListOpen, setIsAdminListOpen] = useState(true)
+  const [isAdminListOpen, setIsAdminListOpen] = useState(false)
 
   async function handleToggleApplications() {
     setTogglingApps(true)
@@ -494,7 +494,9 @@ export default function SettingsClient({
                           <span className="ml-2 text-xs text-forest tracking-widest uppercase">superadmin</span>
                         )}
                       </span>
-                      {email !== superadmin && email !== 'finullistefano@gmail.com' && (
+                      {email === 'finullistefano@gmail.com' ? (
+                        <span className="font-sans text-[11px] tracking-[0.10em] uppercase text-ink-400">Superadmin</span>
+                      ) : email !== superadmin && (
                         <button
                           onClick={() => handleRemoveAdmin(email)}
                           disabled={removingEmail === email}
