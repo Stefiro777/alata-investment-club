@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { MemberProfile } from './DashboardProfileContext'
@@ -47,20 +46,6 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
   return (
     <nav className="sticky top-0 z-[50] bg-[#1a4a3a] shadow-md">
       <div className="max-w-7xl mx-auto px-8 flex items-center h-14 gap-8">
-
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <Image
-            src="/logo.png"
-            alt="Alata"
-            width={30}
-            height={30}
-            style={{ filter: 'brightness(0) invert(1)' }}
-          />
-          <span className="font-serif font-bold text-white text-sm hidden lg:block leading-none">
-            Alata
-          </span>
-        </Link>
 
         {/* Nav links */}
         <div className="flex items-center gap-6 flex-1 overflow-x-auto">

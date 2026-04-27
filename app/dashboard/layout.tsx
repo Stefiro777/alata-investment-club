@@ -96,10 +96,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Welcome header */}
       <div className="bg-white border-b border-line">
         <div className="max-w-7xl mx-auto px-8 py-10">
-          <h1 className="font-serif text-5xl font-semibold text-forest leading-tight">
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-4">
             Welcome back, {profile.full_name}
           </h1>
-          <div className="w-14 h-0.5 bg-forest mt-4" />
+          <div className="w-12 h-px bg-forest" />
         </div>
       </div>
 

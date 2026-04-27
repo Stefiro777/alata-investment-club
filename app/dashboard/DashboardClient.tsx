@@ -149,18 +149,6 @@ function WelcomeView({
 
   return (
     <div className="py-16 sm:py-20">
-      {/* Greeting */}
-      <div className="mb-14">
-        <p className="text-xs tracking-[0.2em] uppercase text-forest mb-3">Members Area</p>
-        <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-4">
-          Welcome back, {displayName}
-        </h2>
-        <div className="w-12 h-px bg-forest mb-8" />
-        <p className="font-serif italic text-2xl sm:text-3xl text-ink-900/70 leading-snug">
-          &ldquo;Great investments start with great people.&rdquo;
-        </p>
-      </div>
-
       {/* Notion Workspace */}
       <div className="mb-10">
         <a
