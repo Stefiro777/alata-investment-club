@@ -53,34 +53,44 @@ export default function ReviewsSection({
 
         <div>
           {reviews.map((review, i) => {
-            const isRight = i % 2 === 1
+            const isEven = i % 2 === 1
             return (
               <Reveal key={review.id} direction="up" delay={i * 80}>
-                <div className={`py-8 px-0${i < reviews.length - 1 ? ' border-b border-forest/10' : ''}`}>
-                  <div className={`max-w-[65%]${isRight ? ' ml-auto text-right' : ' mr-auto'}`}>
-                    {review.rating != null && (
-                      <div className={`mb-3${isRight ? ' flex justify-end' : ''}`}>
-                        <StarRating rating={review.rating} />
+                <div className={i < reviews.length - 1 ? 'border-t border-line' : 'border-t border-line'}>
+                  {!isEven ? (
+                    /* Odd (0, 2, 4…): author left, quote right */
+                    <div className="grid grid-cols-[35%_65%] gap-8 py-12">
+                      <div>
+                        {review.rating != null && <div className="mb-3"><StarRating rating={review.rating} /></div>}
+                        <p className="font-semibold text-ink-900">{review.author_name}</p>
+                        {review.author_role && (
+                          <p className="font-sans text-[11px] tracking-[0.10em] uppercase text-ink-400 mt-1">{review.author_role}</p>
+                        )}
                       </div>
-                    )}
-                    <div className="relative">
-                      <span className={`absolute top-0 font-serif text-7xl text-forest opacity-15 leading-none pointer-events-none select-none${isRight ? ' left-0' : ' right-0'}`}>
-                        &ldquo;
-                      </span>
-                      <p className={`text-gray-700 text-base leading-relaxed${isRight ? ' pl-12' : ' pr-12'}`}>
-                        {review.content}
-                      </p>
+                      <div>
+                        <p className="text-ink-700 leading-relaxed">{review.content}</p>
+                      </div>
                     </div>
-                    <div className="border-t border-forest/20 my-6" />
-                    <p className="font-serif text-forest text-xl font-bold">{review.author_name}</p>
-                    {review.author_role && (
-                      <p className="text-xs uppercase tracking-widest text-gray-400 mt-1">{review.author_role}</p>
-                    )}
-                  </div>
+                  ) : (
+                    /* Even (1, 3, 5…): quote left, author right */
+                    <div className="grid grid-cols-[65%_35%] gap-8 py-12">
+                      <div>
+                        <p className="text-ink-700 leading-relaxed">{review.content}</p>
+                      </div>
+                      <div className="text-right">
+                        {review.rating != null && <div className="mb-3 flex justify-end"><StarRating rating={review.rating} /></div>}
+                        <p className="font-semibold text-ink-900">{review.author_name}</p>
+                        {review.author_role && (
+                          <p className="font-sans text-[11px] tracking-[0.10em] uppercase text-ink-400 mt-1">{review.author_role}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Reveal>
             )
           })}
+          {reviews.length > 0 && <div className="border-t border-line" />}
         </div>
       </div>
     </section>
