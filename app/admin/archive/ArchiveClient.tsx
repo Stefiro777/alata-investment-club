@@ -334,9 +334,14 @@ function DocRow({ doc, onDelete }: { doc: Doc; onDelete: () => void }) {
     <div className="flex items-start gap-4 px-6 py-4 border-b border-black/5 last:border-b-0 hover:bg-[#f9f9f9] transition-colors">
       {/* Type icon */}
       {doc.file_name ? (
-        <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center border ${isPdf ? 'border-red-200 bg-red-50' : isDoc ? 'border-blue-200 bg-blue-50' : 'border-line bg-paper-stone'}`}>
+        <a
+          href={doc.file_url ?? '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex-shrink-0 w-10 h-10 flex items-center justify-center border cursor-pointer hover:border-forest hover:text-forest transition-colors ${isPdf ? 'border-red-200 bg-red-50' : isDoc ? 'border-blue-200 bg-blue-50' : 'border-line bg-paper-stone'}`}
+        >
           <span className="text-[9px] font-bold uppercase tracking-widest">{ext}</span>
-        </div>
+        </a>
       ) : (
         <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center border border-line bg-paper-stone">
           <svg className="w-4 h-4 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
