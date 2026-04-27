@@ -16,9 +16,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
 
-      console.log('auth user email:', user?.email)
+      console.log('=== DASHBOARD AUTH DEBUG ===')
+      const { data: sessionData } = await supabase.auth.getSession()
+      console.log('session:', sessionData.session)
+      console.log('access_token present:', !!sessionData.session?.access_token)
+      console.log('user email from session:', sessionData.session?.user?.email)
+
+      const { data: { user } } = await supabase.auth.getUser()
+      console.log('user from getUser():', user)
+
+      // Test diretto: prova a fare una query che dovrebbe sempre funzionare
+      const { data: testData, error: testError } = await supabase
+        .from('club_members')
+        .select('count')
+        .limit(1)
+      console.log('test query result:', testData, 'test error:', testError)
 
       if (!user) {
         setStatus('unauthenticated')
@@ -26,13 +39,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return
       }
 
+      // Poi la query originale
       const { data: profileData, error } = await supabase
         .from('club_members')
         .select('full_name, role')
-        .eq('email', user.email!)
+        .eq('email', user?.email ?? '')
         .maybeSingle()
-
-      console.log('club_members result:', profileData, error)
+      console.log('profile query result:', profileData, 'profile error:', error)
+      console.log('=== END DEBUG ===')
 
       if (!profileData) {
         setStatus('not-found')
