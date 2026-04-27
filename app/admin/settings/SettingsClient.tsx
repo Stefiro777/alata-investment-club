@@ -78,6 +78,7 @@ export default function SettingsClient({
   const [addingAdmin, setAddingAdmin] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
   const [removingEmail, setRemovingEmail] = useState<string | null>(null)
+  const [isAdminListOpen, setIsAdminListOpen] = useState(true)
 
   async function handleToggleApplications() {
     setTogglingApps(true)
@@ -440,6 +441,7 @@ export default function SettingsClient({
         <SectionHeading title="Admin Users" />
 
         <div className="bg-white border border-line-faint p-8 space-y-6">
+          {/* Add admin form */}
           <form onSubmit={handleAddAdmin} className="flex gap-3">
             <input
               type="email"
@@ -462,26 +464,50 @@ export default function SettingsClient({
             <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{adminError}</p>
           )}
 
-          <div className="space-y-px bg-black/5 rounded-sm">
-            {adminUsers.map(email => (
-              <div key={email} className="bg-white px-6 py-4 flex items-center justify-between gap-6">
-                <span className="text-sm text-ink-900 font-medium">
-                  {email}
-                  {email === superadmin && (
-                    <span className="ml-2 text-xs text-forest tracking-widest uppercase">superadmin</span>
-                  )}
-                </span>
-                {email !== superadmin && (
-                  <button
-                    onClick={() => handleRemoveAdmin(email)}
-                    disabled={removingEmail === email}
-                    className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {removingEmail === email ? '…' : 'Remove'}
-                  </button>
-                )}
+          {/* Collapsible admin list */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setIsAdminListOpen(v => !v)}
+              className="flex items-center gap-3 w-full text-left group border border-line-faint bg-white px-4 py-3 hover:border-forest transition-colors duration-fast"
+            >
+              <span className="text-sm font-medium text-ink-900 group-hover:text-forest transition-colors flex-1">
+                Admin users ({adminUsers.length})
+              </span>
+              <svg
+                className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
+                style={{ transform: isAdminListOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <div style={{ display: 'grid', gridTemplateRows: isAdminListOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+              <div style={{ overflow: 'hidden' }}>
+                <div className="space-y-px bg-black/5 rounded-sm mt-2">
+                  {adminUsers.map(email => (
+                    <div key={email} className="bg-white px-6 py-4 flex items-center justify-between gap-6">
+                      <span className="text-sm text-ink-900 font-medium">
+                        {email}
+                        {email === superadmin && (
+                          <span className="ml-2 text-xs text-forest tracking-widest uppercase">superadmin</span>
+                        )}
+                      </span>
+                      {email !== superadmin && email !== 'finullistefano@gmail.com' && (
+                        <button
+                          onClick={() => handleRemoveAdmin(email)}
+                          disabled={removingEmail === email}
+                          className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {removingEmail === email ? '…' : 'Remove'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
