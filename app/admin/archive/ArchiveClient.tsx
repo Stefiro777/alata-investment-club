@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 
-const CATEGORIES = ['Legal', 'Delibere', 'Bilanci'] as const
+const CATEGORIES = ['Legal', 'Delibere', 'Contratti', 'Bilanci'] as const
 type Category = typeof CATEGORIES[number]
 
 type Doc = {
@@ -95,7 +95,7 @@ function AddDocModal({
     e.preventDefault()
     if (!title.trim() || !category) return
 
-    if ((category === 'Legal' || category === 'Delibere') && !fileUrl) {
+    if ((category === 'Legal' || category === 'Delibere' || category === 'Contratti') && !fileUrl) {
       setError('File obbligatorio per questa categoria.')
       return
     }
@@ -458,7 +458,7 @@ function CategorySection({
   const [open, setOpen] = useState(true)
 
   const sorted = [...docs].sort((a, b) => {
-    if (category === 'Legal') {
+    if (category === 'Legal' || category === 'Contratti') {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     }
     if (category === 'Delibere') {
