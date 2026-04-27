@@ -117,6 +117,14 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
           <span className="text-sm text-white/80 hidden md:block truncate max-w-[160px]">
             {profile.full_name}
           </span>
+          {profile.role === 'bod' && (
+            <Link
+              href="/admin"
+              className="text-xs font-medium uppercase tracking-wide border border-white/40 hover:border-white text-white px-3 py-1.5 transition-colors whitespace-nowrap"
+            >
+              Admin Panel
+            </Link>
+          )}
           <button
             onClick={handleLogout}
             disabled={loggingOut}
