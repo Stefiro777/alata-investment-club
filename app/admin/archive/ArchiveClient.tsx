@@ -322,7 +322,7 @@ function AddDocModal({
 
 // ── Doc row ────────────────────────────────────────────────────────────────────
 
-function DocRow({ doc, onDelete }: { doc: Doc; onDelete: () => void }) {
+function DocRow({ doc, onDelete, hideYearQuarter }: { doc: Doc; onDelete: () => void; hideYearQuarter?: boolean }) {
   const [deleting, setDeleting] = useState(false)
 
   const category = CATEGORIES.find(c => doc.tags.includes(c)) ?? null
@@ -355,7 +355,7 @@ function DocRow({ doc, onDelete }: { doc: Doc; onDelete: () => void }) {
         {doc.description && <p className="text-xs text-ink-500 mt-0.5 line-clamp-2">{doc.description}</p>}
         <div className="flex flex-wrap gap-1 mt-1.5 items-center">
           {/* Year/quarter badge for Delibere */}
-          {category === 'Delibere' && doc.year != null && (
+          {!hideYearQuarter && category === 'Delibere' && doc.year != null && (
             <span className="font-sans text-[10px] uppercase tracking-wide bg-paper-stone px-2 py-0.5 text-ink-500">
               {doc.year} · Q{doc.quarter}
             </span>
@@ -482,9 +482,37 @@ function CategorySection({
       {/* Collapsible body */}
       <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
         <div style={{ overflow: 'hidden' }}>
-          {sorted.length === 0 ? (
+          {docs.length === 0 ? (
             <div className="bg-white border border-line-faint px-6 py-8 text-center text-sm text-ink-500 mb-4">
               Nessun documento in questa categoria.
+            </div>
+          ) : category === 'Delibere' ? (
+            <div className="bg-white border border-line-faint mb-4 px-6 pb-4">
+              {(() => {
+                const years = [...new Set(docs.map(d => d.year).filter((y): y is number => y != null))].sort((a, b) => b - a)
+                return years.map(year => {
+                  const yearDocs = docs.filter(d => d.year === year)
+                  const quarters = [...new Set(yearDocs.map(d => d.quarter).filter((q): q is number => q != null))].sort((a, b) => b - a)
+                  return (
+                    <div key={year}>
+                      <h3 className="font-serif text-2xl font-semibold text-ink-900 mt-8 mb-2 pb-2 border-b border-line">{year}</h3>
+                      {quarters.map(quarter => {
+                        const qDocs = yearDocs
+                          .filter(d => d.quarter === quarter)
+                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        return (
+                          <div key={quarter}>
+                            <p className="font-sans text-xs uppercase tracking-[0.15em] text-ink-500 mt-5 mb-3">{quarter}Q</p>
+                            {qDocs.map(doc => (
+                              <DocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} hideYearQuarter />
+                            ))}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })
+              })()}
             </div>
           ) : (
             <div className="bg-white border border-line-faint mb-4">
