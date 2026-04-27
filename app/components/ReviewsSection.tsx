@@ -52,30 +52,35 @@ export default function ReviewsSection({
         </Reveal>
 
         <div>
-          {reviews.map((review, i) => (
-            <Reveal key={review.id} direction="up" delay={i * 80}>
-              <div className={`py-8 px-0${i < reviews.length - 1 ? ' border-b border-forest/10' : ''}`}>
-                {review.rating != null && (
-                  <div className="mb-3">
-                    <StarRating rating={review.rating} />
+          {reviews.map((review, i) => {
+            const isRight = i % 2 === 1
+            return (
+              <Reveal key={review.id} direction="up" delay={i * 80}>
+                <div className={`py-8 px-0${i < reviews.length - 1 ? ' border-b border-forest/10' : ''}`}>
+                  <div className={`max-w-[65%]${isRight ? ' ml-auto text-right' : ' mr-auto'}`}>
+                    {review.rating != null && (
+                      <div className={`mb-3${isRight ? ' flex justify-end' : ''}`}>
+                        <StarRating rating={review.rating} />
+                      </div>
+                    )}
+                    <div className="relative">
+                      <span className={`absolute top-0 font-serif text-7xl text-forest opacity-15 leading-none pointer-events-none select-none${isRight ? ' left-0' : ' right-0'}`}>
+                        &ldquo;
+                      </span>
+                      <p className={`text-gray-700 text-base leading-relaxed${isRight ? ' pl-12' : ' pr-12'}`}>
+                        {review.content}
+                      </p>
+                    </div>
+                    <div className="border-t border-forest/20 my-6" />
+                    <p className="font-serif text-forest text-xl font-bold">{review.author_name}</p>
+                    {review.author_role && (
+                      <p className="text-xs uppercase tracking-widest text-gray-400 mt-1">{review.author_role}</p>
+                    )}
                   </div>
-                )}
-                <div className="relative max-w-2xl">
-                  <span className="absolute top-0 right-0 font-serif text-7xl text-forest opacity-15 leading-none pointer-events-none select-none">
-                    &ldquo;
-                  </span>
-                  <p className="text-gray-700 text-base leading-relaxed pr-12">
-                    {review.content}
-                  </p>
                 </div>
-                <div className="border-t border-forest/20 my-6 max-w-2xl" />
-                <p className="font-serif text-forest text-xl font-bold">{review.author_name}</p>
-                {review.author_role && (
-                  <p className="text-xs uppercase tracking-widest text-gray-400 mt-1">{review.author_role}</p>
-                )}
-              </div>
-            </Reveal>
-          ))}
+              </Reveal>
+            )
+          })}
         </div>
       </div>
     </section>
