@@ -20,6 +20,16 @@ type Doc = {
   created_at: string
 }
 
+// ── Signed URL helpers ─────────────────────────────────────────────────────────
+
+async function openDoc(filePath: string | null) {
+  if (!filePath) return
+  if (filePath.startsWith('http')) { window.open(filePath, '_blank'); return }
+  const res = await fetch(`/api/admin/archive-signed-url?path=${encodeURIComponent(filePath)}`)
+  const json = await res.json()
+  if (json.signedUrl) window.open(json.signedUrl, '_blank')
+}
+
 // ── Upload ─────────────────────────────────────────────────────────────────────
 
 async function uploadDoc(file: File): Promise<{ url: string; name: string } | { error: string }> {
@@ -322,8 +332,25 @@ function AddDocModal({
 
 // ── Doc row ────────────────────────────────────────────────────────────────────
 
-function DocRow({ doc, onDelete, hideYearQuarter }: { doc: Doc; onDelete: () => void; hideYearQuarter?: boolean }) {
+function DocRow({ doc, onDelete, onOpen, hideYearQuarter }: { doc: Doc; onDelete: () => void; onOpen?: () => void; hideYearQuarter?: boolean }) {
   const [deleting, setDeleting] = useState(false)
+
+  async function handleDownload() {
+    if (!doc.file_url) return
+    let url: string
+    if (doc.file_url.startsWith('http')) {
+      url = doc.file_url
+    } else {
+      const res = await fetch(`/api/admin/archive-signed-url?path=${encodeURIComponent(doc.file_url)}`)
+      const json = await res.json()
+      if (!json.signedUrl) return
+      url = json.signedUrl
+    }
+    const a = document.createElement('a')
+    a.href = url
+    a.download = doc.file_name ?? 'download'
+    a.click()
+  }
 
   const category = CATEGORIES.find(c => doc.tags.includes(c)) ?? null
   const ext = doc.file_name ? (doc.file_name.split('.').pop()?.toLowerCase() ?? '') : ''
@@ -334,14 +361,13 @@ function DocRow({ doc, onDelete, hideYearQuarter }: { doc: Doc; onDelete: () => 
     <div className="flex items-start gap-4 px-6 py-4 border-b border-black/5 last:border-b-0 hover:bg-[#f9f9f9] transition-colors">
       {/* Type icon */}
       {doc.file_name ? (
-        <a
-          href={doc.file_url ?? '#'}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => onOpen?.()}
           className={`flex-shrink-0 w-10 h-10 flex items-center justify-center border cursor-pointer hover:border-forest hover:text-forest transition-colors ${isPdf ? 'border-red-200 bg-red-50' : isDoc ? 'border-blue-200 bg-blue-50' : 'border-line bg-paper-stone'}`}
         >
           <span className="text-[9px] font-bold uppercase tracking-widest">{ext}</span>
-        </a>
+        </button>
       ) : (
         <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center border border-line bg-paper-stone">
           <svg className="w-4 h-4 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -382,14 +408,13 @@ function DocRow({ doc, onDelete, hideYearQuarter }: { doc: Doc; onDelete: () => 
 
       <div className="flex items-center gap-2 flex-shrink-0">
         {doc.file_url && (
-          <a
-            href={doc.file_url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={handleDownload}
             className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
           >
             Download
-          </a>
+          </button>
         )}
         {doc.external_link && (
           <a
@@ -504,7 +529,7 @@ function CategorySection({
                           <div key={quarter}>
                             <p className="font-sans text-xs uppercase tracking-[0.15em] text-ink-500 mt-5 mb-3">{quarter}Q</p>
                             {qDocs.map(doc => (
-                              <DocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} hideYearQuarter />
+                              <DocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} onOpen={() => openDoc(doc.file_url)} hideYearQuarter />
                             ))}
                           </div>
                         )
@@ -517,7 +542,7 @@ function CategorySection({
           ) : (
             <div className="bg-white border border-line-faint mb-4">
               {sorted.map(doc => (
-                <DocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} />
+                <DocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} onOpen={() => openDoc(doc.file_url)} />
               ))}
             </div>
           )}

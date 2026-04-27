@@ -45,6 +45,5 @@ export async function POST(request: NextRequest) {
   })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const { data: { publicUrl } } = service.storage.from('admin-archive').getPublicUrl(data.path)
-  return NextResponse.json({ url: publicUrl })
+  return NextResponse.json({ url: data.path, name: file.name })
 }
