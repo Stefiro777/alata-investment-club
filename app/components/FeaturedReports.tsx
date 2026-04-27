@@ -208,7 +208,7 @@ export default function FeaturedReports({ reports }: { reports: FeaturedReport[]
           key={report.id}
           report={report}
           imageLeft={i % 2 === 0}
-          bg={i % 2 === 0 ? 'var(--color-paper-warm)' : 'var(--color-paper-warm)'}
+          bg={i % 2 === 0 ? '#ffffff' : '#f5f5f5'}
         />
       ))}
     </div>

@@ -212,7 +212,7 @@ export default function ReportsCarousel({ reports }: { reports: Contenuto[] }) {
                   className={`rounded-full transition-all duration-base ${
                     i === safePage
                       ? 'w-2.5 h-2.5 bg-forest'
-                      : 'w-2 h-2 bg-transparent border border-forest/40 hover:border-forest/70'
+                      : 'w-2 h-2 bg-forest/30 hover:bg-forest/50'
                   }`}
                 />
               ))}
