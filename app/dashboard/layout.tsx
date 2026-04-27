@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       const { data: profileData, error } = await supabase
         .from('club_members')
-        .select('full_name, role, teams')
+        .select('full_name, role')
         .eq('email', user.email!)
         .maybeSingle()
 
@@ -44,8 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         full_name: (profileData as any).full_name ?? 'Member',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         role:      (profileData as any).role      ?? 'member',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        teams:     (profileData as any).teams     ?? null,
+        teams:     null,
       })
       setStatus('ok')
     }
