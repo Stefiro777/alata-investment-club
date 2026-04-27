@@ -114,10 +114,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
 
         {/* User + logout */}
         <div className="flex items-center gap-4 flex-shrink-0">
-          <span className="text-sm text-white/80 hidden md:block truncate max-w-[160px]">
-            {profile.full_name}
-          </span>
-          {profile.role === 'bod' && (
+{profile.role === 'bod' && (
             <Link
               href="/admin"
               className="text-xs font-medium uppercase tracking-wide border border-white/40 hover:border-white text-white px-3 py-1.5 transition-colors whitespace-nowrap"
