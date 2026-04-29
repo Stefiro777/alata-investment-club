@@ -3,7 +3,8 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase-server'
 import Reveal from '@/app/components/Reveal'
 import FeaturedGallery from '@/app/components/FeaturedGallery'
-import type { FeaturedGalleryItem, Partner } from '@/lib/types'
+import type { FeaturedGalleryItem, Partner, PartnerDocument } from '@/lib/types'
+import SponsorDocumentList from './SponsorDocumentList'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,6 +70,25 @@ function PartnerCard({ partner }: { partner: Partner }) {
   )
 }
 
+function SponsorCard({ partner, documents }: { partner: Partner; documents: PartnerDocument[] }) {
+  return (
+    <div className="bg-white border border-line-faint p-8 hover-lift h-full flex flex-col">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={partner.logo_url}
+        alt={partner.name}
+        className="h-12 w-auto object-contain mb-6 self-start"
+      />
+      <div className="w-8 h-px bg-forest mb-4" />
+      <h3 className="font-serif text-lg font-bold text-ink-900 mb-3">{partner.name}</h3>
+      {partner.description && (
+        <p className="text-sm text-ink-500 leading-relaxed">{partner.description}</p>
+      )}
+      <SponsorDocumentList documents={documents} />
+    </div>
+  )
+}
+
 export default async function PartnersPage() {
   const supabase = await createClient()
   const [{ data: allPartners }, { data: featuredPartners }] = await Promise.all([
@@ -86,6 +106,23 @@ export default async function PartnersPage() {
   const partners = (allPartners ?? []) as Partner[]
   const sponsors = partners.filter(p => p.type === 'sponsor' || !p.type)
   const strategicPartners = partners.filter(p => p.type === 'partner')
+
+  // Fetch documents for sponsors
+  const sponsorIds = sponsors.map(s => s.id)
+  let sponsorDocs: PartnerDocument[] = []
+  if (sponsorIds.length > 0) {
+    const { data: docsData } = await supabase
+      .from('partner_documents')
+      .select('id, partner_id, name, file_url, preview_count, created_at')
+      .in('partner_id', sponsorIds)
+      .order('created_at', { ascending: true })
+    sponsorDocs = (docsData ?? []) as PartnerDocument[]
+  }
+  const docsByPartner: Record<string, PartnerDocument[]> = {}
+  for (const doc of sponsorDocs) {
+    if (!docsByPartner[doc.partner_id]) docsByPartner[doc.partner_id] = []
+    docsByPartner[doc.partner_id].push(doc)
+  }
 
   return (
     <div>
@@ -161,8 +198,31 @@ export default async function PartnersPage() {
       {/* Strategic Partners */}
       <PartnersGrid partners={strategicPartners} subtitle="Strategic" title="Partners" bg="bg-white" />
 
-      {/* Sponsors — same card layout, alternating background */}
-      <PartnersGrid partners={sponsors} subtitle="Supported by" title="Sponsors" bg="bg-[#f5f5f0]" />
+      {/* Sponsors */}
+      {sponsors.length > 0 && (
+        <section className="py-20 sm:py-28 bg-[#f5f5f0]">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <Reveal direction="up">
+              <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">Supported by</p>
+              <h2 className="font-serif text-4xl font-bold text-ink-900 mb-2">Sponsors</h2>
+              <div className="w-10 h-px bg-forest mb-12" />
+            </Reveal>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sponsors.map((p, i) => (
+                <Reveal key={p.id} direction="up" delay={i * 80} className="h-full">
+                  {p.website_url ? (
+                    <a href={p.website_url} target="_blank" rel="noopener noreferrer" className="block h-full">
+                      <SponsorCard partner={p} documents={docsByPartner[p.id] ?? []} />
+                    </a>
+                  ) : (
+                    <SponsorCard partner={p} documents={docsByPartner[p.id] ?? []} />
+                  )}
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="py-20 sm:py-28 bg-forest text-white">

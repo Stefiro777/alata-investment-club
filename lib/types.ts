@@ -41,6 +41,15 @@ export type Partner = {
   created_at: string
 }
 
+export type PartnerDocument = {
+  id: string
+  partner_id: string
+  name: string
+  file_url: string
+  preview_count: number
+  created_at: string
+}
+
 export type Resource = {
   id: string
   title: string
