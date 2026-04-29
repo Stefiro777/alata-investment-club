@@ -74,7 +74,7 @@ function labSubLabel(key: string): string {
 
 type Member = {
   id: string
-  user_id: string | null
+  user_id?: string | null
   full_name: string
   email: string | null
   phone: string | null
@@ -101,6 +101,7 @@ type FormState = {
   title: string
   teams: string[]
   lab_subdivision: string
+  user_id?: string | null
 }
 
 const EMPTY_FORM: FormState = {
@@ -111,6 +112,7 @@ const EMPTY_FORM: FormState = {
   title: '',
   teams: [],
   lab_subdivision: '',
+  user_id: null,
 }
 
 // ── CompletedTasksModal ───────────────────────────────────────────────────────
@@ -818,7 +820,7 @@ export default function MembersPage() {
         </div>
         {canAdd && (
           <button
-            onClick={() => setModal({ ...EMPTY_FORM, id: '', full_name: '', email: null, phone: null, role: 'member', title: null, teams: null, lab_subdivision: null, isNew: true })}
+            onClick={() => setModal({ ...EMPTY_FORM, id: '', user_id: null, full_name: '', email: null, phone: null, role: 'member', title: null, teams: null, lab_subdivision: null, isNew: true })}
             className="flex-shrink-0 flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
