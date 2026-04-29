@@ -1190,7 +1190,7 @@ export default function TeamPage() {
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit  = profile?.role === 'bod' || profile?.role === 'director'
-  const canView  = canEdit || (profile?.teams?.includes(slug) ?? false)
+  const canView  = canEdit || !!profile?.teams?.includes(slug)
 
   const loadTasks = useCallback(async () => {
     const supabase = createClient()
@@ -1345,7 +1345,7 @@ export default function TeamPage() {
         <GoalsSection
           slug={slug}
           canEdit={canEdit}
-          isBoD={profile?.role === 'bod' ?? false}
+          isBoD={profile?.role === 'bod'}
           userId={userId}
           userName={profile?.full_name ?? null}
         />
