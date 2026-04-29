@@ -26,8 +26,8 @@ export const metadata: Metadata = {
   description: 'University Finance Association · University of Brescia',
   alternates: { canonical: 'https://alatainvestmentclub.com' },
   icons: {
-    icon: '/icon.png',
-    apple: '/icon.png',
+    icon: '/favicon.png',
+    apple: '/favicon.png',
   },
 }
 
@@ -81,14 +81,10 @@ export default function RootLayout({
             <div className="flex items-center justify-between h-16">
               {/* Logo + nome */}
               <Link href="/" className="flex items-center gap-3">
-                <Image
-                  src="/logo.png"
-                  alt="Alata Investment Club"
-                  width={44}
-                  height={44}
-                  className="object-contain flex-shrink-0"
-                  style={{ filter: 'brightness(0) invert(1)' }}
-                  priority
+                <img
+                  src="/loghi/PFP & HIGHLIGHTS/White&Black.png"
+                  alt="Alata"
+                  className="h-8 w-8 object-contain"
                 />
                 <span className="font-serif font-bold text-white text-lg leading-tight whitespace-nowrap">
                   Alata Investment Club
@@ -152,17 +148,11 @@ export default function RootLayout({
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
               {/* Logo + nome */}
               <div className="flex items-center gap-3">
-                <Image
-                  src="/logo.png"
-                  alt="Alata Investment Club"
-                  width={40}
-                  height={40}
-                  className="object-contain flex-shrink-0"
-                  style={{ filter: 'brightness(0) invert(1)' }}
+                <img
+                  src="/loghi/Positivi/White.png"
+                  alt="Alata"
+                  className="h-8 w-auto"
                 />
-                <span className="font-serif font-bold text-white text-base leading-tight whitespace-nowrap">
-                  Alata Investment Club
-                </span>
               </div>
 
               {/* Nav links */}

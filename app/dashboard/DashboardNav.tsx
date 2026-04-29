@@ -47,6 +47,11 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
     <nav className="sticky top-0 z-[50] bg-[#1a4a3a] shadow-md">
       <div className="max-w-7xl mx-auto px-8 flex items-center h-14 gap-8">
 
+        {/* Logo */}
+        <Link href="/dashboard" className="flex-shrink-0">
+          <img src="/loghi/Positivi/White.png" alt="Alata" className="h-7 w-auto" />
+        </Link>
+
         {/* Nav links */}
         <div className="flex items-center gap-6 flex-1">
           <Link href="/dashboard" className={linkClass('/dashboard', true)}>
