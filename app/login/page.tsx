@@ -82,7 +82,7 @@ function LoginForm() {
           {/* Logo */}
           <div className="text-center mb-10" style={{ animation: 'heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.15s both' }}>
             <Link href="/" className="inline-block">
-              <div style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.15)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
+              <div className="border-2 border-[#1a4a3a]">
                 <Image
                   src="/white-black.png"
                   alt="Alata Investment Club"

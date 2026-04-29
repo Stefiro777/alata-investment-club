@@ -31,16 +31,13 @@ export default function SponsorDocumentList({ documents }: { documents: PartnerD
       <ul className="space-y-1">
         {documents.map(doc => (
           <li key={doc.id}>
-            <a
-              href={doc.file_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackPreview(doc.id)}
+            <button
+              onClick={() => { trackPreview(doc.id); window.open(doc.file_url, '_blank', 'noopener,noreferrer') }}
               className="flex items-center gap-2 text-sm text-ink-700 hover:text-forest transition-colors py-1 group"
             >
               <DocIcon />
               <span className="group-hover:underline underline-offset-2">{doc.name}</span>
-            </a>
+            </button>
           </li>
         ))}
       </ul>

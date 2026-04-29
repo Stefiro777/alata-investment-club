@@ -82,7 +82,7 @@ export default function RootLayout({
               {/* Logo + nome */}
               <Link href="/" className="flex items-center gap-3">
                 <img
-                  src="/white-black.png"
+                  src="/white.png"
                   alt="Alata"
                   className="h-8 w-8 object-contain"
                 />
