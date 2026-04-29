@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
             <Link href="/" className="inline-block">
               <div style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.15)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
                 <Image
-                  src="/loghi/pfp/white-black.png"
+                  src="/white-black.png"
                   alt="Alata Investment Club"
                   width={140}
                   height={140}
