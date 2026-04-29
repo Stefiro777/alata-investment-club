@@ -12,7 +12,7 @@ const TEAM_ITEMS = [
   { label: 'Career',        slug: 'career' },
   { label: 'Academy',       slug: 'academy' },
   { label: 'Syrto',         slug: 'syrto' },
-  { label: 'Lab & Research', slug: 'lab-research' },
+  { label: 'Lab & Research', slug: 'lab' },
   { label: 'Alumni',        slug: 'alumni' },
 ]
 
@@ -48,7 +48,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
       <div className="max-w-7xl mx-auto px-8 flex items-center h-14 gap-8">
 
         {/* Nav links */}
-        <div className="flex items-center gap-6 flex-1 overflow-x-auto">
+        <div className="flex items-center gap-6 flex-1">
           <Link href="/dashboard" className={linkClass('/dashboard', true)}>
             Dashboard
           </Link>

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import type { Resource } from '@/lib/types'
-import CalendarEventsList from './CalendarEventsList'
 
 type View = 'welcome' | 'masters' | 'career' | 'education' | 'forbes' | 'documenti'
 
@@ -149,42 +148,6 @@ function WelcomeView({
 
   return (
     <div className="py-16 sm:py-20">
-      {/* Notion Workspace */}
-      <div className="mb-10">
-        <a
-          href="https://www.notion.so/Alata-Investment-Club-3c27ba5ab1374113b820efffa536723e"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group bg-white border border-line-faint hover:border-forest hover:shadow-md px-5 py-3.5 inline-flex items-center gap-4 transition-all duration-150"
-        >
-          <div className="flex-1">
-            <p className="font-serif text-base font-bold text-forest leading-snug">Notion Workspace</p>
-            <p className="text-xs text-gray-500 leading-relaxed">Tracks all tasks assigned to the club&apos;s divisions.</p>
-          </div>
-          <span className="text-xs font-medium text-forest tracking-wide group-hover:underline flex-shrink-0">Open →</span>
-        </a>
-      </div>
-
-      {/* Deadlines & Events */}
-      <div className="mb-14">
-        <div className="flex items-end justify-between gap-4 mb-1">
-          <h3 className="font-serif text-2xl font-bold text-ink-900">Deadlines &amp; Events</h3>
-          <a
-            href="https://www.notion.so/1c4baca2197248999054618cc7f2e8dc?v=32d8bea508ff46bba4d91f5685762c69"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-forest hover:underline flex items-center gap-1 flex-shrink-0 pb-0.5"
-          >
-            Open Master Calendar in Notion
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
-        </div>
-        <div className="w-8 h-px bg-forest mb-4" />
-        <CalendarEventsList />
-      </div>
-
       {/* Quick access cards */}
       <div className="mb-16">
         <h3 className="font-serif text-2xl font-bold text-ink-900 mb-1">Club Resources</h3>

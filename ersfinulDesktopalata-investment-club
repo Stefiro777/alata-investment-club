@@ -1,0 +1,208 @@
+[33mcommit a73601fb980fa169a2de0649fde61de402816521[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Mon Apr 20 19:09:31 2026 +0200
+
+    feat: add admin button to trigger Notion calendar sync manually
+
+ app/admin/components/SyncCalendarButton.tsx  | 56 [32m++++++++++++++++++++++[m
+ app/admin/settings/SettingsClient.tsx        |  7 [32m+++[m
+ app/api/admin/trigger-calendar-sync/route.ts | 69 [32m++++++++++++++++++++++++++++[m
+ 3 files changed, 132 insertions(+)
+
+[33mcommit 048ffe4ff9901e82a5d08f72bc69ea0155851fe9[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Mon Apr 20 19:03:33 2026 +0200
+
+    feat: add Vercel cron for Notion calendar sync twice daily
+
+ vercel.json | 8 [32m++++++++[m
+ 1 file changed, 8 insertions(+)
+
+[33mcommit fc722ce6f5cb9bea1dd095850abc114f61fe5b59[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Mon Apr 20 18:48:33 2026 +0200
+
+    fix: exclude sync-notion-calendar from auth middleware
+
+ middleware.ts | 4 [32m++++[m
+ 1 file changed, 4 insertions(+)
+
+[33mcommit 65ea24743580e4dd2611d2751ba70c0863dbe8f3[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Mon Apr 20 18:41:24 2026 +0200
+
+    feat: add Notion calendar sync API route
+
+ app/api/sync-notion-calendar/route.ts | 150 [32m++++++++++++++++++++++++++++++++++[m
+ package-lock.json                     |  10 [32m+++[m
+ package.json                          |   1 [32m+[m
+ 3 files changed, 161 insertions(+)
+
+[33mcommit fbd926b64e6c9d076c8a01b36cd3cb55e7e12f07[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 12:59:23 2026 +0200
+
+    style: dashboard notion and calendar cards white background
+
+ app/dashboard/DashboardClient.tsx | 4 [32m++[m[31m--[m
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+[33mcommit 6126cab2a339e2789d2dea8d11fdb37bc1d73d6e[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 12:57:06 2026 +0200
+
+    feat: dashboard notion workspace and master calendar cards
+
+ app/dashboard/DashboardClient.tsx | 41 [32m+++++++++++++++++++++++++++++++++++++++[m
+ 1 file changed, 41 insertions(+)
+
+[33mcommit f44a4246b2283af269394892f175d91834904328[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 12:36:17 2026 +0200
+
+    style: career service background unified to cream
+
+ app/career-service/page.tsx | 2 [32m+[m[31m-[m
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+[33mcommit 3ef98b39e6adfb3b05ce2efa532fff86e3fa5543[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 12:23:44 2026 +0200
+
+    style: ferrari report bg gray, carousel buttons green
+
+ app/components/FeaturedReports.tsx | 2 [32m+[m[31m-[m
+ app/components/ReportsCarousel.tsx | 4 [32m++[m[31m--[m
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+[33mcommit 87ca6dbef6f7b55830ccb156d305757106295630[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 12:19:58 2026 +0200
+
+    style: login panel to cream, gray backgrounds to original value
+
+ app/components/FeaturedReports.tsx | 2 [32m+[m[31m-[m
+ app/join-us/TimelineSection.tsx    | 2 [32m+[m[31m-[m
+ app/login/page.tsx                 | 2 [32m+[m[31m-[m
+ app/page.tsx                       | 2 [32m+[m[31m-[m
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+[33mcommit c6820e7c77ab075f97de5fe240700ef65d908b74[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 12:16:18 2026 +0200
+
+    style: revert beige and gray backgrounds to original values
+
+ app/components/FeaturedReports.tsx | 2 [32m+[m[31m-[m
+ app/components/ReviewsSection.tsx  | 2 [32m+[m[31m-[m
+ app/components/UpcomingEvents.tsx  | 2 [32m+[m[31m-[m
+ app/join-us/TimelineSection.tsx    | 2 [32m+[m[31m-[m
+ app/page.tsx                       | 2 [32m+[m[31m-[m
+ app/partners/page.tsx              | 2 [32m+[m[31m-[m
+ app/reports/page.tsx               | 2 [32m+[m[31m-[m
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+[33mcommit ac88f4ba6f7bcfad54a2bc3d0b94a7b21e2b5df2[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 12:11:42 2026 +0200
+
+    style: unify gray and beige backgrounds sitewide
+
+ app/components/FeaturedReports.tsx | 2 [32m+[m[31m-[m
+ app/components/ReviewsSection.tsx  | 2 [32m+[m[31m-[m
+ app/components/UpcomingEvents.tsx  | 2 [32m+[m[31m-[m
+ app/join-us/TimelineSection.tsx    | 2 [32m+[m[31m-[m
+ app/login/page.tsx                 | 2 [32m+[m[31m-[m
+ app/page.tsx                       | 2 [32m+[m[31m-[m
+ app/partners/page.tsx              | 2 [32m+[m[31m-[m
+ app/reports/page.tsx               | 2 [32m+[m[31m-[m
+ 8 files changed, 8 insertions(+), 8 deletions(-)
+
+[33mcommit 5681ce5bf656258ffa96915e2d40accd762d7384[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 12:02:57 2026 +0200
+
+    style: what we value gray, login beige section text black
+
+ app/login/page.tsx | 14 [32m+++++++[m[31m-------[m
+ app/page.tsx       |  2 [32m+[m[31m-[m
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+[33mcommit 5d406e97f36c58303b418ee177b68fde6106ec07[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sun Apr 19 11:56:09 2026 +0200
+
+    style: homepage section backgrounds beige and gray
+
+ app/components/FeaturedReports.tsx | 2 [32m+[m[31m-[m
+ app/components/ReviewsSection.tsx  | 2 [32m+[m[31m-[m
+ app/page.tsx                       | 2 [32m+[m[31m-[m
+ app/partners/page.tsx              | 2 [32m+[m[31m-[m
+ app/reports/page.tsx               | 2 [32m+[m[31m-[m
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+
+[33mcommit b85ce7ce065708b1e762a85a446ca01223732dd7[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sat Apr 18 18:43:09 2026 +0200
+
+    style: swap public section backgrounds from beige to bg-gray-100
+    
+    Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+ app/components/ReviewsSection.tsx | 2 [32m+[m[31m-[m
+ app/page.tsx                      | 2 [32m+[m[31m-[m
+ app/partners/page.tsx             | 2 [32m+[m[31m-[m
+ app/reports/page.tsx              | 2 [32m+[m[31m-[m
+ app/team/alumni/page.tsx          | 2 [32m+[m[31m-[m
+ app/team/page.tsx                 | 2 [32m+[m[31m-[m
+ 6 files changed, 6 insertions(+), 6 deletions(-)
+
+[33mcommit ae9fde7d6dad0c3ef5fbee46bd7651316bd69773[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sat Apr 18 18:38:24 2026 +0200
+
+    style: replace section divider bg-[#f5f5f5] with bg-[#f5f5f0] on public pages
+    
+    Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+ app/page.tsx             | 2 [32m+[m[31m-[m
+ app/partners/page.tsx    | 2 [32m+[m[31m-[m
+ app/reports/page.tsx     | 2 [32m+[m[31m-[m
+ app/team/alumni/page.tsx | 2 [32m+[m[31m-[m
+ app/team/page.tsx        | 2 [32m+[m[31m-[m
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+
+[33mcommit d649c935482086fa9bfdd4008fe1aef13767e1e0[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Sat Apr 18 18:24:33 2026 +0200
+
+    style: replace cream #f7f5f0 with #D6D3CE across all pages
+    
+    Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+ app/career-service/page.tsx        | 2 [32m+[m[31m-[m
+ app/components/FeaturedReports.tsx | 2 [32m+[m[31m-[m
+ app/join-us/ApplySection.tsx       | 2 [32m+[m[31m-[m
+ app/login/page.tsx                 | 2 [32m+[m[31m-[m
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+[33mcommit 4194ef614ba81468f7c43cd861078f1ef9c452e9[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Fri Apr 17 13:07:57 2026 +0200
+
+    fix: replace remaining capitalised email references in footer and contact section
+
+ app/components/CookiePolicy.tsx | 4 [32m++[m[31m--[m
+ app/layout.tsx                  | 4 [32m++[m[31m--[m
+ app/page.tsx                    | 4 [32m++[m[31m--[m
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+[33mcommit c5e2609e08c16c556ee2c105e296db548a583c18[m
+Author: Stefiro777 <finullistefano@gmail.com>
+Date:   Fri Apr 17 13:03:44 2026 +0200
+
+    replace club email with info@alatainvestmentclub.com
+
+ app/accept-invite/page.tsx          |  4 [32m++[m[31m--[m
+ app/api/notify-application/route.ts |  2 [32m+[m[31m-[m
+ app/login/page.tsx                  
