@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 
 const CATEGORIES = ['Legal', 'Delibere', 'Contratti', 'Bilanci'] as const
@@ -18,6 +18,19 @@ type Doc = {
   quarter: number | null
   uploaded_by: string | null
   created_at: string
+}
+
+// Sostituire con l'URL della cartella Google Drive Contabilità
+const ACCOUNTING_DRIVE_URL = 'https://drive.google.com/drive/folders/1Yby27SlRfL2AMFiAgB4RdmjBQ1_SndX8?usp=drive_link'
+
+type AccountingDoc = {
+  id: string
+  name: string
+  file_url: string
+  quarter: string   // 'Q1' | 'Q2' | 'Q3' | 'Q4'
+  year: number
+  created_at: string
+  created_by: string | null
 }
 
 // ── Signed URL helpers ─────────────────────────────────────────────────────────
@@ -41,6 +54,79 @@ async function uploadDoc(file: File): Promise<{ url: string; name: string } | { 
   return { url: json.url, name: file.name }
 }
 
+async function uploadAccountingFile(file: File): Promise<{ url: string } | { error: string }> {
+  const supabase = createClient()
+  const ext = file.name.split('.').pop() ?? 'bin'
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('accounting-documents').upload(path, file, { upsert: false })
+  if (error) return { error: error.message }
+  const { data } = supabase.storage.from('accounting-documents').getPublicUrl(path)
+  return { url: data.publicUrl }
+}
+
+// ── Custom select ─────────────────────────────────────────────────────────────
+
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+  placeholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const selected = options.find(o => o.value === value)
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-3 py-2.5 border border-[#1a4a3a] bg-white text-sm text-gray-900 focus:outline-none"
+      >
+        <span className={selected ? 'text-gray-900' : 'text-ink-400'}>
+          {selected?.label ?? placeholder ?? 'Seleziona…'}
+        </span>
+        <svg className="w-4 h-4 text-[#1a4a3a] flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 right-0 z-20 bg-white border border-[#1a4a3a] border-t-0 shadow-lg">
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false) }}
+              className={`w-full text-left px-3 py-2.5 text-sm transition-colors ${
+                value === opt.value
+                  ? 'bg-[#1a4a3a] text-white'
+                  : 'text-gray-900 hover:bg-[#1a4a3a]/10'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Add document modal ─────────────────────────────────────────────────────────
 
 function AddDocModal({
@@ -57,8 +143,6 @@ function AddDocModal({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<Category | null>(initialCategory)
-  const [customTags, setCustomTags] = useState<string[]>([])
-  const [customTagInput, setCustomTagInput] = useState('')
   const [fileUrl, setFileUrl] = useState('')
   const [fileName, setFileName] = useState('')
   const [externalLink, setExternalLink] = useState('')
@@ -80,15 +164,6 @@ function AddDocModal({
     setFileName(result.name)
     if (!title) setTitle(file.name.replace(/\.[^.]+$/, ''))
     setUploading(false)
-  }
-
-  function addCustomTag(e: React.KeyboardEvent) {
-    if (e.key !== 'Enter') return
-    e.preventDefault()
-    const t = customTagInput.trim()
-    if (!t || customTags.includes(t)) { setCustomTagInput(''); return }
-    setCustomTags(prev => [...prev, t])
-    setCustomTagInput('')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -114,7 +189,7 @@ function AddDocModal({
 
     setSaving(true)
     setError(null)
-    const tags: string[] = [category, ...customTags]
+    const tags: string[] = [category]
     const supabase = createClient()
     const { data, error: err } = await supabase
       .from('admin_documents')
@@ -138,11 +213,11 @@ function AddDocModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 pb-4 bg-black/60 overflow-y-auto"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white w-full max-w-xl max-h-[92vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-center justify-between px-8 py-6 border-b border-line">
+      <div className="bg-white w-full max-w-xl max-h-[80vh] flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-line flex-shrink-0">
           <h3 className="font-serif text-xl font-bold text-ink-900">Aggiungi documento</h3>
           <button onClick={onClose} className="text-ink-500 hover:text-ink-900 p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,29 +226,14 @@ function AddDocModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5">
+        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5 overflow-y-auto flex-1">
 
-          {/* Category selector */}
+          {/* Category — preimpostata, non modificabile */}
           <div>
             <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">
-              Categoria *
+              Categoria
             </label>
-            <div className="flex gap-2">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategory(cat)}
-                  className={`flex-1 text-xs font-medium uppercase tracking-wide px-3 py-2 border transition-colors ${
-                    category === cat
-                      ? 'bg-forest text-white border-forest'
-                      : 'border-line text-ink-500 hover:border-forest'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+            <p className="text-sm font-semibold text-ink-900 uppercase tracking-wide">{category}</p>
           </div>
 
           {/* File upload */}
@@ -237,18 +297,17 @@ function AddDocModal({
               </div>
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Trimestre *</label>
-                <select
-                  required
+                <CustomSelect
                   value={quarter}
-                  onChange={e => setQuarter(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white appearance-none"
-                >
-                  <option value="" disabled>Seleziona…</option>
-                  <option value="1">Q1</option>
-                  <option value="2">Q2</option>
-                  <option value="3">Q3</option>
-                  <option value="4">Q4</option>
-                </select>
+                  onChange={setQuarter}
+                  placeholder="Seleziona…"
+                  options={[
+                    { value: '1', label: 'Q1' },
+                    { value: '2', label: 'Q2' },
+                    { value: '3', label: 'Q3' },
+                    { value: '4', label: 'Q4' },
+                  ]}
+                />
               </div>
             </div>
           )}
@@ -284,31 +343,6 @@ function AddDocModal({
             </div>
           )}
 
-          {/* Custom tags */}
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Tag aggiuntivi</label>
-            {customTags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {customTags.map(tag => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => setCustomTags(prev => prev.filter(t => t !== tag))}
-                    className="text-xs px-3 py-1 border bg-[#1a4a3a]/10 text-forest border-forest/30 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors"
-                  >
-                    {tag} ×
-                  </button>
-                ))}
-              </div>
-            )}
-            <input
-              value={customTagInput}
-              onChange={e => setCustomTagInput(e.target.value)}
-              onKeyDown={addCustomTag}
-              placeholder="Tag personalizzato (premi Invio)"
-              className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
-            />
-          </div>
 
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
 
@@ -455,7 +489,7 @@ function CategorySection({
   onUpload: (cat: Category) => void
   onDelete: (id: string) => void
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const sorted = [...docs].sort((a, b) => {
     if (category === 'Legal' || category === 'Contratti') {
@@ -552,6 +586,369 @@ function CategorySection({
   )
 }
 
+// ── Contabilità: upload modal ─────────────────────────────────────────────────
+
+function AccountingUploadModal({
+  userEmail,
+  onSave,
+  onClose,
+}: {
+  userEmail: string
+  onSave: (doc: AccountingDoc) => void
+  onClose: () => void
+}) {
+  const [name, setName]       = useState('')
+  const [quarter, setQuarter] = useState('Q1')
+  const [year, setYear]       = useState(String(new Date().getFullYear()))
+  const [fileUrl, setFileUrl] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving]   = useState(false)
+  const [fileName, setFileName] = useState('')
+  const [error, setError]     = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    const result = await uploadAccountingFile(file)
+    if ('error' in result) { setError(result.error); setUploading(false); return }
+    setFileUrl(result.url)
+    setFileName(file.name)
+    if (!name) setName(file.name.replace(/\.[^.]+$/, ''))
+    setUploading(false)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim() || !fileUrl) return
+    setSaving(true)
+    setError(null)
+    const supabase = createClient()
+    const { data, error: err } = await supabase
+      .from('accounting_documents')
+      .insert({ name: name.trim(), file_url: fileUrl, quarter, year: parseInt(year, 10), created_by: userEmail })
+      .select('*')
+      .single()
+    if (err) { setError(err.message); setSaving(false); return }
+    onSave(data as AccountingDoc)
+    setSaving(false)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="bg-white w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-line">
+          <h3 className="font-serif text-xl font-bold text-ink-900">Carica documento</h3>
+          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 p-1">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
+          {/* File */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">File *</label>
+            <div className="flex gap-3 items-center">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-4 py-2.5 transition-colors disabled:opacity-50 whitespace-nowrap"
+              >
+                {uploading ? 'Uploading…' : 'Scegli file'}
+              </button>
+              {fileName && <span className="text-xs text-ink-500 truncate flex-1">{fileName}</span>}
+              <input ref={fileRef} type="file" className="hidden" onChange={handleFile} />
+            </div>
+          </div>
+
+          {/* Name */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Nome *</label>
+            <input
+              required
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Nome documento"
+              className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white"
+            />
+          </div>
+
+          {/* Quarter + Year */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Quarter *</label>
+              <CustomSelect
+                value={quarter}
+                onChange={setQuarter}
+                options={['Q1', 'Q2', 'Q3', 'Q4'].map(q => ({ value: q, label: q }))}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Anno *</label>
+              <CustomSelect
+                value={year}
+                onChange={setYear}
+                options={[2024, 2025, 2026, 2027].map(y => ({ value: String(y), label: String(y) }))}
+              />
+            </div>
+          </div>
+
+          {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
+
+          <div className="flex items-center gap-4 pt-1">
+            <button
+              type="submit"
+              disabled={saving || !fileUrl}
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Carica'}
+            </button>
+            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Annulla</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Contabilità: doc row ──────────────────────────────────────────────────────
+
+function AccountingDocRow({
+  doc,
+  onDelete,
+}: {
+  doc: AccountingDoc
+  onDelete: () => void
+}) {
+  const [confirmDel, setConfirmDel] = useState(false)
+  const [deleting, setDeleting]     = useState(false)
+  const ext = doc.file_url.split('.').pop()?.split('?')[0]?.toLowerCase() ?? ''
+  const isPdf = ext === 'pdf'
+
+  async function handleDelete() {
+    setDeleting(true)
+    const supabase = createClient()
+    // Remove from storage: extract path after bucket name in URL
+    const storagePath = doc.file_url.split('/accounting-documents/')[1]?.split('?')[0]
+    if (storagePath) await supabase.storage.from('accounting-documents').remove([storagePath])
+    await supabase.from('accounting_documents').delete().eq('id', doc.id)
+    onDelete()
+  }
+
+  return (
+    <div className="flex items-center gap-4 px-6 py-3 border-b border-black/5 last:border-b-0 hover:bg-[#f9f9f9] transition-colors">
+      {/* File icon */}
+      <button
+        type="button"
+        onClick={() => window.open(doc.file_url, '_blank')}
+        className={`flex-shrink-0 w-9 h-9 flex items-center justify-center border cursor-pointer hover:border-forest hover:text-forest transition-colors ${isPdf ? 'border-red-200 bg-red-50' : 'border-line bg-paper-stone'}`}
+        title="Apri documento"
+      >
+        <span className="text-[9px] font-bold uppercase tracking-widest">{ext || 'doc'}</span>
+      </button>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-ink-900 truncate">{doc.name}</p>
+        <p className="text-[10px] text-ink-400 mt-0.5">
+          {new Date(doc.created_at).toLocaleDateString('it-IT')}
+          {doc.created_by ? ` · ${doc.created_by}` : ''}
+        </p>
+      </div>
+
+      {/* Delete */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {confirmDel ? (
+          <>
+            <span className="text-xs text-ink-500">Eliminare?</span>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-40"
+            >
+              {deleting ? '…' : 'Sì'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDel(false)}
+              className="border border-line text-ink-500 hover:text-ink-900 text-xs font-medium uppercase px-3 py-1.5 transition-colors"
+            >
+              No
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmDel(true)}
+            className="p-1.5 text-ink-300 hover:text-red-500 transition-colors"
+            title="Elimina"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Contabilità: quarter accordion ────────────────────────────────────────────
+
+function QuarterAccordion({
+  label,
+  docs,
+  onDelete,
+}: {
+  label: string
+  docs: AccountingDoc[]
+  onDelete: (id: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="border-b border-black/5 last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-3 w-full text-left px-6 py-3 hover:bg-[#f9f9f9] transition-colors group"
+      >
+        <span className="text-sm font-semibold text-ink-900 group-hover:text-forest transition-colors flex-1">{label}</span>
+        <span className="text-xs text-ink-400">{docs.length}</span>
+        <svg
+          className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+        <div style={{ overflow: 'hidden' }}>
+          {docs.map(doc => (
+            <AccountingDocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Contabilità section ───────────────────────────────────────────────────────
+
+function ContabilitaSection({ userEmail }: { userEmail: string }) {
+  const [docs, setDocs]         = useState<AccountingDoc[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [open, setOpen]         = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  useEffect(() => {
+    createClient()
+      .from('accounting_documents')
+      .select('*')
+      .order('year', { ascending: false })
+      .then(({ data }) => { setDocs((data ?? []) as AccountingDoc[]); setLoading(false) })
+  }, [])
+
+  function handleDelete(id: string) {
+    setDocs(prev => prev.filter(d => d.id !== id))
+  }
+
+  // Group by quarter label, sorted year DESC then quarter DESC
+  const groups: { label: string; docs: AccountingDoc[] }[] = []
+  const seen = new Set<string>()
+  const sorted = [...docs].sort((a, b) => b.year !== a.year ? b.year - a.year : b.quarter.localeCompare(a.quarter))
+  for (const doc of sorted) {
+    const label = `${doc.quarter} ${doc.year}`
+    if (!seen.has(label)) { seen.add(label); groups.push({ label, docs: [] }) }
+    groups.find(g => g.label === label)!.docs.push(doc)
+  }
+
+  return (
+    <div className="border-t border-line">
+      {/* Header */}
+      <div className="flex items-center gap-4 py-4">
+        <button
+          type="button"
+          onClick={() => setOpen(v => !v)}
+          className="flex items-center gap-3 flex-1 text-left group"
+        >
+          <h3 className="font-serif text-xl text-ink-900 group-hover:text-forest transition-colors">Contabilità</h3>
+          <span className="text-xs text-ink-400">{docs.length}</span>
+          <svg
+            className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
+            style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="inline-flex items-center gap-1.5 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-4 py-2 transition-colors flex-shrink-0"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Upload
+        </button>
+      </div>
+
+      {/* Collapsible body */}
+      <div style={{ display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+        <div style={{ overflow: 'hidden' }}>
+          <div className="bg-white border border-line-faint mb-4">
+            {/* Drive link */}
+            <div className="px-6 py-4 border-b border-black/5">
+              <a
+                href={ACCOUNTING_DRIVE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                Apri cartella Drive →
+              </a>
+            </div>
+
+            {/* Quarter groups */}
+            {loading ? (
+              <div className="px-6 py-6 text-sm text-ink-400">Caricamento...</div>
+            ) : groups.length === 0 ? (
+              <div className="px-6 py-8 text-center text-sm text-ink-500">Nessun documento ancora.</div>
+            ) : (
+              groups.map(g => (
+                <QuarterAccordion key={g.label} label={g.label} docs={g.docs} onDelete={handleDelete} />
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {modalOpen && (
+        <AccountingUploadModal
+          userEmail={userEmail}
+          onSave={doc => { setDocs(prev => [doc, ...prev]); setModalOpen(false) }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </div>
+  )
+}
+
 // ── Main client ────────────────────────────────────────────────────────────────
 
 export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs: Doc[]; userEmail: string }) {
@@ -593,6 +990,7 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
             onDelete={handleDelete}
           />
         ))}
+        <ContabilitaSection userEmail={userEmail} />
         <div className="border-t border-line" />
       </div>
 
