@@ -190,6 +190,11 @@ export default function TodoPage() {
         assigned_to: assignedTo,
         assignees: assignedTo.map(uid => members.find(m => m.user_id === uid)).filter(Boolean) as Member[],
       }])
+      fetch(`${window.location.origin}/api/tasks/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId: row.id }),
+      }).catch(() => {})
       setNewTitle('')
       setSelectedUids([])
       inputRef.current?.focus()

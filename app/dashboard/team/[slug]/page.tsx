@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../../DashboardProfileContext'
 import MemberAutocomplete from '../../MemberAutocomplete'
+import VenuesSection from '@/components/dashboard/VenuesSection'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -140,6 +141,78 @@ function relTime(iso: string) {
   if (h < 24)  return `${h}h fa`
   const d = Math.floor(h / 24)
   return d === 1 ? 'ieri' : `${d} giorni fa`
+}
+
+// ── PriorityDropdown ──────────────────────────────────────────────────────────
+
+const PRIORITY_OPTIONS: { value: 'high' | 'medium' | 'low'; label: string; bg: string }[] = [
+  { value: 'high',   label: 'High',   bg: '#7f1d1d' },
+  { value: 'medium', label: 'Medium', bg: '#92400e' },
+  { value: 'low',    label: 'Low',    bg: '#374151' },
+]
+
+function PriorityDropdown({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: 'high' | 'medium' | 'low'
+  onChange: (v: 'high' | 'medium' | 'low') => void
+  disabled?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const selected = PRIORITY_OPTIONS.find(o => o.value === value) ?? PRIORITY_OPTIONS[1]
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 disabled:opacity-50"
+      >
+        <span
+          className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 text-white"
+          style={{ backgroundColor: selected.bg }}
+        >
+          {selected.label}
+        </span>
+        <svg className="w-3 h-3 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-10 bg-white border border-line shadow-lg py-1 min-w-[110px]">
+          {PRIORITY_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false) }}
+              className="flex items-center w-full px-3 py-1.5 hover:bg-[#f5f5f5]"
+            >
+              <span
+                className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 text-white"
+                style={{ backgroundColor: opt.bg }}
+              >
+                {opt.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── TaskCard ──────────────────────────────────────────────────────────────────
@@ -448,16 +521,11 @@ function TaskModal({
             <div>
               <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-1">Priorità</p>
               {canEdit ? (
-                <select
-                  value={task.priority}
+                <PriorityDropdown
+                  value={task.priority as 'high' | 'medium' | 'low'}
+                  onChange={p => handlePriorityChange(p)}
                   disabled={savingPriority}
-                  onChange={e => handlePriorityChange(e.target.value)}
-                  className="border border-line px-2 py-1 text-sm bg-white focus:outline-none focus:border-forest w-full"
-                >
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
+                />
               ) : (
                 <span className={`text-[11px] font-medium uppercase tracking-wide px-2 py-0.5 ${priorityBadgeClass(task.priority)}`}>
                   {priorityLabel(task.priority)}
@@ -812,15 +880,7 @@ function CreateTaskModal({
 
           <div>
             <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Priorità</label>
-            <select
-              value={priority}
-              onChange={e => setPriority(e.target.value as 'high' | 'medium' | 'low')}
-              className="w-full border border-line px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest appearance-none"
-            >
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+            <PriorityDropdown value={priority} onChange={setPriority} />
           </div>
 
           <div>
@@ -1190,7 +1250,7 @@ export default function TeamPage() {
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit  = profile?.role === 'bod' || profile?.role === 'director'
-  const canView  = canEdit || !!profile?.teams?.includes(slug)
+  const canView  = profile?.role === 'bod' || profile?.role === 'director' || !!profile?.teams?.includes(slug)
 
   const loadTasks = useCallback(async () => {
     const supabase = createClient()
@@ -1424,6 +1484,9 @@ export default function TeamPage() {
           })}
         </div>
       )}
+
+      {/* Venues — solo per team events */}
+      {slug === 'events' && <VenuesSection />}
 
       {/* Task detail modal */}
       {selectedTask && userId && (

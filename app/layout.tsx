@@ -151,7 +151,7 @@ export default function RootLayout({
                 <img
                   src="/white.png"
                   alt="Alata"
-                  className="h-8 w-auto"
+                  className="h-10 w-auto"
                 />
               </div>
 
