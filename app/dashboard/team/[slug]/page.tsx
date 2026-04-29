@@ -735,10 +735,13 @@ function CreateTaskModal({
         priority: r.priority as string,
         due_date: r.due_date as string | null,
         category_id: r.category_id as string | null,
-        assigned_to: selectedUids,
+        assigned_to: r.assigned_to as string[],
         created_at: r.created_at as string,
         category: cat,
         assignees,
+        completed_at: null,
+        completed_by: null,
+        completer_name: null,
       })
     }
     setSaving(false)
