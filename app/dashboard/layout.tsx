@@ -36,6 +36,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return
       }
 
+      // Collega user_id se non ancora collegato
+      await supabase
+        .from('club_members')
+        .update({ user_id: user.id })
+        .eq('email', user.email!)
+        .is('user_id', null)
+
       setProfile({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         full_name: (profileData as any).full_name ?? 'Member',
