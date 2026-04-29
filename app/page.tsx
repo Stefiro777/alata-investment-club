@@ -100,7 +100,7 @@ export default async function HomePage() {
                   style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.5)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}
                 >
                   <Image
-                    src="/loghi/PFP & HIGHLIGHTS/White&Black.png"
+                    src="/loghi/pfp/white-black.png"
                     alt="Alata Investment Club"
                     width={320}
                     height={320}

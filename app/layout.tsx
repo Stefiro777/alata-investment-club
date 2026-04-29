@@ -82,7 +82,7 @@ export default function RootLayout({
               {/* Logo + nome */}
               <Link href="/" className="flex items-center gap-3">
                 <img
-                  src="/loghi/PFP & HIGHLIGHTS/White&Black.png"
+                  src="/loghi/pfp/white-black.png"
                   alt="Alata"
                   className="h-8 w-8 object-contain"
                 />
@@ -149,7 +149,7 @@ export default function RootLayout({
               {/* Logo + nome */}
               <div className="flex items-center gap-3">
                 <img
-                  src="/loghi/Positivi/White.png"
+                  src="/loghi/positivi/white.png"
                   alt="Alata"
                   className="h-8 w-auto"
                 />

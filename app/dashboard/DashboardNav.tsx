@@ -49,7 +49,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
 
         {/* Logo */}
         <Link href="/dashboard" className="flex-shrink-0">
-          <img src="/loghi/Positivi/White.png" alt="Alata" className="h-7 w-auto" />
+          <img src="/loghi/positivi/white.png" alt="Alata" className="h-7 w-auto" />
         </Link>
 
         {/* Nav links */}
