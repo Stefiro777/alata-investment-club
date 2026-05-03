@@ -40,7 +40,13 @@ type Reaction = typeof REACTIONS[number]
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Category = { id: string; name: string; color: string | null }
-type Member   = { user_id: string; full_name: string }
+type Member   = {
+  user_id: string
+  full_name: string
+  role?: string
+  teams?: string[] | null
+  lab_subdivision?: string | null
+}
 
 type Task = {
   id: string
@@ -747,8 +753,14 @@ function CreateTaskModal({
   useEffect(() => {
     async function loadForm() {
       const supabase = createClient()
-      const { data: mems } = await supabase.from('club_members').select('user_id, full_name').order('full_name')
-      setMembers((mems ?? []).filter((m: Record<string,unknown>) => m.user_id) as Member[])
+      const { data: mems } = await supabase.from('club_members').select('user_id, full_name, role, teams, lab_subdivision').order('full_name')
+      setMembers((mems ?? []).filter((m: Record<string,unknown>) => m.user_id).map((m: Record<string,unknown>) => ({
+        user_id: m.user_id as string,
+        full_name: m.full_name as string,
+        role: m.role as string | undefined,
+        teams: m.teams as string[] | null | undefined,
+        lab_subdivision: m.lab_subdivision as string | null | undefined,
+      })))
       if (slug === 'lab') {
         const { data: cats } = await supabase.from('task_categories').select('id, name, color').eq('team', 'lab')
         setCategories(cats ?? [])

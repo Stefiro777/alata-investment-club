@@ -7,7 +7,13 @@ import MemberAutocomplete from '../MemberAutocomplete'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Member = { user_id: string; full_name: string }
+type Member = {
+  user_id: string
+  full_name: string
+  role?: string
+  teams?: string[] | null
+  lab_subdivision?: string | null
+}
 
 type TodoTask = {
   id: string
@@ -69,7 +75,7 @@ export default function TodoPage() {
     // Load all members (for dropdown + name resolution)
     const { data: memberRows } = await supabase
       .from('club_members')
-      .select('user_id, full_name')
+      .select('user_id, full_name, role, teams, lab_subdivision')
       .not('user_id', 'is', null)
       .order('full_name')
 
@@ -78,6 +84,9 @@ export default function TodoPage() {
       .map((m: Record<string, unknown>) => ({
         user_id: m.user_id as string,
         full_name: m.full_name as string,
+        role: m.role as string | undefined,
+        teams: m.teams as string[] | null | undefined,
+        lab_subdivision: m.lab_subdivision as string | null | undefined,
       }))
 
     setMembers(loadedMembers)

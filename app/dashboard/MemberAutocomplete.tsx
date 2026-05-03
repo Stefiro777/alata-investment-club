@@ -2,7 +2,38 @@
 
 import { useState, useRef, useEffect } from 'react'
 
-type Member = { user_id: string; full_name: string }
+type Member = {
+  user_id: string
+  full_name: string
+  role?: string
+  teams?: string[] | null
+  lab_subdivision?: string | null
+}
+
+const TEAM_BADGE: Record<string, { bg: string; text: string; label: string }> = {
+  bod:        { bg: '#ccff00', text: '#1a4a3a', label: 'BOD' },
+  management: { bg: '#1a1a1a', text: '#ffffff', label: 'MANAGEMENT' },
+  events:     { bg: '#1d4ed8', text: '#ffffff', label: 'EVENTS' },
+  media:      { bg: '#4b5320', text: '#ffffff', label: 'MEDIA' },
+  career:     { bg: '#dc2626', text: '#ffffff', label: 'CAREER' },
+  alumni:     { bg: '#6ca0dc', text: '#ffffff', label: 'ALUMNI' },
+  lab:        { bg: '#1a4a3a', text: '#ffffff', label: 'LAB' },
+  academy:    { bg: '#7c3aed', text: '#ffffff', label: 'ACADEMY' },
+  syrto:      { bg: '#6b7280', text: '#ffffff', label: 'SYRTO' },
+}
+
+function getMemberBadges(m: Member) {
+  const badges: Array<{ bg: string; text: string; label: string }> = []
+  if (m.role === 'bod') {
+    badges.push(TEAM_BADGE.bod)
+  } else if (m.role === 'director') {
+    badges.push(TEAM_BADGE.management)
+  }
+  for (const team of m.teams ?? []) {
+    if (TEAM_BADGE[team]) badges.push(TEAM_BADGE[team])
+  }
+  return badges
+}
 
 export default function MemberAutocomplete({
   members,
@@ -104,16 +135,35 @@ export default function MemberAutocomplete({
             {filtered.length === 0 ? (
               <p className="px-4 py-2.5 text-xs text-ink-400">Nessun membro trovato.</p>
             ) : (
-              filtered.map(m => (
-                <button
-                  key={m.user_id}
-                  type="button"
-                  onMouseDown={e => { e.preventDefault(); add(m.user_id) }}
-                  className="w-full text-left px-4 py-2.5 text-sm text-ink-900 hover:bg-[#f5f5f5] border-b border-line last:border-b-0"
-                >
-                  {m.full_name}
-                </button>
-              ))
+              filtered.map(m => {
+                const badges = getMemberBadges(m)
+                return (
+                  <button
+                    key={m.user_id}
+                    type="button"
+                    onMouseDown={e => { e.preventDefault(); add(m.user_id) }}
+                    className="w-full text-left px-4 py-2.5 hover:bg-[#f5f5f5] border-b border-line last:border-b-0"
+                  >
+                    <p className="text-sm font-medium text-ink-900">{m.full_name}</p>
+                    {(badges.length > 0 || m.lab_subdivision) && (
+                      <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                        {badges.map((b, i) => (
+                          <span
+                            key={i}
+                            className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px"
+                            style={{ backgroundColor: b.bg, color: b.text }}
+                          >
+                            {b.label}
+                          </span>
+                        ))}
+                        {m.lab_subdivision && (
+                          <span className="text-xs text-ink-400">{m.lab_subdivision}</span>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                )
+              })
             )}
           </div>
         )}
