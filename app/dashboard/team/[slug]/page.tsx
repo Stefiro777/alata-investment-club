@@ -1417,7 +1417,7 @@ export default function TeamPage() {
         <GoalsSection
           slug={slug}
           canEdit={canEdit}
-          isBoD={profile?.role === 'bod'}
+          isBoD={profile?.role === 'bod' || profile?.role === 'director'}
           userId={userId}
           userName={profile?.full_name ?? null}
         />
@@ -1506,7 +1506,7 @@ export default function TeamPage() {
           task={selectedTask}
           slug={slug}
           canEdit={canEdit}
-          isBoD={profile?.role === 'bod'}
+          isBoD={profile?.role === 'bod' || profile?.role === 'director'}
           userId={userId}
           onClose={() => setSelectedTask(null)}
           onStatusChange={handleStatusChange}

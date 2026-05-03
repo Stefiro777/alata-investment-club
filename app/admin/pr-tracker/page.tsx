@@ -13,7 +13,9 @@ export default async function PrTrackerPage() {
 
   const { data: adminRow } = await supabase
     .from('admin_users').select('email').eq('email', user.email).maybeSingle()
-  if (!adminRow) redirect('/dashboard')
+  const { data: profile } = await supabase
+    .from('profiles').select('role').eq('id', user.id).maybeSingle()
+  if (!adminRow && profile?.role !== 'bod' && profile?.role !== 'director') redirect('/dashboard')
 
   return (
     <>

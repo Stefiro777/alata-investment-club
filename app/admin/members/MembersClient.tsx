@@ -1171,7 +1171,7 @@ export default function MembersClient({
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setConfirmEmail(email)}
+                      onClick={() => { console.log('Remove clicked for:', email); setConfirmEmail(email) }}
                       disabled={removingEmail === email}
                       className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40 disabled:cursor-not-allowed"
                     >

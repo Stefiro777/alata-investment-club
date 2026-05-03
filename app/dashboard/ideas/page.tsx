@@ -309,7 +309,7 @@ export default function IdeasPage() {
   const [userId, setUserId]     = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
 
-  const isBoD = profile?.role === 'bod'
+  const isBoD = profile?.role === 'bod' || profile?.role === 'director'
 
   useEffect(() => {
     async function load() {

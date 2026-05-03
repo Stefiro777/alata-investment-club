@@ -705,7 +705,7 @@ export default function MembersPage() {
   const [modal, setModal]                   = useState<(Member & { isNew: boolean }) | null>(null)
   const [completedModal, setCompletedModal] = useState<{ memberName: string; tasks: TaskRecord[] } | null>(null)
 
-  const isBoD      = profile?.role === 'bod'
+  const isBoD      = profile?.role === 'bod' || profile?.role === 'director'
   const isDirector = profile?.role === 'director'
   const canAdd     = isBoD
 

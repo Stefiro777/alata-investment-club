@@ -24,8 +24,10 @@ export default async function AdminTeamPage() {
     .select('email')
     .eq('email', user.email)
     .maybeSingle()
+  const { data: profile } = await supabase
+    .from('profiles').select('role').eq('id', user.id).maybeSingle()
 
-  if (!adminRow) redirect('/login')
+  if (!adminRow && profile?.role !== 'bod' && profile?.role !== 'director') redirect('/login')
 
   const { data: membersData } = await supabase
     .from('team_members')

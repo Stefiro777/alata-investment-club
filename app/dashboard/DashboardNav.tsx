@@ -118,7 +118,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
 
         {/* User + logout */}
         <div className="flex items-center gap-4 flex-shrink-0">
-{profile.role === 'bod' && (
+{isBoD && (
             <Link
               href="/admin"
               className="text-xs font-medium uppercase tracking-wide border border-white/40 hover:border-white text-white px-3 py-1.5 transition-colors whitespace-nowrap"
