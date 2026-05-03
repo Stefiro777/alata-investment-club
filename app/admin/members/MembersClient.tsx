@@ -770,8 +770,6 @@ export default function MembersClient({
   const [newAdminEmail, setNewAdminEmail] = useState('')
   const [addingAdmin, setAddingAdmin] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
-  const [removingEmail, setRemovingEmail] = useState<string | null>(null)
-  const [removeError, setRemoveError] = useState<string | null>(null)
   const [isAdminListOpen, setIsAdminListOpen] = useState(false)
 
   function scrollTo(id: string) {
@@ -821,23 +819,6 @@ export default function MembersClient({
       router.refresh()
     }
     setAddingAdmin(false)
-  }
-
-  async function handleRemoveAdmin(email: string) {
-    setRemovingEmail(email)
-    setRemoveError(null)
-    const res = await fetch('/api/admin/remove', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    })
-    if (res.ok) {
-      setAdminList(prev => prev.filter(e => e !== email))
-    } else {
-      const data = await res.json().catch(() => ({}))
-      setRemoveError(data.error ?? 'Errore durante la rimozione')
-    }
-    setRemovingEmail(null)
   }
 
   const navItems = [
@@ -1086,30 +1067,10 @@ export default function MembersClient({
           Admin Users
       ══════════════════════════════════════ */}
       <div id="admin-users">
+        <SectionHeading title="Admin Users" />
 
-        {/* Header row */}
-        <button
-          onClick={() => setIsAdminListOpen(!isAdminListOpen)}
-          className="flex items-center justify-between w-full text-left py-2"
-        >
-          <h2 className="text-2xl font-serif">Admin Users</h2>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#9ca3af"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ transform: isAdminListOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-
-        {/* Add admin — always visible */}
-        <div className="bg-white border border-line-faint p-6 space-y-4 mb-2">
+        {/* Add admin */}
+        <div className="bg-white border border-line-faint p-6 space-y-4 mb-6">
           <form onSubmit={handleAddAdmin} className="flex gap-3">
             <input
               type="email"
@@ -1132,37 +1093,53 @@ export default function MembersClient({
           )}
         </div>
 
-        {/* Email list — shown only when open */}
-        {isAdminListOpen && (
-          <div className="space-y-px bg-black/5">
-            {removeError && (
-              <p className="bg-white px-6 py-3 text-red-600 text-xs border-l-2 border-red-400">{removeError}</p>
-            )}
-            {adminList.map(email => (
-              <div key={email} className="bg-white px-6 py-4 flex items-center justify-between gap-6">
-                <span className="text-sm text-ink-900 font-medium">
-                  {email}
-                  {email === superadmin && (
-                    <span className="ml-2 text-xs text-forest tracking-widest uppercase">superadmin</span>
+        {/* Lista collassabile */}
+        <div className="border border-line">
+          <button
+            type="button"
+            onClick={() => setIsAdminListOpen(o => !o)}
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-paper-stone transition-colors"
+          >
+            <span className="font-medium">Admin users ({adminList.length})</span>
+            <svg className={`w-4 h-4 transition-transform ${isAdminListOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isAdminListOpen && (
+            <div className="border-t border-line">
+              {adminList.map(email => (
+                <div key={email} className="flex items-center justify-between px-5 py-3 border-b border-line last:border-b-0">
+                  <span className="text-sm text-ink-900">{email}</span>
+                  {email === 'finullistefano@gmail.com' ? (
+                    <span className="text-xs font-semibold uppercase tracking-wide text-[#1a4a3a]">SUPERADMIN</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!window.confirm(`Rimuovere ${email} dagli admin?`)) return
+                        const res = await fetch('/api/admin/remove', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email }),
+                        })
+                        if (res.ok) {
+                          setAdminList(prev => prev.filter(e => e !== email))
+                        } else {
+                          const data = await res.json().catch(() => ({}))
+                          alert(data.error ?? 'Errore durante la rimozione')
+                        }
+                      }}
+                      className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors"
+                    >
+                      Remove
+                    </button>
                   )}
-                </span>
-                {email !== superadmin && (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!window.confirm(`Rimuovere ${email} dagli admin?`)) return
-                      await handleRemoveAdmin(email)
-                    }}
-                    disabled={removingEmail === email}
-                    className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {removingEmail === email ? '…' : 'Remove'}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
 
