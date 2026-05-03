@@ -1118,16 +1118,24 @@ export default function MembersClient({
                       type="button"
                       onClick={async () => {
                         if (!window.confirm(`Rimuovere ${email} dagli admin?`)) return
-                        const res = await fetch('/api/admin/remove', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email }),
-                        })
-                        if (res.ok) {
-                          setAdminList(prev => prev.filter(e => e !== email))
-                        } else {
-                          const data = await res.json().catch(() => ({}))
-                          alert(data.error ?? 'Errore durante la rimozione')
+                        console.log('Calling remove API for:', email)
+                        try {
+                          const res = await fetch('/api/admin/remove', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email }),
+                          })
+                          console.log('Response status:', res.status)
+                          const data = await res.json()
+                          console.log('Response data:', data)
+                          if (res.ok) {
+                            setAdminList(prev => prev.filter(e => e !== email))
+                          } else {
+                            alert(data.error ?? 'Errore durante la rimozione')
+                          }
+                        } catch (err) {
+                          console.error('Fetch error:', err)
+                          alert('Errore di rete')
                         }
                       }}
                       className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors"
