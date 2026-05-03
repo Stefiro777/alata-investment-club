@@ -766,10 +766,13 @@ export default function MembersClient({
   const [inviteSuccess, setInviteSuccess] = useState(false)
 
   // Admin users state
+  const [adminList, setAdminList] = useState<string[]>(adminUsers)
   const [newAdminEmail, setNewAdminEmail] = useState('')
   const [addingAdmin, setAddingAdmin] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
   const [removingEmail, setRemovingEmail] = useState<string | null>(null)
+  const [confirmEmail, setConfirmEmail] = useState<string | null>(null)
+  const [removeError, setRemoveError] = useState<string | null>(null)
   const [isAdminListOpen, setIsAdminListOpen] = useState(false)
 
   function scrollTo(id: string) {
@@ -823,10 +826,20 @@ export default function MembersClient({
 
   async function handleRemoveAdmin(email: string) {
     setRemovingEmail(email)
-    const supabase = createClient()
-    await supabase.from('admin_users').delete().eq('email', email)
+    setRemoveError(null)
+    const res = await fetch('/api/admin/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    if (res.ok) {
+      setAdminList(prev => prev.filter(e => e !== email))
+    } else {
+      const data = await res.json().catch(() => ({}))
+      setRemoveError(data.error ?? 'Errore durante la rimozione')
+    }
     setRemovingEmail(null)
-    router.refresh()
+    setConfirmEmail(null)
   }
 
   const navItems = [
@@ -1124,7 +1137,10 @@ export default function MembersClient({
         {/* Email list — shown only when open */}
         {isAdminListOpen && (
           <div className="space-y-px bg-black/5">
-            {adminUsers.map(email => (
+            {removeError && (
+              <p className="bg-white px-6 py-3 text-red-600 text-xs border-l-2 border-red-400">{removeError}</p>
+            )}
+            {adminList.map(email => (
               <div key={email} className="bg-white px-6 py-4 flex items-center justify-between gap-6">
                 <span className="text-sm text-ink-900 font-medium">
                   {email}
@@ -1133,13 +1149,35 @@ export default function MembersClient({
                   )}
                 </span>
                 {email !== superadmin && (
-                  <button
-                    onClick={() => handleRemoveAdmin(email)}
-                    disabled={removingEmail === email}
-                    className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {removingEmail === email ? '…' : 'Remove'}
-                  </button>
+                  confirmEmail === email ? (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-sm text-ink-500">Rimuovere?</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAdmin(email)}
+                        disabled={removingEmail === email}
+                        className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast disabled:opacity-40"
+                      >
+                        {removingEmail === email ? '…' : 'Sì'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmEmail(null)}
+                        className="border border-line text-ink-500 hover:text-ink-900 text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmEmail(email)}
+                      disabled={removingEmail === email}
+                      className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Remove
+                    </button>
+                  )
                 )}
               </div>
             ))}
