@@ -771,7 +771,6 @@ export default function MembersClient({
   const [addingAdmin, setAddingAdmin] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
   const [removingEmail, setRemovingEmail] = useState<string | null>(null)
-  const [confirmEmail, setConfirmEmail] = useState<string | null>(null)
   const [removeError, setRemoveError] = useState<string | null>(null)
   const [isAdminListOpen, setIsAdminListOpen] = useState(false)
 
@@ -839,7 +838,6 @@ export default function MembersClient({
       setRemoveError(data.error ?? 'Errore durante la rimozione')
     }
     setRemovingEmail(null)
-    setConfirmEmail(null)
   }
 
   const navItems = [
@@ -1149,35 +1147,17 @@ export default function MembersClient({
                   )}
                 </span>
                 {email !== superadmin && (
-                  confirmEmail === email ? (
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-sm text-ink-500">Rimuovere?</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAdmin(email)}
-                        disabled={removingEmail === email}
-                        className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast disabled:opacity-40"
-                      >
-                        {removingEmail === email ? '…' : 'Sì'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmEmail(null)}
-                        className="border border-line text-ink-500 hover:text-ink-900 text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast"
-                      >
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => { console.log('Remove clicked for:', email); setConfirmEmail(email) }}
-                      disabled={removingEmail === email}
-                      className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Remove
-                    </button>
-                  )
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!window.confirm(`Rimuovere ${email} dagli admin?`)) return
+                      await handleRemoveAdmin(email)
+                    }}
+                    disabled={removingEmail === email}
+                    className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {removingEmail === email ? '…' : 'Remove'}
+                  </button>
                 )}
               </div>
             ))}
