@@ -13,9 +13,17 @@ export async function POST(req: NextRequest) {
     const { data: adminRow } = await supabase
       .from('admin_users')
       .select('email')
-      .eq('email', user.email)
+      .eq('email', user.email!)
       .maybeSingle()
-    if (!adminRow) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const { data: memberRow } = await supabase
+      .from('club_members')
+      .select('role')
+      .eq('email', user.email!)
+      .maybeSingle()
+
+    const isAuthorized = !!adminRow || memberRow?.role === 'bod' || memberRow?.role === 'director'
+    if (!isAuthorized) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { email } = await req.json()
     if (!email || !emailRegex.test(email)) {
