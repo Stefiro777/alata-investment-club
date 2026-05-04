@@ -232,7 +232,7 @@ function OfficialJobCard({
       )}
       <div className="mt-auto pt-1">
         <a href={offer.link} target="_blank" rel="noopener noreferrer"
-          className="inline-block text-sm font-medium text-[#1a4a3a] hover:underline underline-offset-2">
+          className="inline-block bg-[#1a4a3a] text-white text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-[#123a2d] transition-colors">
           Candidati →
         </a>
       </div>
