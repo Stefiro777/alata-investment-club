@@ -175,6 +175,7 @@ function OfficialJobCard({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
 
   async function handleDelete() {
     setDeleting(true)
@@ -217,7 +218,17 @@ function OfficialJobCard({
         )}
       </div>
       {offer.description && (
-        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{offer.description}</p>
+        <div>
+          <p className={`text-sm text-gray-600 leading-relaxed ${collapsed ? 'line-clamp-2' : 'whitespace-pre-wrap'}`}>
+            {offer.description}
+          </p>
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="mt-1 text-xs text-[#1a4a3a] hover:underline underline-offset-2"
+          >
+            {collapsed ? 'Leggi di più ↓' : 'Chiudi ↑'}
+          </button>
+        </div>
       )}
       <div className="mt-auto pt-1">
         <a href={offer.link} target="_blank" rel="noopener noreferrer"
@@ -244,6 +255,7 @@ function MemberJobCard({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
   const canDelete = isBoD || offer.created_by === userId
 
   async function handleDelete() {
@@ -284,7 +296,17 @@ function MemberJobCard({
         )}
       </div>
       {offer.description && (
-        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{offer.description}</p>
+        <div>
+          <p className={`text-sm text-gray-600 leading-relaxed ${collapsed ? 'line-clamp-2' : 'whitespace-pre-wrap'}`}>
+            {offer.description}
+          </p>
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="mt-1 text-xs text-[#1a4a3a] hover:underline underline-offset-2"
+          >
+            {collapsed ? 'Leggi di più ↓' : 'Chiudi ↑'}
+          </button>
+        </div>
       )}
       <div className="flex items-center justify-between mt-auto pt-1 gap-4">
         <div className="text-xs text-gray-400">
