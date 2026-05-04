@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
 
     const supabase = createClient()
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/confirm`,
+      redirectTo: 'https://alatainvestmentclub.com/reset-password',
     })
 
     if (resetError) {
