@@ -81,14 +81,12 @@ function JobModal({
     const supabase = createClient()
 
     if (isEdit && offer) {
-      const { data, error: err } = await supabase
+      const { error: err } = await supabase
         .from('job_offers')
         .update({ title: title.trim(), company: company.trim(), link: link.trim(), description: description || null })
         .eq('id', offer.id)
-        .select('id, title, company, link, description, type, created_by, created_at')
-        .maybeSingle()
-      if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return }
-      onSaved({ ...offer, ...(data as JobOffer) }, false)
+      if (err) { setError(err.message); setSaving(false); return }
+      onSaved({ ...offer, title: title.trim(), company: company.trim(), link: link.trim(), description: description || null }, false)
     } else {
       const { data, error: err } = await supabase
         .from('job_offers')
