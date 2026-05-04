@@ -83,10 +83,10 @@ function JobModal({
     if (isEdit && offer) {
       const { data, error: err } = await supabase
         .from('job_offers')
-        .update({ title: title.trim(), company: company.trim(), link: link.trim(), description: description.trim() || null })
+        .update({ title: title.trim(), company: company.trim(), link: link.trim(), description: description || null })
         .eq('id', offer.id)
         .select('id, title, company, link, description, type, created_by, created_at')
-        .single()
+        .maybeSingle()
       if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return }
       onSaved({ ...offer, ...(data as JobOffer) }, false)
     } else {
@@ -219,7 +219,7 @@ function OfficialJobCard({
         )}
       </div>
       {offer.description && (
-        <p className="text-sm text-gray-600 leading-relaxed">{offer.description}</p>
+        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{offer.description}</p>
       )}
       <div className="mt-auto pt-1">
         <a href={offer.link} target="_blank" rel="noopener noreferrer"
@@ -286,7 +286,7 @@ function MemberJobCard({
         )}
       </div>
       {offer.description && (
-        <p className="text-sm text-gray-600 leading-relaxed">{offer.description}</p>
+        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{offer.description}</p>
       )}
       <div className="flex items-center justify-between mt-auto pt-1 gap-4">
         <div className="text-xs text-gray-400">
