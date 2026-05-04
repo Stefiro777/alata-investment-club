@@ -22,7 +22,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
   const [teamOpen, setTeamOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
 
-  const isBoD = profile.role === 'bod' || profile.role === 'director'
+  const isBoD = profile.role === 'bod' || profile.role === 'director' || profile.email === 'finullistefano@gmail.com'
 
   async function handleLogout() {
     setLoggingOut(true)

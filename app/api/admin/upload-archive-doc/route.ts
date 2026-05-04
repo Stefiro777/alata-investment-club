@@ -22,12 +22,13 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: adminUser } = await supabase
-    .from('admin_users')
-    .select('email')
-    .eq('email', user.email)
-    .single()
-  if (!adminUser) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (user.email !== 'finullistefano@gmail.com') {
+    const { data: member } = await supabase
+      .from('club_members').select('role').eq('email', user.email!).maybeSingle()
+    if (member?.role !== 'bod' && member?.role !== 'director') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+  }
 
   const formData = await request.formData()
   const file = formData.get('file')

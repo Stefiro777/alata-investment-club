@@ -30,11 +30,9 @@ export default async function AdminContentPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/dashboard')
 
-  const { data: adminRow } = await supabase
-    .from('admin_users').select('email').eq('email', user.email).maybeSingle()
   const { data: profile } = await supabase
     .from('profiles').select('role').eq('id', user.id).maybeSingle()
-  if (!adminRow && profile?.role !== 'bod' && profile?.role !== 'director') redirect('/dashboard')
+  if (user.email !== 'finullistefano@gmail.com' && profile?.role !== 'bod' && profile?.role !== 'director') redirect('/dashboard')
 
   const serviceClient = createServiceClient()
 

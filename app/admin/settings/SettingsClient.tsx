@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
 function SectionHeading({ title }: { title: string }) {
@@ -14,8 +13,6 @@ function SectionHeading({ title }: { title: string }) {
 }
 
 export default function SettingsClient({
-  adminUsers,
-  superadmin,
   applicationsOpen,
   showPrices,
   priceCV: initialPriceCV,
@@ -25,8 +22,6 @@ export default function SettingsClient({
   showAlumniReviews,
   showEventsReviews,
 }: {
-  adminUsers: string[]
-  superadmin: string
   applicationsOpen: boolean
   showPrices: boolean
   priceCV: string
@@ -36,8 +31,6 @@ export default function SettingsClient({
   showAlumniReviews: boolean
   showEventsReviews: boolean
 }) {
-  const router = useRouter()
-
   // Settings toggles state
   const [appsOpen, setAppsOpen] = useState(applicationsOpen)
   const [togglingApps, setTogglingApps] = useState(false)
@@ -71,13 +64,6 @@ export default function SettingsClient({
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState(false)
-
-  // Admin users state
-  const [newAdminEmail, setNewAdminEmail] = useState('')
-  const [addingAdmin, setAddingAdmin] = useState(false)
-  const [adminError, setAdminError] = useState<string | null>(null)
-  const [removingEmail, setRemovingEmail] = useState<string | null>(null)
-  const [isAdminListOpen, setIsAdminListOpen] = useState(false)
 
   async function handleToggleApplications() {
     setTogglingApps(true)
@@ -189,33 +175,6 @@ export default function SettingsClient({
       setInviteSuccess(true)
     }
     setInviting(false)
-  }
-
-  async function handleAddAdmin(e: React.FormEvent) {
-    e.preventDefault()
-    const email = newAdminEmail.trim().toLowerCase()
-    if (!email) return
-    setAddingAdmin(true)
-    setAdminError(null)
-
-    const supabase = createClient()
-    const { error } = await supabase.from('admin_users').insert({ email })
-
-    if (error) {
-      setAdminError(error.message)
-    } else {
-      setNewAdminEmail('')
-      router.refresh()
-    }
-    setAddingAdmin(false)
-  }
-
-  async function handleRemoveAdmin(email: string) {
-    setRemovingEmail(email)
-    const supabase = createClient()
-    await supabase.from('admin_users').delete().eq('email', email)
-    setRemovingEmail(null)
-    router.refresh()
   }
 
   return (
@@ -426,84 +385,6 @@ export default function SettingsClient({
           {inviteSuccess && (
             <p className="text-forest text-xs border-l-2 border-forest pl-3 py-1 mt-4">Invite sent!</p>
           )}
-        </div>
-      </section>
-
-      {/* ══ Admin Users ═══════════════════════════════════════════════════════ */}
-      <section id="admin-users">
-        <SectionHeading title="Admin Users" />
-
-        <div className="bg-white border border-line-faint p-8 space-y-6">
-          {/* Add admin form */}
-          <form onSubmit={handleAddAdmin} className="flex gap-3">
-            <input
-              type="email"
-              required
-              value={newAdminEmail}
-              onChange={e => setNewAdminEmail(e.target.value)}
-              placeholder="new@email.com"
-              className="flex-1 px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={addingAdmin}
-              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-3 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {addingAdmin ? '…' : 'Add Admin'}
-            </button>
-          </form>
-
-          {adminError && (
-            <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{adminError}</p>
-          )}
-
-          {/* Collapsible admin list */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setIsAdminListOpen(v => !v)}
-              className="flex items-center gap-3 w-full text-left group border border-line-faint bg-white px-4 py-3 hover:border-forest transition-colors duration-fast"
-            >
-              <span className="text-sm font-medium text-ink-900 group-hover:text-forest transition-colors flex-1">
-                Admin users ({adminUsers.length})
-              </span>
-              <svg
-                className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
-                style={{ transform: isAdminListOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            <div style={{ display: 'grid', gridTemplateRows: isAdminListOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
-              <div style={{ overflow: 'hidden' }}>
-                <div className="space-y-px bg-black/5 rounded-sm mt-2">
-                  {adminUsers.map(email => (
-                    <div key={email} className="bg-white px-6 py-4 flex items-center justify-between gap-6">
-                      <span className="text-sm text-ink-900 font-medium">
-                        {email}
-                        {email === superadmin && (
-                          <span className="ml-2 text-xs text-forest tracking-widest uppercase">superadmin</span>
-                        )}
-                      </span>
-                      {email === 'finullistefano@gmail.com' ? (
-                        <span className="font-sans text-[11px] tracking-[0.10em] uppercase text-ink-400">Superadmin</span>
-                      ) : email !== superadmin && (
-                        <button
-                          onClick={() => handleRemoveAdmin(email)}
-                          disabled={removingEmail === email}
-                          className="flex-shrink-0 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          {removingEmail === email ? '…' : 'Remove'}
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

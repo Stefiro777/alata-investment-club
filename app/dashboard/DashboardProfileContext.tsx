@@ -6,6 +6,7 @@ export type MemberProfile = {
   full_name: string
   role: string
   teams: string[] | null
+  email: string
 }
 
 const DashboardProfileContext = createContext<MemberProfile | null>(null)

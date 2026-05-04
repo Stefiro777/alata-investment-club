@@ -650,8 +650,6 @@ function AlumniCompanyRow({
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function MembersClient({
-  adminUsers,
-  superadmin,
   applicationsOpen,
   showPrices,
   priceCV: initialPriceCV,
@@ -661,8 +659,6 @@ export default function MembersClient({
   alumni: initialAlumni,
   alumniCompanies: initialAlumniCompanies,
 }: {
-  adminUsers: string[]
-  superadmin: string
   applicationsOpen: boolean
   showPrices: boolean
   priceCV: string
@@ -765,13 +761,6 @@ export default function MembersClient({
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState(false)
 
-  // Admin users state
-  const [adminList, setAdminList] = useState<string[]>(adminUsers)
-  const [newAdminEmail, setNewAdminEmail] = useState('')
-  const [addingAdmin, setAddingAdmin] = useState(false)
-  const [adminError, setAdminError] = useState<string | null>(null)
-  const [isAdminListOpen, setIsAdminListOpen] = useState(false)
-
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -802,31 +791,11 @@ export default function MembersClient({
     setInviting(false)
   }
 
-  async function handleAddAdmin(e: React.FormEvent) {
-    e.preventDefault()
-    const email = newAdminEmail.trim().toLowerCase()
-    if (!email) return
-    setAddingAdmin(true)
-    setAdminError(null)
-
-    const supabase = createClient()
-    const { error } = await supabase.from('admin_users').insert({ email })
-
-    if (error) {
-      setAdminError(error.message)
-    } else {
-      setNewAdminEmail('')
-      router.refresh()
-    }
-    setAddingAdmin(false)
-  }
-
   const navItems = [
     { label: 'Settings', id: 'settings' },
     { label: 'Alumni', id: 'alumni' },
     { label: 'Alumni Companies', id: 'alumni-companies' },
     { label: 'Invite Member', id: 'invite-member' },
-    { label: 'Admin Users', id: 'admin-users' },
   ]
 
   return (
@@ -1062,94 +1031,6 @@ export default function MembersClient({
           )}
         </div>
       </section>
-
-      {/* ══════════════════════════════════════
-          Admin Users
-      ══════════════════════════════════════ */}
-      <div id="admin-users">
-        <SectionHeading title="Admin Users" />
-
-        {/* Add admin */}
-        <div className="bg-white border border-line-faint p-6 space-y-4 mb-6">
-          <form onSubmit={handleAddAdmin} className="flex gap-3">
-            <input
-              type="email"
-              required
-              value={newAdminEmail}
-              onChange={e => setNewAdminEmail(e.target.value)}
-              placeholder="new@email.com"
-              className="flex-1 px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={addingAdmin}
-              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-3 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {addingAdmin ? '…' : 'Add Admin'}
-            </button>
-          </form>
-          {adminError && (
-            <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{adminError}</p>
-          )}
-        </div>
-
-        {/* Lista collassabile */}
-        <div className="border border-line">
-          <button
-            type="button"
-            onClick={() => setIsAdminListOpen(o => !o)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-paper-stone transition-colors"
-          >
-            <span className="font-medium">Admin users ({adminList.length})</span>
-            <svg className={`w-4 h-4 transition-transform ${isAdminListOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {isAdminListOpen && (
-            <div className="border-t border-line">
-              {adminList.map(email => (
-                <div key={email} className="flex items-center justify-between px-5 py-3 border-b border-line last:border-b-0">
-                  <span className="text-sm text-ink-900">{email}</span>
-                  {email === 'finullistefano@gmail.com' ? (
-                    <span className="text-xs font-semibold uppercase tracking-wide text-[#1a4a3a]">SUPERADMIN</span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!window.confirm(`Rimuovere ${email} dagli admin?`)) return
-                        console.log('Calling remove API for:', email)
-                        try {
-                          const res = await fetch('/api/admin/remove', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email }),
-                          })
-                          console.log('Response status:', res.status)
-                          const data = await res.json()
-                          console.log('Response data:', data)
-                          if (res.ok) {
-                            setAdminList(prev => prev.filter(e => e !== email))
-                          } else {
-                            alert(data.error ?? 'Errore durante la rimozione')
-                          }
-                        } catch (err) {
-                          console.error('Fetch error:', err)
-                          alert('Errore di rete')
-                        }
-                      }}
-                      className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-      </div>
 
     </div>
   )

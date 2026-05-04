@@ -50,6 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         role:      (profileData as any).role      ?? 'member',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         teams:     (profileData as any).teams     ?? null,
+        email:     user.email ?? '',
       })
       setStatus('ok')
     }
