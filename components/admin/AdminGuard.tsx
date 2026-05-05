@@ -8,7 +8,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     async function check() {
-      const res = await fetch('/api/admin/check')
+      const res = await fetch('/api/admin/check', { credentials: 'include' })
       const { allowed } = await res.json()
       if (allowed) {
         setAllowed(true)
