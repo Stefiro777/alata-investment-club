@@ -8,11 +8,15 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     async function check() {
+      console.log('AdminGuard: starting check')
       const res = await fetch('/api/admin/check', { credentials: 'include' })
-      const { allowed } = await res.json()
-      if (allowed) {
+      const data = await res.json()
+      console.log('AdminGuard: response', JSON.stringify(data))
+      if (data.allowed) {
+        console.log('AdminGuard: setting allowed true')
         setAllowed(true)
       } else {
+        console.log('AdminGuard: redirecting to dashboard')
         router.push('/dashboard')
       }
     }
