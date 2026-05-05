@@ -1,6 +1,12 @@
 import { createClient } from '@/lib/supabase-server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import AdminNavbar from '../components/AdminNavbar'
+
+const supabaseAdmin = createAdminClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 const TRACKER_URL =
   'https://docs.google.com/spreadsheets/d/1RMu7AWd3_CPUrq2XuXh1SEyYVxZxsIq3/edit?usp=sharing&ouid=111488797364027754658&rtpof=true&sd=true'
@@ -11,9 +17,12 @@ export default async function PrTrackerPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/dashboard')
 
-  const { data: profile } = await supabase
-    .from('profiles').select('role').eq('id', user.id).maybeSingle()
-  if (user.email !== 'finullistefano@gmail.com' && profile?.role !== 'bod' && profile?.role !== 'director') redirect('/dashboard')
+  const { data: member } = await supabaseAdmin
+    .from('club_members')
+    .select('role')
+    .eq('email', user.email!)
+    .maybeSingle()
+  if (member?.role !== 'bod' && member?.role !== 'director') redirect('/dashboard')
 
   return (
     <>

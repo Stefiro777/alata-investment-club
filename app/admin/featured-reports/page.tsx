@@ -1,7 +1,13 @@
 import { createClient } from '@/lib/supabase-server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import FeaturedReportsClient from './FeaturedReportsClient'
 import type { FeaturedReport } from '@/lib/types'
+
+const supabaseAdmin = createAdminClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export default async function FeaturedReportsAdminPage() {
   const supabase = await createClient()
@@ -9,9 +15,12 @@ export default async function FeaturedReportsAdminPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles').select('role').eq('id', user.id).maybeSingle()
-  if (user.email !== 'finullistefano@gmail.com' && profile?.role !== 'bod' && profile?.role !== 'director') redirect('/login')
+  const { data: member } = await supabaseAdmin
+    .from('club_members')
+    .select('role')
+    .eq('email', user.email!)
+    .maybeSingle()
+  if (member?.role !== 'bod' && member?.role !== 'director') redirect('/dashboard')
 
   const { data } = await supabase
     .from('featured_reports')
