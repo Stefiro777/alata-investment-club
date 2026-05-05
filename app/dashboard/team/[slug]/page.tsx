@@ -579,10 +579,11 @@ function TaskModal({
       changes.push({ field_changed: 'Descrizione', old_value: task.description ?? '—', new_value: editDescription || '—' })
     if (editDueDate !== (task.due_date ?? ''))
       changes.push({ field_changed: 'Scadenza', old_value: task.due_date ?? '—', new_value: editDueDate || '—' })
-    const oldAssignees = (task.assigned_to ?? []).slice().sort().join(',')
-    const newAssignees = editAssignees.slice().sort().join(',')
-    if (oldAssignees !== newAssignees)
-      changes.push({ field_changed: 'Assegnati', old_value: oldAssignees || '—', new_value: newAssignees || '—' })
+    const resolveName = (uid: string) => availableMembers.find(m => m.user_id === uid)?.full_name ?? uid
+    const oldNames = (task.assigned_to ?? []).map(resolveName).sort().join(', ')
+    const newNames = editAssignees.map(resolveName).sort().join(', ')
+    if (oldNames !== newNames)
+      changes.push({ field_changed: 'Assegnati', old_value: oldNames || '—', new_value: newNames || '—' })
 
     if (changes.length > 0) {
       await supabase.from('tasks').update({
