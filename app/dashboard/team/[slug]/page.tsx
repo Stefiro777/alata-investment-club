@@ -601,7 +601,7 @@ function TaskModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+      className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/60 pt-16"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="bg-white w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
