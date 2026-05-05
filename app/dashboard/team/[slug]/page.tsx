@@ -645,19 +645,16 @@ function TaskModal({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-1">Status</p>
-              {task.status === 'done' ? (
-                <p className="text-sm text-ink-500">
-                  Completata{task.completed_at ? ` il ${fmtDate(task.completed_at)}` : ''}
-                </p>
-              ) : canEdit ? (
+              {canEdit ? (
                 <select
                   value={task.status}
                   disabled={savingStatus}
                   onChange={e => handleStatusChange(e.target.value)}
-                  className="border border-line px-2 py-1 text-sm bg-white focus:outline-none focus:border-forest w-full"
+                  className="w-full border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black"
                 >
                   <option value="todo">Todo</option>
                   <option value="in_progress">In corso</option>
+                  <option value="done">Fatto</option>
                 </select>
               ) : (
                 <span className={`text-[11px] font-medium uppercase tracking-wide px-2 py-0.5 ${statusPill(task.status)}`}>
