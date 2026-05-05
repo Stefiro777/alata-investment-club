@@ -17,7 +17,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       }
     }
     check()
-  }, [router])
+  }, [])
 
   if (allowed === null) return <div className="min-h-screen flex items-center justify-center"><p>Loading...</p></div>
   if (!allowed) return null
