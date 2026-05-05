@@ -444,11 +444,10 @@ export default function TodoPage() {
               <select
                 value={editStatus}
                 onChange={e => setEditStatus(e.target.value)}
-                className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-[#1a4a3a] text-white w-full"
+                className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full"
               >
                 <option value="todo">To Do</option>
                 <option value="in_progress">In corso</option>
-                <option value="done">Fatto</option>
               </select>
             </div>
 
