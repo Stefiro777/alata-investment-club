@@ -7,6 +7,51 @@ import { useProfile } from '../../DashboardProfileContext'
 import MemberAutocomplete from '../../MemberAutocomplete'
 import VenuesSection from '@/components/dashboard/VenuesSection'
 
+// ── HistoryToggle ─────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function HistoryToggle({ history }: { history: any[] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border-t border-gray-200 pt-4">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 text-xs uppercase tracking-widest text-gray-500 font-['Inter'] hover:text-black transition-colors"
+      >
+        <span>Storico modifiche ({history.length})</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div className="space-y-2 mt-3">
+          {history.map(h => (
+            <div key={h.id} className="text-xs font-['Inter'] text-gray-600 border-l-2 border-[#1a4a3a] pl-3 py-1">
+              <span className="font-semibold text-black">{h.modified_by_name}</span>
+              {' '}ha modificato <span className="font-semibold">{h.field_changed}</span>
+              <br />
+              <span className="text-gray-400">{h.old_value}</span>{' → '}<span className="text-gray-700">{h.new_value}</span>
+              <br />
+              <span className="text-gray-400">{new Date(h.modified_at).toLocaleString('it-IT')}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TEAM_NAMES: Record<string, string> = {
@@ -788,23 +833,7 @@ function TaskModal({
           </div>
 
           {/* History */}
-          {taskHistory.length > 0 && (
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-xs uppercase tracking-widest text-gray-500 mb-3 font-['Inter']">Storico modifiche</h3>
-              <div className="space-y-2">
-                {taskHistory.map(h => (
-                  <div key={h.id} className="text-xs font-['Inter'] text-gray-600 border-l-2 border-[#1a4a3a] pl-3 py-1">
-                    <span className="font-semibold text-black">{h.modified_by_name}</span>
-                    {' '}ha modificato <span className="font-semibold">{h.field_changed}</span>
-                    <br />
-                    <span className="text-gray-400">{h.old_value}</span>{' → '}<span className="text-gray-700">{h.new_value}</span>
-                    <br />
-                    <span className="text-gray-400">{new Date(h.modified_at).toLocaleString('it-IT')}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {taskHistory.length > 0 && <HistoryToggle history={taskHistory} />}
 
           {/* Delete — bod/director only */}
           {canEdit && (

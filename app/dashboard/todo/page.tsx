@@ -5,6 +5,51 @@ import { createClient } from '@/lib/supabase'
 import { useProfile } from '../DashboardProfileContext'
 import MemberAutocomplete from '../MemberAutocomplete'
 
+// ── HistoryToggle ─────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function HistoryToggle({ history }: { history: any[] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border-t border-gray-200 pt-4">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 text-xs uppercase tracking-widest text-gray-500 font-['Inter'] hover:text-black transition-colors"
+      >
+        <span>Storico modifiche ({history.length})</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div className="space-y-2 mt-3">
+          {history.map(h => (
+            <div key={h.id} className="text-xs font-['Inter'] text-gray-600 border-l-2 border-[#1a4a3a] pl-3 py-1">
+              <span className="font-semibold text-black">{h.modified_by_name}</span>
+              {' '}ha modificato <span className="font-semibold">{h.field_changed}</span>
+              <br />
+              <span className="text-gray-400">{h.old_value}</span>{' → '}<span className="text-gray-700">{h.new_value}</span>
+              <br />
+              <span className="text-gray-400">{new Date(h.modified_at).toLocaleString('it-IT')}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Member = {
@@ -56,6 +101,13 @@ export default function TodoPage() {
   const [toggling, setToggling]         = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting]         = useState<string | null>(null)
+  const [editingTask, setEditingTask]   = useState<TodoTask | null>(null)
+  const [editTitle, setEditTitle]       = useState('')
+  const [editStatus, setEditStatus]     = useState('')
+  const [editDueDate, setEditDueDate]   = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editHistory, setEditHistory]   = useState<any[]>([])
+  const [saving, setSaving]             = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const isDone   = (t: TodoTask) => t.status === 'done'
@@ -160,6 +212,68 @@ export default function TodoPage() {
     setDeleting(null)
   }
 
+  async function openEdit(task: TodoTask) {
+    setEditingTask(task)
+    setEditTitle(task.title)
+    setEditStatus(task.status)
+    setEditDueDate(task.due_date ?? '')
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('task_history')
+      .select('*')
+      .eq('task_id', task.id)
+      .order('modified_at', { ascending: false })
+    setEditHistory(data ?? [])
+  }
+
+  async function handleSaveEdit() {
+    if (!editingTask) return
+    setSaving(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: member } = await supabase
+      .from('club_members')
+      .select('full_name')
+      .eq('email', user.email!)
+      .maybeSingle()
+    const authorName = member?.full_name ?? user.email ?? 'Membro'
+
+    const changes: { field_changed: string; old_value: string; new_value: string }[] = []
+    if (editTitle !== editingTask.title)
+      changes.push({ field_changed: 'Titolo', old_value: editingTask.title, new_value: editTitle })
+    if (editStatus !== editingTask.status)
+      changes.push({ field_changed: 'Stato', old_value: editingTask.status, new_value: editStatus })
+    if (editDueDate !== (editingTask.due_date ?? ''))
+      changes.push({ field_changed: 'Scadenza', old_value: editingTask.due_date ?? '—', new_value: editDueDate || '—' })
+
+    if (changes.length > 0) {
+      await supabase.from('tasks').update({
+        title: editTitle,
+        status: editStatus,
+        due_date: editDueDate || null,
+      }).eq('id', editingTask.id)
+
+      await supabase.from('task_history').insert(
+        changes.map(c => ({
+          task_id: editingTask.id,
+          modified_by: user.id,
+          modified_by_name: authorName,
+          ...c,
+        }))
+      )
+
+      setTasks(prev => prev.map(t =>
+        t.id === editingTask.id
+          ? { ...t, title: editTitle, status: editStatus as TodoTask['status'], due_date: editDueDate || null }
+          : t
+      ))
+    }
+    setSaving(false)
+    setEditingTask(null)
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     const title = newTitle.trim()
@@ -234,6 +348,7 @@ export default function TodoPage() {
   const doneCount = done.length
 
   return (
+    <>
     <div className="max-w-2xl mx-auto px-8 py-10">
 
       {/* Header */}
@@ -285,6 +400,7 @@ export default function TodoPage() {
               onDeleteRequest={() => setConfirmDelete(task.id)}
               onConfirmDelete={() => handleDelete(task.id)}
               onCancelDelete={() => setConfirmDelete(null)}
+              onEditRequest={() => openEdit(task)}
             />
           ))}
         </div>
@@ -298,6 +414,80 @@ export default function TodoPage() {
       )}
 
     </div>
+
+    {/* Edit modal */}
+    {editingTask && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto">
+
+          {/* Header */}
+          <div className="bg-[#1a4a3a] px-6 py-4 flex items-center justify-between">
+            <h2 className="text-white font-['Cormorant_Garamond',serif] text-xl tracking-wide">Modifica Task</h2>
+            <button onClick={() => setEditingTask(null)} className="text-white hover:text-gray-300 text-xl">✕</button>
+          </div>
+
+          <div className="px-6 py-5 space-y-5">
+
+            {/* Titolo */}
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Titolo</label>
+              <input
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+                className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+              />
+            </div>
+
+            {/* Stato */}
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Stato</label>
+              <select
+                value={editStatus}
+                onChange={e => setEditStatus(e.target.value)}
+                className="w-full border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a] bg-white text-black"
+              >
+                <option value="todo">Todo</option>
+                <option value="in_progress">In corso</option>
+                <option value="done">Fatto</option>
+              </select>
+            </div>
+
+            {/* Scadenza */}
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Scadenza</label>
+              <input
+                type="date"
+                value={editDueDate}
+                onChange={e => setEditDueDate(e.target.value)}
+                className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+              />
+            </div>
+
+            {/* Bottoni */}
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                onClick={() => setEditingTask(null)}
+                className="px-4 py-2 text-sm border border-gray-300 text-gray-600 font-['Inter'] hover:bg-gray-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={saving}
+                className="px-4 py-2 text-sm bg-[#1a4a3a] text-white font-['Inter'] hover:bg-[#143d2f] disabled:opacity-50"
+              >
+                {saving ? 'Salvataggio...' : 'Salva modifiche'}
+              </button>
+            </div>
+
+            {/* Storico modifiche */}
+            {editHistory.length > 0 && <HistoryToggle history={editHistory} />}
+
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 
@@ -313,6 +503,7 @@ function TodoRow({
   onDeleteRequest,
   onConfirmDelete,
   onCancelDelete,
+  onEditRequest,
 }: {
   task: TodoTask
   toggling: boolean
@@ -323,6 +514,7 @@ function TodoRow({
   onDeleteRequest: () => void
   onConfirmDelete: () => void
   onCancelDelete: () => void
+  onEditRequest: () => void
 }) {
   const done = task.status === 'done'
 
@@ -408,16 +600,29 @@ function TodoRow({
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={onDeleteRequest}
-              aria-label="Elimina task"
-              className="text-ink-300 hover:text-red-400 transition-colors p-1.5"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onEditRequest() }}
+                aria-label="Modifica task"
+                className="text-[#1a4a3a] hover:text-black transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteRequest}
+                aria-label="Elimina task"
+                className="text-ink-300 hover:text-red-400 transition-colors p-1.5"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </>
           )}
         </div>
       )}
