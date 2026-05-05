@@ -414,6 +414,9 @@ function TaskModal({
   const [editTitle, setEditTitle]             = useState(task.title)
   const [editDescription, setEditDescription] = useState(task.description ?? '')
   const [editDueDate, setEditDueDate]         = useState(task.due_date ?? '')
+  const [editAssignees, setEditAssignees]     = useState<string[]>(task.assigned_to ?? [])
+  const [availableMembers, setAvailableMembers] = useState<{ user_id: string; full_name: string }[]>([])
+  const [memberSearch, setMemberSearch]       = useState('')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [taskHistory, setTaskHistory]         = useState<any[]>([])
   const [savingEdit, setSavingEdit]           = useState(false)
@@ -436,6 +439,12 @@ function TaskModal({
         .eq('task_id', task.id)
         .order('modified_at', { ascending: false })
       setTaskHistory(data ?? [])
+
+      const { data: mems } = await supabase
+        .from('club_members')
+        .select('user_id, full_name')
+        .order('full_name')
+      setAvailableMembers((mems ?? []).filter((m: Record<string, unknown>) => m.user_id) as { user_id: string; full_name: string }[])
     }
     loadHistory()
   }, [task.id])
@@ -570,12 +579,17 @@ function TaskModal({
       changes.push({ field_changed: 'Descrizione', old_value: task.description ?? '—', new_value: editDescription || '—' })
     if (editDueDate !== (task.due_date ?? ''))
       changes.push({ field_changed: 'Scadenza', old_value: task.due_date ?? '—', new_value: editDueDate || '—' })
+    const oldAssignees = (task.assigned_to ?? []).slice().sort().join(',')
+    const newAssignees = editAssignees.slice().sort().join(',')
+    if (oldAssignees !== newAssignees)
+      changes.push({ field_changed: 'Assegnati', old_value: oldAssignees || '—', new_value: newAssignees || '—' })
 
     if (changes.length > 0) {
       await supabase.from('tasks').update({
         title: editTitle,
         description: editDescription || null,
         due_date: editDueDate || null,
+        assigned_to: editAssignees,
       }).eq('id', task.id)
 
       await supabase.from('task_history').insert(
@@ -699,16 +713,57 @@ function TaskModal({
               </div>
             )}
             <div className="col-span-2">
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-1">Assegnati</p>
-              {task.assignees.length ? (
-                <div className="flex flex-wrap gap-1">
-                  {task.assignees.map(m => (
-                    <span key={m.user_id} className="text-xs border border-line px-2 py-0.5 text-ink-700">
-                      {m.full_name}
-                    </span>
-                  ))}
+              {isEditing ? (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-1">Assegnati</p>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {editAssignees.map(uid => {
+                      const m = availableMembers.find(x => x.user_id === uid)
+                      return m ? (
+                        <span key={uid} className="text-xs border border-[#1a4a3a] px-2 py-0.5 text-[#1a4a3a] flex items-center gap-1">
+                          {m.full_name}
+                          <button onClick={() => setEditAssignees(prev => prev.filter(id => id !== uid))} className="text-[#1a4a3a] hover:text-black">×</button>
+                        </span>
+                      ) : null
+                    })}
+                  </div>
+                  <input
+                    value={memberSearch}
+                    onChange={e => setMemberSearch(e.target.value)}
+                    placeholder="Cerca membro..."
+                    className="w-full border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a] mb-1"
+                  />
+                  {memberSearch.length > 0 && (
+                    <div className="border border-gray-200 max-h-32 overflow-y-auto">
+                      {availableMembers
+                        .filter(m => m.full_name.toLowerCase().includes(memberSearch.toLowerCase()) && !editAssignees.includes(m.user_id))
+                        .map(m => (
+                          <button
+                            key={m.user_id}
+                            onClick={() => { setEditAssignees(prev => [...prev, m.user_id]); setMemberSearch('') }}
+                            className="w-full text-left px-3 py-1.5 text-sm font-['Inter'] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+                          >
+                            {m.full_name}
+                          </button>
+                        ))
+                      }
+                    </div>
+                  )}
                 </div>
-              ) : <p className="text-ink-400">—</p>}
+              ) : (
+                <>
+                  <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-1">Assegnati</p>
+                  {task.assignees.length ? (
+                    <div className="flex flex-wrap gap-1">
+                      {task.assignees.map(m => (
+                        <span key={m.user_id} className="text-xs border border-line px-2 py-0.5 text-ink-700">
+                          {m.full_name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : <p className="text-ink-400">—</p>}
+                </>
+              )}
             </div>
           </div>
 
