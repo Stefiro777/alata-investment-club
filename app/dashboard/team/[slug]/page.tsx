@@ -601,7 +601,11 @@ function TaskModal({
         }))
       )
 
-      onUpdate({ ...task, title: editTitle, description: editDescription || null, due_date: editDueDate || null })
+      const newAssigneesResolved = editAssignees.map(uid => {
+        const m = availableMembers.find(x => x.user_id === uid)
+        return { user_id: uid, full_name: m?.full_name ?? uid }
+      })
+      onUpdate({ ...task, title: editTitle, description: editDescription || null, due_date: editDueDate || null, assigned_to: editAssignees, assignees: newAssigneesResolved })
       const { data: newHistory } = await supabase
         .from('task_history')
         .select('*')
