@@ -441,14 +441,21 @@ export default function TodoPage() {
             {/* Stato */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Stato</label>
-              <select
-                value={editStatus}
-                onChange={e => setEditStatus(e.target.value)}
-                className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full"
-              >
-                <option value="todo">To Do</option>
-                <option value="in_progress">In corso</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={editStatus}
+                  onChange={e => setEditStatus(e.target.value)}
+                  className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In corso</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Scadenza */}

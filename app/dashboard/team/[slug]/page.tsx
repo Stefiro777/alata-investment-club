@@ -650,15 +650,22 @@ function TaskModal({
             <div>
               <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-1">Status</p>
               {canEdit ? (
-                <select
-                  value={task.status}
-                  disabled={savingStatus}
-                  onChange={e => handleStatusChange(e.target.value)}
-                  className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full"
-                >
-                  <option value="todo">To Do</option>
-                  <option value="in_progress">In corso</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={task.status}
+                    disabled={savingStatus}
+                    onChange={e => handleStatusChange(e.target.value)}
+                    className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                  >
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In corso</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                </div>
               ) : (
                 <span className={`text-[11px] font-medium uppercase tracking-wide px-2 py-0.5 ${statusPill(task.status)}`}>
                   {statusLabel(task.status)}
@@ -698,15 +705,22 @@ function TaskModal({
               <div>
                 <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-1">Divisione</p>
                 {canEdit ? (
-                  <select
-                    value={task.category_id ?? ''}
-                    disabled={savingCat}
-                    onChange={e => handleCategoryChange(e.target.value)}
-                    className="border border-line px-2 py-1 text-sm bg-white focus:outline-none focus:border-forest w-full"
-                  >
-                    <option value="">Nessuna</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={task.category_id ?? ''}
+                      disabled={savingCat}
+                      onChange={e => handleCategoryChange(e.target.value)}
+                      className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                    >
+                      <option value="">Nessuna</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </div>
+                  </div>
                 ) : (
                   <p className="text-ink-900">{task.category?.name ?? '—'}</p>
                 )}
@@ -1108,14 +1122,21 @@ function CreateTaskModal({
             {slug === 'lab' && (
               <div>
                 <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Divisione</label>
-                <select
-                  value={categoryId}
-                  onChange={e => setCatId(e.target.value)}
-                  className="w-full border border-line px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest appearance-none"
-                >
-                  <option value="">Nessuna</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <div className="relative">
+                  <select
+                    value={categoryId}
+                    onChange={e => setCatId(e.target.value)}
+                    className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                  >
+                    <option value="">Nessuna</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             )}
           </div>
