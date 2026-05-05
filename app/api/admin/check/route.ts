@@ -10,6 +10,7 @@ const supabaseAdmin = createAdminClient(
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  console.log('ADMIN CHECK - user:', user?.email ?? 'null')
   if (!user) return NextResponse.json({ allowed: false })
 
   const { data: member } = await supabaseAdmin
@@ -17,7 +18,8 @@ export async function GET() {
     .select('role')
     .eq('email', user.email!)
     .maybeSingle()
-
+  console.log('ADMIN CHECK - member:', JSON.stringify(member))
   const allowed = member?.role === 'bod' || member?.role === 'director'
+  console.log('ADMIN CHECK - allowed:', allowed)
   return NextResponse.json({ allowed })
 }
