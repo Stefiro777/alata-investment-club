@@ -406,9 +406,17 @@ function MemberFormModal({
               <select
                 value={form.role}
                 onChange={e => setField('role', e.target.value)}
-                className="w-full border border-line px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest appearance-none"
+                className="border border-[#1a4a3a] bg-white text-black font-['Inter'] text-sm w-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]"
               >
-                {ROLE_OPTIONS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
+                {ROLE_OPTIONS.map(r => (
+                  <option
+                    key={r.key}
+                    value={r.key}
+                    className={r.key === form.role ? 'bg-[#1a4a3a] text-white' : 'bg-white text-black'}
+                  >
+                    {r.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

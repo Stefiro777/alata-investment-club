@@ -180,6 +180,7 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -190,6 +191,10 @@ export default function DashboardPage() {
       if (!user) return
 
       const uid = user.id
+
+      const res = await fetch('/api/admin/check')
+      const { allowed } = await res.json()
+      if (allowed) setIsAdmin(true)
 
       // Tasks assigned to this user, not done
       const { data: taskRows } = await supabase
@@ -289,6 +294,14 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
+
+      {isAdmin && (
+        <div className="flex justify-end mb-6">
+          <a href="/admin" className="bg-[#1a4a3a] text-white px-5 py-2 text-sm uppercase tracking-widest font-['Inter']">
+            Admin Panel
+          </a>
+        </div>
+      )}
 
       {/* Banner scadenze */}
       {urgentCount > 0 && (

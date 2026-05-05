@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -9,17 +8,9 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     async function check() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
-
-      const { data: member } = await supabase
-        .from('club_members')
-        .select('role')
-        .eq('email', user.email!)
-        .maybeSingle()
-
-      if (member?.role === 'bod' || member?.role === 'director') {
+      const res = await fetch('/api/admin/check')
+      const { allowed } = await res.json()
+      if (allowed) {
         setAllowed(true)
       } else {
         router.push('/dashboard')
