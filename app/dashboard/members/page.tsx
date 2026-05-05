@@ -403,21 +403,28 @@ function MemberFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Ruolo</label>
-              <select
-                value={form.role}
-                onChange={e => setField('role', e.target.value)}
-                className="border border-[#1a4a3a] bg-white text-black font-['Inter'] text-sm w-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1a4a3a]"
-              >
-                {ROLE_OPTIONS.map(r => (
-                  <option
-                    key={r.key}
-                    value={r.key}
-                    className={r.key === form.role ? 'bg-[#1a4a3a] text-white' : 'bg-white text-black'}
-                  >
-                    {r.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={form.role}
+                  onChange={e => setField('role', e.target.value)}
+                  className="border border-[#1a4a3a] bg-white text-black font-['Inter'] text-sm w-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] appearance-none"
+                >
+                  {ROLE_OPTIONS.map(r => (
+                    <option
+                      key={r.key}
+                      value={r.key}
+                      className={r.key === form.role ? 'bg-[#1a4a3a] text-white' : 'bg-white text-black'}
+                    >
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </div>
             </div>
             <div>
               <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Titolo</label>
@@ -454,14 +461,21 @@ function MemberFormModal({
           {form.teams.includes('lab') && (
             <div>
               <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Divisione Lab</label>
-              <select
-                value={form.lab_subdivision}
-                onChange={e => setField('lab_subdivision', e.target.value)}
-                className="w-full border border-line px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest appearance-none"
-              >
-                <option value="">Nessuna</option>
-                {LAB_SUBDIVISIONS.map(l => <option key={l.key} value={l.key}>{l.label}</option>)}
-              </select>
+              <div className="relative">
+                <select
+                  value={form.lab_subdivision}
+                  onChange={e => setField('lab_subdivision', e.target.value)}
+                  className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                >
+                  <option value="">Nessuna</option>
+                  {LAB_SUBDIVISIONS.map(l => <option key={l.key} value={l.key}>{l.label}</option>)}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </div>
             </div>
           )}
 
