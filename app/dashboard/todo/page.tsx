@@ -625,10 +625,9 @@ function TodoRow({
             {task.assignees.map(m => (
               <span
                 key={m.user_id}
-                title={m.full_name}
-                className="w-5 h-5 bg-[#1a4a3a] text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0"
+                className="text-xs border border-[#1a4a3a] px-2 py-0.5 text-[#1a4a3a] font-['Inter']"
               >
-                {initials(m.full_name)}
+                {m.full_name}
               </span>
             ))}
           </div>
