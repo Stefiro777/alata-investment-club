@@ -401,7 +401,24 @@ function AddDocModal({
 
 // ── Doc row ────────────────────────────────────────────────────────────────────
 
-function DocRow({ doc, onDelete, onOpen, hideYearQuarter }: { doc: Doc; onDelete: () => void; onOpen?: () => void; hideYearQuarter?: boolean }) {
+function ExpandableDescription({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false)
+  const LIMIT = 120
+  if (text.length <= LIMIT) return <p className="text-xs text-ink-500 mt-0.5">{text}</p>
+  return (
+    <p className="text-xs text-ink-500 mt-0.5">
+      {expanded ? text : text.slice(0, LIMIT) + '…'}
+      <button
+        onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
+        className="ml-1 text-[#1a4a3a] hover:underline font-['Inter'] font-medium"
+      >
+        {expanded ? 'Meno' : 'Altro'}
+      </button>
+    </p>
+  )
+}
+
+function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showMoveOut }: { doc: Doc; onDelete: () => void; onOpen?: () => void; hideYearQuarter?: boolean; onMove?: (docId: string, folderId: string | null) => void; folders?: Folder[]; showMoveOut?: boolean }) {
   const [deleting, setDeleting] = useState(false)
 
   async function handleDownload() {
@@ -447,7 +464,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter }: { doc: Doc; onDelete
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-ink-900">{doc.title}</p>
-        {doc.description && <p className="text-xs text-ink-500 mt-0.5 line-clamp-2">{doc.description}</p>}
+        {doc.description && <ExpandableDescription text={doc.description} />}
         <div className="flex flex-wrap gap-1 mt-1.5 items-center">
           {/* Year/quarter badge for Delibere */}
           {!hideYearQuarter && category === 'Delibere' && doc.year != null && (
@@ -495,6 +512,25 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter }: { doc: Doc; onDelete
             Apri ↗
           </a>
         )}
+        {showMoveOut && onMove && (
+          <button
+            onClick={e => { e.stopPropagation(); onMove(doc.id, null) }}
+            className="text-xs text-gray-400 hover:text-[#1a4a3a] font-['Inter'] uppercase tracking-widest border border-gray-300 px-2 py-1 hover:border-[#1a4a3a] transition-colors"
+          >
+            Togli
+          </button>
+        )}
+        {!showMoveOut && onMove && folders && folders.length > 0 && (
+          <select
+            value=""
+            onChange={e => { if (e.target.value) onMove(doc.id, e.target.value) }}
+            className="text-xs border border-gray-300 px-2 py-1 font-['Inter'] bg-white text-gray-500 focus:outline-none appearance-none cursor-pointer"
+            title="Sposta in cartella"
+          >
+            <option value="">Sposta in...</option>
+            {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
+        )}
         <button
           onClick={async () => {
             if (!confirm(`Eliminare "${doc.title}"?`)) return
@@ -511,6 +547,78 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter }: { doc: Doc; onDelete
   )
 }
 
+// ── Folder accordion ──────────────────────────────────────────────────────────
+
+function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDoc }: {
+  folder: Folder
+  docs: Doc[]
+  onDelete: () => void
+  onOpen: (url: string | null) => void
+  onMoveOut: (docId: string) => void
+  onDeleteDoc: (docId: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  return (
+    <div className="border border-[#1a4a3a] mb-2">
+      <div className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-[#f5f5f5] transition-colors" onClick={() => setOpen(o => !o)}>
+        <div className="flex items-center gap-3">
+          <span className="text-[#1a4a3a]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </span>
+          <span className="font-['Inter'] font-semibold text-sm text-ink-900">{folder.name}</span>
+          <span className="text-xs text-ink-400 font-['Inter']">({docs.length} document{docs.length !== 1 ? 'i' : 'o'})</span>
+        </div>
+        <div className="flex items-center gap-3">
+          {confirmDelete ? (
+            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+              <span className="text-xs text-red-600 font-['Inter']">Eliminare la cartella?</span>
+              <button onClick={onDelete} className="text-xs text-red-600 font-semibold hover:underline font-['Inter']">Sì</button>
+              <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-500 hover:underline font-['Inter']">No</button>
+            </div>
+          ) : (
+            <button
+              onClick={e => { e.stopPropagation(); setConfirmDelete(true) }}
+              className="text-xs text-gray-400 hover:text-red-500 font-['Inter'] uppercase tracking-widest"
+            >
+              Elimina cartella
+            </button>
+          )}
+          <svg
+            xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </div>
+      {open && (
+        <div className="border-t border-[#1a4a3a]/20">
+          {docs.length === 0 ? (
+            <p className="text-xs text-ink-400 font-['Inter'] px-6 py-4">Nessun documento in questa cartella.</p>
+          ) : (
+            docs.map(doc => (
+              <div key={doc.id} className="border-b border-gray-100 last:border-0">
+                <DocRow
+                  doc={doc}
+                  onDelete={() => onDeleteDoc(doc.id)}
+                  onOpen={() => onOpen(doc.file_url)}
+                  onMove={onMoveOut}
+                  folders={[]}
+                  showMoveOut={true}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Category section ───────────────────────────────────────────────────────────
 
 function CategorySection({
@@ -518,19 +626,19 @@ function CategorySection({
   docs,
   onUpload,
   onDelete,
+  onMove,
 }: {
   category: Category
   docs: Doc[]
   onUpload: (cat: Category) => void
   onDelete: (id: string) => void
+  onMove: (docId: string, folderId: string | null) => void
 }) {
   const [open, setOpen] = useState(false)
   const [folders, setFolders] = useState<Folder[]>([])
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
   const [showNewFolderInput, setShowNewFolderInput] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [creatingFolder, setCreatingFolder] = useState(false)
-  const [folderToDelete, setFolderToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     if (category !== 'Contratti') return
@@ -562,8 +670,6 @@ function CategorySection({
     const supabase = createClient()
     await supabase.from('archive_folders').delete().eq('id', folderId)
     setFolders(prev => prev.filter(f => f.id !== folderId))
-    if (selectedFolder === folderId) setSelectedFolder(null)
-    setFolderToDelete(null)
   }
 
   const sorted = [...docs].sort((a, b) => {
@@ -650,31 +756,8 @@ function CategorySection({
             </div>
           ) : category === 'Contratti' ? (
             <div className="bg-white border border-line-faint mb-4 px-6 py-4">
-              {/* Barra cartelle */}
+              {/* Bottone nuova cartella */}
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <button
-                  onClick={() => setSelectedFolder(null)}
-                  className={`text-xs px-3 py-1.5 border font-['Inter'] uppercase tracking-widest transition-colors ${selectedFolder === null ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'bg-white text-[#1a4a3a] border-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white'}`}
-                >
-                  Tutti
-                </button>
-                {folders.map(f => (
-                  <div key={f.id} className="flex items-center gap-1">
-                    <button
-                      onClick={() => setSelectedFolder(f.id)}
-                      className={`text-xs px-3 py-1.5 border font-['Inter'] uppercase tracking-widest transition-colors ${selectedFolder === f.id ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'bg-white text-[#1a4a3a] border-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white'}`}
-                    >
-                      📁 {f.name}
-                    </button>
-                    <button
-                      onClick={() => setFolderToDelete(f.id)}
-                      className="text-gray-400 hover:text-red-500 text-xs"
-                      aria-label="Elimina cartella"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
                 {showNewFolderInput ? (
                   <div className="flex items-center gap-2">
                     <input
@@ -702,32 +785,38 @@ function CategorySection({
                 )}
               </div>
 
-              {/* Conferma eliminazione cartella */}
-              {folderToDelete && (
-                <div className="mb-4 p-3 border border-red-200 bg-red-50 text-sm font-['Inter'] flex items-center justify-between">
-                  <span className="text-red-700">Eliminare questa cartella? I documenti al suo interno non verranno eliminati.</span>
-                  <div className="flex gap-3">
-                    <button onClick={() => deleteFolder(folderToDelete)} className="text-red-600 font-semibold hover:underline">Sì, elimina</button>
-                    <button onClick={() => setFolderToDelete(null)} className="text-gray-500 hover:underline">Annulla</button>
-                  </div>
-                </div>
-              )}
+              {/* Cartelle */}
+              {folders.map(f => {
+                const folderDocs = sorted.filter(doc => doc.folder_id === f.id)
+                return (
+                  <FolderAccordion
+                    key={f.id}
+                    folder={f}
+                    docs={folderDocs}
+                    onDelete={() => deleteFolder(f.id)}
+                    onOpen={openDoc}
+                    onMoveOut={docId => onMove(docId, null)}
+                    onDeleteDoc={docId => onDelete(docId)}
+                  />
+                )
+              })}
 
-              {/* Documenti filtrati */}
+              {/* Documenti senza cartella */}
               {(() => {
-                const filtered = selectedFolder
-                  ? sorted.filter(doc => doc.folder_id === selectedFolder)
-                  : sorted
-                return filtered.length === 0 ? (
-                  <div className="py-4 text-center text-sm text-ink-500">Nessun documento.</div>
-                ) : (
+                const noFolder = sorted.filter(doc => !doc.folder_id)
+                if (noFolder.length === 0) return null
+                return (
                   <div className="-mx-6">
-                    {filtered.map(doc => (
-                      <DocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} onOpen={() => openDoc(doc.file_url)} />
+                    {noFolder.map(doc => (
+                      <DocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} onOpen={() => openDoc(doc.file_url)} onMove={onMove} folders={folders} />
                     ))}
                   </div>
                 )
               })()}
+
+              {docs.length === 0 && (
+                <div className="py-4 text-center text-sm text-ink-500">Nessun documento.</div>
+              )}
             </div>
           ) : (
             <div className="bg-white border border-line-faint mb-4">
@@ -1118,6 +1207,15 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
     setDocs(prev => prev.filter(d => d.id !== id))
   }
 
+  async function moveDocument(docId: string, folderId: string | null) {
+    const supabase = createClient()
+    await supabase
+      .from('admin_documents')
+      .update({ folder_id: folderId })
+      .eq('id', docId)
+    setDocs(prev => prev.map(d => d.id === docId ? { ...d, folder_id: folderId } : d))
+  }
+
   function openModal(cat: Category) {
     setModalCategory(cat)
     setModalOpen(true)
@@ -1144,6 +1242,7 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
             docs={docs.filter(d => d.tags.includes(cat))}
             onUpload={openModal}
             onDelete={handleDelete}
+            onMove={moveDocument}
           />
         ))}
         <ContabilitaSection userEmail={userEmail} />

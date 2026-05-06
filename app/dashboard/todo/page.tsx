@@ -105,6 +105,9 @@ export default function TodoPage() {
   const [editTitle, setEditTitle]       = useState('')
   const [editStatus, setEditStatus]     = useState('')
   const [editDueDate, setEditDueDate]   = useState('')
+  const [editAssignees, setEditAssignees] = useState<string[]>([])
+  const [availableMembers, setAvailableMembers] = useState<{user_id: string, full_name: string}[]>([])
+  const [memberSearch, setMemberSearch] = useState('')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editHistory, setEditHistory]   = useState<any[]>([])
   const [saving, setSaving]             = useState(false)
@@ -142,6 +145,7 @@ export default function TodoPage() {
       }))
 
     setMembers(loadedMembers)
+    setAvailableMembers(loadedMembers.filter(m => m.user_id))
 
     const memberMap: Record<string, string> = {}
     loadedMembers.forEach(m => { memberMap[m.user_id] = m.full_name })
@@ -217,6 +221,7 @@ export default function TodoPage() {
     setEditTitle(task.title)
     setEditStatus(task.status)
     setEditDueDate(task.due_date ?? '')
+    setEditAssignees(task.assigned_to ?? [])
     const supabase = createClient()
     const { data } = await supabase
       .from('task_history')
@@ -248,11 +253,17 @@ export default function TodoPage() {
     if (editDueDate !== (editingTask.due_date ?? ''))
       changes.push({ field_changed: 'Scadenza', old_value: editingTask.due_date ?? '—', new_value: editDueDate || '—' })
 
+    const oldA = (editingTask.assigned_to ?? []).slice().sort().join(',')
+    const newA = editAssignees.slice().sort().join(',')
+    if (oldA !== newA)
+      changes.push({ field_changed: 'Assegnati', old_value: oldA || '—', new_value: newA || '—' })
+
     if (changes.length > 0) {
       await supabase.from('tasks').update({
         title: editTitle,
         status: editStatus,
         due_date: editDueDate || null,
+        assigned_to: editAssignees,
       }).eq('id', editingTask.id)
 
       await supabase.from('task_history').insert(
@@ -266,7 +277,7 @@ export default function TodoPage() {
 
       setTasks(prev => prev.map(t =>
         t.id === editingTask.id
-          ? { ...t, title: editTitle, status: editStatus as TodoTask['status'], due_date: editDueDate || null }
+          ? { ...t, title: editTitle, status: editStatus as TodoTask['status'], due_date: editDueDate || null, assigned_to: editAssignees, assignees: editAssignees.map(uid => members.find(m => m.user_id === uid)).filter(Boolean) as Member[] }
           : t
       ))
     }
@@ -467,6 +478,47 @@ export default function TodoPage() {
                 onChange={e => setEditDueDate(e.target.value)}
                 className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
               />
+            </div>
+
+            {/* Assegnati */}
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Assegnati</label>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {editAssignees.map(uid => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const m = availableMembers.find((x: any) => x.user_id === uid)
+                  return m ? (
+                    <span key={uid} className="text-xs border border-[#1a4a3a] px-2 py-0.5 text-[#1a4a3a] flex items-center gap-1 font-['Inter']">
+                      {m.full_name}
+                      <button onClick={() => setEditAssignees(prev => prev.filter(id => id !== uid))} className="text-[#1a4a3a] hover:text-black">×</button>
+                    </span>
+                  ) : null
+                })}
+              </div>
+              <input
+                value={memberSearch}
+                onChange={e => setMemberSearch(e.target.value)}
+                placeholder="Cerca membro..."
+                className="w-full border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a] mb-1"
+              />
+              {memberSearch.length > 0 && (
+                <div className="border border-gray-200 max-h-32 overflow-y-auto">
+                  {availableMembers
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    .filter((m: any) => m.full_name.toLowerCase().includes(memberSearch.toLowerCase()) && !editAssignees.includes(m.user_id))
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    .map((m: any) => (
+                      <button
+                        key={m.user_id}
+                        onClick={() => { setEditAssignees(prev => [...prev, m.user_id]); setMemberSearch('') }}
+                        className="w-full text-left px-3 py-1.5 text-sm font-['Inter'] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+                      >
+                        {m.full_name}
+                      </button>
+                    ))
+                  }
+                </div>
+              )}
             </div>
 
             {/* Bottoni */}

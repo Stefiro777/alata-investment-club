@@ -245,6 +245,7 @@ export async function POST(req: NextRequest) {
         }),
       })
       sent++
+      await new Promise(resolve => setTimeout(resolve, 1000))
     } catch (err) {
       console.error(`Failed to send notification to ${member.email}:`, err)
     }
