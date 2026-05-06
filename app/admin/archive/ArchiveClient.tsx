@@ -18,6 +18,7 @@ type Doc = {
   quarter: number | null
   uploaded_by: string | null
   created_at: string
+  folder_id: string | null
 }
 
 // Sostituire con l'URL della cartella Google Drive Contabilità
@@ -31,6 +32,13 @@ type AccountingDoc = {
   year: number
   created_at: string
   created_by: string | null
+}
+
+type Folder = {
+  id: string
+  name: string
+  category: string
+  created_at: string
 }
 
 // ── Signed URL helpers ─────────────────────────────────────────────────────────
@@ -151,7 +159,19 @@ function AddDocModal({
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [folders, setFolders] = useState<Folder[]>([])
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (category !== 'Contratti') return
+    createClient()
+      .from('archive_folders')
+      .select('*')
+      .eq('category', 'Contratti')
+      .order('name')
+      .then(({ data }) => setFolders(data ?? []))
+  }, [category])
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -203,6 +223,7 @@ function AddDocModal({
         year: year ? parseInt(year, 10) : null,
         quarter: quarter ? parseInt(quarter, 10) : null,
         uploaded_by: userEmail,
+        folder_id: selectedFolder,
       })
       .select('*')
       .single()
@@ -343,6 +364,20 @@ function AddDocModal({
             </div>
           )}
 
+
+          {category === 'Contratti' && (
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Cartella (opzionale)</label>
+              <select
+                value={selectedFolder ?? ''}
+                onChange={e => setSelectedFolder(e.target.value || null)}
+                className="w-full border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black appearance-none"
+              >
+                <option value="">Nessuna cartella</option>
+                {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
+          )}
 
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
 
@@ -490,6 +525,46 @@ function CategorySection({
   onDelete: (id: string) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [folders, setFolders] = useState<Folder[]>([])
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [creatingFolder, setCreatingFolder] = useState(false)
+  const [folderToDelete, setFolderToDelete] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (category !== 'Contratti') return
+    createClient()
+      .from('archive_folders')
+      .select('*')
+      .eq('category', 'Contratti')
+      .order('name')
+      .then(({ data }) => setFolders(data ?? []))
+  }, [category])
+
+  async function createFolder() {
+    if (!newFolderName.trim()) return
+    setCreatingFolder(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase
+      .from('archive_folders')
+      .insert({ name: newFolderName.trim(), category: 'Contratti', created_by: user?.id })
+      .select()
+      .single()
+    if (data) setFolders(prev => [...prev, data as Folder].sort((a, b) => a.name.localeCompare(b.name)))
+    setNewFolderName('')
+    setShowNewFolderInput(false)
+    setCreatingFolder(false)
+  }
+
+  async function deleteFolder(folderId: string) {
+    const supabase = createClient()
+    await supabase.from('archive_folders').delete().eq('id', folderId)
+    setFolders(prev => prev.filter(f => f.id !== folderId))
+    if (selectedFolder === folderId) setSelectedFolder(null)
+    setFolderToDelete(null)
+  }
 
   const sorted = [...docs].sort((a, b) => {
     if (category === 'Legal' || category === 'Contratti') {
@@ -571,6 +646,87 @@ function CategorySection({
                     </div>
                   )
                 })
+              })()}
+            </div>
+          ) : category === 'Contratti' ? (
+            <div className="bg-white border border-line-faint mb-4 px-6 py-4">
+              {/* Barra cartelle */}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <button
+                  onClick={() => setSelectedFolder(null)}
+                  className={`text-xs px-3 py-1.5 border font-['Inter'] uppercase tracking-widest transition-colors ${selectedFolder === null ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'bg-white text-[#1a4a3a] border-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white'}`}
+                >
+                  Tutti
+                </button>
+                {folders.map(f => (
+                  <div key={f.id} className="flex items-center gap-1">
+                    <button
+                      onClick={() => setSelectedFolder(f.id)}
+                      className={`text-xs px-3 py-1.5 border font-['Inter'] uppercase tracking-widest transition-colors ${selectedFolder === f.id ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'bg-white text-[#1a4a3a] border-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white'}`}
+                    >
+                      📁 {f.name}
+                    </button>
+                    <button
+                      onClick={() => setFolderToDelete(f.id)}
+                      className="text-gray-400 hover:text-red-500 text-xs"
+                      aria-label="Elimina cartella"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {showNewFolderInput ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={newFolderName}
+                      onChange={e => setNewFolderName(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && createFolder()}
+                      placeholder="Nome cartella..."
+                      className="border border-[#1a4a3a] px-2 py-1 text-xs font-['Inter'] focus:outline-none w-36"
+                      autoFocus
+                    />
+                    <button onClick={createFolder} disabled={creatingFolder} className="text-xs text-[#1a4a3a] font-semibold hover:underline font-['Inter']">
+                      {creatingFolder ? '...' : 'Crea'}
+                    </button>
+                    <button onClick={() => { setShowNewFolderInput(false); setNewFolderName('') }} className="text-xs text-gray-400 hover:text-black font-['Inter']">
+                      Annulla
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowNewFolderInput(true)}
+                    className="text-xs text-[#1a4a3a] border border-dashed border-[#1a4a3a] px-3 py-1.5 hover:bg-[#1a4a3a] hover:text-white transition-colors font-['Inter']"
+                  >
+                    + Nuova cartella
+                  </button>
+                )}
+              </div>
+
+              {/* Conferma eliminazione cartella */}
+              {folderToDelete && (
+                <div className="mb-4 p-3 border border-red-200 bg-red-50 text-sm font-['Inter'] flex items-center justify-between">
+                  <span className="text-red-700">Eliminare questa cartella? I documenti al suo interno non verranno eliminati.</span>
+                  <div className="flex gap-3">
+                    <button onClick={() => deleteFolder(folderToDelete)} className="text-red-600 font-semibold hover:underline">Sì, elimina</button>
+                    <button onClick={() => setFolderToDelete(null)} className="text-gray-500 hover:underline">Annulla</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Documenti filtrati */}
+              {(() => {
+                const filtered = selectedFolder
+                  ? sorted.filter(doc => doc.folder_id === selectedFolder)
+                  : sorted
+                return filtered.length === 0 ? (
+                  <div className="py-4 text-center text-sm text-ink-500">Nessun documento.</div>
+                ) : (
+                  <div className="-mx-6">
+                    {filtered.map(doc => (
+                      <DocRow key={doc.id} doc={doc} onDelete={() => onDelete(doc.id)} onOpen={() => openDoc(doc.file_url)} />
+                    ))}
+                  </div>
+                )
               })()}
             </div>
           ) : (
