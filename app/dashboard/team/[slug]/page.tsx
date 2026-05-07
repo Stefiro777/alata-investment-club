@@ -1513,8 +1513,9 @@ export default function TeamPage() {
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
 
   const teamName = TEAM_NAMES[slug] ?? slug
-  const canEdit  = profile?.role === 'bod' || profile?.role === 'director' || !!profile?.teams?.includes(slug)
-  const canView  = profile?.role === 'bod' || profile?.role === 'director' || !!profile?.teams?.includes(slug)
+  const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
+  const canCreateTask = profile?.role === 'bod' || profile?.role === 'director' || !!(profile?.teams?.includes(slug))
+  const canView       = profile?.role === 'bod' || profile?.role === 'director' || !!profile?.teams?.includes(slug)
 
   const loadTasks = useCallback(async () => {
     const supabase = createClient()
@@ -1656,7 +1657,7 @@ export default function TeamPage() {
             {tasks.length} task · {totalMembers} membri coinvolti
           </p>
         </div>
-        {canEdit && (
+        {canCreateTask && (
           <button
             onClick={() => setShowCreate(true)}
             className="flex-shrink-0 flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
