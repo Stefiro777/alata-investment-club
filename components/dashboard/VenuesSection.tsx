@@ -328,11 +328,15 @@ function Lightbox({ photos, index, onClose }: { photos: string[]; index: number;
 function VenueRow({
   venue,
   canEdit,
+  isExpanded,
+  onToggle,
   onEdit,
   onDelete,
 }: {
   venue: Venue
   canEdit: boolean
+  isExpanded: boolean
+  onToggle: () => void
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -342,6 +346,10 @@ function VenueRow({
 
   const hasPhotos     = Array.isArray(venue.photos) && venue.photos.length > 0
   const showPlaceholder = !hasPhotos || thumbError
+
+  const notes        = venue.notes ?? ''
+  const notesLong    = notes.length > 80
+  const notesDisplay = notesLong && !isExpanded ? notes.slice(0, 80) + '…' : notes
 
   async function handleDelete() {
     if (!confirm(`Eliminare "${venue.name}"?`)) return
@@ -386,7 +394,20 @@ function VenueRow({
           {venue.address    && <p className="text-xs text-ink-500 mt-0.5">{venue.address}</p>}
           {venue.contact    && <p className="text-xs text-ink-500">{venue.contact}</p>}
           {venue.price_notes && <p className="text-xs text-[#1a4a3a] mt-1 font-medium">{venue.price_notes}</p>}
-          {venue.notes      && <p className="text-xs text-ink-400 mt-1 line-clamp-2">{venue.notes}</p>}
+          {notes && (
+            <div className="mt-1">
+              <p className="text-xs text-ink-400">{notesDisplay}</p>
+              {notesLong && (
+                <button
+                  type="button"
+                  onClick={onToggle}
+                  className="text-[10px] text-ink-400 hover:text-ink-700 mt-0.5 transition-colors"
+                >
+                  {isExpanded ? 'Chiudi ↑' : 'Leggi di più ↓'}
+                </button>
+              )}
+            </div>
+          )}
           <p className="text-[10px] text-ink-300 mt-1">{venue.photos.length} foto</p>
         </div>
 
@@ -424,6 +445,15 @@ export default function VenuesSection() {
   const [loading, setLoading]   = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing]   = useState<Venue | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+
+  function toggleExpanded(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   const canEdit = profile?.role === 'bod' || profile?.role === 'director' || !!profile?.teams?.includes('events')
 
@@ -477,6 +507,8 @@ export default function VenuesSection() {
               key={v.id}
               venue={v}
               canEdit={canEdit}
+              isExpanded={expanded.has(v.id)}
+              onToggle={() => toggleExpanded(v.id)}
               onEdit={() => { setEditing(v); setModalOpen(true) }}
               onDelete={() => handleDelete(v.id)}
             />
