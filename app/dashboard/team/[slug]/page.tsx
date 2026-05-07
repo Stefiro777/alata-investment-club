@@ -1514,7 +1514,7 @@ export default function TeamPage() {
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
-  const canCreateTask = profile?.role === 'bod' || profile?.role === 'director' || !!(profile?.teams?.includes(slug))
+  const canCreateTask = true
   const canView       = profile?.role === 'bod' || profile?.role === 'director' || !!profile?.teams?.includes(slug)
 
   const loadTasks = useCallback(async () => {
