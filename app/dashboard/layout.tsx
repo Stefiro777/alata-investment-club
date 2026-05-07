@@ -31,6 +31,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .eq('email', user?.email ?? '')
         .maybeSingle()
 
+      console.log('Profile loaded:', profileData)
+
       if (!profileData) {
         setStatus('not-found')
         return
