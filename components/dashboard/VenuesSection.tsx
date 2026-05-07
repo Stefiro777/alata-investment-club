@@ -393,10 +393,10 @@ function VenueRow({
           <p className="text-sm font-semibold text-ink-900">{venue.name}</p>
           {venue.address    && <p className="text-xs text-ink-500 mt-0.5">{venue.address}</p>}
           {venue.contact    && <p className="text-xs text-ink-500">{venue.contact}</p>}
-          {venue.price_notes && <p className="text-xs text-[#1a4a3a] mt-1 font-medium">{venue.price_notes}</p>}
+          {venue.price_notes && <p className="text-xs text-[#1a4a3a] mt-1 font-medium whitespace-pre-wrap">{venue.price_notes}</p>}
           {notes && (
             <div className="mt-1">
-              <p className="text-xs text-ink-400">{notesDisplay}</p>
+              <p className="text-xs text-ink-400 whitespace-pre-wrap">{notesDisplay}</p>
               {notesLong && (
                 <button
                   type="button"
