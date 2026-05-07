@@ -1513,7 +1513,7 @@ export default function TeamPage() {
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
 
   const teamName = TEAM_NAMES[slug] ?? slug
-  const canEdit  = profile?.role === 'bod' || profile?.role === 'director'
+  const canEdit  = profile?.role === 'bod' || profile?.role === 'director' || !!profile?.teams?.includes(slug)
   const canView  = profile?.role === 'bod' || profile?.role === 'director' || !!profile?.teams?.includes(slug)
 
   const loadTasks = useCallback(async () => {
