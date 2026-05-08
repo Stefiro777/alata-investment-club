@@ -383,7 +383,7 @@ const TAG_FILTERS: { label: string; value: string | null }[] = [
   { label: 'Career Talk', value: 'Career Talk' },
 ]
 
-const CARDS_PER_PAGE = 6
+const CARDS_PER_PAGE = 3
 
 export default function EventsGrid({ items }: { items: Contenuto[] }) {
   const [query, setQuery] = useState('')
@@ -497,7 +497,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
       ) : (
         <>
           <div
-            className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-opacity ease-in-out duration-[220ms] ${fading ? 'opacity-0' : 'opacity-100'}`}
+            className={`grid grid-cols-1 sm:grid-cols-3 gap-8 transition-opacity ease-in-out duration-[220ms] ${fading ? 'opacity-0' : 'opacity-100'}`}
           >
             {currentCards.map((item, i) => (
               <Reveal key={item.id} delay={Math.min(i * 80, 400)} direction="up" className="h-full">
@@ -513,7 +513,8 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage - 1)}
                 disabled={safePage === 0}
-                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-forest hover:text-forest disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
+                style={{ background: '#1a4a3a' }}
                 aria-label="Previous"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -539,7 +540,8 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage + 1)}
                 disabled={safePage === totalPages - 1}
-                className="w-9 h-9 flex items-center justify-center border border-black/15 hover:border-forest hover:text-forest disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="w-9 h-9 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
+                style={{ background: '#1a4a3a' }}
                 aria-label="Next"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
