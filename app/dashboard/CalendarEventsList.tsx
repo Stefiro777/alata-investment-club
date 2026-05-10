@@ -34,7 +34,7 @@ function EventRow({ event }: { event: CalendarEvent }) {
           {event.title}
         </p>
         {event.description && (
-          <p className="text-xs text-ink-500 mt-1 leading-relaxed line-clamp-2">
+          <p className="text-xs text-ink-500 mt-1 leading-relaxed line-clamp-2 whitespace-pre-wrap">
             {event.description}
           </p>
         )}
