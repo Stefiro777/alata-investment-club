@@ -13,20 +13,13 @@ function formatDate(dateStr: string) {
   }
 }
 
+const BADGE_CLASS = "inline-block bg-forest text-white border border-white/20 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1"
+
 function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
   if (status === 'completed') {
-    return (
-      <span className="inline-block text-white/40 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
-        Completed
-      </span>
-    )
+    return <span className={BADGE_CLASS}>Completed</span>
   }
-  // coming_soon
-  return (
-    <span className="inline-block bg-forest text-white border border-white/20 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1">
-      Coming Soon
-    </span>
-  )
+  return <span className={BADGE_CLASS}>Coming Soon</span>
 }
 
 export default function UpcomingEvents() {
@@ -105,21 +98,19 @@ export default function UpcomingEvents() {
                             href={event.action_link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-white hover:bg-gray-100 text-forest text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-fast cursor-pointer"
+                            className={BADGE_CLASS}
                           >
                             Open
                           </a>
                         ) : event.action_type === 'form' ? (
                           <button
                             onClick={() => setModalEvent(event)}
-                            className="bg-white hover:bg-gray-100 text-forest text-sm font-medium tracking-widest uppercase px-5 py-2 transition-colors duration-fast cursor-pointer"
+                            className={BADGE_CLASS}
                           >
                             Open
                           </button>
                         ) : (
-                          <span className="bg-white text-forest text-sm font-medium tracking-widest uppercase px-5 py-2">
-                            Open
-                          </span>
+                          <span className={BADGE_CLASS}>Open</span>
                         )
                       ) : (
                         <StatusBadge status={event.status} />
