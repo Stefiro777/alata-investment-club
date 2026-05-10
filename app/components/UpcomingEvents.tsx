@@ -91,7 +91,7 @@ export default function UpcomingEvents() {
                         {event.title}
                       </h3>
                       {event.description && (
-                        <p className="text-white/70 text-sm mt-1.5 leading-relaxed max-w-xl">
+                        <p className="text-white/70 text-sm mt-1.5 leading-relaxed max-w-xl" style={{ whiteSpace: 'pre-wrap' }}>
                           {event.description}
                         </p>
                       )}

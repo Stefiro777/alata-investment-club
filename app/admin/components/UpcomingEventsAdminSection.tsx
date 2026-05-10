@@ -147,7 +147,7 @@ function EventFormModal({
     const payload = {
       date: form.date,
       title: form.title.trim(),
-      description: form.description.trim() || null,
+      description: form.description || null,
       status: form.status,
       action_type: (form.action_type || null) as 'form' | 'link' | null,
       action_link: form.action_type === 'link' ? (form.action_link.trim() || null) : null,
