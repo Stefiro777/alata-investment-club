@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import Reveal from '../components/Reveal'
 
@@ -147,20 +147,121 @@ function GalleryModal({
 }
 
 
+// ── Detail modal ─────────────────────────────────────────────────────────────
+
+function EventDetailModal({
+  item,
+  onClose,
+}: {
+  item: Contenuto
+  onClose: () => void
+}) {
+  const photos = getPhotos(item)
+  const coverPhoto = photos[0] ?? null
+  const fullText = item.full_description || item.descrizione
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose })
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCloseRef.current()
+    }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center text-ink-500 hover:text-ink-900 transition-colors text-lg"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+
+        {coverPhoto && (
+          <div className="relative w-full flex items-center justify-center bg-[#111]" style={{ maxHeight: '320px', minHeight: '200px', height: '320px' }}>
+            <Image
+              src={coverPhoto}
+              alt={item.titolo}
+              fill
+              className="object-contain"
+              style={{ imageOrientation: 'from-image' } as React.CSSProperties}
+            />
+          </div>
+        )}
+
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            {item.data_pubblicazione && (
+              <span className="text-ink-500 text-xs tracking-widest uppercase">
+                {formatDate(item.data_pubblicazione)}
+              </span>
+            )}
+            {item.tag && (
+              <span className="text-xs px-2.5 py-0.5 bg-forest text-white tracking-wide">
+                {item.tag}
+              </span>
+            )}
+          </div>
+
+          <h2 className="font-serif text-2xl font-bold text-ink-900 mb-6 leading-snug">
+            {item.titolo}
+          </h2>
+
+          {fullText && (
+            <p className="text-[#374151] text-sm leading-relaxed whitespace-pre-line">
+              {fullText}
+            </p>
+          )}
+
+          {item.link && (
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-6 text-forest text-xs font-medium tracking-wide uppercase hover:gap-3 transition-all duration-150"
+            >
+              Read on LinkedIn
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Event card ───────────────────────────────────────────────────────────────
 
 function EventCard({
   item,
   onOpenGallery,
+  onOpenDetail,
 }: {
   item: Contenuto
   onOpenGallery: (item: Contenuto) => void
+  onOpenDetail: (item: Contenuto) => void
 }) {
-  const [open, setOpen] = useState(false)
   const photos = getPhotos(item)
   const coverPhoto = photos[0] ?? null
   const hasGallery = photos.length > 1
-  const description = item.full_description || item.short_description || item.descrizione
+  const hasText = !!(item.full_description || item.descrizione)
 
   return (
     <article className="group flex flex-col h-full border border-line-faint border-l-4 border-l-[#1a4a3a] hover:border-forest overflow-hidden transition-all duration-base hover:-translate-y-1 hover:shadow-lg" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -200,7 +301,6 @@ function EventCard({
 
       {/* Content */}
       <div className="p-6 flex flex-col flex-1">
-        {/* Date + tag */}
         <div className="flex items-center justify-between gap-2 mb-3">
           {item.data_pubblicazione ? (
             <span className="text-ink-500 text-xs tracking-widest uppercase">
@@ -214,31 +314,16 @@ function EventCard({
           )}
         </div>
 
-        {/* Title */}
-        <h3 className="font-serif text-lg font-medium text-ink-900 leading-snug mb-2 group-hover:text-forest transition-colors">
+        <h3 className="font-serif text-lg font-medium text-ink-900 leading-snug mb-3 group-hover:text-forest transition-colors flex-1">
           {item.titolo}
         </h3>
 
-        {/* READ MORE / READ LESS toggle */}
-        {description && (
-          <button
-            onClick={() => setOpen(v => !v)}
-            className="self-start mb-3 text-[10px] font-medium tracking-widest uppercase text-forest hover:text-[#123a2d] transition-colors"
-          >
-            {open ? 'READ LESS' : 'READ MORE'}
-          </button>
+        {(item.short_description || item.descrizione) && (
+          <p className="text-ink-500 text-sm leading-relaxed mb-4">
+            {item.short_description ?? item.descrizione}
+          </p>
         )}
 
-        {/* Collapsible description */}
-        <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-[500px]' : 'max-h-0'}`}>
-          {description && (
-            <p className="text-ink-500 text-sm leading-relaxed mb-4" style={{ whiteSpace: 'pre-wrap' }}>
-              {description}
-            </p>
-          )}
-        </div>
-
-        {/* Footer — always visible */}
         <div className="flex items-center gap-4 pt-4 mt-auto" style={{ borderTop: '3px solid #1a4a3a' }}>
           {item.link && (
             <a
@@ -246,6 +331,7 @@ function EventCard({
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-ink-500 text-xs font-medium tracking-wide uppercase hover:text-forest transition-colors duration-fast"
+              onClick={e => e.stopPropagation()}
             >
               LinkedIn
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,17 +339,30 @@ function EventCard({
               </svg>
             </a>
           )}
-          {hasGallery && (
-            <button
-              onClick={() => onOpenGallery(item)}
-              className="inline-flex items-center gap-1.5 text-ink-500 text-xs font-medium tracking-wide uppercase hover:text-forest transition-colors ml-auto"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Gallery
-            </button>
-          )}
+          <div className="flex items-center gap-3 ml-auto">
+            {hasGallery && (
+              <button
+                onClick={() => onOpenGallery(item)}
+                className="inline-flex items-center gap-1.5 text-ink-500 text-xs font-medium tracking-wide uppercase hover:text-forest transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Gallery
+              </button>
+            )}
+            {(hasText || coverPhoto) && (
+              <button
+                onClick={() => onOpenDetail(item)}
+                className="inline-flex items-center gap-1.5 text-forest text-xs font-medium tracking-wide uppercase relative after:absolute after:bottom-[-2px] after:left-0 after:h-px after:w-0 after:bg-forest hover:after:w-full after:transition-all after:duration-300 hover:gap-3 transition-all duration-150"
+              >
+                Read more
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </article>
@@ -286,9 +385,11 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [galleryItem, setGalleryItem] = useState<Contenuto | null>(null)
+  const [detailItem, setDetailItem] = useState<Contenuto | null>(null)
   const [page, setPage] = useState(0)
   const [fading, setFading] = useState(false)
   const closeGallery = useCallback(() => setGalleryItem(null), [])
+  const closeDetail = useCallback(() => setDetailItem(null), [])
 
   const filtered = useMemo(() => items.filter(item => {
     if (activeTag && item.tag !== activeTag) return false
@@ -396,7 +497,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
           >
             {currentCards.map((item, i) => (
               <Reveal key={item.id} delay={Math.min(i * 80, 400)} direction="up" className="h-full">
-                <EventCard item={item} onOpenGallery={setGalleryItem} />
+                <EventCard item={item} onOpenGallery={setGalleryItem} onOpenDetail={setDetailItem} />
               </Reveal>
             ))}
           </div>
@@ -455,6 +556,11 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
           title={galleryItem.titolo}
           onClose={closeGallery}
         />
+      )}
+
+      {/* Detail modal */}
+      {detailItem && (
+        <EventDetailModal item={detailItem} onClose={closeDetail} />
       )}
 
     </div>

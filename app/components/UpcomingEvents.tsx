@@ -22,6 +22,87 @@ function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
   return <span className={BADGE_CLASS}>Coming Soon</span>
 }
 
+function UpcomingEventRow({
+  event,
+  isLast,
+  onOpenModal,
+}: {
+  event: UpcomingEvent
+  isLast: boolean
+  onOpenModal: (event: UpcomingEvent) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const { month, day } = formatDate(event.date)
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-start gap-6 py-8 bg-forest hover:bg-[#153d30] transition-colors duration-fast px-6">
+
+        {/* Date block */}
+        <div className="flex-shrink-0 w-16 sm:w-20">
+          <p className="text-[10px] tracking-[0.25em] uppercase text-white font-medium leading-none mb-1">
+            {month}
+          </p>
+          <p className="font-serif text-5xl font-bold text-white leading-none">
+            {day}
+          </p>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-serif text-xl text-white font-bold leading-snug">
+            {event.title}
+          </h3>
+
+          {event.description && (
+            <button
+              onClick={() => setOpen(v => !v)}
+              className="mt-2 text-[10px] font-medium tracking-widest uppercase text-white/50 hover:text-white/80 transition-colors"
+            >
+              {open ? 'READ LESS' : 'READ MORE'}
+            </button>
+          )}
+
+          {/* Collapsible description */}
+          <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96' : 'max-h-0'}`}>
+            {event.description && (
+              <p className="text-white/70 text-sm mt-2 leading-relaxed max-w-xl" style={{ whiteSpace: 'pre-wrap' }}>
+                {event.description}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Action — always visible */}
+        <div className="flex-shrink-0 flex items-start pt-1">
+          {event.status === 'open' ? (
+            event.action_type === 'link' && event.action_link ? (
+              <a
+                href={event.action_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={BADGE_CLASS}
+              >
+                Open
+              </a>
+            ) : event.action_type === 'form' ? (
+              <button onClick={() => onOpenModal(event)} className={BADGE_CLASS}>
+                Open
+              </button>
+            ) : (
+              <span className={BADGE_CLASS}>Open</span>
+            )
+          ) : (
+            <StatusBadge status={event.status} />
+          )}
+        </div>
+      </div>
+
+      {!isLast && <div className="h-px bg-white/10" />}
+    </div>
+  )
+}
+
 export default function UpcomingEvents() {
   const [events, setEvents] = useState<UpcomingEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -61,70 +142,14 @@ export default function UpcomingEvents() {
 
           {/* Event rows */}
           <div>
-            {events.map((event, i) => {
-              const { month, day } = formatDate(event.date)
-              const isLast = i === events.length - 1
-              return (
-                <div key={event.id}>
-                  <div className="group flex flex-col sm:flex-row sm:items-center gap-6 py-8 bg-forest hover:bg-[#153d30] transition-colors duration-fast px-6">
-
-                    {/* Date block */}
-                    <div className="flex-shrink-0 w-16 sm:w-20">
-                      <p className="text-[10px] tracking-[0.25em] uppercase text-white font-medium leading-none mb-1">
-                        {month}
-                      </p>
-                      <p className="font-serif text-5xl font-bold text-white leading-none">
-                        {day}
-                      </p>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-serif text-xl text-white font-bold leading-snug">
-                        {event.title}
-                      </h3>
-                      {event.description && (
-                        <p className="text-white/70 text-sm mt-1.5 leading-relaxed max-w-xl" style={{ whiteSpace: 'pre-wrap' }}>
-                          {event.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Action */}
-                    <div className="flex-shrink-0 flex items-center">
-                      {event.status === 'open' ? (
-                        event.action_type === 'link' && event.action_link ? (
-                          <a
-                            href={event.action_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={BADGE_CLASS}
-                          >
-                            Open
-                          </a>
-                        ) : event.action_type === 'form' ? (
-                          <button
-                            onClick={() => setModalEvent(event)}
-                            className={BADGE_CLASS}
-                          >
-                            Open
-                          </button>
-                        ) : (
-                          <span className={BADGE_CLASS}>Open</span>
-                        )
-                      ) : (
-                        <StatusBadge status={event.status} />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Divider */}
-                  {!isLast && (
-                    <div className="h-px bg-white/10" />
-                  )}
-                </div>
-              )
-            })}
+            {events.map((event, i) => (
+              <UpcomingEventRow
+                key={event.id}
+                event={event}
+                isLast={i === events.length - 1}
+                onOpenModal={setModalEvent}
+              />
+            ))}
           </div>
         </div>
       </section>
