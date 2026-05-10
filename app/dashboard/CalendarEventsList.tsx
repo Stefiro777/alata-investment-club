@@ -26,40 +26,34 @@ function EventRow({ event }: { event: CalendarEvent }) {
   const hasDescription = !!event.description
 
   return (
-    <div className="bg-white border border-line-faint">
+    <div className="bg-white border border-line-faint px-5 py-4">
       {/* Always-visible header row */}
-      <div className="flex items-center gap-3 px-5 py-4">
+      <div className="flex items-start gap-3">
         {/* Date */}
-        <span className="flex-shrink-0 text-xs text-ink-500 whitespace-nowrap w-32">
+        <span className="flex-shrink-0 text-xs text-ink-500 whitespace-nowrap w-32 pt-0.5">
           {formatDate(event.event_date)}
         </span>
 
-        {/* Title + chevron — clicking expands description */}
-        <button
-          onClick={() => hasDescription && setOpen(v => !v)}
-          className={`flex-1 min-w-0 flex items-center gap-2 text-left ${hasDescription ? 'cursor-pointer' : 'cursor-default'}`}
-        >
-          <span className="font-serif text-base font-semibold text-ink-900 leading-snug truncate">
+        {/* Title + READ MORE toggle */}
+        <div className="flex-1 min-w-0">
+          <p className="font-serif text-base font-semibold text-ink-900 leading-snug">
             {event.title}
-          </span>
+          </p>
           {hasDescription && (
-            <svg
-              className={`w-4 h-4 flex-shrink-0 text-ink-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <button
+              onClick={() => setOpen(v => !v)}
+              className="mt-1 text-[10px] font-medium tracking-widest uppercase text-forest hover:text-[#123a2d] transition-colors"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+              {open ? 'READ LESS' : 'READ MORE'}
+            </button>
           )}
-        </button>
+        </div>
 
         {/* OPEN link — always visible */}
         <a
           href={event.notion_url}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={e => e.stopPropagation()}
           className="flex-shrink-0 text-[10px] font-medium tracking-widest uppercase border border-forest text-forest hover:bg-forest hover:text-white px-3 py-1 transition-colors duration-fast"
         >
           OPEN
@@ -68,7 +62,7 @@ function EventRow({ event }: { event: CalendarEvent }) {
 
       {/* Collapsible description */}
       <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96' : 'max-h-0'}`}>
-        <div className="px-5 pb-4">
+        <div className="mt-3 pl-32">
           <p className="text-xs text-ink-500 leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
             {event.description?.replace(/\\n/g, '\n')}
           </p>
