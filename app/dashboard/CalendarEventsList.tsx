@@ -35,7 +35,7 @@ function EventRow({ event }: { event: CalendarEvent }) {
         </p>
         {event.description && (
           <p className="text-xs text-ink-500 mt-1 leading-relaxed line-clamp-2 whitespace-pre-wrap">
-            {event.description}
+            {event.description?.replace(/\\n/g, '\n')}
           </p>
         )}
         {(event.division || event.team) && (
