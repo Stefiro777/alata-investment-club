@@ -22,44 +22,73 @@ function formatDate(dateStr: string) {
 }
 
 function EventRow({ event }: { event: CalendarEvent }) {
+  const [open, setOpen] = useState(false)
+  const hasDescription = !!event.description
+
   return (
-    <a
-      href={event.notion_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex items-start justify-between gap-6 bg-white border border-line-faint hover:border-forest px-5 py-4 transition-colors duration-fast"
-    >
-      <div className="flex-1 min-w-0">
-        <p className="font-serif text-base font-semibold text-ink-900 group-hover:text-forest transition-colors leading-snug">
-          {event.title}
-        </p>
-        {event.description && (
-          <p className="text-xs text-ink-500 mt-1 leading-relaxed line-clamp-2" style={{ whiteSpace: 'pre-wrap' }}>
+    <div className="bg-white border border-line-faint">
+      {/* Always-visible header row */}
+      <div className="flex items-center gap-3 px-5 py-4">
+        {/* Date */}
+        <span className="flex-shrink-0 text-xs text-ink-500 whitespace-nowrap w-32">
+          {formatDate(event.event_date)}
+        </span>
+
+        {/* Title + chevron — clicking expands description */}
+        <button
+          onClick={() => hasDescription && setOpen(v => !v)}
+          className={`flex-1 min-w-0 flex items-center gap-2 text-left ${hasDescription ? 'cursor-pointer' : 'cursor-default'}`}
+        >
+          <span className="font-serif text-base font-semibold text-ink-900 leading-snug truncate">
+            {event.title}
+          </span>
+          {hasDescription && (
+            <svg
+              className={`w-4 h-4 flex-shrink-0 text-ink-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
+        </button>
+
+        {/* OPEN link — always visible */}
+        <a
+          href={event.notion_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="flex-shrink-0 text-[10px] font-medium tracking-widest uppercase border border-forest text-forest hover:bg-forest hover:text-white px-3 py-1 transition-colors duration-fast"
+        >
+          OPEN
+        </a>
+      </div>
+
+      {/* Collapsible description */}
+      <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96' : 'max-h-0'}`}>
+        <div className="px-5 pb-4">
+          <p className="text-xs text-ink-500 leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
             {event.description?.replace(/\\n/g, '\n')}
           </p>
-        )}
-        {(event.division || event.team) && (
-          <div className="flex gap-2 mt-2 flex-wrap">
-            {event.division && (
-              <span className="text-[10px] font-medium tracking-widest uppercase text-forest border border-forest/30 px-2 py-0.5">
-                {event.division}
-              </span>
-            )}
-            {event.team && (
-              <span className="text-[10px] font-medium tracking-widest uppercase text-ink-500 border border-line-faint px-2 py-0.5">
-                {event.team}
-              </span>
-            )}
-          </div>
-        )}
+          {(event.division || event.team) && (
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {event.division && (
+                <span className="text-[10px] font-medium tracking-widest uppercase text-forest border border-forest/30 px-2 py-0.5">
+                  {event.division}
+                </span>
+              )}
+              {event.team && (
+                <span className="text-[10px] font-medium tracking-widest uppercase text-ink-500 border border-line-faint px-2 py-0.5">
+                  {event.team}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-      <div className="flex-shrink-0 text-right">
-        <p className="text-xs text-ink-500 whitespace-nowrap">{formatDate(event.event_date)}</p>
-        <svg className="w-3.5 h-3.5 text-ink-400 group-hover:text-forest transition-colors mt-1 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
-      </div>
-    </a>
+    </div>
   )
 }
 
@@ -111,14 +140,14 @@ export default function CalendarEventsList() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
               </svg>
-              Chiudi
+              Show less
             </>
           ) : (
             <>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              Mostra tutti ({events.length - INITIAL_COUNT} altri)
+              Show all ({events.length - INITIAL_COUNT} more)
             </>
           )}
         </button>
