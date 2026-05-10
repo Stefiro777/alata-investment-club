@@ -27,7 +27,7 @@ export default function SponsorDocumentList({ documents }: { documents: PartnerD
   if (documents.length === 0) return null
   return (
     <div className="mt-4 pt-4 border-t border-line-faint">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-400 mb-2">Documenti</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-400 mb-2">Documents</p>
       <ul className="space-y-1">
         {documents.map(doc => (
           <li key={doc.id}>
