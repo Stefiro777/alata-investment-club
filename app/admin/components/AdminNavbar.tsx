@@ -3,12 +3,13 @@
 import { usePathname } from 'next/navigation'
 
 const NAV = [
-  { label: 'Settings',   href: '/admin/settings'    },
-  { label: 'Content',    href: '/admin/content'     },
-  { label: 'Dashboard',  href: '/admin/dashboard'   },
-  { label: 'People',     href: '/admin/people'      },
-  { label: 'Archive',    href: '/admin/archive'     },
-  { label: 'PR Tracker', href: '/admin/pr-tracker'  },
+  { label: 'Settings',    href: '/admin/settings'    },
+  { label: 'Content',     href: '/admin/content'     },
+  { label: 'Dashboard',   href: '/admin/dashboard'   },
+  { label: 'People',      href: '/admin/people'      },
+  { label: 'Archive',     href: '/admin/archive'     },
+  { label: 'PR Tracker',  href: '/admin/pr-tracker'  },
+  { label: 'Candidature', href: '/admin/jobs'        },
 ] as const
 
 export default function AdminNavbar({ userEmail: _ }: { userEmail: string }) {
