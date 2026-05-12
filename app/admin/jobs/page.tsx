@@ -23,6 +23,7 @@ export type JobApplication = {
   cv_filename: string | null
   submitted_at: string
   status: string
+  archived: boolean
 }
 
 export default async function AdminJobsPage() {
@@ -40,7 +41,7 @@ export default async function AdminJobsPage() {
 
   const { data: applications } = await supabaseAdmin
     .from('job_applications')
-    .select('id, job_offer_id, job_title, first_name, last_name, email, phone, linkedin_url, cover_letter, cv_url, cv_filename, submitted_at, status')
+    .select('id, job_offer_id, job_title, first_name, last_name, email, phone, linkedin_url, cover_letter, cv_url, cv_filename, submitted_at, status, archived')
     .order('submitted_at', { ascending: false })
 
   return (
