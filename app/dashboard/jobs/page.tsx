@@ -255,16 +255,11 @@ export function JobApplicationModal({
       return
     }
 
-    // Signed URL valid 365 days
-    const { data: signedData, error: signedErr } = await supabase.storage
+    // Public URL
+    const { data: publicData } = supabase.storage
       .from('cv-uploads')
-      .createSignedUrl(path, 60 * 60 * 24 * 365)
-
-    if (signedErr || !signedData?.signedUrl) {
-      setError(`Errore generazione link CV: ${signedErr?.message ?? 'unknown'}`)
-      setSubmitting(false)
-      return
-    }
+      .getPublicUrl(path)
+    const cvUrl = publicData?.publicUrl
 
     // Insert application
     const { error: insertErr } = await supabase.from('job_applications').insert({
@@ -276,7 +271,7 @@ export function JobApplicationModal({
       phone: phone.trim() || null,
       linkedin_url: linkedinUrl.trim() || null,
       cover_letter: coverLetter.trim() || null,
-      cv_url: signedData.signedUrl,
+      cv_url: cvUrl,
       cv_filename: cvFile.name,
     })
 
