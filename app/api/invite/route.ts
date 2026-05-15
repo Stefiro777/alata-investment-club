@@ -106,7 +106,6 @@ export async function POST(req: NextRequest) {
       email,
       options: {
         redirectTo: 'https://alatainvestmentclub.com/accept-invite',
-        expiresIn: 86400, // 24 hours
       },
     })
 
