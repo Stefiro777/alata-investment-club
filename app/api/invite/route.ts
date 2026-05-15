@@ -52,9 +52,8 @@ function buildInviteEmail(inviteLink: string): string {
         <!-- Expiry notice -->
         <tr>
           <td style="padding:0 24px 24px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#a0a0a0;line-height:1.5;">
-              Questo link è valido per <strong style="color:#a0a0a0;">24 ore</strong>.
-              Se è scaduto, contatta un amministratore per riceverne uno nuovo.
+            <p style="font-size:12px;color:#a0a0a0;text-align:center;margin-top:16px;">
+              This link is valid for <strong>24 hours</strong>. If it has expired, please contact an administrator to receive a new one.
             </p>
           </td>
         </tr>
