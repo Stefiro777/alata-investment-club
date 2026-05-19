@@ -71,18 +71,20 @@ function ServiceSubCard({ number, title, description }: { number: string; title:
 
       <p className="text-ink-500 text-sm leading-relaxed flex-1 relative">{description}</p>
 
-      <a
-        href={CALENDLY_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center justify-center gap-2 w-full border border-forest text-forest hover:bg-forest hover:text-white text-sm font-medium tracking-wide py-3 px-6 mt-auto pt-6 relative"
-        style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
-      >
-        Book Now
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-        </svg>
-      </a>
+      <div className="mt-auto pt-6">
+        <a
+          href={CALENDLY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 border border-forest text-forest hover:bg-forest hover:text-white text-sm font-medium tracking-wide py-2 px-5 relative"
+          style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
+        >
+          Book Now
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
     </div>
   )
 }
@@ -120,14 +122,14 @@ export default function CareerServicePage() {
             <Reveal delay={0} direction="up">
               <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
                 {/* Green title header */}
-                <div className="px-8 py-6" style={{ background: '#1a4a3a' }}>
+                <div className="px-10 py-8" style={{ background: '#1a4a3a' }}>
                   <h2
-                    className="font-serif text-3xl sm:text-4xl font-bold uppercase text-white mb-2"
-                    style={{ letterSpacing: '0.06em' }}
+                    className="font-serif text-4xl sm:text-5xl font-normal uppercase text-white tracking-widest"
                   >
                     Master &amp; Education
                   </h2>
-                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                  <div className="w-full border-b border-white/20 my-4" />
+                  <p className="text-sm italic text-white/70">
                     Academic guidance and technical preparation for top programs
                   </p>
                 </div>
@@ -147,14 +149,14 @@ export default function CareerServicePage() {
             <Reveal delay={150} direction="up">
               <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
                 {/* Green title header */}
-                <div className="px-8 py-6" style={{ background: '#1a4a3a' }}>
+                <div className="px-10 py-8" style={{ background: '#1a4a3a' }}>
                   <h2
-                    className="font-serif text-3xl sm:text-4xl font-bold uppercase text-white mb-2"
-                    style={{ letterSpacing: '0.06em' }}
+                    className="font-serif text-4xl sm:text-5xl font-normal uppercase text-white tracking-widest"
                   >
                     Career
                   </h2>
-                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                  <div className="w-full border-b border-white/20 my-4" />
+                  <p className="text-sm italic text-white/70">
                     End-to-end support for your professional journey in finance
                   </p>
                 </div>
