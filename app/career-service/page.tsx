@@ -114,7 +114,7 @@ export default function CareerServicePage() {
       {/* Two windows */}
       <section className="py-20 sm:py-28 bg-[#f5f5f0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div className="flex flex-col gap-8">
 
             {/* Window 1: Master & Education */}
             <Reveal delay={0} direction="up">
