@@ -1,87 +1,96 @@
-//
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase-server'
 import Reveal from '../components/Reveal'
-
-export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alatainvestmentclub.com/career-service' },
 }
 
-// -----------------------------------------------------------------------
-// EDIT HERE: update Calendly links and Linktree URL
-// -----------------------------------------------------------------------
 const LINKTREE_URL = 'https://linktr.ee/alatainvestmentclub'
+const CALENDLY_URL = 'https://calendly.com/alatabrixiaic/30min'
 
-const services = [
+const masterServices = [
   {
-    id: 'cv-review',
     number: '01',
-    title: 'CV Review',
+    title: 'Master Orientation',
     description:
-      'Receive detailed, personalised feedback on your CV from our members with hands-on experience in finance, banking, and consulting. We help you craft a compelling, competitive curriculum that stands out to top recruiters.',
-    price: '€29,99',
-    calendlyUrl: 'https://calendly.com/alatabrixiaic/30min',
-    features: [
-      'Full structure and layout review',
-      'Content and language feedback',
-      'Tailored suggestions for finance roles',
-      'Response within 48 hours',
-    ],
+      "Personalized guidance to identify the right master's programs based on your profile, goals, and target schools. We help you build a compelling application strategy.",
   },
   {
-    id: 'master',
     number: '02',
-    title: 'Master Orientation Call',
+    title: 'GMAT / IELTS Prep',
     description:
-      "Get guidance from those who have already navigated the graduate school path in finance. We help you identify the most suitable master's programme for your profile and professional goals, in Italy and abroad.",
-    price: '€49,99',
-    calendlyUrl: 'https://calendly.com/alatabrixiaic/30min',
-    features: [
-      '30-minute 1:1 session',
-      'Personal profile analysis',
-      'Programme comparison and ranking',
-      'Application and admission advice',
-    ],
+      'Structured preparation sessions for GMAT and IELTS, focused on your weak areas. Get actionable feedback and a tailored study plan from members with first-hand experience.',
   },
   {
-    id: 'career',
     number: '03',
-    title: 'Career Orientation Call',
+    title: 'Finance Technicals',
     description:
-      'A personalised consulting session to define your professional roadmap in the financial sector. From choosing your first internship to building your network, we help you take the right steps at the right time.',
-    price: '€49,99',
-    calendlyUrl: 'https://calendly.com/alatabrixiaic/30min',
-    features: [
-      '30-minute 1:1 session',
-      'Professional goals definition',
-      'Networking strategy',
-      'Personal development plan',
-    ],
+      'Hands-on training in financial modelling, accounting fundamentals, and valuation — the core skills expected in finance internships and graduate roles.',
   },
 ]
-// -----------------------------------------------------------------------
 
-export default async function CareerServicePage() {
-  const supabase = await createClient()
-  const { data: settingsRows } = await supabase
-    .from('settings')
-    .select('key, value')
-    .in('key', ['show_prices', 'price_cv_review', 'price_master_orientation', 'price_career_orientation'])
+const careerServices = [
+  {
+    number: '01',
+    title: 'Career Orientation',
+    description:
+      'One-on-one sessions to map your career path in finance. We help you define your target roles, sectors, and firms, and build a realistic action plan.',
+  },
+  {
+    number: '02',
+    title: 'Interview Prep',
+    description:
+      'Mock interviews and technical drills tailored to investment banking, consulting, and asset management recruitment processes. Real questions, real feedback.',
+  },
+  {
+    number: '03',
+    title: 'CV / Cover Letter Review',
+    description:
+      'Expert review of your CV and cover letter with detailed written feedback and a revised version. Aligned with the standards of top financial firms.',
+  },
+]
 
-  const s = Object.fromEntries((settingsRows ?? []).map(r => [r.key, r.value]))
-  const showPrices = s['show_prices'] !== 'false'
-  const prices: Record<string, string> = {
-    'cv-review': s['price_cv_review'] ?? '€29,99',
-    'master': s['price_master_orientation'] ?? '€49,99',
-    'career': s['price_career_orientation'] ?? '€49,99',
-  }
+function ServiceSubCard({ number, title, description }: { number: string; title: string; description: string }) {
+  return (
+    <div className="relative overflow-hidden p-6 sm:p-8 flex flex-col" style={{ background: '#ffffff', borderTop: '2px solid #1a4a3a' }}>
+      {/* Decorative background number */}
+      <span
+        className="absolute -bottom-4 -right-2 font-serif font-bold leading-none select-none pointer-events-none"
+        style={{ fontSize: '7rem', color: '#1a4a3a', opacity: 0.05 }}
+        aria-hidden="true"
+      >
+        {number}
+      </span>
 
+      <div className="mb-4 relative">
+        <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: '#1a4a3a', opacity: 0.6 }}>{number}</p>
+        <h3 className="font-serif text-xl font-medium text-ink-900">{title}</h3>
+        <div className="w-6 h-px mt-3" style={{ background: '#1a4a3a' }} />
+      </div>
+
+      <p className="text-ink-500 text-sm leading-relaxed flex-1 relative">{description}</p>
+
+      <a
+        href={CALENDLY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center gap-2 w-full border border-forest text-forest hover:bg-forest hover:text-white text-sm font-medium tracking-wide py-3 px-6 mt-6 relative"
+        style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
+      >
+        Book Now
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  )
+}
+
+export default function CareerServicePage() {
   return (
     <div>
-      {/* Header — background image */}
+      {/* Hero */}
       <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
         <Image src="/vittoria.jpeg" alt="" fill className="object-cover object-top grayscale" priority />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
@@ -92,84 +101,92 @@ export default async function CareerServicePage() {
               Career Service
             </h1>
             <div className="animate-hero-line w-12 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-base max-w-2xl leading-relaxed"
-              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
+            <p
+              className="text-white/70 text-base max-w-2xl leading-relaxed"
+              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}
+            >
               Services designed to accelerate your career in finance — from university orientation to landing your first role in the industry.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Services — light */}
+      {/* Two windows */}
       <section className="py-20 sm:py-28 bg-[#f5f5f0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid gap-px bg-[#e5e5e5] md:grid-cols-3">
-            {services.map((service, i) => (
-              <Reveal key={service.id} delay={i * 150} direction="up">
-                <div
-                  className="hover-lift p-8 sm:p-10 flex flex-col h-full relative overflow-hidden"
-                  style={{ background: '#ffffff', borderTop: '3px solid #1a4a3a' }}
-                >
-                  {/* Decorative number */}
-                  <span
-                    className="absolute -bottom-5 -right-3 font-serif font-bold leading-none text-forest select-none pointer-events-none"
-                    style={{ fontSize: '9rem', opacity: 0.05 }}
-                    aria-hidden="true"
-                  >{service.number}</span>
+          <div className="grid gap-8 lg:grid-cols-2">
 
-                  {/* Service number + title */}
-                  <div className="mb-6 relative">
-                    <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-2">{service.number}</p>
-                    <div className="flex items-baseline justify-between gap-4">
-                      <h2 className="font-serif text-2xl font-medium text-ink-900">
-                        {service.title}
-                      </h2>
-                      {showPrices ? (
-                        <span className="font-serif text-2xl font-medium text-forest flex-shrink-0">
-                          {prices[service.id]}
-                        </span>
-                      ) : (
-                        <span className="text-xs font-medium tracking-wide uppercase text-ink-500 flex-shrink-0">
-                          Contact us
-                        </span>
-                      )}
-                    </div>
-                    <div className="w-8 h-px bg-forest mt-3" />
-                  </div>
-
-                  <div className="relative">
-                    <p className="text-ink-500 text-sm leading-relaxed">{service.description}</p>
-                  </div>
-
-                  <ul className="space-y-2.5 flex-1 mt-6 relative">
-                    {service.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-sm text-ink-900">
-                        <span className="w-1 h-1 rounded-full bg-forest flex-shrink-0 mt-2" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <a
-                    href={service.calendlyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 w-full border border-forest text-forest hover:bg-forest hover:text-white text-sm font-medium tracking-wide py-3.5 px-6 mt-6 relative"
-                    style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
+            {/* Window 1: Master & Education */}
+            <Reveal delay={0} direction="up">
+              <div
+                className="flex flex-col h-full"
+                style={{ border: '2px solid #1a4a3a', padding: '2.5rem' }}
+              >
+                {/* Window header */}
+                <div className="mb-8 pb-6" style={{ borderBottom: '1px solid rgba(26,74,58,0.15)' }}>
+                  <p className="text-xs tracking-[0.25em] uppercase mb-3 font-medium" style={{ color: '#1a4a3a', opacity: 0.55 }}>
+                    Window 01
+                  </p>
+                  <h2
+                    className="font-serif text-3xl sm:text-4xl font-bold tracking-wide uppercase mb-3"
+                    style={{ color: '#1a4a3a', letterSpacing: '0.06em' }}
                   >
-                    Book now
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </a>
+                    Master &amp; Education
+                  </h2>
+                  <p className="text-sm text-ink-500 leading-relaxed max-w-sm">
+                    Academic guidance and technical preparation for top programs
+                  </p>
                 </div>
-              </Reveal>
-            ))}
+
+                {/* Sub-sections */}
+                <div className="flex flex-col gap-4 flex-1">
+                  {masterServices.map((service, i) => (
+                    <Reveal key={service.number} delay={i * 100} direction="up">
+                      <ServiceSubCard {...service} />
+                    </Reveal>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Window 2: Career */}
+            <Reveal delay={150} direction="up">
+              <div
+                className="flex flex-col h-full"
+                style={{ border: '2px solid #1a4a3a', padding: '2.5rem' }}
+              >
+                {/* Window header */}
+                <div className="mb-8 pb-6" style={{ borderBottom: '1px solid rgba(26,74,58,0.15)' }}>
+                  <p className="text-xs tracking-[0.25em] uppercase mb-3 font-medium" style={{ color: '#1a4a3a', opacity: 0.55 }}>
+                    Window 02
+                  </p>
+                  <h2
+                    className="font-serif text-3xl sm:text-4xl font-bold tracking-wide uppercase mb-3"
+                    style={{ color: '#1a4a3a', letterSpacing: '0.06em' }}
+                  >
+                    Career
+                  </h2>
+                  <p className="text-sm text-ink-500 leading-relaxed max-w-sm">
+                    End-to-end support for your professional journey in finance
+                  </p>
+                </div>
+
+                {/* Sub-sections */}
+                <div className="flex flex-col gap-4 flex-1">
+                  {careerServices.map((service, i) => (
+                    <Reveal key={service.number} delay={i * 100} direction="up">
+                      <ServiceSubCard {...service} />
+                    </Reveal>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+
           </div>
         </div>
       </section>
 
-      {/* Linktree — white */}
+      {/* Linktree CTA */}
       <section className="py-20 bg-white border-t border-line">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <Reveal>
