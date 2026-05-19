@@ -118,28 +118,22 @@ export default function CareerServicePage() {
 
             {/* Window 1: Master & Education */}
             <Reveal delay={0} direction="up">
-              <div
-                className="flex flex-col h-full"
-                style={{ border: '2px solid #1a4a3a', padding: '2.5rem' }}
-              >
-                {/* Window header */}
-                <div className="mb-8 pb-6" style={{ borderBottom: '1px solid rgba(26,74,58,0.15)' }}>
-                  <p className="text-xs tracking-[0.25em] uppercase mb-3 font-medium" style={{ color: '#1a4a3a', opacity: 0.55 }}>
-                    Window 01
-                  </p>
+              <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
+                {/* Green title header */}
+                <div className="px-8 py-6" style={{ background: '#1a4a3a' }}>
                   <h2
-                    className="font-serif text-3xl sm:text-4xl font-bold tracking-wide uppercase mb-3"
-                    style={{ color: '#1a4a3a', letterSpacing: '0.06em' }}
+                    className="font-serif text-3xl sm:text-4xl font-bold uppercase text-white mb-2"
+                    style={{ letterSpacing: '0.06em' }}
                   >
                     Master &amp; Education
                   </h2>
-                  <p className="text-sm text-ink-500 leading-relaxed max-w-sm">
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
                     Academic guidance and technical preparation for top programs
                   </p>
                 </div>
 
-                {/* Sub-sections */}
-                <div className="flex flex-col gap-4 flex-1">
+                {/* Sub-sections — horizontal grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 flex-1">
                   {masterServices.map((service, i) => (
                     <Reveal key={service.number} delay={i * 100} direction="up">
                       <ServiceSubCard {...service} />
@@ -151,28 +145,22 @@ export default function CareerServicePage() {
 
             {/* Window 2: Career */}
             <Reveal delay={150} direction="up">
-              <div
-                className="flex flex-col h-full"
-                style={{ border: '2px solid #1a4a3a', padding: '2.5rem' }}
-              >
-                {/* Window header */}
-                <div className="mb-8 pb-6" style={{ borderBottom: '1px solid rgba(26,74,58,0.15)' }}>
-                  <p className="text-xs tracking-[0.25em] uppercase mb-3 font-medium" style={{ color: '#1a4a3a', opacity: 0.55 }}>
-                    Window 02
-                  </p>
+              <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
+                {/* Green title header */}
+                <div className="px-8 py-6" style={{ background: '#1a4a3a' }}>
                   <h2
-                    className="font-serif text-3xl sm:text-4xl font-bold tracking-wide uppercase mb-3"
-                    style={{ color: '#1a4a3a', letterSpacing: '0.06em' }}
+                    className="font-serif text-3xl sm:text-4xl font-bold uppercase text-white mb-2"
+                    style={{ letterSpacing: '0.06em' }}
                   >
                     Career
                   </h2>
-                  <p className="text-sm text-ink-500 leading-relaxed max-w-sm">
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
                     End-to-end support for your professional journey in finance
                   </p>
                 </div>
 
-                {/* Sub-sections */}
-                <div className="flex flex-col gap-4 flex-1">
+                {/* Sub-sections — horizontal grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 flex-1">
                   {careerServices.map((service, i) => (
                     <Reveal key={service.number} delay={i * 100} direction="up">
                       <ServiceSubCard {...service} />
