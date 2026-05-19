@@ -53,7 +53,7 @@ const careerServices = [
 
 function ServiceSubCard({ number, title, description }: { number: string; title: string; description: string }) {
   return (
-    <div className="relative overflow-hidden p-6 sm:p-8 flex flex-col" style={{ background: '#ffffff', borderTop: '2px solid #1a4a3a' }}>
+    <div className="relative overflow-hidden p-6 sm:p-8 flex flex-col h-full" style={{ background: '#ffffff', borderTop: '2px solid #1a4a3a' }}>
       {/* Decorative background number */}
       <span
         className="absolute -bottom-4 -right-2 font-serif font-bold leading-none select-none pointer-events-none"
@@ -75,7 +75,7 @@ function ServiceSubCard({ number, title, description }: { number: string; title:
         href={CALENDLY_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center justify-center gap-2 w-full border border-forest text-forest hover:bg-forest hover:text-white text-sm font-medium tracking-wide py-3 px-6 mt-6 relative"
+        className="inline-flex items-center justify-center gap-2 w-full border border-forest text-forest hover:bg-forest hover:text-white text-sm font-medium tracking-wide py-3 px-6 mt-auto pt-6 relative"
         style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
       >
         Book Now
@@ -133,7 +133,7 @@ export default function CareerServicePage() {
                 </div>
 
                 {/* Sub-sections — horizontal grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch gap-6 p-6">
                   {masterServices.map((service, i) => (
                     <Reveal key={service.number} delay={i * 100} direction="up">
                       <ServiceSubCard {...service} />
@@ -160,7 +160,7 @@ export default function CareerServicePage() {
                 </div>
 
                 {/* Sub-sections — horizontal grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch gap-6 p-6">
                   {careerServices.map((service, i) => (
                     <Reveal key={service.number} delay={i * 100} direction="up">
                       <ServiceSubCard {...service} />
