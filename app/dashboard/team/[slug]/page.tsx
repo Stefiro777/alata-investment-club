@@ -1771,6 +1771,7 @@ export default function TeamPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          {slug !== 'career' && slug !== 'education' && (
           <button
             onClick={() => setShowPlanPost(true)}
             className="flex items-center gap-1.5 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
@@ -1780,6 +1781,7 @@ export default function TeamPage() {
             </svg>
             Pianifica post
           </button>
+          )}
           {canCreateTask && (
             <button
               onClick={() => setShowCreate(true)}
