@@ -7,17 +7,18 @@ import { TEAM_BADGE } from '../teamColors'
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const FILTER_OPTIONS = [
-  { key: 'all',     label: 'Tutti' },
-  { key: 'events',  label: 'Events' },
-  { key: 'media',   label: 'Media' },
-  { key: 'career',  label: 'Career' },
-  { key: 'academy', label: 'Academy' },
-  { key: 'syrto',   label: 'Syrto' },
-  { key: 'lab',     label: 'Lab' },
-  { key: 'alumni',  label: 'Alumni' },
+  { key: 'all',       label: 'Tutti' },
+  { key: 'events',    label: 'Events' },
+  { key: 'media',     label: 'Media' },
+  { key: 'career',    label: 'Career' },
+  { key: 'education', label: 'Education' },
+  { key: 'academy',   label: 'Academy' },
+  { key: 'syrto',     label: 'Syrto' },
+  { key: 'lab',       label: 'Lab' },
+  { key: 'alumni',    label: 'Alumni' },
 ] as const
 
-type CalFilter = 'all' | 'events' | 'media' | 'career' | 'academy' | 'syrto' | 'lab' | 'alumni' | 'posts'
+type CalFilter = 'all' | 'events' | 'media' | 'career' | 'education' | 'academy' | 'syrto' | 'lab' | 'alumni' | 'posts'
 
 const WEEKDAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 

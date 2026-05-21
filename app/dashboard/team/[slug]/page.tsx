@@ -58,6 +58,7 @@ const TEAM_NAMES: Record<string, string> = {
   events: 'Events',
   media: 'Media',
   career: 'Career',
+  education: 'Education',
   academy: 'Academy',
   syrto: 'Syrto',
   lab: 'Lab & Research',

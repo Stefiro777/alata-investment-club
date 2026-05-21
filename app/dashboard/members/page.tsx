@@ -7,13 +7,14 @@ import { useProfile } from '../DashboardProfileContext'
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TEAM_OPTIONS = [
-  { key: 'events',  label: 'Events' },
-  { key: 'media',   label: 'Media' },
-  { key: 'career',  label: 'Career' },
-  { key: 'academy', label: 'Academy' },
-  { key: 'syrto',   label: 'Syrto' },
-  { key: 'lab',     label: 'Lab' },
-  { key: 'alumni',  label: 'Alumni' },
+  { key: 'events',    label: 'Events' },
+  { key: 'media',     label: 'Media' },
+  { key: 'career',    label: 'Career' },
+  { key: 'education', label: 'Education' },
+  { key: 'academy',   label: 'Academy' },
+  { key: 'syrto',     label: 'Syrto' },
+  { key: 'lab',       label: 'Lab' },
+  { key: 'alumni',    label: 'Alumni' },
 ]
 
 const LAB_SUBDIVISIONS = [

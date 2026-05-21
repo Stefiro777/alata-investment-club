@@ -10,6 +10,7 @@ const TEAM_ITEMS = [
   { label: 'Events',        slug: 'events' },
   { label: 'Media',         slug: 'media' },
   { label: 'Career',        slug: 'career' },
+  { label: 'Education',     slug: 'education' },
   { label: 'Academy',       slug: 'academy' },
   { label: 'Syrto',         slug: 'syrto' },
   { label: 'Lab & Research', slug: 'lab' },
