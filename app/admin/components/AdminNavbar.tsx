@@ -8,8 +8,7 @@ const NAV = [
   { label: 'Dashboard',   href: '/admin/dashboard'   },
   { label: 'People',      href: '/admin/people'      },
   { label: 'Archive',     href: '/admin/archive'     },
-  { label: 'PR Tracker',  href: '/admin/pr-tracker'  },
-  { label: 'Candidature', href: '/admin/jobs'        },
+{ label: 'Candidature', href: '/admin/jobs'        },
 ] as const
 
 export default function AdminNavbar({ userEmail: _ }: { userEmail: string }) {
