@@ -1883,7 +1883,7 @@ export default function TeamPage() {
       {slug === 'events' && <VenuesSection />}
 
       {/* PR Tracker — solo per team career, visibile a bod/director */}
-      {slug === 'career' && canEdit && (
+      {slug === 'career' && (
         <section className="mt-12">
           <div className="border-t border-line mb-8" />
           <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-4">Public Relations Tracker</h2>
