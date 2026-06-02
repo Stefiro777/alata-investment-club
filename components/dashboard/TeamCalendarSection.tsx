@@ -279,16 +279,30 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
                   onClick={() => openCreate(dateStr)}
                   className={`relative border-r border-gray-100 min-h-[40px] ${canWrite ? 'cursor-pointer hover:bg-gray-50' : ''}`}
                 >
-                  {hourEvts.map(ev => (
-                    <div
-                      key={ev.id}
-                      onClick={e => { e.stopPropagation(); openEdit(ev) }}
-                      className="absolute inset-0 px-1.5 py-0.5 text-white text-[10px] font-['Inter'] truncate cursor-pointer flex items-center"
-                      style={{ backgroundColor: TEAM_COLORS[ev.team] ?? '#1a4a3a' }}
-                    >
-                      {ev.title}
-                    </div>
-                  ))}
+                  {hourEvts.map(ev => {
+                    const startH = parseInt(ev.start_time!.split(':')[0])
+                    const startM = parseInt(ev.start_time!.split(':')[1] ?? '0')
+                    const endH   = ev.end_time ? parseInt(ev.end_time.split(':')[0]) : startH + 1
+                    const endM   = ev.end_time ? parseInt(ev.end_time.split(':')[1] ?? '0') : 0
+                    const duration = (endH * 60 + endM) - (startH * 60 + startM)
+                    const heightPx = Math.max(40, (duration / 60) * 40)
+                    const topPx    = (startM / 60) * 40
+
+                    return (
+                      <div
+                        key={ev.id}
+                        onClick={e => { e.stopPropagation(); openEdit(ev) }}
+                        className="absolute left-0 right-0 px-1.5 py-0.5 text-white text-[10px] font-['Inter'] truncate cursor-pointer flex items-start z-10"
+                        style={{
+                          backgroundColor: TEAM_COLORS[ev.team] ?? '#1a4a3a',
+                          height: `${heightPx}px`,
+                          top: `${topPx}px`,
+                        }}
+                      >
+                        {ev.title}
+                      </div>
+                    )
+                  })}
                 </div>
               )
             })}
