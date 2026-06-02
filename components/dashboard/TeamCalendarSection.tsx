@@ -15,7 +15,7 @@ export const TEAM_COLORS: Record<string, string> = {
   alumni:    '#6ca0dc',
 }
 
-const WRITE_TEAMS = ['events', 'career', 'academy']
+const WRITE_TEAMS = ['events', 'career', 'education']
 
 const TEAM_LABELS: Record<string, string> = {
   events:    'Events',
