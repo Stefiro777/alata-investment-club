@@ -277,13 +277,13 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
                 <div
                   key={i}
                   onClick={() => openCreate(dateStr)}
-                  className={`border-r border-gray-100 min-h-[40px] p-0.5 ${canWrite ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                  className={`relative border-r border-gray-100 min-h-[40px] ${canWrite ? 'cursor-pointer hover:bg-gray-50' : ''}`}
                 >
                   {hourEvts.map(ev => (
                     <div
                       key={ev.id}
                       onClick={e => { e.stopPropagation(); openEdit(ev) }}
-                      className="px-1.5 py-0.5 text-white text-[10px] font-['Inter'] truncate cursor-pointer"
+                      className="absolute inset-0 px-1.5 py-0.5 text-white text-[10px] font-['Inter'] truncate cursor-pointer flex items-center"
                       style={{ backgroundColor: TEAM_COLORS[ev.team] ?? '#1a4a3a' }}
                     >
                       {ev.title}
