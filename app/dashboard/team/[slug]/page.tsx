@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { useProfile } from '../../DashboardProfileContext'
 import MemberAutocomplete from '../../MemberAutocomplete'
 import VenuesSection from '@/components/dashboard/VenuesSection'
+import TeamCalendarSection from '@/components/dashboard/TeamCalendarSection'
 
 // ── HistoryToggle ─────────────────────────────────────────────────────────────
 
@@ -53,6 +54,17 @@ function HistoryToggle({ history }: { history: any[] }) {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+
+const TEAM_COLORS: Record<string, string> = {
+  events:    '#1a4a3a',
+  career:    '#2563eb',
+  academy:   '#7c3aed',
+  education: '#7c3aed',
+  media:     '#dc2626',
+  syrto:     '#d97706',
+  lab:       '#0891b2',
+  alumni:    '#4b5563',
+}
 
 const TEAM_NAMES: Record<string, string> = {
   events: 'Events',
@@ -1624,6 +1636,7 @@ export default function TeamPage() {
   const [collapsed, setCollapsed]       = useState<Set<string>>(new Set(['done']))
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
+  const [activeTab, setActiveTab]       = useState<'tasks' | 'calendar'>('tasks')
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
@@ -1794,6 +1807,39 @@ export default function TeamPage() {
         </div>
       </div>
 
+      {/* Tab bar */}
+      <div className="border-b border-gray-200 mb-8">
+        <div className="flex gap-6">
+          {(['tasks', 'calendar'] as const).map(tab => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className="pb-2 text-sm font-['Inter'] capitalize transition-colors"
+              style={
+                activeTab === tab
+                  ? { borderBottom: `2px solid #1a4a3a`, color: '#1a4a3a', fontWeight: 600 }
+                  : { borderBottom: '2px solid transparent', color: '#6b7280' }
+              }
+            >
+              {tab === 'tasks' ? 'Tasks' : 'Calendar'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === 'calendar' ? (
+        <TeamCalendarSection
+          slug={slug}
+          currentMember={
+            profile && userId
+              ? { id: userId, role: profile.role ?? '', email: profile.email ?? '' }
+              : null
+          }
+        />
+      ) : (
+        <>
+
       {/* Goals section */}
       {userId && (
         <GoalsSection
@@ -1902,6 +1948,9 @@ export default function TeamPage() {
             <p className="text-sm text-ink-500">Contacts, descriptions and notes for all PR relationships.</p>
           </div>
         </section>
+      )}
+
+        </>
       )}
 
       {/* Task detail modal */}
