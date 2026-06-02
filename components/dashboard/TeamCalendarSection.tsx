@@ -87,7 +87,8 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
     let start: string, end: string
     if (view === 'month') {
       start = isoDate(year, month, 1)
-      end   = isoDate(year, month + 1, 0)
+      const lastDay = new Date(year, month + 1, 0).getDate()
+      end = isoDate(year, month, lastDay)
     } else {
       const week = getWeekDates(refDate)
       start = isoDate(week[0].getFullYear(), week[0].getMonth(), week[0].getDate())
