@@ -1636,7 +1636,7 @@ export default function TeamPage() {
   const [collapsed, setCollapsed]       = useState<Set<string>>(new Set(['done']))
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
-  const [activeTab, setActiveTab]       = useState<'tasks' | 'calendar'>('tasks')
+  const [activeTab, setActiveTab]       = useState<'tasks' | 'calendar' | 'goals'>('tasks')
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
@@ -1810,7 +1810,7 @@ export default function TeamPage() {
       {/* Tab bar */}
       <div className="border-b border-gray-200 mb-8">
         <div className="flex gap-6">
-          {(['tasks', 'calendar'] as const).map(tab => (
+          {(['tasks', 'calendar', 'goals'] as const).map(tab => (
             <button
               key={tab}
               type="button"
@@ -1822,7 +1822,7 @@ export default function TeamPage() {
                   : { borderBottom: '2px solid transparent', color: '#6b7280' }
               }
             >
-              {tab === 'tasks' ? 'Tasks' : 'Calendar'}
+              {tab === 'tasks' ? 'Tasks' : tab === 'calendar' ? 'Calendar' : 'Goals'}
             </button>
           ))}
         </div>
@@ -1837,19 +1837,20 @@ export default function TeamPage() {
               : null
           }
         />
+      ) : activeTab === 'goals' ? (
+        <>
+          {userId && (
+            <GoalsSection
+              slug={slug}
+              canEdit={canEdit}
+              isBoD={profile?.role === 'bod' || profile?.role === 'director'}
+              userId={userId}
+              userName={profile?.full_name ?? null}
+            />
+          )}
+        </>
       ) : (
         <>
-
-      {/* Goals section */}
-      {userId && (
-        <GoalsSection
-          slug={slug}
-          canEdit={canEdit}
-          isBoD={profile?.role === 'bod' || profile?.role === 'director'}
-          userId={userId}
-          userName={profile?.full_name ?? null}
-        />
-      )}
 
       {/* Priority filter */}
       {tasks.length > 0 && (

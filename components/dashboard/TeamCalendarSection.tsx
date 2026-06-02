@@ -5,14 +5,14 @@ import { createClient } from '@/lib/supabase'
 import TeamCalendarModal, { TeamCalendarEvent } from './TeamCalendarModal'
 
 export const TEAM_COLORS: Record<string, string> = {
-  events:    '#1a4a3a',
-  career:    '#2563eb',
+  events:    '#1d4ed8',
+  career:    '#dc2626',
   academy:   '#7c3aed',
   education: '#7c3aed',
-  media:     '#dc2626',
-  syrto:     '#d97706',
-  lab:       '#0891b2',
-  alumni:    '#4b5563',
+  media:     '#4b5320',
+  syrto:     '#6b7280',
+  lab:       '#1a4a3a',
+  alumni:    '#6ca0dc',
 }
 
 const WRITE_TEAMS = ['events', 'career', 'academy']
