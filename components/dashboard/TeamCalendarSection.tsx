@@ -93,11 +93,13 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
       start = isoDate(week[0].getFullYear(), week[0].getMonth(), week[0].getDate())
       end   = isoDate(week[6].getFullYear(), week[6].getMonth(), week[6].getDate())
     }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('team_calendar')
       .select('*')
       .lte('start_date', end)
       .gte('end_date', start)
+
+    console.log('fetchEvents result:', { data, error, start, end })
     setEvents((data ?? []) as TeamCalendarEvent[])
     setLoading(false)
   }, [view, year, month, refDate]) // eslint-disable-line react-hooks/exhaustive-deps
