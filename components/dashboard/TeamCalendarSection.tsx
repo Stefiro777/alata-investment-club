@@ -385,6 +385,7 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
       {/* Modal */}
       {modalOpen && (
         <TeamCalendarModal
+          key={`${modalMode}-${selectedDate}-${selectedEvent?.id ?? 'new'}`}
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           onSave={fetchEvents}
