@@ -8,7 +8,7 @@ export const TEAM_COLORS: Record<string, string> = {
   events:    '#1d4ed8',
   career:    '#dc2626',
   academy:   '#7c3aed',
-  education: '#7c3aed',
+  education: '#b45309',
   media:     '#4b5320',
   syrto:     '#6b7280',
   lab:       '#1a4a3a',
