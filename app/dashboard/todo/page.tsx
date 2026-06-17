@@ -97,6 +97,30 @@ function initials(name: string): string {
   return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
+// ── Quarter helpers ───────────────────────────────────────────────────────────
+
+function getQuarterLabel(dateStr: string): string {
+  const d = new Date(dateStr)
+  const q = Math.floor(d.getMonth() / 3) + 1
+  return `Q${q} ${d.getFullYear()}`
+}
+
+function getCurrentQuarterLabel(): string {
+  const now = new Date()
+  const q = Math.floor(now.getMonth() / 3) + 1
+  return `Q${q} ${now.getFullYear()}`
+}
+
+function groupByQuarter(tasks: TodoTask[]): { label: string; tasks: TodoTask[] }[] {
+  const map = new Map<string, TodoTask[]>()
+  for (const t of tasks) {
+    const label = t.due_date ? getQuarterLabel(t.due_date) : t.created_at ? getQuarterLabel(t.created_at) : getCurrentQuarterLabel()
+    if (!map.has(label)) map.set(label, [])
+    map.get(label)!.push(t)
+  }
+  return Array.from(map.entries()).map(([label, tasks]) => ({ label, tasks }))
+}
+
 // ── Recurrence helpers ────────────────────────────────────────────────────────
 
 function getQuarterRange(): { start: Date; end: Date } {
@@ -235,10 +259,14 @@ export default function TodoPage() {
     nowDone: boolean
   } | null>(null)
 
+  const [showDone, setShowDone] = useState(false)
+
   const isDone   = (t: TodoTask) => t.status === 'done'
   const displayTasks = expandRecurringTasks(tasks)
   const open     = displayTasks.filter(t => !isDone(t))
   const done     = displayTasks.filter(t => isDone(t))
+  const openGroups = groupByQuarter(open)
+  const doneGroups = groupByQuarter(done)
   const canEdit  = profile?.role === 'bod' || profile?.role === 'director'
 
   useEffect(() => {
@@ -582,9 +610,6 @@ export default function TodoPage() {
     )
   }
 
-  const total     = displayTasks.length
-  const doneCount = done.length
-
   return (
     <>
     <div className="max-w-2xl mx-auto px-8 py-10">
@@ -676,38 +701,94 @@ export default function TodoPage() {
         )}
       </form>
 
-      {/* Task list */}
+      {/* TO DO */}
       {open.length === 0 && done.length === 0 ? (
         <p className="text-sm text-ink-500">Nessuna to do al momento.</p>
       ) : (
-        <div className="border border-line">
-          {[...open, ...done].map(task => (
-            <TodoRow
-              key={task.id}
-              task={task}
-              toggling={toggling === task.id}
-              onToggle={() => handleToggle(task)}
-              canDelete={canEdit}
-              confirmingDelete={confirmDelete === task.id}
-              deleting={deleting === task.id}
-              onDeleteRequest={() => setConfirmDelete(task.id)}
-              onConfirmDelete={() => handleDelete(task._recurrence_origin_id ? task._recurrence_origin_id : task.id)}
-              onCancelDelete={() => setConfirmDelete(null)}
-              onEditRequest={() => openEdit(task)}
-              onShowOccurrences={task.recurrence_type ? () => {
-                const origin = tasks.find(t => t.id === (task._recurrence_origin_id ?? task.id)) ?? task
-                setOccurrencesTask(origin)
-              } : undefined}
-            />
+        <div className="mb-10">
+          {openGroups.map(group => (
+            <div key={group.label} className="mb-8">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-xs uppercase tracking-widest text-[#1a4a3a] font-['Inter'] font-semibold">{group.label}</span>
+                <div className="flex-1 h-px bg-[#1a4a3a]/20" />
+              </div>
+              <div className="border border-line">
+                {group.tasks.map(task => (
+                  <TodoRow
+                    key={task.id}
+                    task={task}
+                    toggling={toggling === task.id}
+                    onToggle={() => handleToggle(task)}
+                    canDelete={canEdit}
+                    confirmingDelete={confirmDelete === task.id}
+                    deleting={deleting === task.id}
+                    onDeleteRequest={() => setConfirmDelete(task.id)}
+                    onConfirmDelete={() => handleDelete(task._recurrence_origin_id ? task._recurrence_origin_id : task.id)}
+                    onCancelDelete={() => setConfirmDelete(null)}
+                    onEditRequest={() => openEdit(task)}
+                    onShowOccurrences={task.recurrence_type ? () => {
+                      const origin = tasks.find(t => t.id === (task._recurrence_origin_id ?? task.id)) ?? task
+                      setOccurrencesTask(origin)
+                    } : undefined}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Counter */}
-      {total > 0 && (
-        <p className="text-xs text-ink-400 mt-5">
-          {doneCount} task completate su {total} totali
-        </p>
+      {/* COMPLETATE */}
+      {done.length > 0 && (
+        <div className="mt-6 border-t border-line pt-6">
+          <button
+            onClick={() => setShowDone(o => !o)}
+            className="flex items-center gap-2 text-xs uppercase tracking-widest text-gray-400 font-['Inter'] hover:text-black transition-colors mb-4"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: showDone ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            Completate ({done.length})
+          </button>
+
+          {showDone && (
+            <div className="space-y-8">
+              {doneGroups.map(group => (
+                <div key={group.label}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs uppercase tracking-widest text-gray-400 font-['Inter'] font-semibold">{group.label}</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+                  <div className="border border-line">
+                    {group.tasks.map(task => (
+                      <TodoRow
+                        key={task.id}
+                        task={task}
+                        toggling={toggling === task.id}
+                        onToggle={() => handleToggle(task)}
+                        canDelete={canEdit}
+                        confirmingDelete={confirmDelete === task.id}
+                        deleting={deleting === task.id}
+                        onDeleteRequest={() => setConfirmDelete(task.id)}
+                        onConfirmDelete={() => handleDelete(task._recurrence_origin_id ? task._recurrence_origin_id : task.id)}
+                        onCancelDelete={() => setConfirmDelete(null)}
+                        onEditRequest={() => openEdit(task)}
+                        onShowOccurrences={task.recurrence_type ? () => {
+                          const origin = tasks.find(t => t.id === (task._recurrence_origin_id ?? task.id)) ?? task
+                          setOccurrencesTask(origin)
+                        } : undefined}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
     </div>
