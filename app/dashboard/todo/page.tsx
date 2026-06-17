@@ -73,6 +73,15 @@ type TodoTask = {
   completer_name: string | null
   assigned_to: string[]
   assignees: Member[]
+  recurrence_type: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom' | null
+  recurrence_interval: number | null
+  recurrence_days: number[] | null
+  recurrence_end_date: string | null
+  recurrence_parent_id: string | null
+  recurrence_exceptions: string[] | null
+  _is_virtual?: boolean
+  _recurrence_origin_id?: string
+  _recurrence_date?: string
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -83,8 +92,101 @@ function formatDate(iso: string): string {
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function initials(name: string): string {
   return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+}
+
+// ── Recurrence helpers ────────────────────────────────────────────────────────
+
+function getQuarterRange(): { start: Date; end: Date } {
+  const now = new Date()
+  const q = Math.floor(now.getMonth() / 3)
+  const year = now.getFullYear()
+  const start = new Date(year, q * 3, 1)
+  const end = new Date(year, q * 3 + 3, 0)
+  return { start, end }
+}
+
+function nextOccurrence(current: Date, task: TodoTask, interval: number): Date {
+  const next = new Date(current)
+  switch (task.recurrence_type) {
+    case 'daily':
+      next.setDate(next.getDate() + interval)
+      break
+    case 'weekly':
+      next.setDate(next.getDate() + 7 * interval)
+      break
+    case 'monthly':
+      next.setMonth(next.getMonth() + interval)
+      break
+    case 'yearly':
+      next.setFullYear(next.getFullYear() + interval)
+      break
+    case 'custom':
+      next.setDate(next.getDate() + 7 * interval)
+      break
+  }
+  return next
+}
+
+function generateOccurrences(task: TodoTask, start: Date, end: Date): Date[] {
+  const dates: Date[] = []
+  if (!task.due_date) return dates
+
+  const origin = new Date(task.due_date)
+  const recEnd = task.recurrence_end_date ? new Date(task.recurrence_end_date) : end
+  const effectiveEnd = recEnd < end ? recEnd : end
+
+  const interval = task.recurrence_interval ?? 1
+  let cursor = new Date(origin)
+
+  while (cursor < start) {
+    cursor = nextOccurrence(cursor, task, interval)
+  }
+
+  let safety = 0
+  while (cursor <= effectiveEnd && safety < 500) {
+    safety++
+    if (cursor >= start) {
+      dates.push(new Date(cursor))
+    }
+    cursor = nextOccurrence(cursor, task, interval)
+  }
+
+  return dates
+}
+
+function expandRecurringTasks(tasks: TodoTask[]): TodoTask[] {
+  const { start, end } = getQuarterRange()
+  const result: TodoTask[] = []
+
+  for (const task of tasks) {
+    if (!task.recurrence_type) {
+      result.push(task)
+      continue
+    }
+
+    const occurrences = generateOccurrences(task, start, end)
+    for (const date of occurrences) {
+      const dateStr = date.toISOString().split('T')[0]
+      if (task.recurrence_exceptions?.includes(dateStr)) continue
+      result.push({
+        ...task,
+        id: `${task.id}__${dateStr}`,
+        due_date: dateStr,
+        _is_virtual: true,
+        _recurrence_origin_id: task.id,
+        _recurrence_date: dateStr,
+      })
+    }
+  }
+
+  return result.sort((a, b) => {
+    if (!a.due_date) return 1
+    if (!b.due_date) return -1
+    return a.due_date.localeCompare(b.due_date)
+  })
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -113,9 +215,30 @@ export default function TodoPage() {
   const [saving, setSaving]             = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // New task recurrence states
+  const [newRecurrenceType, setNewRecurrenceType]     = useState<string>('')
+  const [newRecurrenceInterval, setNewRecurrenceInterval] = useState<number>(1)
+  const [newRecurrenceEndDate, setNewRecurrenceEndDate] = useState<string>('')
+  const [newDueDate, setNewDueDate]                   = useState<string>('')
+
+  // Edit modal recurrence states
+  const [editRecurrenceType, setEditRecurrenceType]     = useState<string>('')
+  const [editRecurrenceInterval, setEditRecurrenceInterval] = useState<number>(1)
+  const [editRecurrenceEndDate, setEditRecurrenceEndDate] = useState<string>('')
+
+  // Occurrences modal
+  const [occurrencesTask, setOccurrencesTask] = useState<TodoTask | null>(null)
+
+  // Recurrence toggle dialog
+  const [recurrenceToggleDialog, setRecurrenceToggleDialog] = useState<{
+    task: TodoTask & { _recurrence_origin_id: string; _recurrence_date: string }
+    nowDone: boolean
+  } | null>(null)
+
   const isDone   = (t: TodoTask) => t.status === 'done'
-  const open     = tasks.filter(t => !isDone(t))
-  const done     = tasks.filter(t => isDone(t))
+  const displayTasks = expandRecurringTasks(tasks)
+  const open     = displayTasks.filter(t => !isDone(t))
+  const done     = displayTasks.filter(t => isDone(t))
   const canEdit  = profile?.role === 'bod' || profile?.role === 'director'
 
   useEffect(() => {
@@ -127,7 +250,6 @@ export default function TodoPage() {
   async function loadTasks() {
     const supabase = createClient()
 
-    // Load all members (for dropdown + name resolution)
     const { data: memberRows } = await supabase
       .from('club_members')
       .select('user_id, full_name, role, teams, lab_subdivision')
@@ -150,10 +272,9 @@ export default function TodoPage() {
     const memberMap: Record<string, string> = {}
     loadedMembers.forEach(m => { memberMap[m.user_id] = m.full_name })
 
-    // Load tasks
     const { data: taskRows } = await supabase
       .from('tasks')
-      .select('id, title, status, created_at, created_by, completed_at, completed_by, due_date, assigned_to')
+      .select('id, title, status, created_at, created_by, completed_at, completed_by, due_date, assigned_to, recurrence_type, recurrence_interval, recurrence_days, recurrence_end_date, recurrence_parent_id, recurrence_exceptions')
       .eq('is_todo_item', true)
       .order('created_at', { ascending: true })
 
@@ -174,6 +295,12 @@ export default function TodoPage() {
         completer_name: r.completed_by ? (memberMap[r.completed_by as string] ?? null) : null,
         assigned_to: assignedTo,
         assignees: assignedTo.map(uid => loadedMembers.find(m => m.user_id === uid)).filter(Boolean) as Member[],
+        recurrence_type: r.recurrence_type as TodoTask['recurrence_type'],
+        recurrence_interval: r.recurrence_interval as number | null,
+        recurrence_days: r.recurrence_days as number[] | null,
+        recurrence_end_date: r.recurrence_end_date as string | null,
+        recurrence_parent_id: r.recurrence_parent_id as string | null,
+        recurrence_exceptions: r.recurrence_exceptions as string[] | null,
       }
     })
 
@@ -183,8 +310,16 @@ export default function TodoPage() {
 
   async function handleToggle(task: TodoTask) {
     if (toggling) return
-    setToggling(task.id)
 
+    if (task._is_virtual) {
+      setRecurrenceToggleDialog({
+        task: task as TodoTask & { _recurrence_origin_id: string; _recurrence_date: string },
+        nowDone: !isDone(task),
+      })
+      return
+    }
+
+    setToggling(task.id)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setToggling(null); return }
@@ -207,6 +342,57 @@ export default function TodoPage() {
     setToggling(null)
   }
 
+  async function handleToggleThisOnly() {
+    if (!recurrenceToggleDialog) return
+    const { task, nowDone } = recurrenceToggleDialog
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    await supabase.from('tasks').update({
+      recurrence_exceptions: [
+        ...(tasks.find(t => t.id === task._recurrence_origin_id)?.recurrence_exceptions ?? []),
+        task._recurrence_date,
+      ],
+    }).eq('id', task._recurrence_origin_id)
+
+    await supabase.from('tasks').insert({
+      title: task.title,
+      is_todo_item: true,
+      status: nowDone ? 'done' : 'todo',
+      created_by: user.id,
+      assigned_to: task.assigned_to,
+      due_date: task._recurrence_date,
+      recurrence_parent_id: task._recurrence_origin_id,
+      completed_at: nowDone ? new Date().toISOString() : null,
+      completed_by: nowDone ? user.id : null,
+    })
+
+    setRecurrenceToggleDialog(null)
+    await loadTasks()
+  }
+
+  async function handleToggleThisAndFuture() {
+    if (!recurrenceToggleDialog) return
+    const { task } = recurrenceToggleDialog
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const originTask = tasks.find(t => t.id === task._recurrence_origin_id)
+    if (!originTask) return
+
+    const dayBefore = new Date(task._recurrence_date)
+    dayBefore.setDate(dayBefore.getDate() - 1)
+
+    await supabase.from('tasks').update({
+      recurrence_end_date: dayBefore.toISOString().split('T')[0],
+    }).eq('id', task._recurrence_origin_id)
+
+    setRecurrenceToggleDialog(null)
+    await loadTasks()
+  }
+
   async function handleDelete(taskId: string) {
     setDeleting(taskId)
     const supabase = createClient()
@@ -217,16 +403,22 @@ export default function TodoPage() {
   }
 
   async function openEdit(task: TodoTask) {
-    setEditingTask(task)
-    setEditTitle(task.title)
-    setEditStatus(task.status)
-    setEditDueDate(task.due_date ?? '')
-    setEditAssignees(task.assigned_to ?? [])
+    // Edit the origin task if virtual
+    const originId = task._recurrence_origin_id ?? task.id
+    const origin = tasks.find(t => t.id === originId) ?? task
+    setEditingTask(origin)
+    setEditTitle(origin.title)
+    setEditStatus(origin.status)
+    setEditDueDate(origin.due_date ?? '')
+    setEditAssignees(origin.assigned_to ?? [])
+    setEditRecurrenceType(origin.recurrence_type ?? '')
+    setEditRecurrenceInterval(origin.recurrence_interval ?? 1)
+    setEditRecurrenceEndDate(origin.recurrence_end_date ?? '')
     const supabase = createClient()
     const { data } = await supabase
       .from('task_history')
       .select('*')
-      .eq('task_id', task.id)
+      .eq('task_id', originId)
       .order('modified_at', { ascending: false })
     setEditHistory(data ?? [])
   }
@@ -258,12 +450,23 @@ export default function TodoPage() {
     if (oldA !== newA)
       changes.push({ field_changed: 'Assegnati', old_value: oldA || '—', new_value: newA || '—' })
 
+    const oldRT = editingTask.recurrence_type ?? ''
+    if (editRecurrenceType !== oldRT)
+      changes.push({ field_changed: 'Ricorrenza', old_value: oldRT || '—', new_value: editRecurrenceType || '—' })
+    if (editRecurrenceType && editRecurrenceInterval !== (editingTask.recurrence_interval ?? 1))
+      changes.push({ field_changed: 'Intervallo ricorrenza', old_value: String(editingTask.recurrence_interval ?? 1), new_value: String(editRecurrenceInterval) })
+    if (editRecurrenceEndDate !== (editingTask.recurrence_end_date ?? ''))
+      changes.push({ field_changed: 'Fine ricorrenza', old_value: editingTask.recurrence_end_date ?? '—', new_value: editRecurrenceEndDate || '—' })
+
     if (changes.length > 0) {
       await supabase.from('tasks').update({
         title: editTitle,
         status: editStatus,
         due_date: editDueDate || null,
         assigned_to: editAssignees,
+        recurrence_type: editRecurrenceType || null,
+        recurrence_interval: editRecurrenceType ? editRecurrenceInterval : null,
+        recurrence_end_date: editRecurrenceEndDate || null,
       }).eq('id', editingTask.id)
 
       await supabase.from('task_history').insert(
@@ -277,7 +480,17 @@ export default function TodoPage() {
 
       setTasks(prev => prev.map(t =>
         t.id === editingTask.id
-          ? { ...t, title: editTitle, status: editStatus as TodoTask['status'], due_date: editDueDate || null, assigned_to: editAssignees, assignees: editAssignees.map(uid => members.find(m => m.user_id === uid)).filter(Boolean) as Member[] }
+          ? {
+              ...t,
+              title: editTitle,
+              status: editStatus as TodoTask['status'],
+              due_date: editDueDate || null,
+              assigned_to: editAssignees,
+              assignees: editAssignees.map(uid => members.find(m => m.user_id === uid)).filter(Boolean) as Member[],
+              recurrence_type: (editRecurrenceType || null) as TodoTask['recurrence_type'],
+              recurrence_interval: editRecurrenceType ? editRecurrenceInterval : null,
+              recurrence_end_date: editRecurrenceEndDate || null,
+            }
           : t
       ))
     }
@@ -303,8 +516,12 @@ export default function TodoPage() {
         status: 'todo',
         created_by: user.id,
         assigned_to: selectedUids,
+        due_date: newDueDate || null,
+        recurrence_type: newRecurrenceType || null,
+        recurrence_interval: newRecurrenceType ? newRecurrenceInterval : null,
+        recurrence_end_date: newRecurrenceEndDate || null,
       })
-      .select('id, title, status, created_at, created_by, completed_at, completed_by, due_date, assigned_to')
+      .select('id, title, status, created_at, created_by, completed_at, completed_by, due_date, assigned_to, recurrence_type, recurrence_interval, recurrence_days, recurrence_end_date, recurrence_parent_id, recurrence_exceptions')
       .single()
 
     if (!error && data) {
@@ -323,6 +540,12 @@ export default function TodoPage() {
         completer_name: null,
         assigned_to: assignedTo,
         assignees: assignedTo.map(uid => members.find(m => m.user_id === uid)).filter(Boolean) as Member[],
+        recurrence_type: row.recurrence_type as TodoTask['recurrence_type'],
+        recurrence_interval: row.recurrence_interval as number | null,
+        recurrence_days: row.recurrence_days as number[] | null,
+        recurrence_end_date: row.recurrence_end_date as string | null,
+        recurrence_parent_id: row.recurrence_parent_id as string | null,
+        recurrence_exceptions: row.recurrence_exceptions as string[] | null,
       }])
       fetch(`${window.location.origin}/api/tasks/notify`, {
         method: 'POST',
@@ -331,6 +554,10 @@ export default function TodoPage() {
       }).catch(() => {})
       setNewTitle('')
       setSelectedUids([])
+      setNewRecurrenceType('')
+      setNewRecurrenceInterval(1)
+      setNewRecurrenceEndDate('')
+      setNewDueDate('')
       inputRef.current?.focus()
     }
     setAdding(false)
@@ -355,7 +582,7 @@ export default function TodoPage() {
     )
   }
 
-  const total     = tasks.length
+  const total     = displayTasks.length
   const doneCount = done.length
 
   return (
@@ -392,6 +619,61 @@ export default function TodoPage() {
           selectedUids={selectedUids}
           onChange={setSelectedUids}
         />
+
+        {/* Due date */}
+        <input
+          type="date"
+          value={newDueDate}
+          onChange={e => setNewDueDate(e.target.value)}
+          className="w-full border border-line px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-forest"
+        />
+
+        {/* Ricorrenza */}
+        <div className="relative">
+          <select
+            value={newRecurrenceType}
+            onChange={e => setNewRecurrenceType(e.target.value)}
+            className="border border-[#1a4a3a] px-3 py-2.5 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+          >
+            <option value="">Nessuna ricorrenza</option>
+            <option value="daily">Giornaliera</option>
+            <option value="weekly">Settimanale</option>
+            <option value="monthly">Mensile</option>
+            <option value="yearly">Annuale</option>
+            <option value="custom">Personalizzata</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+        </div>
+
+        {newRecurrenceType === 'custom' && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-ink-500 font-['Inter']">Ogni</span>
+            <input
+              type="number"
+              min={1}
+              value={newRecurrenceInterval}
+              onChange={e => setNewRecurrenceInterval(Number(e.target.value))}
+              className="w-16 border border-line px-3 py-2 text-sm focus:outline-none focus:border-forest"
+            />
+            <span className="text-sm text-ink-500 font-['Inter']">settimane</span>
+          </div>
+        )}
+
+        {newRecurrenceType && (
+          <div>
+            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Fine ricorrenza (opzionale)</label>
+            <input
+              type="date"
+              value={newRecurrenceEndDate}
+              onChange={e => setNewRecurrenceEndDate(e.target.value)}
+              className="w-full border border-line px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-forest"
+            />
+          </div>
+        )}
       </form>
 
       {/* Task list */}
@@ -409,9 +691,13 @@ export default function TodoPage() {
               confirmingDelete={confirmDelete === task.id}
               deleting={deleting === task.id}
               onDeleteRequest={() => setConfirmDelete(task.id)}
-              onConfirmDelete={() => handleDelete(task.id)}
+              onConfirmDelete={() => handleDelete(task._recurrence_origin_id ? task._recurrence_origin_id : task.id)}
               onCancelDelete={() => setConfirmDelete(null)}
               onEditRequest={() => openEdit(task)}
+              onShowOccurrences={task.recurrence_type ? () => {
+                const origin = tasks.find(t => t.id === (task._recurrence_origin_id ?? task.id)) ?? task
+                setOccurrencesTask(origin)
+              } : undefined}
             />
           ))}
         </div>
@@ -480,6 +766,56 @@ export default function TodoPage() {
               />
             </div>
 
+            {/* Ricorrenza */}
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Ricorrenza</label>
+              <div className="relative">
+                <select
+                  value={editRecurrenceType}
+                  onChange={e => setEditRecurrenceType(e.target.value)}
+                  className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                >
+                  <option value="">Nessuna ricorrenza</option>
+                  <option value="daily">Giornaliera</option>
+                  <option value="weekly">Settimanale</option>
+                  <option value="monthly">Mensile</option>
+                  <option value="yearly">Annuale</option>
+                  <option value="custom">Personalizzata</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a4a3a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </div>
+
+              {editRecurrenceType === 'custom' && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-sm text-ink-500 font-['Inter']">Ogni</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editRecurrenceInterval}
+                    onChange={e => setEditRecurrenceInterval(Number(e.target.value))}
+                    className="w-16 border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                  />
+                  <span className="text-sm text-ink-500 font-['Inter']">settimane</span>
+                </div>
+              )}
+
+              {editRecurrenceType && (
+                <div className="mt-2">
+                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Fine ricorrenza (opzionale)</label>
+                  <input
+                    type="date"
+                    value={editRecurrenceEndDate}
+                    onChange={e => setEditRecurrenceEndDate(e.target.value)}
+                    className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Assegnati */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Assegnati</label>
@@ -545,6 +881,74 @@ export default function TodoPage() {
         </div>
       </div>
     )}
+
+    {/* Occurrences modal */}
+    {occurrencesTask && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-sm">
+          <div className="bg-[#1a4a3a] px-6 py-4 flex items-center justify-between">
+            <h2 className="text-white font-['Cormorant_Garamond',serif] text-xl tracking-wide">Prossime occorrenze</h2>
+            <button onClick={() => setOccurrencesTask(null)} className="text-white hover:text-gray-300 text-xl">✕</button>
+          </div>
+          <div className="px-6 py-5">
+            <p className="text-xs uppercase tracking-widest text-gray-500 mb-3 font-['Inter']">{occurrencesTask.title}</p>
+            <div className="space-y-1">
+              {(() => {
+                const today = new Date()
+                today.setHours(0, 0, 0, 0)
+                const futureEnd = new Date()
+                futureEnd.setFullYear(futureEnd.getFullYear() + 1)
+                const all = generateOccurrences(occurrencesTask, today, futureEnd)
+                  .filter(d => !(occurrencesTask.recurrence_exceptions ?? []).includes(d.toISOString().split('T')[0]))
+                  .slice(0, 10)
+                if (all.length === 0) return <p className="text-sm text-gray-400 font-['Inter']">Nessuna occorrenza futura.</p>
+                return all.map((d, i) => (
+                  <div key={i} className="text-sm font-['Inter'] text-ink-900 border-l-2 border-[#1a4a3a] pl-3 py-0.5">
+                    {formatDate(d.toISOString())}
+                  </div>
+                ))
+              })()}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Recurrence toggle dialog */}
+    {recurrenceToggleDialog && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-sm">
+          <div className="bg-[#1a4a3a] px-6 py-4">
+            <h2 className="text-white font-['Cormorant_Garamond',serif] text-xl tracking-wide">
+              {recurrenceToggleDialog.nowDone ? 'Completa ricorrenza' : 'Riapri ricorrenza'}
+            </h2>
+          </div>
+          <div className="px-6 py-5 space-y-3">
+            <p className="text-sm font-['Inter'] text-ink-700">Vuoi modificare solo questa occorrenza o questa e tutte le future?</p>
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                onClick={handleToggleThisOnly}
+                className="w-full text-left px-4 py-3 border border-[#1a4a3a] text-sm font-['Inter'] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+              >
+                Solo questa occorrenza
+              </button>
+              <button
+                onClick={handleToggleThisAndFuture}
+                className="w-full text-left px-4 py-3 border border-[#1a4a3a] text-sm font-['Inter'] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+              >
+                Questa e tutte le future
+              </button>
+              <button
+                onClick={() => setRecurrenceToggleDialog(null)}
+                className="w-full text-left px-4 py-3 border border-gray-200 text-sm font-['Inter'] text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                Annulla
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   )
 }
@@ -562,6 +966,7 @@ function TodoRow({
   onConfirmDelete,
   onCancelDelete,
   onEditRequest,
+  onShowOccurrences,
 }: {
   task: TodoTask
   toggling: boolean
@@ -573,6 +978,7 @@ function TodoRow({
   onConfirmDelete: () => void
   onCancelDelete: () => void
   onEditRequest: () => void
+  onShowOccurrences?: () => void
 }) {
   const done = task.status === 'done'
 
@@ -602,6 +1008,27 @@ function TodoRow({
       <div className="flex-1 min-w-0">
         <p className={`text-sm leading-snug ${done ? 'line-through text-ink-400' : 'text-ink-900 font-medium'}`}>
           {task.title}
+          {task.recurrence_type && (
+            <span
+              title="Task ricorrente"
+              className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-[#1a4a3a] border border-[#1a4a3a] px-1.5 py-px ml-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Ricorrente
+            </span>
+          )}
+          {task.recurrence_type && onShowOccurrences && (
+            <button
+              onClick={onShowOccurrences}
+              className="text-[10px] text-[#1a4a3a] underline underline-offset-2 ml-1 font-['Inter']"
+            >
+              Vedi prossime
+            </button>
+          )}
         </p>
 
         <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
