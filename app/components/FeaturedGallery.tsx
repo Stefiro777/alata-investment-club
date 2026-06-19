@@ -7,10 +7,13 @@ import Reveal from './Reveal'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function normalizeVideoUrl(url: string): string {
-  // YouTube: watch?v=ID → embed/ID
+  // YouTube Shorts: youtube.com/shorts/ID
+  const shortsMatch = url.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/)
+  if (shortsMatch) return `https://www.youtube.com/embed/${shortsMatch[1]}`
+  // YouTube: watch?v=ID or youtu.be/ID
   const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
   if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`
-  // Vimeo: vimeo.com/ID → player.vimeo.com/video/ID
+  // Vimeo
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
   if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`
   return url
