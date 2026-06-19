@@ -7,6 +7,10 @@ import { useProfile } from '../../DashboardProfileContext'
 import MemberAutocomplete from '../../MemberAutocomplete'
 import VenuesSection from '@/components/dashboard/VenuesSection'
 import TeamCalendarSection from '@/components/dashboard/TeamCalendarSection'
+import FeaturedReportsClient from '@/app/admin/featured-reports/FeaturedReportsClient'
+import UpcomingEventsAdminSection from '@/app/admin/components/UpcomingEventsAdminSection'
+import PartnersSection from '@/app/admin/components/PartnersSection'
+import type { FeaturedReport, UpcomingEvent, Partner } from '@/lib/types'
 
 // ── HistoryToggle ─────────────────────────────────────────────────────────────
 
@@ -1620,6 +1624,93 @@ function GoalsSection({
   )
 }
 
+// ── FeaturedReportsTab ────────────────────────────────────────────────────────
+
+function FeaturedReportsTab() {
+  const [reports, setReports] = useState<FeaturedReport[] | null>(null)
+
+  useEffect(() => {
+    createClient()
+      .from('featured_reports')
+      .select('id, title, description, pdf_url, authors, display_order')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => setReports((data ?? []) as FeaturedReport[]))
+  }, [])
+
+  if (reports === null) {
+    return <p className="text-sm text-ink-500 py-8">Caricamento...</p>
+  }
+  return <FeaturedReportsClient reports={reports} />
+}
+
+// ── EventsContentTab ──────────────────────────────────────────────────────────
+
+type ContentSubTab = 'events' | 'partners' | 'venues'
+
+const CONTENT_SUB_TABS: { key: ContentSubTab; label: string }[] = [
+  { key: 'events',   label: 'Events' },
+  { key: 'partners', label: 'Partners' },
+  { key: 'venues',   label: 'Venues' },
+]
+
+function EventsContentTab() {
+  const [subTab, setSubTab]                   = useState<ContentSubTab>('events')
+  const [upcomingEvents, setUpcomingEvents]   = useState<UpcomingEvent[] | null>(null)
+  const [partners, setPartners]               = useState<Partner[] | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('upcoming_events')
+      .select('*')
+      .order('date', { ascending: true })
+      .then(({ data }) => setUpcomingEvents((data ?? []) as UpcomingEvent[]))
+    supabase
+      .from('partners')
+      .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at')
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true })
+      .then(({ data }) => setPartners((data ?? []) as Partner[]))
+  }, [])
+
+  return (
+    <div>
+      {/* Sub-tab bar */}
+      <div className="border-b border-gray-200 mb-6">
+        <div className="flex gap-4">
+          {CONTENT_SUB_TABS.map(t => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setSubTab(t.key)}
+              className="pb-2 text-sm font-['Inter'] transition-colors"
+              style={
+                subTab === t.key
+                  ? { borderBottom: '2px solid #1a4a3a', color: '#1a4a3a', fontWeight: 600 }
+                  : { borderBottom: '2px solid transparent', color: '#6b7280' }
+              }
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {subTab === 'events' && (
+        upcomingEvents === null
+          ? <p className="text-sm text-ink-500 py-8">Caricamento...</p>
+          : <UpcomingEventsAdminSection initialEvents={upcomingEvents} />
+      )}
+      {subTab === 'partners' && (
+        partners === null
+          ? <p className="text-sm text-ink-500 py-8">Caricamento...</p>
+          : <PartnersSection initialPartners={partners} />
+      )}
+      {subTab === 'venues' && <VenuesSection />}
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function TeamPage() {
@@ -1636,7 +1727,7 @@ export default function TeamPage() {
   const [collapsed, setCollapsed]       = useState<Set<string>>(new Set(['done']))
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
-  const [activeTab, setActiveTab]       = useState<'tasks' | 'calendar' | 'goals'>('tasks')
+  const [activeTab, setActiveTab]       = useState<'tasks' | 'calendar' | 'goals' | 'reports' | 'content'>('tasks')
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
@@ -1810,19 +1901,25 @@ export default function TeamPage() {
       {/* Tab bar */}
       <div className="border-b border-gray-200 mb-8">
         <div className="flex gap-6">
-          {(['tasks', 'calendar', 'goals'] as const).map(tab => (
+          {[
+            { key: 'tasks'    as const, label: 'Tasks' },
+            { key: 'calendar' as const, label: 'Calendar' },
+            { key: 'goals'    as const, label: 'Goals' },
+            ...(slug === 'lab'    ? [{ key: 'reports' as const, label: 'Featured Reports' }] : []),
+            ...(slug === 'events' ? [{ key: 'content' as const, label: 'Content' }] : []),
+          ].map(tab => (
             <button
-              key={tab}
+              key={tab.key}
               type="button"
-              onClick={() => setActiveTab(tab)}
-              className="pb-2 text-sm font-['Inter'] capitalize transition-colors"
+              onClick={() => setActiveTab(tab.key)}
+              className="pb-2 text-sm font-['Inter'] transition-colors"
               style={
-                activeTab === tab
+                activeTab === tab.key
                   ? { borderBottom: `2px solid #1a4a3a`, color: '#1a4a3a', fontWeight: 600 }
                   : { borderBottom: '2px solid transparent', color: '#6b7280' }
               }
             >
-              {tab === 'tasks' ? 'Tasks' : tab === 'calendar' ? 'Calendar' : 'Goals'}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -1849,6 +1946,10 @@ export default function TeamPage() {
             />
           )}
         </>
+      ) : activeTab === 'reports' ? (
+        <FeaturedReportsTab />
+      ) : activeTab === 'content' ? (
+        <EventsContentTab />
       ) : (
         <>
 
@@ -1925,9 +2026,6 @@ export default function TeamPage() {
           })}
         </div>
       )}
-
-      {/* Venues — solo per team events */}
-      {slug === 'events' && <VenuesSection />}
 
       {/* PR Tracker — solo per team career, visibile a bod/director */}
       {slug === 'career' && (
