@@ -10,7 +10,9 @@ import TeamCalendarSection from '@/components/dashboard/TeamCalendarSection'
 import FeaturedReportsClient from '@/app/admin/featured-reports/FeaturedReportsClient'
 import UpcomingEventsAdminSection from '@/app/admin/components/UpcomingEventsAdminSection'
 import PartnersSection from '@/app/admin/components/PartnersSection'
-import type { FeaturedReport, UpcomingEvent, Partner } from '@/lib/types'
+import NewsEventsSection from '@/app/admin/components/NewsEventsSection'
+import FeaturedGalleryAdminClient from '@/app/admin/components/FeaturedGalleryAdminClient'
+import type { FeaturedReport, UpcomingEvent, Partner, FeaturedGalleryItem } from '@/lib/types'
 
 // ── HistoryToggle ─────────────────────────────────────────────────────────────
 
@@ -1624,9 +1626,9 @@ function GoalsSection({
   )
 }
 
-// ── FeaturedReportsTab ────────────────────────────────────────────────────────
+// ── LabFeaturedReportsTab ────────────────────────────────────────────────────────
 
-function FeaturedReportsTab() {
+function LabFeaturedReportsTab() {
   const [reports, setReports] = useState<FeaturedReport[] | null>(null)
 
   useEffect(() => {
@@ -1645,26 +1647,55 @@ function FeaturedReportsTab() {
 
 // ── EventsContentTab ──────────────────────────────────────────────────────────
 
-type ContentSubTab = 'events' | 'partners' | 'venues'
+type ContentSubTab = 'upcoming-events' | 'event-cards' | 'featured-events' | 'partners' | 'venues'
+
+type Contenuto = {
+  id: number
+  titolo: string
+  descrizione: string | null
+  short_description: string | null
+  full_description: string | null
+  tag: string | null
+  tipo: string
+  data_pubblicazione: string | null
+  link: string | null
+  immagine_url: string | null
+  photos: string[] | null
+}
 
 const CONTENT_SUB_TABS: { key: ContentSubTab; label: string }[] = [
-  { key: 'events',   label: 'Events' },
-  { key: 'partners', label: 'Partners' },
-  { key: 'venues',   label: 'Venues' },
+  { key: 'upcoming-events',  label: 'Upcoming Events' },
+  { key: 'event-cards',      label: 'Event Cards' },
+  { key: 'featured-events',  label: 'Featured Events' },
+  { key: 'partners',         label: 'Partners' },
+  { key: 'venues',           label: 'Venues' },
 ]
 
 function EventsContentTab() {
-  const [subTab, setSubTab]                   = useState<ContentSubTab>('events')
-  const [upcomingEvents, setUpcomingEvents]   = useState<UpcomingEvent[] | null>(null)
-  const [partners, setPartners]               = useState<Partner[] | null>(null)
+  const [subTab, setSubTab]                 = useState<ContentSubTab>('upcoming-events')
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[] | null>(null)
+  const [contenuti, setContenuti]           = useState<Contenuto[] | null>(null)
+  const [featuredEvents, setFeaturedEvents] = useState<FeaturedGalleryItem[] | null>(null)
+  const [partners, setPartners]             = useState<Partner[] | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
     supabase
       .from('upcoming_events')
       .select('*')
-      .order('date', { ascending: true })
+      .order('display_order', { ascending: true, nullsFirst: false })
       .then(({ data }) => setUpcomingEvents((data ?? []) as UpcomingEvent[]))
+    supabase
+      .from('contenuti')
+      .select('*')
+      .eq('tipo', 'evento')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setContenuti((data ?? []) as Contenuto[]))
+    supabase
+      .from('featured_events')
+      .select('id, title, description, authors, media, display_order')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => setFeaturedEvents((data ?? []) as FeaturedGalleryItem[]))
     supabase
       .from('partners')
       .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at')
@@ -1677,7 +1708,7 @@ function EventsContentTab() {
     <div>
       {/* Sub-tab bar */}
       <div className="border-b border-gray-200 mb-6">
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap">
           {CONTENT_SUB_TABS.map(t => (
             <button
               key={t.key}
@@ -1687,7 +1718,7 @@ function EventsContentTab() {
               style={
                 subTab === t.key
                   ? { borderBottom: '2px solid #1a4a3a', color: '#1a4a3a', fontWeight: 600 }
-                  : { borderBottom: '2px solid transparent', color: '#6b7280' }
+                  : { borderBottom: '2px solid transparent', color: '#9ca3af' }
               }
             >
               {t.label}
@@ -1696,10 +1727,26 @@ function EventsContentTab() {
         </div>
       </div>
 
-      {subTab === 'events' && (
+      {subTab === 'upcoming-events' && (
         upcomingEvents === null
           ? <p className="text-sm text-ink-500 py-8">Caricamento...</p>
           : <UpcomingEventsAdminSection initialEvents={upcomingEvents} />
+      )}
+      {subTab === 'event-cards' && (
+        contenuti === null
+          ? <p className="text-sm text-ink-500 py-8">Caricamento...</p>
+          : <NewsEventsSection initialItems={contenuti} />
+      )}
+      {subTab === 'featured-events' && (
+        featuredEvents === null
+          ? <p className="text-sm text-ink-500 py-8">Caricamento...</p>
+          : <FeaturedGalleryAdminClient
+              items={featuredEvents}
+              table="featured_events"
+              bucket="venue-photos"
+              heading="Featured Events"
+              description="Manage featured event gallery"
+            />
       )}
       {subTab === 'partners' && (
         partners === null
@@ -1947,7 +1994,7 @@ export default function TeamPage() {
           )}
         </>
       ) : activeTab === 'reports' ? (
-        <FeaturedReportsTab />
+        <LabFeaturedReportsTab />
       ) : activeTab === 'content' ? (
         <EventsContentTab />
       ) : (
