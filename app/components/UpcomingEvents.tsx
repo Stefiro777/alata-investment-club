@@ -113,13 +113,11 @@ export default function UpcomingEvents() {
     supabase
       .from('upcoming_events')
       .select('*')
+      .gte('date', new Date().toISOString().split('T')[0])
       .order('display_order', { ascending: true, nullsFirst: false })
       .then(({ data }) => {
         if (!data) { setLoading(false); return }
-        const today = new Date().toISOString().split('T')[0]
-        const completed = data.filter(e => e.status === 'completed').slice(-3)
-        const upcoming = data.filter(e => e.date >= today && e.status !== 'completed')
-        setEvents([...completed, ...upcoming])
+        setEvents(data)
         setLoading(false)
       })
   }, [])

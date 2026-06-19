@@ -394,15 +394,21 @@ export default function UpcomingEventsAdminSection({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 ${
-                      ev.status === 'open'
-                        ? 'bg-forest text-white'
-                        : ev.status === 'completed'
-                        ? 'border border-gray-300 text-gray-500'
-                        : 'border border-forest text-forest'
-                    }`}>
-                      {ev.status.replace('_', ' ')}
-                    </span>
+                    {(() => {
+                      const isCompleted = new Date(ev.date) < new Date(new Date().toDateString())
+                      const displayStatus = isCompleted ? 'completed' : ev.status
+                      return (
+                        <span className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 ${
+                          displayStatus === 'open'
+                            ? 'bg-forest text-white'
+                            : displayStatus === 'completed'
+                            ? 'border border-gray-300 text-gray-500'
+                            : 'border border-forest text-forest'
+                        }`}>
+                          {displayStatus.replace('_', ' ')}
+                        </span>
+                      )
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-ink-500 text-xs">
                     {ev.action_type ?? '—'}
