@@ -296,9 +296,12 @@ export default function JobApplicationsClient({ applications: initial }: { appli
   }
 
   async function handleDelete(id: string) {
-    const supabase = createClient()
-    const { error } = await supabase.from('job_applications').delete().eq('id', id)
-    if (!error) setApplications(prev => prev.filter(a => a.id !== id))
+    const res = await fetch('/api/admin/delete-job-application', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    if (res.ok) setApplications(prev => prev.filter(a => a.id !== id))
   }
 
   return (
