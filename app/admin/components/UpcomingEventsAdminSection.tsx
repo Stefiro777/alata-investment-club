@@ -278,7 +278,12 @@ export default function UpcomingEventsAdminSection({
   const [regsModal, setRegsModal] = useState<UpcomingEvent | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [orderSaved, setOrderSaved] = useState(false)
+  const [completedOpen, setCompletedOpen] = useState(false)
   const dragIndex = useRef<number | null>(null)
+
+  const today = new Date(new Date().toDateString())
+  const activeEvents = events.filter(ev => new Date(ev.date) >= today)
+  const completedEvents = events.filter(ev => new Date(ev.date) < today)
 
   function openAdd() {
     setFormModal({ ...EMPTY_FORM })
@@ -322,12 +327,12 @@ export default function UpcomingEventsAdminSection({
     dragIndex.current = null
     if (from === null || from === i) return
 
-    const reordered = [...events]
-    const [moved] = reordered.splice(from, 1)
-    reordered.splice(i, 0, moved)
-    setEvents(reordered)
+    const reorderedActive = [...activeEvents]
+    const [moved] = reorderedActive.splice(from, 1)
+    reorderedActive.splice(i, 0, moved)
+    setEvents([...reorderedActive, ...completedEvents])
 
-    const items = reordered.map((ev, idx) => ({ id: ev.id, display_order: idx }))
+    const items = reorderedActive.map((ev, idx) => ({ id: ev.id, display_order: idx }))
     const res = await fetch('/api/upcoming-events/reorder', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -359,8 +364,9 @@ export default function UpcomingEventsAdminSection({
         </button>
       </div>
 
+      {/* Active events table */}
       <div className="bg-white border border-line-faint overflow-x-auto">
-        {events.length === 0 ? (
+        {activeEvents.length === 0 ? (
           <p className="text-sm text-ink-500 text-center py-10">No upcoming events.</p>
         ) : (
           <table className="w-full text-sm">
@@ -375,7 +381,7 @@ export default function UpcomingEventsAdminSection({
               </tr>
             </thead>
             <tbody>
-              {events.map((ev, i) => (
+              {activeEvents.map((ev, i) => (
                 <tr
                   key={ev.id}
                   draggable
@@ -394,21 +400,13 @@ export default function UpcomingEventsAdminSection({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {(() => {
-                      const isCompleted = new Date(ev.date) < new Date(new Date().toDateString())
-                      const displayStatus = isCompleted ? 'completed' : ev.status
-                      return (
-                        <span className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 ${
-                          displayStatus === 'open'
-                            ? 'bg-forest text-white'
-                            : displayStatus === 'completed'
-                            ? 'border border-gray-300 text-gray-500'
-                            : 'border border-forest text-forest'
-                        }`}>
-                          {displayStatus.replace('_', ' ')}
-                        </span>
-                      )
-                    })()}
+                    <span className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 ${
+                      ev.status === 'open'
+                        ? 'bg-forest text-white'
+                        : 'border border-forest text-forest'
+                    }`}>
+                      {ev.status.replace('_', ' ')}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-ink-500 text-xs">
                     {ev.action_type ?? '—'}
@@ -459,6 +457,102 @@ export default function UpcomingEventsAdminSection({
           </table>
         )}
       </div>
+
+      {/* Completed events collapsible */}
+      {completedEvents.length > 0 && (
+        <div className="mt-6">
+          <button
+            onClick={() => setCompletedOpen(prev => !prev)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-medium tracking-widest uppercase text-ink-500 hover:bg-[#e9eaeb] transition-colors"
+          >
+            <span>Completed ({completedEvents.length})</span>
+            <span>{completedOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {completedOpen && (
+            <div className="bg-white border border-t-0 border-[#e5e7eb] overflow-x-auto opacity-70">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-line-faint bg-[#f9f9f9]">
+                    <th className="px-4 py-3 w-8" />
+                    {['Date', 'Title', 'Status', 'Action', 'Azioni'].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {completedEvents.map(ev => (
+                    <tr
+                      key={ev.id}
+                      className="border-b border-black/5 last:border-0 hover:bg-paper-cool transition-colors"
+                    >
+                      <td className="px-4 py-3 text-ink-300">
+                        <DragHandle />
+                      </td>
+                      <td className="px-4 py-3 font-medium text-ink-500 whitespace-nowrap">{ev.date}</td>
+                      <td className="px-4 py-3 text-ink-500 max-w-[200px]">
+                        <span title={ev.title}>
+                          {ev.title.length > 50 ? ev.title.slice(0, 50) + '…' : ev.title}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[10px] font-medium tracking-widest uppercase px-2 py-1 border border-gray-300 text-gray-400">
+                          completed
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-ink-400 text-xs">
+                        {ev.action_type ?? '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            onClick={() => setRegsModal(ev)}
+                            className="border border-[#6b7280] text-ink-400 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast whitespace-nowrap"
+                          >
+                            Registrations
+                          </button>
+                          <button
+                            onClick={() => openEdit(ev)}
+                            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                          >
+                            Edit
+                          </button>
+                          {deleteConfirm === ev.id ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-red-600">Confirm?</span>
+                              <button
+                                onClick={() => handleDelete(ev.id)}
+                                className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeleteConfirm(ev.id)}
+                              className="border border-red-300 text-red-400 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Event form modal */}
       {formModal && (
