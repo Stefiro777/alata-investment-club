@@ -91,7 +91,10 @@ function GalleryPanel({ media }: { media: MediaItem[] }) {
     )
   }
 
-  const current = media[active]
+  const sortedMedia = [...media].sort((a, b) =>
+    a.type === 'video' ? -1 : b.type === 'video' ? 1 : 0
+  )
+  const current = sortedMedia[active]
 
   return (
     <div>
@@ -101,9 +104,9 @@ function GalleryPanel({ media }: { media: MediaItem[] }) {
           <p className="text-xs text-ink-500 px-4 py-2 bg-white border-t border-black/5">{current.caption}</p>
         )}
       </div>
-      {media.length > 1 && (
+      {sortedMedia.length > 1 && (
         <div className="flex gap-2 mt-3 flex-wrap">
-          {media.map((m, i) => (
+          {sortedMedia.map((m, i) => (
             <button
               key={i}
               onClick={() => setActive(i)}
