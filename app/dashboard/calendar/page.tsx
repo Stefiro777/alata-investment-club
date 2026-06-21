@@ -82,6 +82,8 @@ type UpcomingEventItem = {
   start_time: string | null
   end_time: string | null
   status: string
+  _source?: 'event' | 'task'
+  _team?: string | null
 }
 
 type PedPost = {
@@ -552,7 +554,15 @@ function EventDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="bg-white w-full max-w-sm shadow-2xl">
         <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-[#e5e7eb]">
-          <h3 className="font-serif text-lg font-bold text-ink-900 leading-snug flex-1">{event.title}</h3>
+          <div className="flex-1">
+            {event._source === 'task' && (
+              <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 mb-2 inline-block"
+                style={{ backgroundColor: event._team ? (TEAM_BADGE[event._team]?.bg ?? '#d97706') : '#d97706', color: '#fff' }}>
+                Task · {event._team ?? 'team'}
+              </span>
+            )}
+            <h3 className="font-serif text-lg font-bold text-ink-900 leading-snug">{event.title}</h3>
+          </div>
           <button onClick={onClose} className="text-ink-400 hover:text-ink-900 p-1 flex-shrink-0">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
@@ -579,10 +589,12 @@ function EventDetailModal({
                 <p className="text-ink-900">{event.location}</p>
               </div>
             )}
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-ink-400 mb-0.5">Status</p>
-              <p className="text-ink-900">{event.status}</p>
-            </div>
+            {event._source !== 'task' && (
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-ink-400 mb-0.5">Status</p>
+                <p className="text-ink-900">{event.status}</p>
+              </div>
+            )}
           </div>
           {event.description && (
             <div>
@@ -591,23 +603,25 @@ function EventDetailModal({
             </div>
           )}
         </div>
-        <div className="px-6 pb-5 border-t border-[#e5e7eb] pt-3">
-          {confirming ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-ink-500 flex-1">Eliminare questo evento?</span>
-              <button type="button" onClick={handleDelete} disabled={deleting} className="text-xs font-medium uppercase tracking-wide px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-40">
-                {deleting ? '…' : 'Sì, elimina'}
+        {event._source !== 'task' && (
+          <div className="px-6 pb-5 border-t border-[#e5e7eb] pt-3">
+            {confirming ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-ink-500 flex-1">Eliminare questo evento?</span>
+                <button type="button" onClick={handleDelete} disabled={deleting} className="text-xs font-medium uppercase tracking-wide px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-40">
+                  {deleting ? '…' : 'Sì, elimina'}
+                </button>
+                <button type="button" onClick={() => setConfirming(false)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-ink-900 transition-colors">
+                  Annulla
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setConfirming(true)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-red-600 transition-colors">
+                Elimina evento
               </button>
-              <button type="button" onClick={() => setConfirming(false)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-ink-900 transition-colors">
-                Annulla
-              </button>
-            </div>
-          ) : (
-            <button type="button" onClick={() => setConfirming(true)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-red-600 transition-colors">
-              Elimina evento
-            </button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -703,11 +717,39 @@ function EventiTab() {
   const [dayPopover, setDayPopover]             = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/calendar/events')
-      .then(r => r.json())
+    async function load() {
+      const supabase = createClient()
+      const [evRes, taskRes] = await Promise.all([
+        fetch('/api/calendar/events').then(r => r.json()),
+        supabase
+          .from('tasks')
+          .select('id, title, due_date, description, team')
+          .eq('is_event', true)
+          .not('due_date', 'is', null),
+      ])
+
+      const upcoming: UpcomingEventItem[] = (evRes.data ?? []).map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (e: any) => ({ ...e, _source: 'event' as const })
+      )
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then(json => setEvents((json.data ?? []) as UpcomingEventItem[]))
-      .finally(() => setLoading(false))
+      const taskEvents: UpcomingEventItem[] = ((taskRes.data ?? []) as any[]).map(t => ({
+        id: t.id,
+        date: t.due_date as string,
+        title: t.title as string,
+        description: t.description as string | null,
+        location: null,
+        start_time: null,
+        end_time: null,
+        status: 'task',
+        _source: 'task' as const,
+        _team: t.team as string | null,
+      }))
+
+      setEvents([...upcoming, ...taskEvents].sort((a, b) => a.date.localeCompare(b.date)))
+      setLoading(false)
+    }
+    load()
   }, [])
 
   function prevMonth() { if (month === 0) { setYear(y => y - 1); setMonth(11) } else setMonth(m => m - 1) }
@@ -762,12 +804,17 @@ function EventiTab() {
                 </div>
                 <div className="flex flex-col gap-0.5 flex-1">
                   {visible.map(ev => {
-                    const label = ev.start_time ? `${ev.start_time} ${ev.title.slice(0, 16)}` : ev.title.slice(0, 22)
+                    const isTask = ev._source === 'task'
+                    const teamBadge = isTask && ev._team ? (TEAM_BADGE[ev._team] ?? null) : null
+                    const bg = isTask ? (teamBadge?.bg ?? '#d97706') : '#1a4a3a'
+                    const rawLabel = ev.start_time ? `${ev.start_time} ${ev.title}` : ev.title
+                    const label = rawLabel.length > 20 ? rawLabel.slice(0, 20) + '…' : rawLabel
                     return (
                       <button key={ev.id} type="button" onClick={e => { e.stopPropagation(); setSelectedEvent(ev) }}
-                        className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 truncate"
-                        style={{ backgroundColor: '#1a4a3a', color: '#fff' }}>
-                        {label.length > 22 ? label.slice(0, 22) + '…' : label}
+                        className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 truncate flex items-center gap-1"
+                        style={{ backgroundColor: bg, color: '#fff' }}>
+                        {isTask && <span className="flex-shrink-0 text-[8px] border border-white/60 px-0.5 leading-tight">Task</span>}
+                        <span className="truncate">{label}</span>
                       </button>
                     )
                   })}
@@ -797,13 +844,19 @@ function EventiTab() {
                 </button>
               </div>
               <div className="px-4 py-3 flex flex-col gap-1 max-h-72 overflow-y-auto">
-                {evs.map(ev => (
-                  <button key={ev.id} type="button" onClick={() => { setDayPopover(null); setSelectedEvent(ev) }}
-                    className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5"
-                    style={{ backgroundColor: '#1a4a3a', color: '#fff' }}>
-                    {ev.start_time ? `${ev.start_time} ` : ''}{ev.title}
-                  </button>
-                ))}
+                {evs.map(ev => {
+                  const isTask = ev._source === 'task'
+                  const teamBadge = isTask && ev._team ? (TEAM_BADGE[ev._team] ?? null) : null
+                  const bg = isTask ? (teamBadge?.bg ?? '#d97706') : '#1a4a3a'
+                  return (
+                    <button key={ev.id} type="button" onClick={() => { setDayPopover(null); setSelectedEvent(ev) }}
+                      className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5 flex items-center gap-1.5"
+                      style={{ backgroundColor: bg, color: '#fff' }}>
+                      {isTask && <span className="text-[8px] border border-white/60 px-0.5 leading-tight flex-shrink-0">Task</span>}
+                      <span>{ev.start_time ? `${ev.start_time} ` : ''}{ev.title}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -949,8 +1002,8 @@ function NewPedModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white w-full max-w-lg max-h-[92vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="relative z-[60] bg-white w-full max-w-lg max-h-[92vh] flex flex-col shadow-2xl">
         <div className="flex items-center justify-between px-7 py-5 border-b border-[#e5e7eb] flex-shrink-0">
           <h2 className="font-serif text-xl font-bold text-ink-900">Nuova entry PED</h2>
           <button onClick={onClose} className="text-ink-400 hover:text-ink-900 p-1">

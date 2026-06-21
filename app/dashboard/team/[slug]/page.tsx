@@ -1012,6 +1012,10 @@ function CreateTaskModal({
   const [categories, setCategories] = useState<Category[]>([])
   const [members, setMembers]       = useState<Member[]>([])
   const [saving, setSaving]         = useState(false)
+  const [isEvent, setIsEvent]       = useState(false)
+
+  const EVENT_TEAMS = ['career', 'education', 'events', 'media']
+  const showEventToggle = EVENT_TEAMS.includes(slug)
 
   useEffect(() => {
     async function loadForm() {
@@ -1050,6 +1054,7 @@ function CreateTaskModal({
         status: 'todo',
         priority,
         created_by: userId,
+        is_event: isEvent,
       })
       .select('id, title, description, status, priority, due_date, category_id, assigned_to, created_at')
       .single()
@@ -1173,6 +1178,24 @@ function CreateTaskModal({
               onChange={setSelected}
             />
           </div>
+
+          {showEventToggle && (
+            <div className="flex items-center justify-between pt-1 border-t border-line">
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-ink-400 font-medium">È un evento?</p>
+                <p className="text-xs text-ink-400 mt-0.5">Verrà mostrato nel Calendario Eventi</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isEvent}
+                onClick={() => setIsEvent(v => !v)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isEvent ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+              >
+                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${isEvent ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center gap-4 pt-2">
             <button
