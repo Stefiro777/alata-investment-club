@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase'
 import { useProfile } from '../../DashboardProfileContext'
 import MemberAutocomplete from '../../MemberAutocomplete'
 import VenuesSection from '@/components/dashboard/VenuesSection'
-import TeamCalendarSection from '@/components/dashboard/TeamCalendarSection'
 import FeaturedReportsClient from '@/app/admin/featured-reports/FeaturedReportsClient'
 import UpcomingEventsAdminSection from '@/app/admin/components/UpcomingEventsAdminSection'
 import PartnersSection from '@/app/admin/components/PartnersSection'
@@ -1193,117 +1192,6 @@ function CreateTaskModal({
   )
 }
 
-// ── PlanPostModal ─────────────────────────────────────────────────────────────
-
-function PlanPostModal({
-  slug,
-  userId,
-  onClose,
-}: {
-  slug: string
-  userId: string
-  onClose: () => void
-}) {
-  const [title, setTitle]           = useState('')
-  const [description, setDesc]      = useState('')
-  const [scheduledDate, setDate]    = useState('')
-  const [saving, setSaving]         = useState(false)
-  const [success, setSuccess]       = useState(false)
-  const [error, setError]           = useState<string | null>(null)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!title.trim() || saving) return
-    setSaving(true)
-    setError(null)
-    const supabase = createClient()
-    const { error: insertError } = await supabase.from('post_plans').insert({
-      title:          title.trim(),
-      description:    description.trim() || null,
-      team:           slug,
-      scheduled_date: scheduledDate || null,
-      status:         'planned',
-      created_by:     userId,
-    })
-    setSaving(false)
-    if (insertError) {
-      setError('Errore durante il salvataggio. Riprova.')
-    } else {
-      setSuccess(true)
-      setTimeout(() => onClose(), 1400)
-    }
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="bg-white w-full max-w-md shadow-2xl">
-        <div className="flex items-center justify-between px-7 py-5 border-b border-line">
-          <h2 className="font-serif text-xl font-bold text-ink-900">Piano Post LinkedIn</h2>
-          <button onClick={onClose} className="text-ink-400 hover:text-ink-900 p-1">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {success ? (
-          <div className="px-7 py-10 text-center">
-            <p className="text-sm font-medium text-[#1a4a3a]">Post pianificato con successo!</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="px-7 py-5 space-y-4">
-            <div>
-              <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Titolo *</label>
-              <input
-                required
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="Titolo del post"
-                className="w-full border border-line px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Descrizione</label>
-              <textarea
-                rows={3}
-                value={description}
-                onChange={e => setDesc(e.target.value)}
-                placeholder="Bozza o note sul post (opzionale)"
-                className="w-full border border-line px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Data pianificata</label>
-              <input
-                type="date"
-                value={scheduledDate}
-                onChange={e => setDate(e.target.value)}
-                className="w-full border border-line px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest"
-              />
-            </div>
-            {error && <p className="text-xs text-red-500">{error}</p>}
-            <div className="flex items-center gap-4 pt-1">
-              <button
-                type="submit"
-                disabled={saving || !title.trim()}
-                className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40"
-              >
-                {saving ? 'Salvataggio…' : 'Pianifica'}
-              </button>
-              <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">
-                Annulla
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // ── GoalsSection ──────────────────────────────────────────────────────────────
 
 function GoalsSection({
@@ -1770,11 +1658,10 @@ export default function TeamPage() {
   const [userId, setUserId]             = useState<string | null>(null)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showCreate, setShowCreate]     = useState(false)
-  const [showPlanPost, setShowPlanPost] = useState(false)
   const [collapsed, setCollapsed]       = useState<Set<string>>(new Set(['done']))
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
-  const [activeTab, setActiveTab]       = useState<'tasks' | 'calendar' | 'goals' | 'reports' | 'content'>('tasks')
+  const [activeTab, setActiveTab]       = useState<'tasks' | 'goals' | 'reports' | 'content'>('tasks')
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
@@ -1922,15 +1809,6 @@ export default function TeamPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => setShowPlanPost(true)}
-            className="flex items-center gap-1.5 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
-            </svg>
-            Pianifica post
-          </button>
           {canCreateTask && (
             <button
               onClick={() => setShowCreate(true)}
@@ -1949,9 +1827,8 @@ export default function TeamPage() {
       <div className="border-b border-gray-200 mb-8">
         <div className="flex gap-6">
           {[
-            { key: 'tasks'    as const, label: 'Tasks' },
-            { key: 'calendar' as const, label: 'Calendar' },
-            { key: 'goals'    as const, label: 'Goals' },
+            { key: 'tasks'   as const, label: 'Tasks' },
+            { key: 'goals'   as const, label: 'Goals' },
             ...(slug === 'lab'    ? [{ key: 'reports' as const, label: 'Featured Reports' }] : []),
             ...(slug === 'events' ? [{ key: 'content' as const, label: 'Content' }] : []),
           ].map(tab => (
@@ -1972,16 +1849,7 @@ export default function TeamPage() {
         </div>
       </div>
 
-      {activeTab === 'calendar' ? (
-        <TeamCalendarSection
-          slug={slug}
-          currentMember={
-            profile && userId
-              ? { id: userId, role: profile.role ?? '', email: profile.email ?? '' }
-              : null
-          }
-        />
-      ) : activeTab === 'goals' ? (
+      {activeTab === 'goals' ? (
         <>
           {userId && (
             <GoalsSection
@@ -2123,15 +1991,6 @@ export default function TeamPage() {
           userId={userId}
           onClose={() => setShowCreate(false)}
           onCreated={task => { setTasks(prev => [task, ...prev]); setShowCreate(false) }}
-        />
-      )}
-
-      {/* Plan post modal */}
-      {showPlanPost && userId && (
-        <PlanPostModal
-          slug={slug}
-          userId={userId}
-          onClose={() => setShowPlanPost(false)}
         />
       )}
 
