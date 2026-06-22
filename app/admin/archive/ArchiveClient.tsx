@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 
-const CATEGORIES = ['Legal', 'Delibere', 'Contratti', 'Bilanci'] as const
+const CATEGORIES = ['Legal', 'Delibere', 'Contratti'] as const
 type Category = typeof CATEGORIES[number]
 
 type Doc = {
@@ -21,7 +21,7 @@ type Doc = {
   folder_id: string | null
 }
 
-// Sostituire con l'URL della cartella Google Drive Contabilità
+// Sostituire con l'URL della cartella Google Drive ContabilitÃ 
 const ACCOUNTING_DRIVE_URL = 'https://drive.google.com/drive/folders/1Yby27SlRfL2AMFiAgB4RdmjBQ1_SndX8?usp=drive_link'
 
 type AccountingDoc = {
@@ -41,7 +41,7 @@ type Folder = {
   created_at: string
 }
 
-// ── Signed URL helpers ─────────────────────────────────────────────────────────
+// â”€â”€ Signed URL helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function openDoc(filePath: string | null) {
   if (!filePath) return
@@ -51,7 +51,7 @@ async function openDoc(filePath: string | null) {
   if (json.signedUrl) window.open(json.signedUrl, '_blank')
 }
 
-// ── Upload ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function uploadDoc(file: File): Promise<{ url: string; name: string } | { error: string }> {
   const form = new FormData()
@@ -72,7 +72,7 @@ async function uploadAccountingFile(file: File): Promise<{ url: string } | { err
   return { url: data.publicUrl }
 }
 
-// ── Custom select ─────────────────────────────────────────────────────────────
+// â”€â”€ Custom select â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CustomSelect({
   value,
@@ -107,7 +107,7 @@ function CustomSelect({
         className="w-full flex items-center justify-between px-3 py-2.5 border border-[#1a4a3a] bg-white text-sm text-gray-900 focus:outline-none"
       >
         <span className={selected ? 'text-gray-900' : 'text-ink-400'}>
-          {selected?.label ?? placeholder ?? 'Seleziona…'}
+          {selected?.label ?? placeholder ?? 'Selezionaâ€¦'}
         </span>
         <svg className="w-4 h-4 text-[#1a4a3a] flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -135,7 +135,7 @@ function CustomSelect({
   )
 }
 
-// ── Add document modal ─────────────────────────────────────────────────────────
+// â”€â”€ Add document modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AddDocModal({
   userEmail,
@@ -249,7 +249,7 @@ function AddDocModal({
 
         <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5 overflow-y-auto flex-1">
 
-          {/* Category — preimpostata, non modificabile */}
+          {/* Category â€” preimpostata, non modificabile */}
           <div>
             <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">
               Categoria
@@ -269,7 +269,7 @@ function AddDocModal({
                 disabled={uploading}
                 className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-4 py-2.5 transition-colors disabled:opacity-50 whitespace-nowrap"
               >
-                {uploading ? 'Uploading…' : 'Scegli file'}
+                {uploading ? 'Uploadingâ€¦' : 'Scegli file'}
               </button>
               {fileName && <span className="text-xs text-ink-500 truncate flex-1">{fileName}</span>}
               <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,image/*" className="hidden" onChange={handleFile} />
@@ -295,7 +295,7 @@ function AddDocModal({
               rows={2}
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Breve descrizione…"
+              placeholder="Breve descrizioneâ€¦"
               className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white resize-none"
             />
           </div>
@@ -321,7 +321,7 @@ function AddDocModal({
                 <CustomSelect
                   value={quarter}
                   onChange={setQuarter}
-                  placeholder="Seleziona…"
+                  placeholder="Selezionaâ€¦"
                   options={[
                     { value: '1', label: 'Q1' },
                     { value: '2', label: 'Q2' },
@@ -357,7 +357,7 @@ function AddDocModal({
                   type="url"
                   value={externalLink}
                   onChange={e => setExternalLink(e.target.value)}
-                  placeholder="https://drive.google.com/…"
+                  placeholder="https://drive.google.com/â€¦"
                   className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white"
                 />
               </div>
@@ -387,7 +387,7 @@ function AddDocModal({
               disabled={saving || !category}
               className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50"
             >
-              {saving ? 'Saving…' : 'Aggiungi documento'}
+              {saving ? 'Savingâ€¦' : 'Aggiungi documento'}
             </button>
             <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">
               Annulla
@@ -399,7 +399,7 @@ function AddDocModal({
   )
 }
 
-// ── Doc row ────────────────────────────────────────────────────────────────────
+// â”€â”€ Doc row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ExpandableDescription({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false)
@@ -407,7 +407,7 @@ function ExpandableDescription({ text }: { text: string }) {
   if (text.length <= LIMIT) return <p className="text-xs text-ink-500 mt-0.5">{text}</p>
   return (
     <p className="text-xs text-ink-500 mt-0.5">
-      {expanded ? text : text.slice(0, LIMIT) + '…'}
+      {expanded ? text : text.slice(0, LIMIT) + 'â€¦'}
       <button
         onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
         className="ml-1 text-[#1a4a3a] hover:underline font-['Inter'] font-medium"
@@ -469,7 +469,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
           {/* Year/quarter badge for Delibere */}
           {!hideYearQuarter && category === 'Delibere' && doc.year != null && (
             <span className="font-sans text-[10px] uppercase tracking-wide bg-paper-stone px-2 py-0.5 text-ink-500">
-              {doc.year} · Q{doc.quarter}
+              {doc.year} Â· Q{doc.quarter}
             </span>
           )}
           {/* Year badge for Bilanci */}
@@ -488,7 +488,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
             ))}
         </div>
         <p className="text-[10px] text-ink-400 mt-1">
-          {doc.uploaded_by} · {new Date(doc.created_at).toLocaleDateString('it-IT')}
+          {doc.uploaded_by} Â· {new Date(doc.created_at).toLocaleDateString('it-IT')}
         </p>
       </div>
 
@@ -509,7 +509,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
             rel="noopener noreferrer"
             className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
           >
-            Apri ↗
+            Apri â†—
           </a>
         )}
         {showMoveOut && onMove && (
@@ -540,14 +540,14 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
           disabled={deleting}
           className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-40"
         >
-          {deleting ? '…' : 'Delete'}
+          {deleting ? 'â€¦' : 'Delete'}
         </button>
       </div>
     </div>
   )
 }
 
-// ── Folder accordion ──────────────────────────────────────────────────────────
+// â”€â”€ Folder accordion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDoc }: {
   folder: Folder
@@ -575,7 +575,7 @@ function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDo
           {confirmDelete ? (
             <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
               <span className="text-xs text-red-600 font-['Inter']">Eliminare la cartella?</span>
-              <button onClick={onDelete} className="text-xs text-red-600 font-semibold hover:underline font-['Inter']">Sì</button>
+              <button onClick={onDelete} className="text-xs text-red-600 font-semibold hover:underline font-['Inter']">SÃ¬</button>
               <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-500 hover:underline font-['Inter']">No</button>
             </div>
           ) : (
@@ -619,7 +619,7 @@ function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDo
   )
 }
 
-// ── Category section ───────────────────────────────────────────────────────────
+// â”€â”€ Category section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CategorySection({
   category,
@@ -680,7 +680,7 @@ function CategorySection({
       if ((b.year ?? 0) !== (a.year ?? 0)) return (b.year ?? 0) - (a.year ?? 0)
       return (b.quarter ?? 0) - (a.quarter ?? 0)
     }
-    // Bilanci — by year desc
+    // Bilanci â€” by year desc
     return (b.year ?? 0) - (a.year ?? 0)
   })
 
@@ -831,7 +831,7 @@ function CategorySection({
   )
 }
 
-// ── Contabilità: upload modal ─────────────────────────────────────────────────
+// â”€â”€ ContabilitÃ : upload modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AccountingUploadModal({
   userEmail,
@@ -907,7 +907,7 @@ function AccountingUploadModal({
                 disabled={uploading}
                 className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-4 py-2.5 transition-colors disabled:opacity-50 whitespace-nowrap"
               >
-                {uploading ? 'Uploading…' : 'Scegli file'}
+                {uploading ? 'Uploadingâ€¦' : 'Scegli file'}
               </button>
               {fileName && <span className="text-xs text-ink-500 truncate flex-1">{fileName}</span>}
               <input ref={fileRef} type="file" className="hidden" onChange={handleFile} />
@@ -954,7 +954,7 @@ function AccountingUploadModal({
               disabled={saving || !fileUrl}
               className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50"
             >
-              {saving ? 'Saving…' : 'Carica'}
+              {saving ? 'Savingâ€¦' : 'Carica'}
             </button>
             <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Annulla</button>
           </div>
@@ -964,7 +964,7 @@ function AccountingUploadModal({
   )
 }
 
-// ── Contabilità: doc row ──────────────────────────────────────────────────────
+// â”€â”€ ContabilitÃ : doc row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AccountingDocRow({
   doc,
@@ -1005,7 +1005,7 @@ function AccountingDocRow({
         <p className="text-sm font-semibold text-ink-900 truncate">{doc.name}</p>
         <p className="text-[10px] text-ink-400 mt-0.5">
           {new Date(doc.created_at).toLocaleDateString('it-IT')}
-          {doc.created_by ? ` · ${doc.created_by}` : ''}
+          {doc.created_by ? ` Â· ${doc.created_by}` : ''}
         </p>
       </div>
 
@@ -1020,7 +1020,7 @@ function AccountingDocRow({
               disabled={deleting}
               className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-40"
             >
-              {deleting ? '…' : 'Sì'}
+              {deleting ? 'â€¦' : 'SÃ¬'}
             </button>
             <button
               type="button"
@@ -1047,7 +1047,7 @@ function AccountingDocRow({
   )
 }
 
-// ── Contabilità: quarter accordion ────────────────────────────────────────────
+// â”€â”€ ContabilitÃ : quarter accordion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function QuarterAccordion({
   label,
@@ -1089,7 +1089,7 @@ function QuarterAccordion({
   )
 }
 
-// ── Contabilità section ───────────────────────────────────────────────────────
+// â”€â”€ ContabilitÃ  section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ContabilitaSection({ userEmail }: { userEmail: string }) {
   const [docs, setDocs]         = useState<AccountingDoc[]>([])
@@ -1128,7 +1128,7 @@ function ContabilitaSection({ userEmail }: { userEmail: string }) {
           onClick={() => setOpen(v => !v)}
           className="flex items-center gap-3 flex-1 text-left group"
         >
-          <h3 className="font-serif text-xl text-ink-900 group-hover:text-forest transition-colors">Contabilità</h3>
+          <h3 className="font-serif text-xl text-ink-900 group-hover:text-forest transition-colors">ContabilitÃ </h3>
           <span className="text-xs text-ink-400">{docs.length}</span>
           <svg
             className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
@@ -1165,7 +1165,7 @@ function ContabilitaSection({ userEmail }: { userEmail: string }) {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
-                Apri cartella Drive →
+                Apri cartella Drive â†’
               </a>
             </div>
 
@@ -1194,7 +1194,7 @@ function ContabilitaSection({ userEmail }: { userEmail: string }) {
   )
 }
 
-// ── Main client ────────────────────────────────────────────────────────────────
+// â”€â”€ Main client â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs: Doc[]; userEmail: string }) {
   const [docs, setDocs] = useState<Doc[]>(initialDocs)
@@ -1231,7 +1231,7 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
       <div className="mb-8">
         <h2 className="font-serif text-2xl font-bold text-ink-900">Archivio Documenti</h2>
         <div className="w-10 h-0.5 bg-forest mt-2" />
-        <p className="text-xs text-ink-500 mt-3">Documenti interni — PDF, DOCX, immagini. Visibile solo agli admin.</p>
+        <p className="text-xs text-ink-500 mt-3">Documenti interni â€” PDF, DOCX, immagini. Visibile solo agli admin.</p>
       </div>
 
       <div>
@@ -1245,8 +1245,6 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
             onMove={moveDocument}
           />
         ))}
-        <ContabilitaSection userEmail={userEmail} />
-        <div className="border-t border-line" />
       </div>
 
       {modalOpen && (
@@ -1260,3 +1258,4 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
     </div>
   )
 }
+

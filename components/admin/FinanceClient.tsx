@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import TransactionManager from './TransactionManager'
 import BudgetReport from './BudgetReport'
+import FinanceDocuments from './FinanceDocuments'
 
-type Tab = 'transactions' | 'budget'
+type Tab = 'transactions' | 'budget' | 'documents'
 
 export default function FinanceClient() {
   const [tab, setTab] = useState<Tab>('transactions')
@@ -22,6 +23,7 @@ export default function FinanceClient() {
           {([
             { key: 'transactions' as const, label: 'Transactions' },
             { key: 'budget'       as const, label: 'Budget Report' },
+            { key: 'documents'    as const, label: 'Documents' },
           ] as const).map(t => (
             <button
               key={t.key}
@@ -40,7 +42,9 @@ export default function FinanceClient() {
         </div>
       </div>
 
-      {tab === 'transactions' ? <TransactionManager /> : <BudgetReport />}
+      {tab === 'transactions' ? <TransactionManager /> :
+       tab === 'budget'       ? <BudgetReport /> :
+                                <FinanceDocuments />}
     </div>
   )
 }
