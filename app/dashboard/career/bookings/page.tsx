@@ -239,9 +239,11 @@ function SvcFormFields({ form, onChange }: { form: ServiceForm | undefined; onCh
 function ServicesTab({
   services,
   setServices,
+  refreshServices,
 }: {
   services: CareerService[]
   setServices: React.Dispatch<React.SetStateAction<CareerService[]>>
+  refreshServices: () => Promise<void>
 }) {
   const [editingId, setEditingId]   = useState<string | null>(null)
   const [editForms, setEditForms]   = useState<Record<string, ServiceForm>>({})
@@ -262,11 +264,14 @@ function ServicesTab({
     if (!form?.name.trim()) return
     setSaving(s.id); setError(null)
     try {
-      const { data, error: err } = await createClient()
-        .from('career_services').update(formToSvcPayload(form)).eq('id', s.id).select()
-      if (err) { setError(err.message); setSaving(null); return }
-      const row = (data as CareerService[])?.[0]
-      if (row) setServices(prev => prev.map(x => x.id === s.id ? row : x))
+      const res = await fetch('/api/career/services', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: s.id, ...formToSvcPayload(form) }),
+      })
+      const json = await res.json()
+      if (!res.ok) { setError(json.error ?? 'Update failed'); setSaving(null); return }
+      await refreshServices()
       setEditingId(null); setSaving(null)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'An error occurred')
@@ -942,6 +947,11 @@ export default function CareerBookingsPage() {
     setAccessChecked(true)
   }, [profile, router])
 
+  async function refreshServices() {
+    const { data } = await createClient().from('career_services').select('*').order('name')
+    setServices((data ?? []) as CareerService[])
+  }
+
   // Load services once access is confirmed
   useEffect(() => {
     if (!accessChecked) return
@@ -992,7 +1002,7 @@ export default function CareerBookingsPage() {
         <p className="text-sm text-gray-400">Loading…</p>
       ) : (
         <>
-          {tab === 'services'      && <ServicesTab services={services} setServices={setServices} />}
+          {tab === 'services'      && <ServicesTab services={services} setServices={setServices} refreshServices={refreshServices} />}
           {tab === 'availability'  && <AvailabilityTab services={services} />}
           {tab === 'bookings'      && <BookingsTab services={services} />}
           {tab === 'notifications' && <NotificationsTab services={services} />}
