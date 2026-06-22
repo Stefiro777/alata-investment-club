@@ -8,7 +8,7 @@ type Member = {
   full_name: string
   email: string
   role: string
-  team: string
+  teams: string
   created_at: string
 }
 
@@ -193,15 +193,15 @@ export default function MembersTable() {
   }, [])
 
   const teams = useMemo(() => {
-    const set = new Set(members.map(m => m.team).filter(Boolean))
+    const set = new Set(members.map(m => m.teams).filter(Boolean))
     return Array.from(set).sort()
   }, [members])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return members.filter(m => {
-      const matchSearch = !q || m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q) || m.team?.toLowerCase().includes(q)
-      const matchTeam = !teamFilter || m.team === teamFilter
+      const matchSearch = !q || m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q) || m.teams?.toLowerCase().includes(q)
+      const matchTeam = !teamFilter || m.teams === teamFilter
       return matchSearch && matchTeam
     })
   }, [members, search, teamFilter])
@@ -316,7 +316,7 @@ export default function MembersTable() {
               </tr>
             ) : filtered.map(m => {
               const isSelected = selected.has(m.id)
-              const teamBadge = TEAM_BADGE[m.team]
+              const teamBadge = TEAM_BADGE[m.teams]
               const roleBadge = TEAM_BADGE[m.role]
               return (
                 <tr
@@ -359,7 +359,7 @@ export default function MembersTable() {
                         {teamBadge.label}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-[#6b7280]">{m.team ?? '—'}</span>
+                      <span className="text-[10px] text-[#6b7280]">{m.teams ?? '—'}</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-[#6b7280] whitespace-nowrap">
