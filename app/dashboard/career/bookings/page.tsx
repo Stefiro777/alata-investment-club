@@ -20,7 +20,7 @@ type CareerService = {
 type CareerAvailability = {
   id: string
   service_id: string
-  slot_type: 'recurring' | 'one_time'
+  type: 'recurring' | 'one_time'
   day_of_week: number | null
   date: string | null
   start_time: string
@@ -420,7 +420,7 @@ function ServicesTab({
 // ── AVAILABILITY TAB ──────────────────────────────────────────────────────────
 
 type AvailForm = {
-  slot_type: 'recurring' | 'one_time'
+  type: 'recurring' | 'one_time'
   date: string
   day_of_week: number
   start_time: string
@@ -429,7 +429,7 @@ type AvailForm = {
 }
 
 const EMPTY_AVAIL: AvailForm = {
-  slot_type: 'recurring', date: '', day_of_week: 1,
+  type: 'recurring', date: '', day_of_week: 1,
   start_time: '', end_time: '', active: true,
 }
 
@@ -450,7 +450,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
       .from('career_availability')
       .select('*')
       .eq('service_id', svcId)
-      .order('slot_type')
+      .order('type')
       .order('day_of_week', { nullsFirst: false })
       .order('date', { nullsFirst: false })
       .then(({ data }) => { setRows((data ?? []) as CareerAvailability[]); setLoading(false) })
@@ -472,17 +472,17 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
   async function saveSlot() {
     if (!svcId) return
     if (!form.start_time) { setError('Start time is required'); return }
-    if (form.slot_type === 'one_time' && !form.date) { setError('Date is required'); return }
+    if (form.type === 'one_time' && !form.date) { setError('Date is required'); return }
     setSaving(true); setError(null)
 
     const payload: Record<string, unknown> = {
       service_id: svcId,
-      slot_type: form.slot_type,
+      type: form.type,
       start_time: form.start_time,
       end_time: form.end_time || null,
       active: form.active,
-      day_of_week: form.slot_type === 'recurring' ? form.day_of_week : null,
-      date: form.slot_type === 'one_time' ? form.date : null,
+      day_of_week: form.type === 'recurring' ? form.day_of_week : null,
+      date: form.type === 'one_time' ? form.date : null,
     }
 
     const { data, error: err } = await createClient()
@@ -522,11 +522,11 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
           {rows.map((a, i) => (
             <div key={a.id} className={`flex items-center gap-3 px-5 py-3 bg-white hover:bg-[#fafaf9] transition-colors ${i > 0 ? 'border-t border-gray-200' : ''}`}>
               <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
-                <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${a.slot_type === 'one_time' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-                  {a.slot_type === 'one_time' ? 'One-Time' : 'Recurring'}
+                <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${a.type === 'one_time' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                  {a.type === 'one_time' ? 'One-Time' : 'Recurring'}
                 </span>
                 <span className="text-sm text-gray-700 font-medium">
-                  {a.slot_type === 'one_time'
+                  {a.type === 'one_time'
                     ? (a.date ? formatDate(a.date) : '—')
                     : (a.day_of_week !== null ? DOW_NAMES[a.day_of_week] : '—')}
                 </span>
@@ -571,8 +571,8 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
           <label className={labelCls}>Type</label>
           <div className="flex border border-gray-200 max-w-xs">
             {(['recurring', 'one_time'] as const).map(t => (
-              <button key={t} type="button" onClick={() => setForm(f => ({ ...f, slot_type: t }))}
-                className={`flex-1 px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors border-r border-gray-200 last:border-r-0 ${form.slot_type === t ? 'bg-[#1a4a3a] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+              <button key={t} type="button" onClick={() => setForm(f => ({ ...f, type: t }))}
+                className={`flex-1 px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors border-r border-gray-200 last:border-r-0 ${form.type === t ? 'bg-[#1a4a3a] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
                 {t === 'recurring' ? 'Recurring' : 'One-Time'}
               </button>
             ))}
@@ -580,7 +580,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
         </div>
 
         {/* Date or day-of-week */}
-        {form.slot_type === 'one_time' ? (
+        {form.type === 'one_time' ? (
           <div className="mb-4 max-w-xs">
             <label className={labelCls}>Date</label>
             <input type="date" value={form.date}

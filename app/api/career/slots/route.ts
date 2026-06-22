@@ -67,12 +67,12 @@ export async function GET(req: NextRequest) {
     const slots: { date: string; time: string }[] = []
 
     for (const row of availability ?? []) {
-      if (row.slot_type === 'recurring' && row.day_of_week != null && row.start_time) {
+      if (row.type === 'recurring' && row.day_of_week != null && row.start_time) {
         const dates = getDayOfWeekOccurrences(year, month, row.day_of_week)
         for (const date of dates) {
           slots.push({ date, time: row.start_time })
         }
-      } else if (row.slot_type === 'one_time' && row.date && row.start_time) {
+      } else if (row.type === 'one_time' && row.date && row.start_time) {
         if (row.date >= monthStart && row.date < monthEnd) {
           slots.push({ date: row.date, time: row.start_time })
         }
