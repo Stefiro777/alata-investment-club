@@ -884,18 +884,24 @@ function NotificationsTab({ services }: { services: CareerService[] }) {
   async function addContact() {
     if (!addName.trim() || !addEmail.trim() || !svcId) return
     setAdding(true); setError(null)
-    const { data, error: err } = await createClient()
-      .from('career_notification_contacts')
-      .insert({ service_id: svcId, name: addName.trim(), email: addEmail.trim() })
-      .select().single()
-    if (err) { setError(err.message); setAdding(false); return }
-    setContacts(prev => [...prev, data as CareerNotificationContact])
+    const res = await fetch('/api/career/notification-contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ service_id: svcId, name: addName.trim(), email: addEmail.trim() }),
+    })
+    const json = await res.json()
+    if (!res.ok) { setError(json.error ?? 'Insert failed'); setAdding(false); return }
+    setContacts(prev => [...prev, json.data as CareerNotificationContact])
     setAddName(''); setAddEmail(''); setAdding(false)
   }
 
   async function deleteContact(id: string) {
     setDeleting(true)
-    await createClient().from('career_notification_contacts').delete().eq('id', id)
+    await fetch('/api/career/notification-contacts', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
     setContacts(prev => prev.filter(c => c.id !== id))
     setConfirmDel(null); setDeleting(false)
   }
