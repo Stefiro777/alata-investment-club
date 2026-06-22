@@ -7,7 +7,7 @@ import MobileMenu from './components/MobileMenu'
 import CookieBanner from './components/CookieBanner'
 import CookiePolicy from './components/CookiePolicy'
 import AnalyticsWrapper from './components/AnalyticsWrapper'
-import Clarity from '@/components/Clarity'
+import Script from 'next/script'
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -139,7 +139,17 @@ export default function RootLayout({
         {/* Main */}
         <main className="flex-1">{children}</main>
         <AnalyticsWrapper />
-        <Clarity />
+        {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${process.env.NEXT_PUBLIC_GA_ID}');`}
+            </Script>
+          </>
+        )}
         <CookieBanner />
 
         {/* Footer */}
