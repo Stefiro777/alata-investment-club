@@ -83,14 +83,14 @@ function UpcomingEventRow({
                 rel="noopener noreferrer"
                 className={BADGE_CLASS}
               >
-                Open
+                Register Now
               </a>
             ) : event.action_type === 'form' ? (
               <button onClick={() => onOpenModal(event)} className={BADGE_CLASS}>
-                Open
+                Register Now
               </button>
             ) : (
-              <span className={BADGE_CLASS}>Open</span>
+              <span className={BADGE_CLASS}>Register Now</span>
             )
           ) : (
             <StatusBadge status={event.status} />
