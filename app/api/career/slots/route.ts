@@ -72,9 +72,9 @@ export async function GET(req: NextRequest) {
         for (const date of dates) {
           slots.push({ date, time: row.slot_time })
         }
-      } else if (row.slot_type === 'one_time' && row.slot_date && row.slot_time) {
-        if (row.slot_date >= monthStart && row.slot_date < monthEnd) {
-          slots.push({ date: row.slot_date, time: row.slot_time })
+      } else if (row.slot_type === 'one_time' && row.date && row.slot_time) {
+        if (row.date >= monthStart && row.date < monthEnd) {
+          slots.push({ date: row.date, time: row.slot_time })
         }
       }
     }

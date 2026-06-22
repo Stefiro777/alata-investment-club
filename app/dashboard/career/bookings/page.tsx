@@ -22,7 +22,7 @@ type CareerAvailability = {
   service_id: string
   slot_type: 'recurring' | 'one_time'
   day_of_week: number | null
-  slot_date: string | null
+  date: string | null
   slot_time: string
   end_time: string | null
   active: boolean
@@ -416,7 +416,7 @@ function ServicesTab({
 
 type AvailForm = {
   slot_type: 'recurring' | 'one_time'
-  slot_date: string
+  date: string
   day_of_week: number
   slot_time: string
   end_time: string
@@ -424,7 +424,7 @@ type AvailForm = {
 }
 
 const EMPTY_AVAIL: AvailForm = {
-  slot_type: 'recurring', slot_date: '', day_of_week: 1,
+  slot_type: 'recurring', date: '', day_of_week: 1,
   slot_time: '', end_time: '', active: true,
 }
 
@@ -447,7 +447,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
       .eq('service_id', svcId)
       .order('slot_type')
       .order('day_of_week', { nullsFirst: false })
-      .order('slot_date', { nullsFirst: false })
+      .order('date', { nullsFirst: false })
       .then(({ data }) => { setRows((data ?? []) as CareerAvailability[]); setLoading(false) })
   }, [svcId])
 
@@ -467,7 +467,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
   async function saveSlot() {
     if (!svcId) return
     if (!form.slot_time) { setError('Start time is required'); return }
-    if (form.slot_type === 'one_time' && !form.slot_date) { setError('Date is required'); return }
+    if (form.slot_type === 'one_time' && !form.date) { setError('Date is required'); return }
     setSaving(true); setError(null)
 
     const payload: Record<string, unknown> = {
@@ -477,7 +477,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
       end_time: form.end_time || null,
       active: form.active,
       day_of_week: form.slot_type === 'recurring' ? form.day_of_week : null,
-      slot_date: form.slot_type === 'one_time' ? form.slot_date : null,
+      date: form.slot_type === 'one_time' ? form.date : null,
     }
 
     const { data, error: err } = await createClient()
@@ -522,7 +522,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
                 </span>
                 <span className="text-sm text-gray-700 font-medium">
                   {a.slot_type === 'one_time'
-                    ? (a.slot_date ? formatDate(a.slot_date) : '—')
+                    ? (a.date ? formatDate(a.date) : '—')
                     : (a.day_of_week !== null ? DOW_NAMES[a.day_of_week] : '—')}
                 </span>
                 <span className="text-sm text-gray-500">
@@ -578,8 +578,8 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
         {form.slot_type === 'one_time' ? (
           <div className="mb-4 max-w-xs">
             <label className={labelCls}>Date</label>
-            <input type="date" value={form.slot_date}
-              onChange={e => setForm(f => ({ ...f, slot_date: e.target.value }))} className={inputCls} />
+            <input type="date" value={form.date}
+              onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={inputCls} />
           </div>
         ) : (
           <div className="mb-4">
