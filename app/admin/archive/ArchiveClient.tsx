@@ -194,18 +194,11 @@ function AddDocModal({
       setError('File obbligatorio per questa categoria.')
       return
     }
-    if (category === 'Bilanci' && !fileUrl && !externalLink.trim()) {
-      setError('Inserisci un file o un link esterno.')
-      return
-    }
     if (category === 'Delibere' && (!year || !quarter)) {
       setError('Anno e trimestre obbligatori per Delibere.')
       return
     }
-    if (category === 'Bilanci' && !year) {
-      setError('Anno obbligatorio per Bilanci.')
-      return
-    }
+
 
     setSaving(true)
     setError(null)
@@ -260,7 +253,7 @@ function AddDocModal({
           {/* File upload */}
           <div>
             <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">
-              File{category === 'Bilanci' ? ' (opzionale se link esterno)' : ' *'}
+              File *
             </label>
             <div className="flex gap-3 items-center">
               <button
@@ -333,36 +326,6 @@ function AddDocModal({
             </div>
           )}
 
-          {/* Bilanci: year + external link */}
-          {category === 'Bilanci' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Anno *</label>
-                <input
-                  type="number"
-                  required
-                  value={year}
-                  onChange={e => setYear(e.target.value)}
-                  placeholder="2024"
-                  min={2000}
-                  max={2100}
-                  className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">
-                  Link esterno (es. Google Drive)
-                </label>
-                <input
-                  type="url"
-                  value={externalLink}
-                  onChange={e => setExternalLink(e.target.value)}
-                  placeholder="https://drive.google.com/â€¦"
-                  className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white"
-                />
-              </div>
-            </div>
-          )}
 
 
           {category === 'Contratti' && (
@@ -472,12 +435,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
               {doc.year} Â· Q{doc.quarter}
             </span>
           )}
-          {/* Year badge for Bilanci */}
-          {category === 'Bilanci' && doc.year != null && (
-            <span className="font-sans text-[10px] uppercase tracking-wide bg-paper-stone px-2 py-0.5 text-ink-500">
-              {doc.year}
-            </span>
-          )}
+
           {/* Custom tags (exclude category tags) */}
           {doc.tags
             .filter(t => !(CATEGORIES as readonly string[]).includes(t))
@@ -680,8 +638,7 @@ function CategorySection({
       if ((b.year ?? 0) !== (a.year ?? 0)) return (b.year ?? 0) - (a.year ?? 0)
       return (b.quarter ?? 0) - (a.quarter ?? 0)
     }
-    // Bilanci â€” by year desc
-    return (b.year ?? 0) - (a.year ?? 0)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
 
   return (
