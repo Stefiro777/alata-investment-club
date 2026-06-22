@@ -197,7 +197,8 @@ function formToSvcPayload(f: ServiceForm) {
   }
 }
 
-function SvcFormFields({ form, onChange }: { form: ServiceForm; onChange: (f: ServiceForm) => void }) {
+function SvcFormFields({ form, onChange }: { form: ServiceForm | undefined; onChange: (f: ServiceForm) => void }) {
+  if (!form) return null
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="col-span-2">
@@ -260,11 +261,17 @@ function ServicesTab({
     const form = editForms[s.id]
     if (!form?.name.trim()) return
     setSaving(s.id); setError(null)
-    const { data, error: err } = await createClient()
-      .from('career_services').update(formToSvcPayload(form)).eq('id', s.id).select()
-    if (err) { setError(err.message); setSaving(null); return }
-    setServices(prev => prev.map(x => x.id === s.id ? ((data as CareerService[])[0]) : x))
-    setEditingId(null); setSaving(null)
+    try {
+      const { data, error: err } = await createClient()
+        .from('career_services').update(formToSvcPayload(form)).eq('id', s.id).select()
+      if (err) { setError(err.message); setSaving(null); return }
+      const row = (data as CareerService[])?.[0]
+      if (row) setServices(prev => prev.map(x => x.id === s.id ? row : x))
+      setEditingId(null); setSaving(null)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'An error occurred')
+      setSaving(null)
+    }
   }
 
   async function handleDelete(id: string) {
@@ -370,7 +377,7 @@ function ServicesTab({
               </div>
 
               {/* Inline edit form */}
-              {editingId === s.id && (
+              {editingId === s.id && editForms[s.id] && (
                 <div className="border-t border-[#1a4a3a]/20 bg-[#f9f9f8] px-5 py-5">
                   <SvcFormFields form={editForms[s.id]} onChange={f => setEditForms(prev => ({ ...prev, [s.id]: f }))} />
                   {error && <p className="mt-3 text-xs text-red-600 border-l-2 border-red-400 pl-2">{error}</p>}
