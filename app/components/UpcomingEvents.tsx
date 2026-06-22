@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent } from '@/lib/types'
@@ -15,6 +15,26 @@ function formatDate(dateStr: string) {
 }
 
 const BADGE_CLASS = "inline-block bg-forest text-white border border-white/20 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1"
+
+// Reads ?register= and auto-opens the modal. Must be wrapped in <Suspense>.
+function RegisterDeepLink({
+  events,
+  onOpen,
+}: {
+  events: UpcomingEvent[]
+  onOpen: (ev: UpcomingEvent) => void
+}) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const registerId = searchParams.get('register')
+    if (!registerId || events.length === 0) return
+    const target = events.find(
+      ev => ev.id === registerId && ev.status === 'open' && ev.action_type === 'form'
+    )
+    if (target) onOpen(target)
+  }, [searchParams, events, onOpen])
+  return null
+}
 
 function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
   if (status === 'completed') {
@@ -108,7 +128,7 @@ export default function UpcomingEvents() {
   const [events, setEvents] = useState<UpcomingEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [modalEvent, setModalEvent] = useState<UpcomingEvent | null>(null)
-  const searchParams = useSearchParams()
+  const openModal = useCallback((ev: UpcomingEvent) => setModalEvent(ev), [])
 
   useEffect(() => {
     const supabase = createClient()
@@ -121,18 +141,18 @@ export default function UpcomingEvents() {
         if (!data) { setLoading(false); return }
         setEvents(data)
         setLoading(false)
-        const registerId = searchParams.get('register')
-        if (registerId) {
-          const target = data.find(ev => ev.id === registerId && ev.status === 'open' && ev.action_type === 'form')
-          if (target) setModalEvent(target)
-        }
       })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   if (loading || events.length === 0) return null
 
   return (
     <>
+      {/* Deep-link handler: reads ?register= and auto-opens modal */}
+      <Suspense fallback={null}>
+        <RegisterDeepLink events={events} onOpen={openModal} />
+      </Suspense>
+
       <section className="bg-[#f5f5f0] py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
