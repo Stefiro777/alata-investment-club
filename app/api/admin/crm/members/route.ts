@@ -25,7 +25,7 @@ export async function GET() {
 
   const { data, error } = await supabaseAdmin
     .from('club_members')
-    .select('id, full_name, email, role, teams, created_at')
+    .select('id, full_name, email, role, teams, title, created_at')
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

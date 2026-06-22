@@ -8,7 +8,8 @@ type Member = {
   full_name: string
   email: string
   role: string
-  teams: string
+  teams: string[] | null
+  title: string | null
   created_at: string
 }
 
@@ -193,15 +194,20 @@ export default function MembersTable() {
   }, [])
 
   const teams = useMemo(() => {
-    const set = new Set(members.map(m => m.teams).filter(Boolean))
+    const set = new Set<string>()
+    members.forEach(m => (m.teams ?? []).forEach(t => set.add(t)))
     return Array.from(set).sort()
   }, [members])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return members.filter(m => {
-      const matchSearch = !q || m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q) || m.teams?.toLowerCase().includes(q)
-      const matchTeam = !teamFilter || m.teams === teamFilter
+      const teamsStr = (m.teams ?? []).join(' ').toLowerCase()
+      const matchSearch = !q ||
+        m.full_name?.toLowerCase().includes(q) ||
+        m.email?.toLowerCase().includes(q) ||
+        teamsStr.includes(q)
+      const matchTeam = !teamFilter || (m.teams ?? []).includes(teamFilter)
       return matchSearch && matchTeam
     })
   }, [members, search, teamFilter])
@@ -316,8 +322,8 @@ export default function MembersTable() {
               </tr>
             ) : filtered.map(m => {
               const isSelected = selected.has(m.id)
-              const teamBadge = TEAM_BADGE[m.teams]
               const roleBadge = TEAM_BADGE[m.role]
+              const memberTeams = m.teams ?? []
               return (
                 <tr
                   key={m.id}
@@ -351,15 +357,25 @@ export default function MembersTable() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {teamBadge ? (
-                      <span
-                        className="text-[10px] font-medium tracking-widest uppercase px-2 py-1"
-                        style={{ backgroundColor: teamBadge.bg, color: teamBadge.text }}
-                      >
-                        {teamBadge.label}
-                      </span>
+                    {memberTeams.length === 0 ? (
+                      <span className="text-[10px] text-[#6b7280]">—</span>
                     ) : (
-                      <span className="text-[10px] text-[#6b7280]">{m.teams ?? '—'}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {memberTeams.map(t => {
+                          const badge = TEAM_BADGE[t]
+                          return badge ? (
+                            <span
+                              key={t}
+                              className="text-[10px] font-medium tracking-widest uppercase px-2 py-1"
+                              style={{ backgroundColor: badge.bg, color: badge.text }}
+                            >
+                              {badge.label}
+                            </span>
+                          ) : (
+                            <span key={t} className="text-[10px] text-[#6b7280]">{t}</span>
+                          )
+                        })}
+                      </div>
                     )}
                   </td>
                   <td className="px-4 py-3 text-[#6b7280] whitespace-nowrap">
