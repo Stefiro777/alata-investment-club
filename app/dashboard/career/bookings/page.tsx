@@ -281,7 +281,7 @@ function ServicesTab({
 
   async function handleDelete(id: string) {
     setDeleting(true)
-    await createClient().from('career_services').delete().eq('id', id)
+    await fetch('/api/career/services', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
     setServices(prev => prev.filter(x => x.id !== id))
     setConfirmDel(null); setDeleting(false)
   }
@@ -289,17 +289,16 @@ function ServicesTab({
   async function saveNew() {
     if (!addForm?.name.trim()) return
     setSaving('new'); setError(null)
-    const { data, error: err } = await createClient()
-      .from('career_services').insert(formToSvcPayload(addForm)).select()
-    if (err) { setError(err.message); setSaving(null); return }
-    setServices(prev => [...prev, (data as CareerService[])[0]])
+    const res = await fetch('/api/career/services', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formToSvcPayload(addForm)) })
+    const json = await res.json()
+    if (!res.ok) { setError(json.error ?? 'Insert failed'); setSaving(null); return }
+    await refreshServices()
     setAddForm(null); setSaving(null)
   }
 
   async function toggleActive(s: CareerService) {
-    const { data } = await createClient()
-      .from('career_services').update({ active: !s.active }).eq('id', s.id).select()
-    if (data) setServices(prev => prev.map(x => x.id === s.id ? ((data as CareerService[])[0]) : x))
+    const res = await fetch('/api/career/services', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: s.id, active: !s.active }) })
+    if (res.ok) await refreshServices()
   }
 
   return (
@@ -457,14 +456,14 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
   }, [svcId])
 
   async function toggleActive(a: CareerAvailability) {
-    const { data } = await createClient()
-      .from('career_availability').update({ active: !a.active }).eq('id', a.id).select().single()
-    if (data) setRows(prev => prev.map(x => x.id === a.id ? (data as CareerAvailability) : x))
+    const res = await fetch('/api/career/availability', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: a.id, active: !a.active }) })
+    const json = await res.json()
+    if (res.ok && json.data) setRows(prev => prev.map(x => x.id === a.id ? (json.data as CareerAvailability) : x))
   }
 
   async function deleteRow(id: string) {
     setDeleting(true)
-    await createClient().from('career_availability').delete().eq('id', id)
+    await fetch('/api/career/availability', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
     setRows(prev => prev.filter(x => x.id !== id))
     setConfirmDel(null); setDeleting(false)
   }
@@ -475,7 +474,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
     if (form.type === 'one_time' && !form.date) { setError('Date is required'); return }
     setSaving(true); setError(null)
 
-    const payload: Record<string, unknown> = {
+    const payload = {
       service_id: svcId,
       type: form.type,
       start_time: form.start_time,
@@ -485,10 +484,10 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
       date: form.type === 'one_time' ? form.date : null,
     }
 
-    const { data, error: err } = await createClient()
-      .from('career_availability').insert(payload).select().single()
-    if (err) { setError(err.message); setSaving(false); return }
-    setRows(prev => [...prev, data as CareerAvailability])
+    const res = await fetch('/api/career/availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    const json = await res.json()
+    if (!res.ok) { setError(json.error ?? 'Insert failed'); setSaving(false); return }
+    setRows(prev => [...prev, json.data as CareerAvailability])
     setForm(EMPTY_AVAIL); setSaving(false)
   }
 
