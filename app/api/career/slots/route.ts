@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     const [{ data: service, error: serviceErr }, { data: availability, error: availErr }] = await Promise.all([
       supabaseAdmin
         .from('career_services')
-        .select('max_bookings_per_slot, price_cents')
+        .select('max_bookings_per_slot, price_cents, duration_minutes')
         .eq('id', service_id)
         .single(),
       supabaseAdmin
@@ -58,10 +58,35 @@ export async function GET(req: NextRequest) {
     if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
 
     const maxBookings: number = service.max_bookings_per_slot ?? 1
+    const duration: number = service.duration_minutes ?? 60
     const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
     const nextMonth = month === 12 ? 1 : month + 1
     const nextYear = month === 12 ? year + 1 : year
     const monthEnd = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`
+
+    // Parse "HH:MM[:SS]" to total minutes since midnight
+    function toMinutes(t: string): number {
+      const [h, m] = t.split(':').map(Number)
+      return h * 60 + m
+    }
+
+    // Format total minutes as "HH:MM"
+    function fromMinutes(mins: number): string {
+      return `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`
+    }
+
+    // Subdivide an availability window into slots of `duration` minutes
+    function subdivide(startTime: string, endTime: string | null): string[] {
+      const start = toMinutes(startTime)
+      const end = endTime ? toMinutes(endTime) : start + duration
+      const times: string[] = []
+      for (let t = start; t + duration <= end; t += duration) {
+        times.push(fromMinutes(t))
+      }
+      // Always include at least the start time if window is shorter than duration
+      if (times.length === 0) times.push(fromMinutes(start))
+      return times
+    }
 
     // Collect all (date, time) pairs for this month
     const slots: { date: string; time: string }[] = []
@@ -69,12 +94,18 @@ export async function GET(req: NextRequest) {
     for (const row of availability ?? []) {
       if (row.type === 'recurring' && row.day_of_week != null && row.start_time) {
         const dates = getDayOfWeekOccurrences(year, month, row.day_of_week)
+        const times = subdivide(row.start_time, row.end_time)
         for (const date of dates) {
-          slots.push({ date, time: row.start_time })
+          for (const time of times) {
+            slots.push({ date, time })
+          }
         }
       } else if (row.type === 'one_time' && row.date && row.start_time) {
         if (row.date >= monthStart && row.date < monthEnd) {
-          slots.push({ date: row.date, time: row.start_time })
+          const times = subdivide(row.start_time, row.end_time)
+          for (const time of times) {
+            slots.push({ date: row.date, time })
+          }
         }
       }
     }
@@ -99,7 +130,7 @@ export async function GET(req: NextRequest) {
 
     const countMap = new Map<string, number>()
     for (const b of bookings ?? []) {
-      const key = `${b.slot_date}|${b.slot_time}`
+      const key = `${b.slot_date}|${b.slot_time.slice(0, 5)}`
       countMap.set(key, (countMap.get(key) ?? 0) + 1)
     }
 
@@ -107,7 +138,7 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
       .map(s => ({
         date: s.date,
-        time: s.time.slice(0, 5), // HH:MM
+        time: s.time, // already HH:MM from fromMinutes()
         available: (countMap.get(`${s.date}|${s.time}`) ?? 0) < maxBookings,
       }))
 
