@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { useProfile } from '../../DashboardProfileContext'
 import MemberAutocomplete from '../../MemberAutocomplete'
 import VenuesSection from '@/components/dashboard/VenuesSection'
+import PRTracker from '@/components/dashboard/PRTracker'
 import FeaturedReportsClient from '@/app/admin/featured-reports/FeaturedReportsClient'
 import UpcomingEventsAdminSection from '@/app/admin/components/UpcomingEventsAdminSection'
 import PartnersSection from '@/app/admin/components/PartnersSection'
@@ -1684,7 +1685,7 @@ export default function TeamPage() {
   const [collapsed, setCollapsed]       = useState<Set<string>>(new Set(['done']))
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
-  const [activeTab, setActiveTab]       = useState<'tasks' | 'goals' | 'reports' | 'content'>('tasks')
+  const [activeTab, setActiveTab]       = useState<'tasks' | 'goals' | 'reports' | 'content' | 'pr-tracker'>('tasks')
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
@@ -1852,8 +1853,9 @@ export default function TeamPage() {
           {[
             { key: 'tasks'   as const, label: 'Tasks' },
             { key: 'goals'   as const, label: 'Goals' },
-            ...(slug === 'lab'    ? [{ key: 'reports' as const, label: 'Featured Reports' }] : []),
-            ...(slug === 'events' ? [{ key: 'content' as const, label: 'Content' }] : []),
+            ...(slug === 'lab'    ? [{ key: 'reports'    as const, label: 'Featured Reports' }] : []),
+            ...(slug === 'events' ? [{ key: 'content'    as const, label: 'Content' }] : []),
+            ...(slug === 'career' ? [{ key: 'pr-tracker' as const, label: 'PR Tracker' }] : []),
           ].map(tab => (
             <button
               key={tab.key}
@@ -1888,6 +1890,8 @@ export default function TeamPage() {
         <LabFeaturedReportsTab />
       ) : activeTab === 'content' ? (
         <EventsContentTab />
+      ) : activeTab === 'pr-tracker' ? (
+        <PRTracker />
       ) : (
         <>
 
