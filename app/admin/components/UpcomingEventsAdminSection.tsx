@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
 
@@ -314,7 +314,6 @@ function EventFormModal({
       action_type: (form.action_type || null) as 'form' | 'link' | null,
       action_link: form.action_type === 'link' ? (form.action_link.trim() || null) : null,
       registration_field: form.registration_field,
-      ...(!initial.id ? { display_order: 999 } : {}),
     }
 
     if (initial.id) {
@@ -532,20 +531,6 @@ function SendQrButton({ event, registrationIds }: { event: UpcomingEvent; regist
   )
 }
 
-// ── Drag handle icon ─────────────────────────────────────────────────────────
-function DragHandle() {
-  return (
-    <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" className="text-ink-400">
-      <circle cx="4" cy="3" r="1.5" />
-      <circle cx="8" cy="3" r="1.5" />
-      <circle cx="4" cy="8" r="1.5" />
-      <circle cx="8" cy="8" r="1.5" />
-      <circle cx="4" cy="13" r="1.5" />
-      <circle cx="8" cy="13" r="1.5" />
-    </svg>
-  )
-}
-
 // ── Main Section ─────────────────────────────────────────────────────────────
 export default function UpcomingEventsAdminSection({
   initialEvents,
@@ -557,11 +542,10 @@ export default function UpcomingEventsAdminSection({
   const [regsModal, setRegsModal] = useState<UpcomingEvent | null>(null)
   const [emailEventTarget, setEmailEventTarget] = useState<{ event: UpcomingEvent; recipientCount: number } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const [orderSaved, setOrderSaved] = useState(false)
   const [completedOpen, setCompletedOpen] = useState(false)
   const [regCounts, setRegCounts] = useState<Record<string, number>>({})
   const [regIds, setRegIds] = useState<Record<string, string[]>>({})
-  const dragIndex = useRef<number | null>(null)
+
 
   const today = new Date(new Date().toDateString())
   const activeEvents = events.filter(ev => new Date(ev.date) >= today)
@@ -623,32 +607,6 @@ export default function UpcomingEventsAdminSection({
     setDeleteConfirm(null)
   }
 
-  function onDragStart(i: number) {
-    dragIndex.current = i
-  }
-
-  async function onDrop(i: number) {
-    const from = dragIndex.current
-    dragIndex.current = null
-    if (from === null || from === i) return
-
-    const reorderedActive = [...activeEvents]
-    const [moved] = reorderedActive.splice(from, 1)
-    reorderedActive.splice(i, 0, moved)
-    setEvents([...reorderedActive, ...completedEvents])
-
-    const items = reorderedActive.map((ev, idx) => ({ id: ev.id, display_order: idx }))
-    const res = await fetch('/api/upcoming-events/reorder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items }),
-    })
-    if (res.ok) {
-      setOrderSaved(true)
-      setTimeout(() => setOrderSaved(false), 2500)
-    }
-  }
-
   function openEmailCompose(ev: UpcomingEvent) {
     setEmailEventTarget({ event: ev, recipientCount: regCounts[ev.id] ?? 0 })
   }
@@ -657,14 +615,7 @@ export default function UpcomingEventsAdminSection({
     <div className="max-w-5xl mx-auto px-8 py-10">
       <SectionHeading title="Upcoming Events" />
 
-      <div className="flex items-center justify-between mb-4">
-        <div className="h-6">
-          {orderSaved && (
-            <span className="text-xs text-forest font-medium tracking-wide animate-pulse">
-              ✓ Order saved
-            </span>
-          )}
-        </div>
+      <div className="flex justify-end mb-4">
         <button
           onClick={openAdd}
           className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-fast"
@@ -681,7 +632,6 @@ export default function UpcomingEventsAdminSection({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-line-faint bg-[#f9f9f9]">
-                <th className="px-4 py-3 w-8" />
                 {['Date', 'Title', 'Status', 'Action', 'Azioni'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
                     {h}
@@ -690,18 +640,11 @@ export default function UpcomingEventsAdminSection({
               </tr>
             </thead>
             <tbody>
-              {activeEvents.map((ev, i) => (
+              {activeEvents.map((ev) => (
                 <tr
                   key={ev.id}
-                  draggable
-                  onDragStart={() => onDragStart(i)}
-                  onDragOver={e => e.preventDefault()}
-                  onDrop={() => onDrop(i)}
                   className="border-b border-black/5 last:border-0 hover:bg-paper-cool transition-colors"
                 >
-                  <td className="px-4 py-3 cursor-grab active:cursor-grabbing">
-                    <DragHandle />
-                  </td>
                   <td className="px-4 py-3 font-medium text-ink-900 whitespace-nowrap">{ev.date}</td>
                   <td className="px-4 py-3 text-ink-900 max-w-[200px]">
                     <span title={ev.title}>
@@ -796,7 +739,6 @@ export default function UpcomingEventsAdminSection({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-line-faint bg-[#f9f9f9]">
-                    <th className="px-4 py-3 w-8" />
                     {['Date', 'Title', 'Status', 'Action', 'Azioni'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
                         {h}
@@ -810,9 +752,6 @@ export default function UpcomingEventsAdminSection({
                       key={ev.id}
                       className="border-b border-black/5 last:border-0 hover:bg-paper-cool transition-colors"
                     >
-                      <td className="px-4 py-3 text-ink-300">
-                        <DragHandle />
-                      </td>
                       <td className="px-4 py-3 font-medium text-ink-500 whitespace-nowrap">{ev.date}</td>
                       <td className="px-4 py-3 text-ink-500 max-w-[200px]">
                         <span title={ev.title}>

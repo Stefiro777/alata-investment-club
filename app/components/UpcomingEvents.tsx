@@ -136,7 +136,7 @@ export default function UpcomingEvents() {
       .from('upcoming_events')
       .select('*')
       .gte('date', new Date().toISOString().split('T')[0])
-      .order('display_order', { ascending: true, nullsFirst: false })
+      .order('date', { ascending: true })
       .then(({ data }) => {
         if (!data) { setLoading(false); return }
         setEvents(data)
