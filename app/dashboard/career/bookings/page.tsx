@@ -261,9 +261,9 @@ function ServicesTab({
     if (!form?.name.trim()) return
     setSaving(s.id); setError(null)
     const { data, error: err } = await createClient()
-      .from('career_services').update(formToSvcPayload(form)).eq('id', s.id).select().single()
+      .from('career_services').update(formToSvcPayload(form)).eq('id', s.id).select()
     if (err) { setError(err.message); setSaving(null); return }
-    setServices(prev => prev.map(x => x.id === s.id ? (data as CareerService) : x))
+    setServices(prev => prev.map(x => x.id === s.id ? ((data as CareerService[])[0]) : x))
     setEditingId(null); setSaving(null)
   }
 
@@ -278,16 +278,16 @@ function ServicesTab({
     if (!addForm?.name.trim()) return
     setSaving('new'); setError(null)
     const { data, error: err } = await createClient()
-      .from('career_services').insert(formToSvcPayload(addForm)).select().single()
+      .from('career_services').insert(formToSvcPayload(addForm)).select()
     if (err) { setError(err.message); setSaving(null); return }
-    setServices(prev => [...prev, data as CareerService])
+    setServices(prev => [...prev, (data as CareerService[])[0]])
     setAddForm(null); setSaving(null)
   }
 
   async function toggleActive(s: CareerService) {
     const { data } = await createClient()
-      .from('career_services').update({ active: !s.active }).eq('id', s.id).select().single()
-    if (data) setServices(prev => prev.map(x => x.id === s.id ? (data as CareerService) : x))
+      .from('career_services').update({ active: !s.active }).eq('id', s.id).select()
+    if (data) setServices(prev => prev.map(x => x.id === s.id ? ((data as CareerService[])[0]) : x))
   }
 
   return (
