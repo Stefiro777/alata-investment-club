@@ -459,6 +459,79 @@ function CopyLinkButton({ eventId }: { eventId: string }) {
   )
 }
 
+// ── Send QR button ────────────────────────────────────────────────────────────
+function SendQrButton({ event, registrationIds }: { event: UpcomingEvent; registrationIds: string[] }) {
+  const [state, setState] = useState<'idle' | 'confirm' | 'sending' | 'done' | 'error'>('idle')
+  const [result, setResult] = useState<{ sent: number; failed: number } | null>(null)
+
+  async function handleSend() {
+    setState('sending')
+    try {
+      const res = await fetch('/api/admin/crm/send-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registration_ids: registrationIds }),
+      })
+      const json = await res.json()
+      if (!res.ok) { setState('error'); return }
+      setResult(json)
+      setState('done')
+      setTimeout(() => setState('idle'), 3000)
+    } catch {
+      setState('error')
+      setTimeout(() => setState('idle'), 3000)
+    }
+  }
+
+  if (state === 'confirm') {
+    return (
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] text-ink-500 whitespace-nowrap">
+          Send QR to {registrationIds.length}?
+        </span>
+        <button
+          onClick={handleSend}
+          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+        >
+          Yes
+        </button>
+        <button
+          onClick={() => setState('idle')}
+          className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+        >
+          No
+        </button>
+      </div>
+    )
+  }
+
+  const label =
+    state === 'sending' ? '…' :
+    state === 'done'    ? `✓ ${result?.sent ?? 0}` :
+    state === 'error'   ? '✕' : null
+
+  return (
+    <button
+      onClick={() => state === 'idle' && setState('confirm')}
+      disabled={state === 'sending'}
+      title="Send QR codes to all registrants"
+      className={`flex items-center gap-1 border text-xs font-medium px-2 py-1.5 transition-colors duration-fast disabled:opacity-50 ${
+        state === 'done'  ? 'border-forest text-forest' :
+        state === 'error' ? 'border-red-400 text-red-500' :
+        'border-forest text-forest hover:bg-forest hover:text-white'
+      }`}
+    >
+      {label ?? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+          <path d="M14 14h.01M14 17h.01M17 14h.01M17 17h.01M20 14h.01M20 17h.01M20 20h.01M17 20h.01M14 20h.01" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 // ── Drag handle icon ─────────────────────────────────────────────────────────
 function DragHandle() {
   return (
@@ -487,26 +560,32 @@ export default function UpcomingEventsAdminSection({
   const [orderSaved, setOrderSaved] = useState(false)
   const [completedOpen, setCompletedOpen] = useState(false)
   const [regCounts, setRegCounts] = useState<Record<string, number>>({})
+  const [regIds, setRegIds] = useState<Record<string, string[]>>({})
   const dragIndex = useRef<number | null>(null)
 
   const today = new Date(new Date().toDateString())
   const activeEvents = events.filter(ev => new Date(ev.date) >= today)
   const completedEvents = events.filter(ev => new Date(ev.date) < today)
 
-  // Fetch registration counts for all events
+  // Fetch registration counts and ids for all events
   useEffect(() => {
     if (events.length === 0) return
     Promise.all(
       events.map(ev =>
         fetch(`/api/event-registrations?event_id=${ev.id}`)
           .then(r => r.json())
-          .then(({ data }) => ({ id: ev.id, count: (data ?? []).length as number }))
-          .catch(() => ({ id: ev.id, count: 0 }))
+          .then(({ data }) => ({ id: ev.id, rows: (data ?? []) as { id: string }[] }))
+          .catch(() => ({ id: ev.id, rows: [] }))
       )
     ).then(results => {
       const counts: Record<string, number> = {}
-      for (const { id, count } of results) counts[id] = count
+      const ids: Record<string, string[]> = {}
+      for (const { id, rows } of results) {
+        counts[id] = rows.length
+        ids[id] = rows.map(r => r.id)
+      }
       setRegCounts(counts)
+      setRegIds(ids)
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -658,6 +737,9 @@ export default function UpcomingEventsAdminSection({
                           <EnvelopeIcon />
                         </button>
                       )}
+                      {(regCounts[ev.id] ?? 0) > 0 && (
+                        <SendQrButton event={ev} registrationIds={regIds[ev.id] ?? []} />
+                      )}
                       <CopyLinkButton eventId={ev.id} />
                       <button
                         onClick={() => openEdit(ev)}
@@ -761,6 +843,9 @@ export default function UpcomingEventsAdminSection({
                             >
                               <EnvelopeIcon />
                             </button>
+                          )}
+                          {(regCounts[ev.id] ?? 0) > 0 && (
+                            <SendQrButton event={ev} registrationIds={regIds[ev.id] ?? []} />
                           )}
                           <CopyLinkButton eventId={ev.id} />
                           <button
