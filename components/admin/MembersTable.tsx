@@ -5,7 +5,7 @@ import { TEAM_BADGE } from '@/app/dashboard/teamColors'
 
 type Member = {
   id: string
-  name: string
+  full_name: string
   email: string
   role: string
   team: string
@@ -39,7 +39,7 @@ function ComposeModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          recipients: recipients.map(m => ({ email: m.email, name: m.name })),
+          recipients: recipients.map(m => ({ email: m.email, name: m.full_name })),
           subject: subject.trim(),
           message: message.trim(),
         }),
@@ -103,7 +103,7 @@ function ComposeModal({
               <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                 {visibleRecipients.map(m => (
                   <span key={m.id} className="text-[11px] bg-[#f0f5f3] text-[#1a4a3a] px-2 py-1 border border-[#c8ddd6]">
-                    {m.name}
+                    {m.full_name}
                   </span>
                 ))}
                 {overflow > 0 && (
@@ -200,7 +200,7 @@ export default function MembersTable() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return members.filter(m => {
-      const matchSearch = !q || m.name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q) || m.team?.toLowerCase().includes(q)
+      const matchSearch = !q || m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q) || m.team?.toLowerCase().includes(q)
       const matchTeam = !teamFilter || m.team === teamFilter
       return matchSearch && matchTeam
     })
@@ -334,7 +334,7 @@ export default function MembersTable() {
                       className="cursor-pointer"
                     />
                   </td>
-                  <td className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap">{m.name}</td>
+                  <td className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap">{m.full_name}</td>
                   <td className="px-4 py-3 text-[#6b7280]">{m.email}</td>
                   <td className="px-4 py-3">
                     {roleBadge ? (
