@@ -1969,27 +1969,6 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* PR Tracker — solo per team career, visibile a bod/director */}
-      {slug === 'career' && (
-        <section className="mt-12">
-          <div className="border-t border-line mb-8" />
-          <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-4">Public Relations Tracker</h2>
-          <div className="flex flex-col items-start gap-3">
-            <a
-              href="https://docs.google.com/spreadsheets/d/1RMu7AWd3_CPUrq2XuXh1SEyYVxZxsIq3/edit?usp=sharing&ouid=111488797364027754658&rtpof=true&sd=true"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              Open Tracker
-            </a>
-            <p className="text-sm text-ink-500">Contacts, descriptions and notes for all PR relationships.</p>
-          </div>
-        </section>
-      )}
 
         </>
       )}
