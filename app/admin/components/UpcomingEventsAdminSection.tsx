@@ -431,6 +431,34 @@ function EventFormModal({
   )
 }
 
+// ── Copy link button ──────────────────────────────────────────────────────────
+function CopyLinkButton({ eventId }: { eventId: string }) {
+  const [copied, setCopied] = useState(false)
+  function handleCopy() {
+    navigator.clipboard.writeText(`https://alatainvestmentclub.com/events?register=${eventId}`)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy registration link"
+      className="flex items-center justify-center border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 // ── Drag handle icon ─────────────────────────────────────────────────────────
 function DragHandle() {
   return (
@@ -630,6 +658,7 @@ export default function UpcomingEventsAdminSection({
                           <EnvelopeIcon />
                         </button>
                       )}
+                      <CopyLinkButton eventId={ev.id} />
                       <button
                         onClick={() => openEdit(ev)}
                         className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
@@ -733,6 +762,7 @@ export default function UpcomingEventsAdminSection({
                               <EnvelopeIcon />
                             </button>
                           )}
+                          <CopyLinkButton eventId={ev.id} />
                           <button
                             onClick={() => openEdit(ev)}
                             className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"

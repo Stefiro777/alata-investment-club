@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
+import { Suspense } from 'react'
 import EventsGrid from './EventsGrid'
 import EventsReviewsWrapper from './EventsReviewsWrapper'
 import UpcomingEvents from '@/app/components/UpcomingEvents'
@@ -45,7 +46,9 @@ export default async function EventsPage() {
       </section>
 
       {/* Upcoming Events — dark agenda section */}
-      <UpcomingEvents />
+      <Suspense fallback={null}>
+        <UpcomingEvents />
+      </Suspense>
 
       {/* Divider */}
       <div className="h-px bg-[#e5e5e5]" />

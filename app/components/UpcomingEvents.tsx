@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent } from '@/lib/types'
 import EventRegistrationModal from './EventRegistrationModal'
@@ -107,6 +108,7 @@ export default function UpcomingEvents() {
   const [events, setEvents] = useState<UpcomingEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [modalEvent, setModalEvent] = useState<UpcomingEvent | null>(null)
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     const supabase = createClient()
@@ -119,8 +121,13 @@ export default function UpcomingEvents() {
         if (!data) { setLoading(false); return }
         setEvents(data)
         setLoading(false)
+        const registerId = searchParams.get('register')
+        if (registerId) {
+          const target = data.find(ev => ev.id === registerId && ev.status === 'open' && ev.action_type === 'form')
+          if (target) setModalEvent(target)
+        }
       })
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading || events.length === 0) return null
 
