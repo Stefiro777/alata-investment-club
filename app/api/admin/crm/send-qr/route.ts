@@ -18,7 +18,7 @@ function sleep(ms: number) {
 
 async function buildQrHtml(nome: string, eventTitle: string, registrationId: string): Promise<string> {
   const checkinUrl = `https://alatainvestmentclub.com/checkin?token=${registrationId}`
-  const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 220, margin: 2 })
+  const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 300, margin: 2 })
 
   return `<!DOCTYPE html>
 <html lang="it">
@@ -46,7 +46,7 @@ async function buildQrHtml(nome: string, eventTitle: string, registrationId: str
           <td style="padding:8px 32px 32px;">
             <p style="margin:16px 0 12px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a4a3a;">Your Check-In QR Code</p>
             <div style="text-align:center;padding:20px;border:1px solid #e5e5e5;">
-              <img src="${qrDataUrl}" alt="Check-in QR Code" width="220" height="220" style="display:block;margin:0 auto;" />
+              <img src="${qrDataUrl}" width="250" height="250" alt="QR Code" style="display:block;margin:0 auto;" />
             </div>
             <p style="margin:12px 0 0;font-size:12px;color:#888;text-align:center;">Present this QR code at the event entrance</p>
           </td>
