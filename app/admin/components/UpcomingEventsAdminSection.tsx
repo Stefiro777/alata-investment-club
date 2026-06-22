@@ -442,7 +442,7 @@ function CopyLinkButton({ eventId }: { eventId: string }) {
     <button
       onClick={handleCopy}
       title="Copy registration link"
-      className="flex items-center justify-center border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+      className="flex items-center justify-center border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
     >
       {copied ? (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -490,13 +490,13 @@ function SendQrButton({ event, registrationIds }: { event: UpcomingEvent; regist
         </span>
         <button
           onClick={handleSend}
-          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
         >
           Yes
         </button>
         <button
           onClick={() => setState('idle')}
-          className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+          className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors duration-fast"
         >
           No
         </button>
@@ -514,7 +514,7 @@ function SendQrButton({ event, registrationIds }: { event: UpcomingEvent; regist
       onClick={() => state === 'idle' && setState('confirm')}
       disabled={state === 'sending'}
       title="Send QR codes to all registrants"
-      className={`flex items-center gap-1 border text-xs font-medium px-2 py-1.5 transition-colors duration-fast disabled:opacity-50 ${
+      className={`flex items-center border text-xs font-medium px-2 py-1 transition-colors duration-fast disabled:opacity-50 ${
         state === 'done'  ? 'border-forest text-forest' :
         state === 'error' ? 'border-red-400 text-red-500' :
         'border-forest text-forest hover:bg-forest hover:text-white'
@@ -663,11 +663,11 @@ export default function UpcomingEventsAdminSection({
                   <td className="px-4 py-3 text-ink-500 text-xs">
                     {ev.action_type ?? '—'}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => setRegsModal(ev)}
-                        className="border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast whitespace-nowrap"
+                        className="border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                       >
                         Registrations
                       </button>
@@ -675,7 +675,7 @@ export default function UpcomingEventsAdminSection({
                         <button
                           onClick={() => openEmailCompose(ev)}
                           title="Send email to registrants"
-                          className="flex items-center gap-1 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                          className="flex items-center border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                         >
                           <EnvelopeIcon />
                         </button>
@@ -686,22 +686,22 @@ export default function UpcomingEventsAdminSection({
                       <CopyLinkButton eventId={ev.id} />
                       <button
                         onClick={() => openEdit(ev)}
-                        className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                        className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                       >
                         Edit
                       </button>
                       {deleteConfirm === ev.id ? (
                         <div className="flex items-center gap-1">
-                          <span className="text-xs text-red-600">Confirm?</span>
+                          <span className="text-xs text-red-600">Sure?</span>
                           <button
                             onClick={() => handleDelete(ev.id)}
-                            className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+                            className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                           >
                             Yes
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
-                            className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+                            className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors duration-fast"
                           >
                             No
                           </button>
@@ -709,7 +709,7 @@ export default function UpcomingEventsAdminSection({
                       ) : (
                         <button
                           onClick={() => setDeleteConfirm(ev.id)}
-                          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                         >
                           Delete
                         </button>
@@ -766,11 +766,11 @@ export default function UpcomingEventsAdminSection({
                       <td className="px-4 py-3 text-ink-400 text-xs">
                         {ev.action_type ?? '—'}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 flex-wrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1">
                           <button
                             onClick={() => setRegsModal(ev)}
-                            className="border border-[#6b7280] text-ink-400 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast whitespace-nowrap"
+                            className="border border-[#6b7280] text-ink-400 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                           >
                             Registrations
                           </button>
@@ -778,7 +778,7 @@ export default function UpcomingEventsAdminSection({
                             <button
                               onClick={() => openEmailCompose(ev)}
                               title="Send email to registrants"
-                              className="flex items-center gap-1 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                              className="flex items-center border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                             >
                               <EnvelopeIcon />
                             </button>
@@ -789,22 +789,22 @@ export default function UpcomingEventsAdminSection({
                           <CopyLinkButton eventId={ev.id} />
                           <button
                             onClick={() => openEdit(ev)}
-                            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                           >
                             Edit
                           </button>
                           {deleteConfirm === ev.id ? (
                             <div className="flex items-center gap-1">
-                              <span className="text-xs text-red-600">Confirm?</span>
+                              <span className="text-xs text-red-600">Sure?</span>
                               <button
                                 onClick={() => handleDelete(ev.id)}
-                                className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+                                className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                               >
                                 Yes
                               </button>
                               <button
                                 onClick={() => setDeleteConfirm(null)}
-                                className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1.5 transition-colors duration-fast"
+                                className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors duration-fast"
                               >
                                 No
                               </button>
@@ -812,7 +812,7 @@ export default function UpcomingEventsAdminSection({
                           ) : (
                             <button
                               onClick={() => setDeleteConfirm(ev.id)}
-                              className="border border-red-300 text-red-400 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                              className="border border-red-300 text-red-400 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1 transition-colors duration-fast"
                             >
                               Delete
                             </button>
