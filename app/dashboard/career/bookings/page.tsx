@@ -685,11 +685,116 @@ function BookingsTab({ services }: { services: CareerService[] }) {
     { key: 'cancelled',       label: 'Cancelled' },
   ]
 
-  const filtered = useMemo(() => bookings.filter(b => {
-    if (svcFilter !== 'all' && b.service_id !== svcFilter) return false
-    if (statFilter !== 'all' && b.status !== statFilter) return false
-    return true
-  }), [bookings, svcFilter, statFilter])
+  const today = new Date().toISOString().slice(0, 10)
+
+  const { upcoming, past } = useMemo(() => {
+    const all = bookings.filter(b => {
+      if (svcFilter !== 'all' && b.service_id !== svcFilter) return false
+      if (statFilter !== 'all' && b.status !== statFilter) return false
+      return true
+    })
+    return {
+      upcoming: all.filter(b => b.slot_date >= today).sort((a, b) => a.slot_date.localeCompare(b.slot_date) || (a.slot_time ?? '').localeCompare(b.slot_time ?? '')),
+      past:     all.filter(b => b.slot_date < today).sort((a, b) => b.slot_date.localeCompare(a.slot_date) || (b.slot_time ?? '').localeCompare(a.slot_time ?? '')),
+    }
+  }, [bookings, svcFilter, statFilter, today])
+
+  const [pastOpen, setPastOpen] = useState(false)
+
+  function BookingRow({ b, muted }: { b: CareerBooking; muted?: boolean }) {
+    return (
+      <div className={muted ? 'opacity-50' : ''}>
+        <button type="button" onClick={() => setExpandedId(expandedId === b.id ? null : b.id)}
+          className="w-full flex items-center gap-4 px-5 py-4 bg-white hover:bg-[#fafaf9] transition-colors text-left">
+          <div className="flex-shrink-0 w-24">
+            <p className="text-sm font-medium text-gray-900 leading-tight">{formatDate(b.slot_date)}</p>
+            <p className="text-xs text-gray-400">{b.slot_time?.slice(0, 5)}</p>
+          </div>
+          <div className="hidden sm:block flex-shrink-0 w-28">
+            <p className="text-xs text-gray-500 truncate">{b.service_name}</p>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900">{b.name}</p>
+            <p className="text-xs text-gray-400 truncate">{b.email}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {b.is_member_free && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-[#1a4a3a]/10 text-[#1a4a3a]">
+                Member
+              </span>
+            )}
+            {b.cv_url && (
+              <a href={b.cv_url} target="_blank" rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                CV
+              </a>
+            )}
+            <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${statusBadgeCls(b.status)}`}>
+              {statusLabel(b.status)}
+            </span>
+            <ChevronIcon open={expandedId === b.id} />
+          </div>
+        </button>
+
+        {expandedId === b.id && (
+          <div className="border-t border-[#1a4a3a]/20 bg-[#f9f9f8] px-5 py-5">
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4 mb-5">
+              <div>
+                <p className={labelCls}>Service</p>
+                <p className="text-sm text-gray-700">{b.service_name}</p>
+              </div>
+              <div>
+                <p className={labelCls}>Email</p>
+                <a href={`mailto:${b.email}`} className="text-sm text-[#1a4a3a] hover:underline underline-offset-2">{b.email}</a>
+              </div>
+              <div className="sm:col-span-2">
+                <p className={labelCls}>Motivation</p>
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{b.motivation}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className={labelCls}>Goal</p>
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{b.goal}</p>
+              </div>
+              {b.cv_url && (
+                <div>
+                  <p className={labelCls}>CV</p>
+                  <a href={b.cv_url} target="_blank" rel="noopener noreferrer"
+                    className="text-sm text-[#1a4a3a] hover:underline underline-offset-2">
+                    Download CV →
+                  </a>
+                </div>
+              )}
+              {b.stripe_payment_intent_id && (
+                <div>
+                  <p className={labelCls}>Stripe PI</p>
+                  <p className="text-xs text-gray-400 font-mono break-all">{b.stripe_payment_intent_id}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <p className={`${labelCls} mb-0`}>Change Status</p>
+              <div className="relative">
+                <select value={b.status} onChange={e => updateStatus(b.id, e.target.value)}
+                  disabled={updatingId === b.id}
+                  className="border border-gray-200 px-3 py-1.5 text-xs appearance-none bg-white focus:outline-none focus:border-[#1a4a3a] pr-7 disabled:opacity-50">
+                  <option value="pending_payment">Pending Payment</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              {updatingId === b.id && <span className="text-xs text-gray-400">Saving…</span>}
+              {statusError && expandedId === b.id && <span className="text-xs text-red-600">{statusError}</span>}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
@@ -710,108 +815,42 @@ function BookingsTab({ services }: { services: CareerService[] }) {
             </svg>
           </div>
         ))}
-        <span className="text-xs text-gray-400">{filtered.length} booking{filtered.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-gray-400">{upcoming.length + past.length} booking{upcoming.length + past.length !== 1 ? 's' : ''}</span>
       </div>
 
-      {filtered.length === 0 ? (
-        <p className="text-sm text-gray-400 py-8 border border-dashed border-gray-200 text-center">No bookings found.</p>
+      {/* Upcoming */}
+      {upcoming.length === 0 ? (
+        <p className="text-sm text-gray-400 py-8 border border-dashed border-gray-200 text-center">No upcoming bookings.</p>
       ) : (
         <div className="border border-gray-200">
-          {filtered.map((b, i) => (
+          {upcoming.map((b, i) => (
             <div key={b.id} className={i > 0 ? 'border-t border-gray-200' : ''}>
-              {/* Clickable row */}
-              <button type="button" onClick={() => setExpandedId(expandedId === b.id ? null : b.id)}
-                className="w-full flex items-center gap-4 px-5 py-4 bg-white hover:bg-[#fafaf9] transition-colors text-left">
-                <div className="flex-shrink-0 w-24">
-                  <p className="text-sm font-medium text-gray-900 leading-tight">{formatDate(b.slot_date)}</p>
-                  <p className="text-xs text-gray-400">{b.slot_time?.slice(0, 5)}</p>
-                </div>
-                <div className="hidden sm:block flex-shrink-0 w-28">
-                  <p className="text-xs text-gray-500 truncate">{b.service_name}</p>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">{b.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{b.email}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {b.is_member_free && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-[#1a4a3a]/10 text-[#1a4a3a]">
-                      Member
-                    </span>
-                  )}
-                  {b.cv_url && (
-                    <a href={b.cv_url} target="_blank" rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()}
-                      className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-                      CV
-                    </a>
-                  )}
-                  <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${statusBadgeCls(b.status)}`}>
-                    {statusLabel(b.status)}
-                  </span>
-                  <ChevronIcon open={expandedId === b.id} />
-                </div>
-              </button>
-
-              {/* Expanded details */}
-              {expandedId === b.id && (
-                <div className="border-t border-[#1a4a3a]/20 bg-[#f9f9f8] px-5 py-5">
-                  <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4 mb-5">
-                    <div>
-                      <p className={labelCls}>Service</p>
-                      <p className="text-sm text-gray-700">{b.service_name}</p>
-                    </div>
-                    <div>
-                      <p className={labelCls}>Email</p>
-                      <a href={`mailto:${b.email}`} className="text-sm text-[#1a4a3a] hover:underline underline-offset-2">{b.email}</a>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className={labelCls}>Motivation</p>
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{b.motivation}</p>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className={labelCls}>Goal</p>
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{b.goal}</p>
-                    </div>
-                    {b.cv_url && (
-                      <div>
-                        <p className={labelCls}>CV</p>
-                        <a href={b.cv_url} target="_blank" rel="noopener noreferrer"
-                          className="text-sm text-[#1a4a3a] hover:underline underline-offset-2">
-                          Download CV →
-                        </a>
-                      </div>
-                    )}
-                    {b.stripe_payment_intent_id && (
-                      <div>
-                        <p className={labelCls}>Stripe PI</p>
-                        <p className="text-xs text-gray-400 font-mono break-all">{b.stripe_payment_intent_id}</p>
-                      </div>
-                    )}
-                  </div>
-                  {/* Status change */}
-                  <div className="flex items-center gap-3">
-                    <p className={`${labelCls} mb-0`}>Change Status</p>
-                    <div className="relative">
-                      <select value={b.status} onChange={e => updateStatus(b.id, e.target.value)}
-                        disabled={updatingId === b.id}
-                        className="border border-gray-200 px-3 py-1.5 text-xs appearance-none bg-white focus:outline-none focus:border-[#1a4a3a] pr-7 disabled:opacity-50">
-                        <option value="pending_payment">Pending Payment</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                      <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                    {updatingId === b.id && <span className="text-xs text-gray-400">Saving…</span>}
-                    {statusError && expandedId === b.id && <span className="text-xs text-red-600">{statusError}</span>}
-                  </div>
-                </div>
-              )}
+              <BookingRow b={b} />
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Past bookings collapsible */}
+      {past.length > 0 && (
+        <div className="mt-6">
+          <button type="button" onClick={() => setPastOpen(o => !o)}
+            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors">
+            <svg className={`w-3.5 h-3.5 transition-transform ${pastOpen ? 'rotate-180' : ''}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+            Past Bookings ({past.length})
+          </button>
+          {pastOpen && (
+            <div className="border border-gray-200 mt-3">
+              {past.map((b, i) => (
+                <div key={b.id} className={i > 0 ? 'border-t border-gray-200' : ''}>
+                  <BookingRow b={b} muted />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
