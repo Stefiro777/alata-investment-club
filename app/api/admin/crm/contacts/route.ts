@@ -1,27 +1,29 @@
 import { createClient } from '@/lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function GET() {
+async function checkAuth() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user) return null
+  if (user.email === 'finullistefano@gmail.com') return user
+  const { data: member } = await supabaseAdmin
+    .from('club_members')
+    .select('role')
+    .eq('email', user.email!)
+    .maybeSingle()
+  if (member?.role !== 'bod' && member?.role !== 'director') return null
+  return user
+}
 
-  if (user.email !== 'finullistefano@gmail.com') {
-    const { data: member } = await supabaseAdmin
-      .from('club_members')
-      .select('role')
-      .eq('email', user.email!)
-      .maybeSingle()
-    if (member?.role !== 'bod' && member?.role !== 'director') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-  }
+export async function GET() {
+  const user = await checkAuth()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data, error } = await supabaseAdmin
     .from('event_registrations')
@@ -44,4 +46,67 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ data })
+}
+
+export async function PATCH(req: NextRequest) {
+  const user = await checkAuth()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  let body: { id?: string; [key: string]: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const { id, ...fields } = body
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+  const { data, error } = await supabaseAdmin
+    .from('event_registrations')
+    .update(fields)
+    .eq('id', id)
+    .select(`
+      id,
+      nome,
+      cognome,
+      email,
+      telefono,
+      anno_di_studio,
+      motivazione,
+      questions_for_panelists,
+      created_at,
+      upcoming_events (
+        title,
+        date
+      )
+    `)
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data })
+}
+
+export async function DELETE(req: NextRequest) {
+  const user = await checkAuth()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  let id: string | null = req.nextUrl.searchParams.get('id')
+  if (!id) {
+    try {
+      const body = await req.json()
+      id = body.id ?? null
+    } catch {
+      // ignore
+    }
+  }
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+  const { error } = await supabaseAdmin
+    .from('event_registrations')
+    .delete()
+    .eq('id', id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }

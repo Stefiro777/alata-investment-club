@@ -18,6 +18,16 @@ type Contact = {
   } | null
 }
 
+type EditForm = {
+  nome: string
+  cognome: string
+  email: string
+  telefono: string
+  anno_di_studio: string
+  motivazione: string
+  questions_for_panelists: string
+}
+
 function truncate(str: string | null | undefined, max: number): string {
   if (!str) return '—'
   return str.length > max ? str.slice(0, max) + '…' : str
@@ -50,6 +60,144 @@ function exportCSV(contacts: Contact[]) {
   URL.revokeObjectURL(url)
 }
 
+function PencilIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4h6v2" />
+    </svg>
+  )
+}
+
+// ── Edit Modal ────────────────────────────────────────────────────────────────
+function EditModal({
+  contact,
+  onSave,
+  onClose,
+}: {
+  contact: Contact
+  onSave: (updated: Contact) => void
+  onClose: () => void
+}) {
+  const [form, setForm] = useState<EditForm>({
+    nome: contact.nome,
+    cognome: contact.cognome,
+    email: contact.email,
+    telefono: contact.telefono ?? '',
+    anno_di_studio: contact.anno_di_studio,
+    motivazione: contact.motivazione ?? '',
+    questions_for_panelists: contact.questions_for_panelists ?? '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function set(key: keyof EditForm, value: string) {
+    setForm(prev => ({ ...prev, [key]: value }))
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    const res = await fetch('/api/admin/crm/contacts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: contact.id,
+        nome: form.nome.trim(),
+        cognome: form.cognome.trim(),
+        email: form.email.trim(),
+        telefono: form.telefono.trim() || null,
+        anno_di_studio: form.anno_di_studio.trim(),
+        motivazione: form.motivazione.trim() || null,
+        questions_for_panelists: form.questions_for_panelists.trim() || null,
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      setError(json.error ?? 'Failed to save')
+      setSaving(false)
+      return
+    }
+    onSave(json.data)
+    setSaving(false)
+  }
+
+  const inputClass =
+    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#1a1a1a] bg-white transition-colors'
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 9999 }}
+      onClick={e => { if (e.target === e.currentTarget && !saving) onClose() }}
+    >
+      <div className="bg-white border border-[#e5e5e5] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e5e5]">
+          <p className="font-serif text-base font-bold text-[#1a4a3a]">Edit Contact</p>
+          <button onClick={onClose} disabled={saving} className="text-[#6b7280] hover:text-[#1a1a1a] text-xl leading-none transition-colors disabled:opacity-40">✕</button>
+        </div>
+        <form onSubmit={handleSave} className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Nome *</label>
+              <input required value={form.nome} onChange={e => set('nome', e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Cognome *</label>
+              <input required value={form.cognome} onChange={e => set('cognome', e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Email *</label>
+            <input required type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Telefono</label>
+              <input value={form.telefono} onChange={e => set('telefono', e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Anno di studio *</label>
+              <input required value={form.anno_di_studio} onChange={e => set('anno_di_studio', e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Motivazione</label>
+            <textarea rows={3} value={form.motivazione} onChange={e => set('motivazione', e.target.value)} className={`${inputClass} resize-none`} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Questions for Panelists</label>
+            <textarea rows={3} value={form.questions_for_panelists} onChange={e => set('questions_for_panelists', e.target.value)} className={`${inputClass} resize-none`} />
+          </div>
+
+          {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
+            <button type="button" onClick={onClose} disabled={saving} className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {saving ? '…' : 'Save'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 export default function EventContactsTable() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,8 +205,12 @@ export default function EventContactsTable() {
   const [search, setSearch] = useState('')
   const [eventFilter, setEventFilter] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [editContact, setEditContact] = useState<Contact | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => {
+  function loadContacts() {
+    setLoading(true)
     fetch('/api/admin/crm/contacts')
       .then(r => r.json())
       .then(({ data, error: err }) => {
@@ -70,7 +222,9 @@ export default function EventContactsTable() {
         setError(err.message)
         setLoading(false)
       })
-  }, [])
+  }
+
+  useEffect(() => { loadContacts() }, [])
 
   const events = useMemo(() => {
     const set = new Set(contacts.map(c => c.upcoming_events?.title).filter(Boolean) as string[])
@@ -91,6 +245,21 @@ export default function EventContactsTable() {
 
   const uniqueEmails = useMemo(() => new Set(contacts.map(c => c.email)).size, [contacts])
   const eventsWithRegs = useMemo(() => new Set(contacts.map(c => c.upcoming_events?.title).filter(Boolean)).size, [contacts])
+
+  function handleSaved(updated: Contact) {
+    setContacts(prev => prev.map(c => c.id === updated.id ? { ...updated, upcoming_events: c.upcoming_events } : c))
+    setEditContact(null)
+  }
+
+  async function handleDelete(id: string) {
+    setDeleting(true)
+    const res = await fetch(`/api/admin/crm/contacts?id=${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setContacts(prev => prev.filter(c => c.id !== id))
+    }
+    setDeleteConfirm(null)
+    setDeleting(false)
+  }
 
   if (loading) return <p className="text-sm text-[#6b7280] py-10 text-center">Loading…</p>
   if (error) return <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
@@ -143,8 +312,8 @@ export default function EventContactsTable() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e5e5] bg-[#f9f9f9]">
-              {['Name', 'Email', 'Phone', 'Event', 'Date', 'Field'].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide whitespace-nowrap">
+              {['Name', 'Email', 'Phone', 'Event', 'Date', 'Field', ''].map((h, i) => (
+                <th key={i} className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -153,20 +322,23 @@ export default function EventContactsTable() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-[#6b7280]">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-[#6b7280]">
                   No contacts found.
                 </td>
               </tr>
             ) : filtered.map(c => {
               const field = c.motivazione ?? c.questions_for_panelists
               const isExpanded = expandedId === c.id
+              const isDeleting = deleteConfirm === c.id
               return (
                 <tr
                   key={c.id}
-                  onClick={() => setExpandedId(isExpanded ? null : c.id)}
-                  className="border-b border-black/5 last:border-0 cursor-pointer hover:bg-[#f9f9f9] transition-colors"
+                  className="group border-b border-black/5 last:border-0 hover:bg-[#f9f9f9] transition-colors"
                 >
-                  <td className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap">
+                  <td
+                    className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap cursor-pointer"
+                    onClick={() => setExpandedId(isExpanded ? null : c.id)}
+                  >
                     {c.nome} {c.cognome}
                   </td>
                   <td className="px-4 py-3 text-[#6b7280]">{c.email}</td>
@@ -179,11 +351,51 @@ export default function EventContactsTable() {
                   <td className="px-4 py-3 text-[#6b7280] whitespace-nowrap">
                     {c.upcoming_events?.date ?? '—'}
                   </td>
-                  <td className="px-4 py-3 text-[#6b7280] max-w-[240px]">
+                  <td
+                    className="px-4 py-3 text-[#6b7280] max-w-[240px] cursor-pointer"
+                    onClick={() => setExpandedId(isExpanded ? null : c.id)}
+                  >
                     {isExpanded ? (
                       <span className="whitespace-pre-wrap">{field ?? '—'}</span>
                     ) : (
                       <span>{truncate(field, 60)}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {isDeleting ? (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-red-600">Delete?</span>
+                        <button
+                          onClick={() => handleDelete(c.id)}
+                          disabled={deleting}
+                          className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1 transition-colors disabled:opacity-40"
+                        >
+                          Yes
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(null)}
+                          className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => setEditContact(c)}
+                          title="Edit"
+                          className="p-1.5 text-[#6b7280] hover:text-[#1a4a3a] hover:bg-[#f0f5f3] transition-colors"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(c.id)}
+                          title="Delete"
+                          className="p-1.5 text-[#6b7280] hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -192,6 +404,14 @@ export default function EventContactsTable() {
           </tbody>
         </table>
       </div>
+
+      {editContact && (
+        <EditModal
+          contact={editContact}
+          onSave={handleSaved}
+          onClose={() => setEditContact(null)}
+        />
+      )}
     </div>
   )
 }
