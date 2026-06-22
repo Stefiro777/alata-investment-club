@@ -1595,7 +1595,7 @@ function EventsContentTab() {
     supabase
       .from('upcoming_events')
       .select('*')
-      .order('display_order', { ascending: true, nullsFirst: false })
+      .order('date', { ascending: true })
       .then(({ data }) => setUpcomingEvents((data ?? []) as UpcomingEvent[]))
     supabase
       .from('contenuti')
