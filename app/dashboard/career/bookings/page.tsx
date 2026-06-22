@@ -23,7 +23,7 @@ type CareerAvailability = {
   slot_type: 'recurring' | 'one_time'
   day_of_week: number | null
   date: string | null
-  slot_time: string
+  start_time: string
   end_time: string | null
   active: boolean
 }
@@ -423,14 +423,14 @@ type AvailForm = {
   slot_type: 'recurring' | 'one_time'
   date: string
   day_of_week: number
-  slot_time: string
+  start_time: string
   end_time: string
   active: boolean
 }
 
 const EMPTY_AVAIL: AvailForm = {
   slot_type: 'recurring', date: '', day_of_week: 1,
-  slot_time: '', end_time: '', active: true,
+  start_time: '', end_time: '', active: true,
 }
 
 function AvailabilityTab({ services }: { services: CareerService[] }) {
@@ -471,14 +471,14 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
 
   async function saveSlot() {
     if (!svcId) return
-    if (!form.slot_time) { setError('Start time is required'); return }
+    if (!form.start_time) { setError('Start time is required'); return }
     if (form.slot_type === 'one_time' && !form.date) { setError('Date is required'); return }
     setSaving(true); setError(null)
 
     const payload: Record<string, unknown> = {
       service_id: svcId,
       slot_type: form.slot_type,
-      slot_time: form.slot_time,
+      start_time: form.start_time,
       end_time: form.end_time || null,
       active: form.active,
       day_of_week: form.slot_type === 'recurring' ? form.day_of_week : null,
@@ -531,7 +531,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
                     : (a.day_of_week !== null ? DOW_NAMES[a.day_of_week] : '—')}
                 </span>
                 <span className="text-sm text-gray-500">
-                  {a.slot_time?.slice(0, 5)}{a.end_time ? ` – ${a.end_time.slice(0, 5)}` : ''}
+                  {a.start_time?.slice(0, 5)}{a.end_time ? ` – ${a.end_time.slice(0, 5)}` : ''}
                 </span>
                 <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${a.active ? 'bg-[#1a4a3a] text-white' : 'bg-gray-200 text-gray-500'}`}>
                   {a.active ? 'Active' : 'Inactive'}
@@ -605,8 +605,8 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
         <div className="grid grid-cols-2 gap-4 mb-4 max-w-sm">
           <div>
             <label className={labelCls}>Start time *</label>
-            <input type="time" value={form.slot_time}
-              onChange={e => setForm(f => ({ ...f, slot_time: e.target.value }))} className={inputCls} />
+            <input type="time" value={form.start_time}
+              onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} className={inputCls} />
           </div>
           <div>
             <label className={labelCls}>End time</label>
