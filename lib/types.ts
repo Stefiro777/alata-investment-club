@@ -71,6 +71,7 @@ export type UpcomingEvent = {
   status: 'open' | 'coming_soon' | 'completed'
   action_type: 'form' | 'link' | null
   action_link: string | null
+  registration_field: 'motivation' | 'panelists' | null
   display_order: number | null
   created_at: string
 }
@@ -84,6 +85,7 @@ export type EventRegistration = {
   telefono: string | null
   anno_di_studio: string
   motivazione: string
+  questions_for_panelists: string | null
   created_at: string
 }
 

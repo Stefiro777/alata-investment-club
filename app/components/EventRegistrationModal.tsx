@@ -11,7 +11,7 @@ const ANNI = [
 ]
 
 interface EventRegistrationModalProps {
-  event: { id: string; title: string; date: string }
+  event: { id: string; title: string; date: string; registration_field?: 'motivation' | 'panelists' | null }
   onClose: () => void
 }
 
@@ -21,14 +21,16 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
   const [email, setEmail] = useState('')
   const [telefono, setTelefono] = useState('')
   const [anno, setAnno] = useState('')
-  const [motivazione, setMotivazione] = useState('')
+  const [fieldValue, setFieldValue] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isPanelists = event.registration_field === 'panelists'
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!nome.trim() || !cognome.trim() || !email.trim() || !anno || !motivazione.trim()) return
+    if (!nome.trim() || !cognome.trim() || !email.trim() || !anno || !fieldValue.trim()) return
     setLoading(true)
     setError(null)
 
@@ -42,7 +44,9 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
         email: email.trim(),
         telefono: telefono.trim() || null,
         anno_di_studio: anno,
-        motivazione: motivazione.trim(),
+        ...(isPanelists
+          ? { questions_for_panelists: fieldValue.trim() }
+          : { motivazione: fieldValue.trim() }),
       }),
     })
     const json = await res.json()
@@ -68,7 +72,8 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      className="fixed inset-0 flex items-center justify-center p-4 bg-black/40"
+      style={{ zIndex: 9999 }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="bg-[#f5f5f3] border border-forest w-full max-w-xl max-h-[92vh] overflow-y-auto">
@@ -165,22 +170,22 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                 </select>
               </div>
 
-              {/* Motivazione */}
+              {/* Dynamic field: motivation or panelists */}
               <div>
                 <label className={labelClass}>
-                  Motivation *{' '}
+                  {isPanelists ? 'Questions for the Panelists' : 'Motivation'} *{' '}
                   <span className="text-gray-400 normal-case tracking-normal">(max 500 characters)</span>
                 </label>
                 <textarea
                   required
                   rows={4}
                   maxLength={500}
-                  value={motivazione}
-                  onChange={e => setMotivazione(e.target.value)}
-                  placeholder="Why do you want to attend this event?"
+                  value={fieldValue}
+                  onChange={e => setFieldValue(e.target.value)}
+                  placeholder={isPanelists ? 'What would you like to ask the panelists?' : 'Why do you want to attend this event?'}
                   className="w-full bg-transparent border-b border-gray-300 focus:border-forest focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors resize-none"
                 />
-                <p className="text-right text-xs text-gray-400 mt-1">{motivazione.length}/500</p>
+                <p className="text-right text-xs text-gray-400 mt-1">{fieldValue.length}/500</p>
               </div>
 
               {error && (

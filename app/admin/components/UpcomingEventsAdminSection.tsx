@@ -23,6 +23,7 @@ type FormState = {
   status: UpcomingEvent['status']
   action_type: 'form' | 'link' | ''
   action_link: string
+  registration_field: 'motivation' | 'panelists'
 }
 
 const EMPTY_FORM: FormState = {
@@ -32,6 +33,7 @@ const EMPTY_FORM: FormState = {
   status: 'coming_soon',
   action_type: '',
   action_link: '',
+  registration_field: 'motivation',
 }
 
 // ── Registrations Modal ──────────────────────────────────────────────────────
@@ -151,6 +153,7 @@ function EventFormModal({
       status: form.status,
       action_type: (form.action_type || null) as 'form' | 'link' | null,
       action_link: form.action_type === 'link' ? (form.action_link.trim() || null) : null,
+      registration_field: form.registration_field,
       ...(!initial.id ? { display_order: 999 } : {}),
     }
 
@@ -237,6 +240,27 @@ function EventFormModal({
             </div>
           )}
 
+          {/* Registration Field toggle */}
+          <div>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-2">Registration Field</label>
+            <div className="flex gap-2">
+              {(['motivation', 'panelists'] as const).map(opt => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => set('registration_field', opt)}
+                  className={`text-xs font-medium tracking-wide px-4 py-2 border transition-colors duration-fast ${
+                    form.registration_field === opt
+                      ? 'bg-forest text-white border-forest'
+                      : 'bg-white text-ink-500 border-line hover:border-forest hover:text-forest'
+                  }`}
+                >
+                  {opt === 'motivation' ? 'Motivation' : 'Questions for Panelists'}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
@@ -298,6 +322,7 @@ export default function UpcomingEventsAdminSection({
       status: ev.status,
       action_type: ev.action_type ?? '',
       action_link: ev.action_link ?? '',
+      registration_field: ev.registration_field ?? 'motivation',
     })
   }
 

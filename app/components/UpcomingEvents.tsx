@@ -155,7 +155,7 @@ export default function UpcomingEvents() {
       {/* Registration modal */}
       {modalEvent && (
         <EventRegistrationModal
-          event={{ id: modalEvent.id, title: modalEvent.title, date: modalEvent.date }}
+          event={{ id: modalEvent.id, title: modalEvent.title, date: modalEvent.date, registration_field: modalEvent.registration_field }}
           onClose={() => setModalEvent(null)}
         />
       )}
