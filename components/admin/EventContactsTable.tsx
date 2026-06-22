@@ -198,6 +198,8 @@ function EditModal({
   )
 }
 
+type QrState = 'idle' | 'confirm' | 'sending' | 'done' | 'error'
+
 export default function EventContactsTable() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
@@ -208,6 +210,9 @@ export default function EventContactsTable() {
   const [editContact, setEditContact] = useState<Contact | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [qrState, setQrState] = useState<QrState>('idle')
+  const [qrResult, setQrResult] = useState<{ sent: number; failed: number } | null>(null)
+  const [qrError, setQrError] = useState<string | null>(null)
 
   function loadContacts() {
     setLoading(true)
@@ -249,6 +254,35 @@ export default function EventContactsTable() {
   function handleSaved(updated: Contact) {
     setContacts(prev => prev.map(c => c.id === updated.id ? { ...updated, upcoming_events: c.upcoming_events } : c))
     setEditContact(null)
+  }
+
+  const filteredForEvent = useMemo(
+    () => eventFilter ? contacts.filter(c => c.upcoming_events?.title === eventFilter) : [],
+    [contacts, eventFilter]
+  )
+
+  async function handleSendQr() {
+    setQrState('sending')
+    setQrError(null)
+    const ids = filteredForEvent.map(c => c.id)
+    try {
+      const res = await fetch('/api/admin/crm/send-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registration_ids: ids }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setQrError(json.error ?? 'Failed')
+        setQrState('error')
+      } else {
+        setQrResult(json)
+        setQrState('done')
+      }
+    } catch (err: unknown) {
+      setQrError(err instanceof Error ? err.message : 'Network error')
+      setQrState('error')
+    }
   }
 
   async function handleDelete(id: string) {
@@ -305,6 +339,54 @@ export default function EventContactsTable() {
         >
           Export CSV
         </button>
+
+        {/* Send QR button — only when an event is selected */}
+        {eventFilter && filteredForEvent.length > 0 && (
+          <div className="flex items-center gap-2">
+            {qrState === 'idle' && (
+              <button
+                onClick={() => setQrState('confirm')}
+                className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
+              >
+                Send QR Codes
+              </button>
+            )}
+            {qrState === 'confirm' && (
+              <div className="flex items-center gap-2 border border-[#1a4a3a] px-4 py-2">
+                <span className="text-xs text-[#1a4a3a]">
+                  Send QR to {filteredForEvent.length} registrant{filteredForEvent.length !== 1 ? 's' : ''} of &ldquo;{eventFilter}&rdquo;?
+                </span>
+                <button
+                  onClick={handleSendQr}
+                  className="bg-[#1a4a3a] text-white text-xs font-medium px-3 py-1 hover:bg-[#123a2d] transition-colors"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setQrState('idle')}
+                  className="border border-[#d1d5db] text-[#6b7280] text-xs font-medium px-3 py-1 hover:bg-[#f3f4f6] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {qrState === 'sending' && (
+              <span className="text-xs text-[#6b7280] tracking-widest uppercase">Sending…</span>
+            )}
+            {qrState === 'done' && qrResult && (
+              <span className="text-xs text-[#1a4a3a] font-medium tracking-wide">
+                ✓ Sent: {qrResult.sent} — Failed: {qrResult.failed}
+                <button onClick={() => { setQrState('idle'); setQrResult(null) }} className="ml-2 text-[#6b7280] hover:text-[#1a1a1a]">✕</button>
+              </span>
+            )}
+            {qrState === 'error' && (
+              <span className="text-xs text-red-600">
+                {qrError}
+                <button onClick={() => setQrState('idle')} className="ml-2 text-[#6b7280] hover:text-[#1a1a1a]">✕</button>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Table */}

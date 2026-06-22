@@ -24,6 +24,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
   const [loggingOut, setLoggingOut] = useState(false)
 
   const isBoD = profile.role === 'bod' || profile.role === 'director' || profile.email === 'finullistefano@gmail.com'
+  const canScan = isBoD || (profile.teams ?? []).some(t => t === 'events' || t === 'media')
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -115,6 +116,12 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
           <Link href="/dashboard/resources" className={linkClass('/dashboard/resources')}>
             Resources
           </Link>
+
+          {canScan && (
+            <Link href="/dashboard/scanner" className={linkClass('/dashboard/scanner')}>
+              Scanner
+            </Link>
+          )}
         </div>
 
         {/* User + logout */}

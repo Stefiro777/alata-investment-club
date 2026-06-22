@@ -2,11 +2,15 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import QRCode from 'qrcode'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
 
-function buildConfirmationHtml(eventTitle: string): string {
+async function buildConfirmationHtml(eventTitle: string, registrationId: string): Promise<string> {
+  const checkinUrl = `https://alatainvestmentclub.com/checkin?token=${registrationId}`
+  const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 220, margin: 2 })
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -27,6 +31,15 @@ function buildConfirmationHtml(eventTitle: string): string {
               Thank you for registering. We have received your application and will send you all the details shortly.
             </p>
             <p style="margin:0;font-size:14px;color:#555;">The Alata Investment Club Team</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 32px;border-top:1px solid #e5e5e5;">
+            <p style="margin:24px 0 12px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a4a3a;">Your Check-In QR Code</p>
+            <div style="text-align:center;padding:20px 0;">
+              <img src="${qrDataUrl}" alt="Check-in QR Code" width="220" height="220" style="display:block;margin:0 auto;" />
+            </div>
+            <p style="margin:8px 0 0;font-size:12px;color:#888;text-align:center;">Present this QR code at the event entrance</p>
           </td>
         </tr>
         <tr>
@@ -93,11 +106,23 @@ export async function POST(req: NextRequest) {
 
       const eventTitle = eventRow?.title ?? 'Event'
 
+      const { data: reg } = await supabase
+        .from('event_registrations')
+        .select('id')
+        .eq('event_id', event_id)
+        .eq('email', email)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      const registrationId = reg?.id ?? ''
+      const html = await buildConfirmationHtml(eventTitle, registrationId)
+
       await resend.emails.send({
         from: FROM,
         to: email,
         subject: `Registration Confirmed — ${eventTitle}`,
-        html: buildConfirmationHtml(eventTitle),
+        html,
       })
     } catch (emailErr) {
       console.error('Confirmation email failed:', emailErr)
