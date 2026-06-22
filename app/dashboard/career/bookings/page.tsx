@@ -640,27 +640,37 @@ function BookingsTab({ services }: { services: CareerService[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
-  useEffect(() => {
-    createClient()
+  async function fetchBookings() {
+    const { data } = await createClient()
       .from('career_bookings')
       .select('*, career_services(name)')
       .order('slot_date', { ascending: false })
-      .then(({ data }) => {
-        const rows = (data ?? []).map((r: Record<string, unknown>) => ({
-          ...(r as CareerBooking),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          service_name: ((r as any).career_services as { name: string } | null)?.name ?? '—',
-        }))
-        setBookings(rows)
-        setLoading(false)
-      })
-  }, [])
+    const rows = (data ?? []).map((r: Record<string, unknown>) => ({
+      ...(r as CareerBooking),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      service_name: ((r as any).career_services as { name: string } | null)?.name ?? '—',
+    }))
+    setBookings(rows)
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchBookings() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [statusError, setStatusError] = useState<string | null>(null)
 
   async function updateStatus(id: string, status: string) {
-    setUpdatingId(id)
-    const { data } = await createClient()
-      .from('career_bookings').update({ status }).eq('id', id).select().single()
-    if (data) setBookings(prev => prev.map(b => b.id === id ? { ...b, status: status as CareerBooking['status'] } : b))
+    setUpdatingId(id); setStatusError(null)
+    const res = await fetch(`/api/career/bookings/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+    if (!res.ok) {
+      const json = await res.json()
+      setStatusError(json.error ?? 'Update failed')
+    } else {
+      await fetchBookings()
+    }
     setUpdatingId(null)
   }
 
@@ -796,6 +806,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
                       </svg>
                     </div>
                     {updatingId === b.id && <span className="text-xs text-gray-400">Saving…</span>}
+                    {statusError && expandedId === b.id && <span className="text-xs text-red-600">{statusError}</span>}
                   </div>
                 </div>
               )}
