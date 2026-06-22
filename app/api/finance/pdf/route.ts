@@ -146,11 +146,10 @@ export async function POST(request: NextRequest) {
   const pdf = buildPDF(payload)
   const safePeriod = payload.period.replace(/[^a-zA-Z0-9\-_]/g, '-')
 
-  return new NextResponse(pdf, {
+  return new NextResponse(new Uint8Array(pdf), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="bilancio-${safePeriod}.pdf"`,
-      'Content-Length': String(pdf.length),
     },
   })
 }

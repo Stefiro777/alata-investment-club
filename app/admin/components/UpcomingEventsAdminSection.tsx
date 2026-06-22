@@ -36,13 +36,162 @@ const EMPTY_FORM: FormState = {
   registration_field: 'motivation',
 }
 
+function EnvelopeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+      <rect x="2" y="4" width="20" height="16" />
+      <polyline points="2,4 12,13 22,4" />
+    </svg>
+  )
+}
+
+// ── Compose Modal ────────────────────────────────────────────────────────────
+function ComposeModal({
+  event,
+  recipientCount,
+  onClose,
+}: {
+  event: UpcomingEvent
+  recipientCount: number
+  onClose: () => void
+}) {
+  const [subject, setSubject] = useState(`Update: ${event.title}`)
+  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
+  const [result, setResult] = useState<{ sent: number; failed: number } | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  async function handleSend() {
+    if (!subject.trim() || !message.trim()) return
+    setStatus('sending')
+    setErrorMsg(null)
+    try {
+      const res = await fetch('/api/admin/events/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: event.id, subject: subject.trim(), message: message.trim() }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setErrorMsg(json.error ?? 'Failed to send')
+        setStatus('error')
+      } else {
+        setResult(json)
+        setStatus('done')
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Network error')
+      setStatus('error')
+    }
+  }
+
+  const inputClass =
+    'w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors'
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.65)', zIndex: 9999 }}
+      onClick={e => { if (e.target === e.currentTarget && status !== 'sending') onClose() }}
+    >
+      <div className="bg-white border border-line-faint w-full max-w-lg shadow-xl">
+        <div className="flex items-start justify-between px-6 py-4 border-b border-line-faint">
+          <div>
+            <p className="font-serif text-base font-bold text-forest uppercase tracking-widest">
+              Email to Registrants
+            </p>
+            <p className="text-xs text-ink-500 mt-0.5">
+              {event.title} — {recipientCount} recipient{recipientCount !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={status === 'sending'}
+            className="text-ink-500 hover:text-ink-900 text-xl leading-none transition-colors ml-4 mt-0.5 disabled:opacity-40"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {status === 'done' && result ? (
+            <div className="py-8 text-center space-y-2">
+              <p className="text-forest font-medium text-sm tracking-wide">
+                ✓ Sent: {result.sent} — Failed: {result.failed}
+              </p>
+              <button
+                onClick={onClose}
+                className="mt-4 border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Subject</label>
+                <input
+                  value={subject}
+                  onChange={e => setSubject(e.target.value)}
+                  disabled={status === 'sending'}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Message</label>
+                <textarea
+                  rows={6}
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  disabled={status === 'sending'}
+                  placeholder="Write your message here…"
+                  className={`${inputClass} resize-none`}
+                />
+                <p className="text-[11px] text-ink-400 mt-1">
+                  [Nome] will be replaced with each registrant's first name.
+                </p>
+              </div>
+
+              {status === 'error' && errorMsg && (
+                <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{errorMsg}</p>
+              )}
+
+              <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={status === 'sending'}
+                  className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSend}
+                  disabled={status === 'sending' || !subject.trim() || !message.trim()}
+                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {status === 'sending' ? 'Sending…' : 'Send'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Registrations Modal ──────────────────────────────────────────────────────
 function RegistrationsModal({
   event,
   onClose,
+  onSendEmail,
 }: {
   event: UpcomingEvent
   onClose: () => void
+  onSendEmail: (count: number) => void
 }) {
   const [regs, setRegs] = useState<EventRegistration[] | null>(null)
   const [loading, setLoading] = useState(true)
@@ -74,12 +223,23 @@ function RegistrationsModal({
             <p className="font-serif text-lg font-bold text-forest">Registrations</p>
             <p className="text-xs text-ink-500 mt-0.5">{event.title} — {event.date}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-ink-500 hover:text-ink-900 text-xl leading-none transition-colors"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            {!loading && !error && regs && regs.length > 0 && (
+              <button
+                onClick={() => onSendEmail(regs.length)}
+                className="flex items-center gap-1.5 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-widest uppercase px-3 py-1.5 transition-colors"
+              >
+                <EnvelopeIcon />
+                Send Email to All
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-ink-500 hover:text-ink-900 text-xl leading-none transition-colors"
+            >
+              ✕
+            </button>
+          </div>
         </div>
         <div className="overflow-auto flex-1 p-6">
           {loading ? (
@@ -195,25 +355,21 @@ function EventFormModal({
           <button onClick={onClose} className="text-ink-500 hover:text-ink-900 text-xl leading-none transition-colors">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Date */}
           <div>
             <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Date *</label>
             <input type="date" required value={form.date} onChange={e => set('date', e.target.value)} className={inputClass} />
           </div>
 
-          {/* Title */}
           <div>
             <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Title *</label>
             <input required value={form.title} onChange={e => set('title', e.target.value)} placeholder="Event title" className={inputClass} />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Description</label>
             <textarea rows={3} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Brief description" className={`${inputClass} resize-none`} />
           </div>
 
-          {/* Status + Action Type */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Status *</label>
@@ -232,7 +388,6 @@ function EventFormModal({
             </div>
           </div>
 
-          {/* Action Link (only when type = link) */}
           {form.action_type === 'link' && (
             <div>
               <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">Action Link</label>
@@ -240,7 +395,6 @@ function EventFormModal({
             </div>
           )}
 
-          {/* Registration Field toggle */}
           <div>
             <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-2">Registration Field</label>
             <div className="flex gap-2">
@@ -300,14 +454,33 @@ export default function UpcomingEventsAdminSection({
   const [events, setEvents] = useState<UpcomingEvent[]>(initialEvents)
   const [formModal, setFormModal] = useState<(FormState & { id?: string }) | null>(null)
   const [regsModal, setRegsModal] = useState<UpcomingEvent | null>(null)
+  const [emailEventTarget, setEmailEventTarget] = useState<{ event: UpcomingEvent; recipientCount: number } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [orderSaved, setOrderSaved] = useState(false)
   const [completedOpen, setCompletedOpen] = useState(false)
+  const [regCounts, setRegCounts] = useState<Record<string, number>>({})
   const dragIndex = useRef<number | null>(null)
 
   const today = new Date(new Date().toDateString())
   const activeEvents = events.filter(ev => new Date(ev.date) >= today)
   const completedEvents = events.filter(ev => new Date(ev.date) < today)
+
+  // Fetch registration counts for all events
+  useEffect(() => {
+    if (events.length === 0) return
+    Promise.all(
+      events.map(ev =>
+        fetch(`/api/event-registrations?event_id=${ev.id}`)
+          .then(r => r.json())
+          .then(({ data }) => ({ id: ev.id, count: (data ?? []).length as number }))
+          .catch(() => ({ id: ev.id, count: 0 }))
+      )
+    ).then(results => {
+      const counts: Record<string, number> = {}
+      for (const { id, count } of results) counts[id] = count
+      setRegCounts(counts)
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function openAdd() {
     setFormModal({ ...EMPTY_FORM })
@@ -367,6 +540,10 @@ export default function UpcomingEventsAdminSection({
       setOrderSaved(true)
       setTimeout(() => setOrderSaved(false), 2500)
     }
+  }
+
+  function openEmailCompose(ev: UpcomingEvent) {
+    setEmailEventTarget({ event: ev, recipientCount: regCounts[ev.id] ?? 0 })
   }
 
   return (
@@ -444,6 +621,15 @@ export default function UpcomingEventsAdminSection({
                       >
                         Registrations
                       </button>
+                      {(regCounts[ev.id] ?? 0) > 0 && (
+                        <button
+                          onClick={() => openEmailCompose(ev)}
+                          title="Send email to registrants"
+                          className="flex items-center gap-1 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                        >
+                          <EnvelopeIcon />
+                        </button>
+                      )}
                       <button
                         onClick={() => openEdit(ev)}
                         className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
@@ -538,6 +724,15 @@ export default function UpcomingEventsAdminSection({
                           >
                             Registrations
                           </button>
+                          {(regCounts[ev.id] ?? 0) > 0 && (
+                            <button
+                              onClick={() => openEmailCompose(ev)}
+                              title="Send email to registrants"
+                              className="flex items-center gap-1 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
+                            >
+                              <EnvelopeIcon />
+                            </button>
+                          )}
                           <button
                             onClick={() => openEdit(ev)}
                             className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors duration-fast"
@@ -593,6 +788,18 @@ export default function UpcomingEventsAdminSection({
         <RegistrationsModal
           event={regsModal}
           onClose={() => setRegsModal(null)}
+          onSendEmail={(count) => {
+            setEmailEventTarget({ event: regsModal, recipientCount: count })
+          }}
+        />
+      )}
+
+      {/* Compose email modal — z-9999 to appear above registrations modal */}
+      {emailEventTarget && (
+        <ComposeModal
+          event={emailEventTarget.event}
+          recipientCount={emailEventTarget.recipientCount}
+          onClose={() => setEmailEventTarget(null)}
         />
       )}
     </div>

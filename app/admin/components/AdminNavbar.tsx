@@ -9,6 +9,7 @@ const NAV = [
   { label: 'Archive',     href: '/admin/archive'     },
   { label: 'Candidature', href: '/admin/jobs'        },
   { label: 'Finance',     href: '/admin/finance'     },
+  { label: 'CRM',         href: '/admin/crm'         },
 ] as const
 
 export default function AdminNavbar({ userEmail: _ }: { userEmail: string }) {
