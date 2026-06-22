@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
@@ -180,7 +180,7 @@ export default function SettingsClient({
   return (
     <div className="max-w-5xl mx-auto px-8 py-10 space-y-16">
 
-      {/* ══ Settings ══════════════════════════════════════════════════════════ */}
+      {/* â•â• Settings â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section id="settings">
         <SectionHeading title="Settings" />
 
@@ -204,31 +204,6 @@ export default function SettingsClient({
                 aria-checked={appsOpen}
               >
                 <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${appsOpen ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
-          </div>
-
-          <div className="border-t border-black/5" />
-
-          {/* Show Prices */}
-          <div className="flex items-center justify-between gap-6">
-            <div>
-              <p className="text-sm font-medium text-ink-900">Show Prices – Career Service</p>
-              <p className="text-xs text-ink-500 mt-0.5">
-                Mostra o nasconde i prezzi nella pagina{' '}
-                <span className="font-medium">/career-service</span>.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {priceToggleSaved && <span className="text-xs text-forest font-medium">Saved</span>}
-              <button
-                onClick={handleTogglePrices}
-                disabled={togglingPrices}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-fast ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${pricesVisible ? 'bg-forest' : 'bg-[#d1d5db]'}`}
-                role="switch"
-                aria-checked={pricesVisible}
-              >
-                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${pricesVisible ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
             </div>
           </div>
@@ -308,51 +283,10 @@ export default function SettingsClient({
               </button>
             </div>
           </div>
-
-          <div className="border-t border-black/5" />
-
-          {/* Prezzi Career Service */}
-          <div>
-            <p className="text-sm font-medium text-ink-900 mb-1">Prezzi Career Service</p>
-            <p className="text-xs text-ink-500 mb-4">
-              Valori mostrati nella pagina <span className="font-medium">/career-service</span>.
-            </p>
-            <form onSubmit={handleSavePrices} className="space-y-3">
-              {[
-                { label: 'CV Review', value: priceCV, setter: setPriceCV },
-                { label: 'Master Orientation', value: priceMaster, setter: setPriceMaster },
-                { label: 'Career Orientation', value: priceCareer, setter: setPriceCareer },
-              ].map(({ label, value, setter }) => (
-                <div key={label} className="flex items-center gap-4">
-                  <span className="text-xs text-ink-500 w-40 flex-shrink-0">{label}</span>
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={e => setter(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
-                    placeholder="€29,99"
-                  />
-                </div>
-              ))}
-              {pricesError && (
-                <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{pricesError}</p>
-              )}
-              <div className="flex items-center gap-4 pt-1">
-                <button
-                  type="submit"
-                  disabled={savingPrices}
-                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {savingPrices ? '…' : 'Save Prices'}
-                </button>
-                {pricesSaved && <span className="text-xs text-forest font-medium">Saved</span>}
-              </div>
-            </form>
-          </div>
         </div>
       </section>
 
-      {/* ══ Invite Member ═════════════════════════════════════════════════════ */}
+      {/* â•â• Invite Member â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section id="invite-member">
         <SectionHeading title="Invite Member" />
 
@@ -375,7 +309,7 @@ export default function SettingsClient({
               disabled={inviting}
               className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-3 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
-              {inviting ? '…' : 'Send Invite'}
+              {inviting ? 'â€¦' : 'Send Invite'}
             </button>
           </form>
 

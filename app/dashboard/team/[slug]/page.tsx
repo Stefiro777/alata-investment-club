@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../../DashboardProfileContext'
 import MemberAutocomplete from '../../MemberAutocomplete'
@@ -1674,6 +1674,7 @@ function EventsContentTab() {
 
 export default function TeamPage() {
   const params = useParams()
+  const router = useRouter()
   const slug = (params.slug as string) ?? ''
   const profile  = useProfile()
 
@@ -1685,7 +1686,7 @@ export default function TeamPage() {
   const [collapsed, setCollapsed]       = useState<Set<string>>(new Set(['done']))
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
-  const [activeTab, setActiveTab]       = useState<'tasks' | 'goals' | 'reports' | 'content' | 'pr-tracker'>('tasks')
+  const [activeTab, setActiveTab]       = useState<'tasks' | 'goals' | 'reports' | 'content' | 'pr-tracker' | 'bookings'>('tasks')
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
@@ -1856,11 +1857,12 @@ export default function TeamPage() {
             ...(slug === 'lab'    ? [{ key: 'reports'    as const, label: 'Featured Reports' }] : []),
             ...(slug === 'events' ? [{ key: 'content'    as const, label: 'Content' }] : []),
             ...(slug === 'career' ? [{ key: 'pr-tracker' as const, label: 'PR Tracker' }] : []),
+            ...(slug === 'career' ? [{ key: 'bookings' as const, label: 'Booking Management' }] : []),
           ].map(tab => (
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => tab.key === 'bookings' ? router.push('/dashboard/career/bookings') : setActiveTab(tab.key)}
               className="pb-2 text-sm font-['Inter'] transition-colors"
               style={
                 activeTab === tab.key

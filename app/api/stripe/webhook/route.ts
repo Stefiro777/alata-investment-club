@@ -1,0 +1,241 @@
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
+import Stripe from 'stripe'
+
+const supabaseAdmin = createSupabaseAdmin(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+const FROM = 'Alata Career Service <noreply@alatainvestmentclub.com>'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+function buildConfirmationHtml(params: {
+  name: string
+  serviceName: string
+  slotDate: string
+  slotTime: string
+  motivation: string
+  goal: string
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f9f9f9;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;overflow:hidden;">
+        <tr>
+          <td style="background:#1a4a3a;padding:24px 32px;">
+            <p style="margin:0;font-size:11px;color:#a8c5b8;letter-spacing:2px;text-transform:uppercase;">Alata Career Service</p>
+            <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">Booking Confirmed</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#1a1a1a;line-height:1.6;">Dear ${params.name},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#1a1a1a;line-height:1.6;">
+              Your payment has been received and your booking for <strong>${params.serviceName}</strong> is confirmed.
+            </p>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 20px;width:100%;">
+              <tr>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#555;width:40%;font-weight:600;">Date</td>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#1a1a1a;">${params.slotDate}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;font-size:13px;color:#555;font-weight:600;">Time</td>
+                <td style="padding:8px 12px;font-size:13px;color:#1a1a1a;">${params.slotTime}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#555;font-weight:600;">Motivation</td>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#1a1a1a;">${params.motivation}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;font-size:13px;color:#555;font-weight:600;">Goal</td>
+                <td style="padding:8px 12px;font-size:13px;color:#1a1a1a;">${params.goal}</td>
+              </tr>
+            </table>
+            <p style="margin:0 0 16px;font-size:15px;color:#1a1a1a;line-height:1.6;">
+              Our team will be in touch with further details closer to your session.
+            </p>
+            <p style="margin:0;font-size:14px;color:#555;">Alata Career Service Team</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px;background:#f4f7f4;border-top:1px solid #e5e5e5;">
+            <p style="margin:0;font-size:11px;color:#888;">Alata Investment Club &bull; alatainvestmentclub.com</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
+function buildNotificationHtml(params: {
+  name: string
+  email: string
+  serviceName: string
+  slotDate: string
+  slotTime: string
+  motivation: string
+  goal: string
+  cvUrl?: string
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f9f9f9;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;overflow:hidden;">
+        <tr>
+          <td style="background:#1a4a3a;padding:24px 32px;">
+            <p style="margin:0;font-size:11px;color:#a8c5b8;letter-spacing:2px;text-transform:uppercase;">Alata Career Service</p>
+            <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">New Booking – ${params.serviceName}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <table cellpadding="0" cellspacing="0" style="width:100%;">
+              <tr>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#555;width:40%;font-weight:600;">Name</td>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#1a1a1a;">${params.name}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;font-size:13px;color:#555;font-weight:600;">Email</td>
+                <td style="padding:8px 12px;font-size:13px;color:#1a1a1a;">${params.email}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#555;font-weight:600;">Service</td>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#1a1a1a;">${params.serviceName}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;font-size:13px;color:#555;font-weight:600;">Date</td>
+                <td style="padding:8px 12px;font-size:13px;color:#1a1a1a;">${params.slotDate}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#555;font-weight:600;">Time</td>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#1a1a1a;">${params.slotTime}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;font-size:13px;color:#555;font-weight:600;">Motivation</td>
+                <td style="padding:8px 12px;font-size:13px;color:#1a1a1a;">${params.motivation}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#555;font-weight:600;">Goal</td>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#1a1a1a;">${params.goal}</td>
+              </tr>
+              ${params.cvUrl ? `<tr>
+                <td style="padding:8px 12px;font-size:13px;color:#555;font-weight:600;">CV</td>
+                <td style="padding:8px 12px;font-size:13px;color:#1a1a1a;"><a href="${params.cvUrl}" style="color:#1a4a3a;">Download CV</a></td>
+              </tr>` : ''}
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px;background:#f4f7f4;border-top:1px solid #e5e5e5;">
+            <p style="margin:0;font-size:11px;color:#888;">Alata Investment Club &bull; alatainvestmentclub.com</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.text()
+  const sig = req.headers.get('stripe-signature')
+
+  if (!sig) {
+    return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
+  }
+
+  let event: Stripe.Event
+  try {
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `Webhook signature verification failed: ${message}` }, { status: 400 })
+  }
+
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent
+
+    const { data: booking, error: findErr } = await supabaseAdmin
+      .from('career_bookings')
+      .select('id, service_id, slot_date, slot_time, name, email, motivation, goal, cv_url')
+      .eq('stripe_payment_intent_id', paymentIntent.id)
+      .single()
+
+    if (findErr || !booking) {
+      console.error('Booking not found for payment intent:', paymentIntent.id)
+      return NextResponse.json({ received: true })
+    }
+
+    await supabaseAdmin
+      .from('career_bookings')
+      .update({ status: 'confirmed' })
+      .eq('id', booking.id)
+
+    const { data: service } = await supabaseAdmin
+      .from('career_services')
+      .select('name')
+      .eq('id', booking.service_id)
+      .single()
+
+    const serviceName = service?.name ?? 'Career Service'
+
+    const { data: contacts } = await supabaseAdmin
+      .from('career_notification_contacts')
+      .select('email')
+      .eq('service_id', booking.service_id)
+
+    const confirmationHtml = buildConfirmationHtml({
+      name: booking.name,
+      serviceName,
+      slotDate: booking.slot_date,
+      slotTime: booking.slot_time,
+      motivation: booking.motivation,
+      goal: booking.goal,
+    })
+
+    const notificationHtml = buildNotificationHtml({
+      name: booking.name,
+      email: booking.email,
+      serviceName,
+      slotDate: booking.slot_date,
+      slotTime: booking.slot_time,
+      motivation: booking.motivation,
+      goal: booking.goal,
+      cvUrl: booking.cv_url ?? undefined,
+    })
+
+    await Promise.allSettled([
+      resend.emails.send({
+        from: FROM,
+        to: booking.email,
+        subject: `Booking Confirmed – ${serviceName} | Alata Career Service`,
+        html: confirmationHtml,
+      }),
+      ...(contacts ?? []).map(c =>
+        resend.emails.send({
+          from: FROM,
+          to: c.email,
+          subject: `New Booking – ${serviceName}`,
+          html: notificationHtml,
+        })
+      ),
+    ])
+  }
+
+  return NextResponse.json({ received: true })
+}
