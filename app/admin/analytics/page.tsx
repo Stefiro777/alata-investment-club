@@ -93,6 +93,7 @@ function OverviewTab() {
   const [members, setMembers]           = useState<Member[]>([])
   const [events, setEvents]             = useState<Event[]>([])
   const [totalRegs, setTotalRegs]       = useState(0)
+  const [totalRegsThisQ, setTotalRegsThisQ] = useState(0)
   const [bookings, setBookings]         = useState<Booking[]>([])
   const [reportsQCount, setReportsQCount] = useState(0)
   const [jobs, setJobs]                 = useState<JobOffer[]>([])
@@ -119,7 +120,8 @@ function OverviewTab() {
     Promise.all([
       db.from('club_members').select('role, created_at'),
       db.from('upcoming_events').select('id, date'),
-      db.from('event_registrations').select('id'),
+      db.from('event_registrations').select('id', { count: 'exact', head: true }),
+      db.from('event_registrations').select('id', { count: 'exact', head: true }).gte('created_at', qsDate),
       db.from('career_bookings').select('id, status, is_member_free, slot_date, created_at'),
       db.from('contenuti').select('id', { count: 'exact', head: true })
         .eq('tipo', 'report').gte('data_pubblicazione', qsDate),
@@ -127,7 +129,7 @@ function OverviewTab() {
       db.from('analytics_quarter_snapshots').select('*')
         .order('year', { ascending: false })
         .order('quarter_number', { ascending: false }),
-    ]).then(([mRes, eRes, rRes, bRes, rpRes, jRes, snRes]) => {
+    ]).then(([mRes, eRes, rAllRes, rQRes, bRes, rpRes, jRes, snRes]) => {
       const ms  = (mRes.data  ?? []) as Member[]
       const es  = (eRes.data  ?? []) as Event[]
       const bs  = (bRes.data  ?? []) as Booking[]
@@ -136,7 +138,8 @@ function OverviewTab() {
 
       setMembers(ms)
       setEvents(es)
-      setTotalRegs(rRes.data?.length ?? 0)
+      setTotalRegs(rAllRes.count ?? 0)
+      setTotalRegsThisQ(rQRes.count ?? 0)
       setBookings(bs)
       setReportsQCount(rpRes.count ?? 0)
       setJobs(js)
@@ -333,7 +336,7 @@ function OverviewTab() {
         {[
           { label: 'New Members This Quarter', value: newMembersThisQuarter },
           { label: 'Reports This Quarter',     value: reportsQCount },
-          { label: 'Total Registrations',      value: totalRegs },
+          { label: 'Total Registrations',      value: totalRegsThisQ },
           { label: 'Active Job Offers',        value: activeJobs },
         ].map(({ label, value }) => (
           <div key={label} className="bg-white border border-[#e5e7eb] px-5 py-5 flex flex-col">
