@@ -170,71 +170,112 @@ export async function POST(req: NextRequest) {
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
 
+    // ── Career booking handling ────────────────────────────────────────────────
     const { data: booking, error: findErr } = await supabaseAdmin
       .from('career_bookings')
       .select('id, service_id, slot_date, slot_time, name, email, motivation, goal, cv_url')
       .eq('stripe_payment_intent_id', paymentIntent.id)
       .single()
 
-    if (findErr || !booking) {
-      console.error('Booking not found for payment intent:', paymentIntent.id)
-      return NextResponse.json({ received: true })
-    }
+    if (!findErr && booking) {
+      await supabaseAdmin
+        .from('career_bookings')
+        .update({ status: 'confirmed' })
+        .eq('id', booking.id)
 
-    await supabaseAdmin
-      .from('career_bookings')
-      .update({ status: 'confirmed' })
-      .eq('id', booking.id)
+      const { data: service } = await supabaseAdmin
+        .from('career_services')
+        .select('name')
+        .eq('id', booking.service_id)
+        .single()
 
-    const { data: service } = await supabaseAdmin
-      .from('career_services')
-      .select('name')
-      .eq('id', booking.service_id)
-      .single()
+      const serviceName = service?.name ?? 'Career Service'
 
-    const serviceName = service?.name ?? 'Career Service'
+      const { data: contacts } = await supabaseAdmin
+        .from('career_notification_contacts')
+        .select('email')
+        .eq('service_id', booking.service_id)
 
-    const { data: contacts } = await supabaseAdmin
-      .from('career_notification_contacts')
-      .select('email')
-      .eq('service_id', booking.service_id)
+      const confirmationHtml = buildConfirmationHtml({
+        name: booking.name,
+        serviceName,
+        slotDate: booking.slot_date,
+        slotTime: booking.slot_time,
+        motivation: booking.motivation,
+        goal: booking.goal,
+      })
 
-    const confirmationHtml = buildConfirmationHtml({
-      name: booking.name,
-      serviceName,
-      slotDate: booking.slot_date,
-      slotTime: booking.slot_time,
-      motivation: booking.motivation,
-      goal: booking.goal,
-    })
+      const notificationHtml = buildNotificationHtml({
+        name: booking.name,
+        email: booking.email,
+        serviceName,
+        slotDate: booking.slot_date,
+        slotTime: booking.slot_time,
+        motivation: booking.motivation,
+        goal: booking.goal,
+        cvUrl: booking.cv_url ?? undefined,
+      })
 
-    const notificationHtml = buildNotificationHtml({
-      name: booking.name,
-      email: booking.email,
-      serviceName,
-      slotDate: booking.slot_date,
-      slotTime: booking.slot_time,
-      motivation: booking.motivation,
-      goal: booking.goal,
-      cvUrl: booking.cv_url ?? undefined,
-    })
-
-    await Promise.allSettled([
-      resend.emails.send({
-        from: FROM,
-        to: booking.email,
-        subject: `Booking Confirmed – ${serviceName} | Alata Career Service`,
-        html: confirmationHtml,
-      }),
-      ...(contacts ?? []).map(c =>
+      await Promise.allSettled([
         resend.emails.send({
           from: FROM,
-          to: c.email,
-          subject: `New Booking – ${serviceName}`,
-          html: notificationHtml,
-        })
-      ),
-    ])
+          to: booking.email,
+          subject: `Booking Confirmed – ${serviceName} | Alata Career Service`,
+          html: confirmationHtml,
+        }),
+        ...(contacts ?? []).map(c =>
+          resend.emails.send({
+            from: FROM,
+            to: c.email,
+            subject: `New Booking – ${serviceName}`,
+            html: notificationHtml,
+          })
+        ),
+      ])
+    } else {
+      console.error('Booking not found for payment intent:', paymentIntent.id)
+    }
+
+    // ── Auto-record finance transaction ───────────────────────────────────────
+    try {
+      const amount      = paymentIntent.amount / 100
+      const description = (paymentIntent.metadata?.service_name as string | undefined)
+        ?? paymentIntent.description
+        ?? 'Stripe Payment'
+      const date = new Date().toISOString().slice(0, 10)
+
+      // Look up or create the 'Career Service' revenue category
+      let categoryId: string | null = null
+      const { data: existingCat } = await supabaseAdmin
+        .from('budget_categories')
+        .select('id')
+        .eq('name', 'Career Service')
+        .eq('type', 'revenue')
+        .maybeSingle()
+
+      if (existingCat) {
+        categoryId = existingCat.id
+      } else {
+        const { data: newCat } = await supabaseAdmin
+          .from('budget_categories')
+          .insert({ name: 'Career Service', type: 'revenue' })
+          .select('id')
+          .single()
+        categoryId = newCat?.id ?? null
+      }
+
+      await supabaseAdmin.from('transactions').insert({
+        type:        'revenue',
+        date,
+        amount,
+        description,
+        category_id: categoryId,
+        note:        'Auto-recorded from Stripe payment ' + paymentIntent.id,
+        receipt_url: null,
+      })
+    } catch (txErr) {
+      console.error('Failed to record transaction for payment intent:', paymentIntent.id, txErr)
+    }
   }
 
   return NextResponse.json({ received: true })
