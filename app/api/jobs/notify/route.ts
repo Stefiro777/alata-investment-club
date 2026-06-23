@@ -164,8 +164,9 @@ export async function POST(req: NextRequest) {
   }
 
   const jobLink = `${BASE_URL}/dashboard/jobs`
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-  // 4. Send emails — fire each independently
+  // 4. Send emails — fire each independently with delay to avoid rate limiting
   let sent = 0
   for (const sub of subList) {
     const member = memberMap[(sub as { user_id: string }).user_id]
@@ -187,6 +188,7 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error(`Failed to send job notification to ${member.email}:`, err)
     }
+    await delay(500)
   }
 
   return NextResponse.json({ sent })
