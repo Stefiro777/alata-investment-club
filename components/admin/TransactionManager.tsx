@@ -60,6 +60,32 @@ function typeBadge(type: TxType) {
   )
 }
 
+function DescriptionCell({ description, note }: { description: string; note: string | null }) {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={() => setExpanded(v => !v)}
+      className="text-left w-full group"
+    >
+      <span className="flex items-start gap-1">
+        <span className={expanded ? 'whitespace-pre-wrap break-words text-ink-900 font-medium' : 'block truncate text-ink-900 font-medium'}>
+          {description}
+        </span>
+        <svg
+          className={`w-3 h-3 flex-shrink-0 mt-1 text-ink-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </span>
+      {note && (
+        <p className={`text-[10px] text-ink-400 mt-0.5 ${expanded ? 'whitespace-pre-wrap' : 'truncate'}`}>{note}</p>
+      )}
+    </button>
+  )
+}
+
 function rowBg(type: TxType) {
   if (type === 'revenue') return 'bg-green-50/60'
   if (type === 'rimborso') return 'bg-orange-50/60'
@@ -574,13 +600,8 @@ export default function TransactionManager() {
               filtered.map(tx => (
                 <tr key={tx.id} className={`border-b border-black/5 last:border-0 hover:brightness-95 transition-all ${rowBg(tx.type)}`}>
                   <td className="px-4 py-3 whitespace-nowrap text-ink-500 text-xs">{fmtDate(tx.date)}</td>
-                  <td className="px-4 py-3 text-ink-900 font-medium max-w-[220px]">
-                    <span title={tx.description}>
-                      {tx.description.length > 45 ? tx.description.slice(0, 45) + '…' : tx.description}
-                    </span>
-                    {tx.note && (
-                      <p className="text-[10px] text-ink-400 mt-0.5 truncate">{tx.note}</p>
-                    )}
+                  <td className="px-4 py-3 max-w-[220px]">
+                    <DescriptionCell description={tx.description} note={tx.note} />
                   </td>
                   <td className="px-4 py-3 text-ink-500 text-xs whitespace-nowrap">{catName(tx.category_id)}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{typeBadge(tx.type)}</td>
