@@ -10,7 +10,6 @@ const NAV = [
   { label: 'Candidature', href: '/admin/jobs'        },
   { label: 'Finance',     href: '/admin/finance'     },
   { label: 'CRM',         href: '/admin/crm'         },
-  { label: 'Scanner',     href: '/admin/scanner'     },
   { label: 'Analytics',   href: '/admin/analytics'   },
 ] as const
 
