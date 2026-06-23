@@ -639,6 +639,8 @@ function BookingsTab({ services }: { services: CareerService[] }) {
   const [statFilter, setStatFilter] = useState('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [confirmDelId, setConfirmDelId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function fetchBookings() {
     const { data } = await createClient()
@@ -657,6 +659,17 @@ function BookingsTab({ services }: { services: CareerService[] }) {
   useEffect(() => { fetchBookings() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [statusError, setStatusError] = useState<string | null>(null)
+
+  async function deleteBooking(id: string) {
+    setDeletingId(id)
+    const res = await fetch(`/api/career/bookings/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setBookings(prev => prev.filter(b => b.id !== id))
+      setExpandedId(null)
+    }
+    setConfirmDelId(null)
+    setDeletingId(null)
+  }
 
   async function updateStatus(id: string, status: string) {
     setUpdatingId(id); setStatusError(null)
@@ -772,7 +785,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <p className={`${labelCls} mb-0`}>Change Status</p>
               <div className="relative">
                 <select value={b.status} onChange={e => updateStatus(b.id, e.target.value)}
@@ -789,6 +802,26 @@ function BookingsTab({ services }: { services: CareerService[] }) {
               </div>
               {updatingId === b.id && <span className="text-xs text-gray-400">Saving…</span>}
               {statusError && expandedId === b.id && <span className="text-xs text-red-600">{statusError}</span>}
+              <div className="ml-auto flex items-center gap-2">
+                {confirmDelId === b.id ? (
+                  <>
+                    <span className="text-xs text-gray-500">Are you sure? This cannot be undone.</span>
+                    <button onClick={() => deleteBooking(b.id)} disabled={deletingId === b.id}
+                      className="text-xs font-semibold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 transition-colors disabled:opacity-40">
+                      {deletingId === b.id ? '…' : 'Confirm'}
+                    </button>
+                    <button onClick={() => setConfirmDelId(null)}
+                      className="text-xs font-semibold uppercase tracking-widest border border-gray-200 px-3 py-1.5 text-gray-600 hover:border-gray-400 transition-colors">
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => setConfirmDelId(b.id)}
+                    className="text-xs font-semibold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 transition-colors">
+                    Delete
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -873,12 +906,9 @@ function NotificationsTab({ services }: { services: CareerService[] }) {
   useEffect(() => {
     if (!svcId) return
     setLoading(true)
-    createClient()
-      .from('career_notification_contacts')
-      .select('*')
-      .eq('service_id', svcId)
-      .order('created_at')
-      .then(({ data }) => { setContacts((data ?? []) as CareerNotificationContact[]); setLoading(false) })
+    fetch(`/api/career/notification-contacts?service_id=${encodeURIComponent(svcId)}`)
+      .then(r => r.json())
+      .then(json => { setContacts((json.data ?? []) as CareerNotificationContact[]); setLoading(false) })
   }, [svcId])
 
   async function addContact() {
