@@ -294,54 +294,68 @@ function OverviewTab() {
 
 // ── LinkedIn Posts Tab ─────────────────────────────────────────────────────────
 
+type ContenutoPost = {
+  id: number
+  titolo: string
+  data_pubblicazione: string | null
+  link: string | null
+}
+
+function getPostTitle(titolo: string): string {
+  for (const line of titolo.split(/\r?\n/)) {
+    const cleaned = line.replace(/[ \t]+/g, ' ').trim()
+    if (cleaned.length > 0) return cleaned
+  }
+  return titolo
+}
+
 function LinkedInPostsTab() {
-  const [reports, setReports] = useState<Report[]>([])
+  const [posts, setPosts]     = useState<ContenutoPost[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     createClient()
-      .from('featured_reports')
-      .select('id, title, description, pdf_url, created_at')
-      .order('created_at', { ascending: false })
+      .from('contenuti')
+      .select('id, titolo, data_pubblicazione, link')
+      .eq('tipo', 'report')
+      .order('data_pubblicazione', { ascending: false })
       .then(({ data }) => {
-        setReports((data ?? []) as Report[])
+        setPosts((data ?? []) as ContenutoPost[])
         setLoading(false)
       })
   }, [])
 
-  const qs           = getQuarterStart()
-  const thisQuarter  = reports.filter(r => r.created_at >= qs).length
+  const qs          = getQuarterStart()
+  const thisQuarter = posts.filter(p => p.data_pubblicazione && p.data_pubblicazione >= qs).length
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
   return (
     <div>
       <div className="grid grid-cols-2 gap-3 max-w-sm mb-8">
-        <KpiCard label="Total Posts All Time" value={reports.length} />
+        <KpiCard label="Total Posts All Time" value={posts.length} />
         <KpiCard label="Posts This Quarter"   value={thisQuarter} />
       </div>
 
-      {reports.length === 0 ? (
+      {posts.length === 0 ? (
         <p className="text-sm text-gray-400 py-10 border border-dashed border-gray-200 text-center">
           No posts recorded yet.
         </p>
       ) : (
         <div className="border border-gray-200">
-          {reports.map((r, i) => (
-            <div key={r.id}
+          {posts.map((p, i) => (
+            <div key={p.id}
               className={`flex items-start gap-4 px-5 py-4 bg-white hover:bg-[#fafaf9] transition-colors ${i > 0 ? 'border-t border-gray-200' : ''}`}>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 leading-snug">{r.title}</p>
-                {r.description && (
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{r.description}</p>
-                )}
+                <p className="text-sm font-semibold text-gray-900 leading-snug">{getPostTitle(p.titolo)}</p>
               </div>
               <div className="flex items-center gap-5 flex-shrink-0 pt-0.5">
                 <span className="text-xs text-gray-400 whitespace-nowrap">
-                  {fmtDate(r.created_at)}
+                  {p.data_pubblicazione ? fmtDate(p.data_pubblicazione) : '—'}
                 </span>
-                {r.pdf_url ? (
-                  <a href={r.pdf_url} target="_blank" rel="noopener noreferrer"
+                {p.link ? (
+                  <a href={p.link.startsWith('urn:') ? `https://www.linkedin.com/feed/update/${p.link}/` : p.link}
+                    target="_blank" rel="noopener noreferrer"
                     className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline underline-offset-2 whitespace-nowrap">
                     Open →
                   </a>
