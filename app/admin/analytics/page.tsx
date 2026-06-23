@@ -66,6 +66,7 @@ function OverviewTab() {
   const [reports, setReports]       = useState<Report[]>([])
   const [jobs, setJobs]             = useState<JobOffer[]>([])
   const [loading, setLoading]       = useState(true)
+  const [barMounted, setBarMounted] = useState(false)
 
   useEffect(() => {
     const db = createClient()
@@ -80,11 +81,11 @@ function OverviewTab() {
       db.from('featured_reports').select('id, title, description, pdf_url, created_at'),
       db.from('job_offers').select('id, active'),
     ]).then(([mRes, eRes, rRes, bRes, rpRes, jRes]) => {
-      const ms = (mRes.data ?? []) as Member[]
-      const es = (eRes.data ?? []) as Event[]
-      const bs = (bRes.data ?? []) as Booking[]
+      const ms  = (mRes.data  ?? []) as Member[]
+      const es  = (eRes.data  ?? []) as Event[]
+      const bs  = (bRes.data  ?? []) as Booking[]
       const rps = (rpRes.data ?? []) as Report[]
-      const js = (jRes.data ?? []) as JobOffer[]
+      const js  = (jRes.data  ?? []) as JobOffer[]
 
       setMembers(ms)
       setEvents(es)
@@ -93,6 +94,7 @@ function OverviewTab() {
       setReports(rps)
       setJobs(js)
       setLoading(false)
+      setTimeout(() => setBarMounted(true), 80)
 
       void qs; void today
     })
@@ -111,55 +113,180 @@ function OverviewTab() {
   const upcomingEvents = events.filter(e => e.date >= today).length
   const avgRegs        = totalEvents > 0 ? Math.round((totalRegs / totalEvents) * 10) / 10 : 0
 
-  const totalBookings        = bookings.length
-  const confirmedBookings    = bookings.filter(b => b.status === 'confirmed').length
-  const bookingsThisQuarter  = bookings.filter(b => b.created_at >= qs).length
-  const memberFreeBookings   = bookings.filter(b => b.is_member_free).length
+  const totalBookings       = bookings.length
+  const confirmedBookings   = bookings.filter(b => b.status === 'confirmed').length
+  const bookingsThisQuarter = bookings.filter(b => b.created_at >= qs).length
+  const memberFreeBookings  = bookings.filter(b => b.is_member_free).length
 
-  const totalReports         = reports.length
-  const reportsThisQuarter   = reports.filter(r => r.created_at >= qs).length
-  const totalJobs            = jobs.length
-  const activeJobs           = jobs.filter(j => j.active).length
+  const reportsThisQuarter = reports.filter(r => r.created_at >= qs).length
+  const totalJobs          = jobs.length
+  const activeJobs         = jobs.filter(j => j.active).length
+
+  // Stacked bar percentages
+  const bodPct      = totalMembers > 0 ? (membersBod      / totalMembers) * 100 : 0
+  const dirPct      = totalMembers > 0 ? (membersDirector / totalMembers) * 100 : 0
+  const memberPct   = totalMembers > 0 ? (membersMember   / totalMembers) * 100 : 0
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
   return (
-    <div>
-      {/* Row 1 — Members */}
-      <SectionLabel>Members</SectionLabel>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <KpiCard label="Total Members"      value={totalMembers} />
-        <KpiCard label="Board of Directors" value={membersBod} />
-        <KpiCard label="Directors"          value={membersDirector} />
-        <KpiCard label="Members"            value={membersMember} />
-        <KpiCard label="New This Quarter"   value={newMembersThisQuarter} />
+    <div className="space-y-4">
+
+      {/* ── Row 1: 3 Hero cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        {/* Hero 1 — Total Members */}
+        <div className="bg-[#1a4a3a] px-7 py-7 flex flex-col justify-between min-h-[200px]">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Total Members</p>
+          <div>
+            <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalMembers}</p>
+            {/* Stacked role bar */}
+            <div className="flex h-3 w-full mt-5 overflow-hidden">
+              <div
+                className="h-full transition-all duration-700 ease-out"
+                style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: '#ccff00' }}
+              />
+              <div
+                className="h-full transition-all duration-700 ease-out delay-100"
+                style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }}
+              />
+              <div
+                className="h-full transition-all duration-700 ease-out delay-200"
+                style={{ width: barMounted ? `${memberPct}%` : '0%', backgroundColor: '#e5e7eb' }}
+              />
+            </div>
+            <div className="flex items-center gap-4 mt-2.5">
+              <span className="flex items-center gap-1.5 text-[10px] text-white/60">
+                <span className="inline-block w-2 h-2 flex-shrink-0" style={{ backgroundColor: '#ccff00' }} />
+                BoD {membersBod}
+              </span>
+              <span className="flex items-center gap-1.5 text-[10px] text-white/60">
+                <span className="inline-block w-2 h-2 flex-shrink-0" style={{ backgroundColor: '#2d6a56' }} />
+                Directors {membersDirector}
+              </span>
+              <span className="flex items-center gap-1.5 text-[10px] text-white/60">
+                <span className="inline-block w-2 h-2 flex-shrink-0" style={{ backgroundColor: '#e5e7eb' }} />
+                Members {membersMember}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hero 2 — Events */}
+        <div className="bg-[#1a4a3a] px-7 py-7 flex flex-col justify-between min-h-[200px]">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Total Events</p>
+          <div>
+            <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalEvents}</p>
+            <p className="text-sm text-white/70 mt-4">
+              <span className="font-semibold text-white">{upcomingEvents}</span> upcoming
+              &nbsp;·&nbsp;
+              <span className="font-semibold text-white">{totalRegs}</span> total registrations
+            </p>
+            <p className="text-[10px] text-white/40 mt-1 uppercase tracking-widest">
+              {avgRegs} avg regs / event
+            </p>
+          </div>
+        </div>
+
+        {/* Hero 3 — Career Bookings */}
+        <div className="bg-[#1a4a3a] px-7 py-7 flex flex-col justify-between min-h-[200px]">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Career Bookings</p>
+          <div>
+            <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalBookings}</p>
+            <p className="text-sm text-white/70 mt-4">
+              <span className="font-semibold text-white">{confirmedBookings}</span> confirmed
+              &nbsp;·&nbsp;
+              <span className="font-semibold text-white">{memberFreeBookings}</span> member free
+            </p>
+            <p className="text-[10px] text-white/40 mt-1 uppercase tracking-widest">
+              {bookingsThisQuarter} this quarter
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Row 2 — Events */}
-      <SectionLabel>Events</SectionLabel>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KpiCard label="Total Events"        value={totalEvents} />
-        <KpiCard label="Upcoming Events"     value={upcomingEvents} />
-        <KpiCard label="Total Registrations" value={totalRegs} />
-        <KpiCard label="Avg Regs / Event"    value={avgRegs} />
+      {/* ── Row 2: 4 medium cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: 'New Members This Quarter', value: newMembersThisQuarter },
+          { label: 'Reports This Quarter',     value: reportsThisQuarter },
+          { label: 'Total Registrations',      value: totalRegs },
+          { label: 'Active Job Offers',        value: activeJobs },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-white border border-[#e5e7eb] px-5 py-5 flex flex-col">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">{label}</p>
+            <p className="font-serif text-[48px] font-bold text-[#1a4a3a] leading-none">{value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Row 3 — Career Service */}
-      <SectionLabel>Career Service</SectionLabel>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KpiCard label="Total Bookings"    value={totalBookings} />
-        <KpiCard label="Confirmed"         value={confirmedBookings} />
-        <KpiCard label="This Quarter"      value={bookingsThisQuarter} />
-        <KpiCard label="Member Free"       value={memberFreeBookings} />
-      </div>
+      {/* ── Row 3: Members breakdown + Career mini-stats ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-      {/* Row 4 — Content */}
-      <SectionLabel>Content</SectionLabel>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KpiCard label="Total Reports"        value={totalReports} />
-        <KpiCard label="Reports This Quarter" value={reportsThisQuarter} />
-        <KpiCard label="Total Job Offers"     value={totalJobs} />
-        <KpiCard label="Active Job Offers"    value={activeJobs} />
+        {/* Left: Members stacked bar panel */}
+        <div className="bg-white border border-[#e5e7eb] px-6 py-6">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-5">
+            Members Breakdown
+          </p>
+          {/* Full-width stacked bar */}
+          <div className="flex h-3 w-full overflow-hidden mb-4">
+            <div
+              className="h-full transition-all duration-700 ease-out"
+              style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: '#1a4a3a' }}
+            />
+            <div
+              className="h-full transition-all duration-700 ease-out delay-100"
+              style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }}
+            />
+            <div
+              className="h-full transition-all duration-700 ease-out delay-200"
+              style={{ width: barMounted ? `${memberPct}%` : '0%', backgroundColor: '#e5e7eb' }}
+            />
+          </div>
+          <div className="space-y-2.5">
+            {[
+              { color: '#1a4a3a', label: 'Board of Directors', count: membersBod },
+              { color: '#2d6a56', label: 'Directors',          count: membersDirector },
+              { color: '#e5e7eb', label: 'Members',            count: membersMember, textDark: true },
+            ].map(({ color, label, count, textDark }) => (
+              <div key={label} className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-block w-3 h-3 flex-shrink-0 border border-gray-200"
+                    style={{ backgroundColor: color }} />
+                  <span className="text-xs text-gray-600 uppercase tracking-wide font-medium">{label}</span>
+                </div>
+                <span className={`font-serif text-xl font-bold ${textDark ? 'text-gray-400' : 'text-[#1a4a3a]'}`}>
+                  {count}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-widest text-gray-400">Total</span>
+            <span className="font-serif text-2xl font-bold text-[#1a4a3a]">{totalMembers}</span>
+          </div>
+        </div>
+
+        {/* Right: Career Service mini-stats 2×2 */}
+        <div className="bg-white border border-[#e5e7eb] px-6 py-6">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-5">
+            Career Service
+          </p>
+          <div className="grid grid-cols-2 gap-px bg-[#e5e7eb]">
+            {[
+              { label: 'Total Bookings',  value: totalBookings },
+              { label: 'Confirmed',       value: confirmedBookings },
+              { label: 'This Quarter',    value: bookingsThisQuarter },
+              { label: 'Member Free',     value: memberFreeBookings },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-white px-5 py-5 flex flex-col">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">{label}</p>
+                <p className="font-serif text-3xl font-bold text-[#1a4a3a] leading-none">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   )
