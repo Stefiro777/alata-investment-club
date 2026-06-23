@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Reveal from '../components/Reveal'
 import { createClient } from '@/lib/supabase'
 import { loadStripe } from '@stripe/stripe-js'
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js'
 
 // Initialise once at module level — guard against missing key at runtime
 const stripeKey     = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
@@ -162,7 +162,7 @@ function PaymentForm({
 
       // Paid path — confirm card payment with Stripe
       if (!stripe || !elements) { setError('Stripe not loaded'); setProcessing(false); return }
-      const cardEl = elements.getElement(CardElement)
+      const cardEl = elements.getElement(CardNumberElement)
       if (!cardEl) { setError('Card element not found'); setProcessing(false); return }
 
       const { error: stripeErr } = await stripe.confirmCardPayment(data.client_secret, {
@@ -213,22 +213,49 @@ function PaymentForm({
             Payment unavailable — please contact us to book.
           </p>
         ) : (
-          <div>
-            <p className={labelCls}>Card Details</p>
-            <div className="border border-gray-200 px-3 py-3.5">
-              <CardElement
-                options={{
-                  style: {
-                    base: {
-                      fontSize: '14px',
-                      color: '#1a1a1a',
-                      fontFamily: 'Inter, sans-serif',
-                      '::placeholder': { color: '#9ca3af' },
+          <div className="space-y-3">
+            {/* Card Number */}
+            <div>
+              <p className={labelCls}>Card Number</p>
+              <div className="border border-gray-200 px-3" style={{ paddingTop: 12, paddingBottom: 12 }}>
+                <CardNumberElement
+                  options={{
+                    style: {
+                      base: { fontSize: '14px', color: '#1a1a1a', fontFamily: 'Inter, sans-serif', '::placeholder': { color: '#9ca3af' } },
+                      invalid: { color: '#ef4444' },
                     },
-                    invalid: { color: '#ef4444' },
-                  },
-                }}
-              />
+                  }}
+                />
+              </div>
+            </div>
+            {/* Expiry + CVC */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className={labelCls}>Expiry Date</p>
+                <div className="border border-gray-200 px-3" style={{ paddingTop: 12, paddingBottom: 12 }}>
+                  <CardExpiryElement
+                    options={{
+                      style: {
+                        base: { fontSize: '14px', color: '#1a1a1a', fontFamily: 'Inter, sans-serif', '::placeholder': { color: '#9ca3af' } },
+                        invalid: { color: '#ef4444' },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+              <div>
+                <p className={labelCls}>CVC</p>
+                <div className="border border-gray-200 px-3" style={{ paddingTop: 12, paddingBottom: 12 }}>
+                  <CardCvcElement
+                    options={{
+                      style: {
+                        base: { fontSize: '14px', color: '#1a1a1a', fontFamily: 'Inter, sans-serif', '::placeholder': { color: '#9ca3af' } },
+                        invalid: { color: '#ef4444' },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )
