@@ -683,40 +683,104 @@ function LinkedInPostsTab() {
 
 // ── Sponsors Tab ───────────────────────────────────────────────────────────────
 
+type SponsorTransaction = {
+  id: string
+  type: 'revenue' | 'cost' | 'rimborso'
+  amount: number
+  date: string | null
+  description: string | null
+}
+
 function SponsorsTab() {
-  const [partners, setPartners] = useState<Partner[]>([])
-  const [loading, setLoading]   = useState(true)
+  const [partners, setPartners]           = useState<Partner[]>([])
+  const [sponsorTxs, setSponsorTxs]       = useState<SponsorTransaction[]>([])
+  const [loading, setLoading]             = useState(true)
 
   useEffect(() => {
-    createClient()
-      .from('partners')
-      .select('id, name, type, created_at')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setPartners((data ?? []) as Partner[])
-        setLoading(false)
-      })
+    const db = createClient()
+    Promise.all([
+      db.from('partners').select('id, name, type, created_at').order('created_at', { ascending: false }),
+      db.from('transactions')
+        .select('id, type, amount, date, description, budget_categories!inner(name)')
+        .ilike('budget_categories.name', '%sponsor%')
+        .order('date', { ascending: false }),
+    ]).then(([pRes, txRes]) => {
+      setPartners((pRes.data ?? []) as Partner[])
+      setSponsorTxs((txRes.data ?? []) as unknown as SponsorTransaction[])
+      setLoading(false)
+    })
   }, [])
 
   const sponsors     = partners.filter(p => p.type === 'sponsor').length
   const partnerCount = partners.filter(p => p.type === 'partner').length
 
+  const sponsorRevenue = sponsorTxs
+    .filter(t => t.type === 'revenue')
+    .reduce((s, t) => s + t.amount, 0)
+  const sponsorCosts = sponsorTxs
+    .filter(t => t.type === 'cost')
+    .reduce((s, t) => s + t.amount, 0)
+
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
   return (
     <div>
-      <div className="grid grid-cols-3 gap-3 max-w-sm mb-8">
+      {/* Partner/sponsor count KPIs */}
+      <div className="grid grid-cols-3 gap-3 max-w-sm mb-4">
         <KpiCard label="Total"    value={partners.length} />
         <KpiCard label="Sponsors" value={sponsors} />
         <KpiCard label="Partners" value={partnerCount} />
       </div>
 
+      {/* Sponsor finance KPIs */}
+      <div className="grid grid-cols-2 gap-3 max-w-sm mb-8">
+        <KpiCard label="Total Sponsor Revenue" value={fmtEuros(sponsorRevenue)} />
+        <KpiCard label="Total Sponsor Costs"   value={fmtEuros(sponsorCosts)} />
+      </div>
+
+      {/* Sponsorship transactions list */}
+      <div className="mb-8">
+        <p className={`${labelCls} mb-3`}>Sponsorship Transactions</p>
+        {sponsorTxs.length === 0 ? (
+          <p className="text-sm text-gray-400 py-10 border border-dashed border-gray-200 text-center">
+            No sponsorship transactions recorded yet.
+          </p>
+        ) : (
+          <div className="border border-gray-200">
+            <div className="grid grid-cols-[90px_1fr_90px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200">
+              <span className={labelCls}>Date</span>
+              <span className={labelCls}>Description</span>
+              <span className={labelCls}>Type</span>
+              <span className={`${labelCls} text-right`}>Amount</span>
+            </div>
+            {sponsorTxs.map((t, i) => (
+              <div key={t.id}
+                className={`grid grid-cols-[90px_1fr_90px_90px] gap-4 items-center px-5 py-3.5 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
+                <span className="text-xs text-gray-400 whitespace-nowrap">
+                  {t.date ? new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                </span>
+                <span className="text-sm text-gray-700 truncate">{t.description ?? '—'}</span>
+                <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
+                  t.type === 'revenue' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                }`}>
+                  {t.type === 'revenue' ? 'Revenue' : 'Cost'}
+                </span>
+                <span className={`text-sm font-semibold text-right ${t.type === 'revenue' ? 'text-[#1a4a3a]' : 'text-red-600'}`}>
+                  {t.type === 'cost' ? '−' : ''}{fmtEuros(t.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Partners table */}
       {partners.length === 0 ? (
         <p className="text-sm text-gray-400 py-10 border border-dashed border-gray-200 text-center">
           No partners or sponsors yet.
         </p>
       ) : (
-        <div className="border border-gray-200 mb-4">
+        <div className="border border-gray-200">
           <div className="grid grid-cols-[1fr_100px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200">
             <span className={labelCls}>Name</span>
             <span className={labelCls}>Type</span>
@@ -738,10 +802,6 @@ function SponsorsTab() {
           ))}
         </div>
       )}
-
-      <p className="text-xs text-gray-400 border-l-2 border-gray-200 pl-3 mt-4">
-        To track sponsor revenue, add transactions in the Finance tab.
-      </p>
     </div>
   )
 }
