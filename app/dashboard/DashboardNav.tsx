@@ -47,21 +47,21 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
 
   return (
     <nav className="sticky top-0 z-[50] bg-[#1a4a3a] shadow-md">
-      <div className="max-w-7xl mx-auto px-8 flex items-center h-14 gap-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center h-14 gap-4 md:gap-8">
 
-        {/* Nav links */}
-        <div className="flex items-center gap-6 flex-1">
-          <Link href="/dashboard" className={linkClass('/dashboard', true)}>
+        {/* Nav links — scrollable on mobile, normal on desktop */}
+        <div className="flex items-center gap-6 flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden md:overflow-visible">
+          <Link href="/dashboard" className={`${linkClass('/dashboard', true)} whitespace-nowrap flex-shrink-0`}>
             Dashboard
           </Link>
 
           {isBoD && (
-            <Link href="/dashboard/todo" className={linkClass('/dashboard/todo')}>
+            <Link href="/dashboard/todo" className={`${linkClass('/dashboard/todo')} whitespace-nowrap flex-shrink-0`}>
               To Do
             </Link>
           )}
 
-          <Link href="/dashboard/ideas" className={linkClass('/dashboard/ideas')}>
+          <Link href="/dashboard/ideas" className={`${linkClass('/dashboard/ideas')} whitespace-nowrap flex-shrink-0`}>
             Idee
           </Link>
 
@@ -73,8 +73,9 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
           >
             <button
               type="button"
+              onClick={() => setTeamOpen(o => !o)}
               className={[
-                'text-sm font-medium transition-colors pb-0.5 border-b-2 flex items-center gap-1',
+                'text-sm font-medium transition-colors pb-0.5 border-b-2 flex items-center gap-1 whitespace-nowrap',
                 teamActive
                   ? 'text-white border-[#7ecba3]'
                   : 'text-white/70 hover:text-white border-transparent',
@@ -92,6 +93,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
                   <Link
                     key={item.slug}
                     href={`/dashboard/team/${item.slug}`}
+                    onClick={() => setTeamOpen(false)}
                     className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-[#1a4a3a] transition-colors whitespace-nowrap"
                   >
                     {item.label}
@@ -101,24 +103,24 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
             )}
           </div>
 
-          <Link href="/dashboard/calendar" className={linkClass('/dashboard/calendar')}>
+          <Link href="/dashboard/calendar" className={`${linkClass('/dashboard/calendar')} whitespace-nowrap flex-shrink-0`}>
             Calendario
           </Link>
 
-          <Link href="/dashboard/members" className={linkClass('/dashboard/members')}>
+          <Link href="/dashboard/members" className={`${linkClass('/dashboard/members')} whitespace-nowrap flex-shrink-0`}>
             Membri
           </Link>
 
-          <Link href="/dashboard/jobs" className={linkClass('/dashboard/jobs')}>
+          <Link href="/dashboard/jobs" className={`${linkClass('/dashboard/jobs')} whitespace-nowrap flex-shrink-0`}>
             Job Offers
           </Link>
 
-          <Link href="/dashboard/resources" className={linkClass('/dashboard/resources')}>
+          <Link href="/dashboard/resources" className={`${linkClass('/dashboard/resources')} whitespace-nowrap flex-shrink-0`}>
             Resources
           </Link>
 
           {canScan && (
-            <Link href="/dashboard/scanner" className={linkClass('/dashboard/scanner')}>
+            <Link href="/dashboard/scanner" className={`${linkClass('/dashboard/scanner')} whitespace-nowrap flex-shrink-0`}>
               Scanner
             </Link>
           )}
