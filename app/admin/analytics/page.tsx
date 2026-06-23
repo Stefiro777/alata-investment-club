@@ -7,22 +7,53 @@ import AdminNavbar from '../components/AdminNavbar'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'linkedin' | 'sponsors' | 'finance'
+type Tab = 'overview' | 'quarter-comparison' | 'linkedin' | 'sponsors' | 'finance'
 
-type Member = { role: string; created_at: string }
-type Event  = { id: string; date: string }
-type Booking = { id: string; status: string; is_member_free: boolean; slot_date: string; created_at: string }
-type Report  = { id: string; title: string; description: string | null; pdf_url: string | null; created_at: string }
-type Partner = { id: string; name: string; type: string; created_at: string }
-type Transaction = { id: string; type: 'revenue' | 'cost' | 'rimborso'; amount: number; category_id: string | null }
+type Member   = { role: string; created_at: string }
+type Event    = { id: string; date: string }
+type Booking  = { id: string; status: string; is_member_free: boolean; slot_date: string; created_at: string }
+type Partner  = { id: string; name: string; type: string; created_at: string }
+type Transaction    = { id: string; type: 'revenue' | 'cost' | 'rimborso'; amount: number; category_id: string | null }
 type BudgetCategory = { id: string; name: string }
-type JobOffer = { id: string; active: boolean }
+type JobOffer       = { id: string; active: boolean }
+
+type QuarterSnapshot = {
+  id: string
+  quarter_number: number
+  year: number
+  kpi_data: {
+    total_members?: number
+    new_members?: number
+    total_events?: number
+    total_registrations?: number
+    total_bookings?: number
+    confirmed_bookings?: number
+    reports_published?: number
+  }
+  created_at: string
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function getQuarterStart(): string {
   const now = new Date()
   return new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).toISOString()
+}
+
+function getQuarterStartDate(): string {
+  const now = new Date()
+  return new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
+    .toISOString()
+    .slice(0, 10)
+}
+
+function getCurrentQuarter(): { quarter: number; year: number } {
+  const now = new Date()
+  return { quarter: Math.floor(now.getMonth() / 3) + 1, year: now.getFullYear() }
+}
+
+function prevQuarterOf(q: number, y: number): { quarter: number; year: number } {
+  return q === 1 ? { quarter: 4, year: y - 1 } : { quarter: q - 1, year: y }
 }
 
 function fmtDate(iso: string): string {
@@ -35,7 +66,7 @@ function fmtEuros(n: number): string {
 
 // ── Shared style constants ─────────────────────────────────────────────────────
 
-const labelCls = 'text-[10px] font-semibold uppercase tracking-widest text-gray-500'
+const labelCls  = 'text-[10px] font-semibold uppercase tracking-widest text-gray-500'
 const btnPrimary = 'inline-block bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest px-5 py-2.5 transition-colors'
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
@@ -59,45 +90,70 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
 function OverviewTab() {
-  const [members, setMembers]       = useState<Member[]>([])
-  const [events, setEvents]         = useState<Event[]>([])
-  const [totalRegs, setTotalRegs]   = useState(0)
-  const [bookings, setBookings]     = useState<Booking[]>([])
-  const [reports, setReports]       = useState<Report[]>([])
-  const [jobs, setJobs]             = useState<JobOffer[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [barMounted, setBarMounted] = useState(false)
+  const [members, setMembers]           = useState<Member[]>([])
+  const [events, setEvents]             = useState<Event[]>([])
+  const [totalRegs, setTotalRegs]       = useState(0)
+  const [bookings, setBookings]         = useState<Booking[]>([])
+  const [reportsQCount, setReportsQCount] = useState(0)
+  const [jobs, setJobs]                 = useState<JobOffer[]>([])
+  const [snapshots, setSnapshots]       = useState<QuarterSnapshot[]>([])
+  const [loading, setLoading]           = useState(true)
+  const [barMounted, setBarMounted]     = useState(false)
+
+  // Banner state
+  const [showBanner, setShowBanner]     = useState(false)
+  const [archiving, setArchiving]       = useState(false)
+  const [archiveSuccess, setArchiveSuccess] = useState(false)
+
+  // Past quarters section
+  const [pastExpanded, setPastExpanded]   = useState(false)
+  const [expandedSnaps, setExpandedSnaps] = useState<Set<string>>(new Set())
+
+  const { quarter: curQ, year: curY } = getCurrentQuarter()
+  const { quarter: prevQ, year: prevY } = prevQuarterOf(curQ, curY)
 
   useEffect(() => {
     const db = createClient()
-    const qs = getQuarterStart()
-    const today = new Date().toISOString().slice(0, 10)
+    const qsDate = getQuarterStartDate()
 
     Promise.all([
       db.from('club_members').select('role, created_at'),
       db.from('upcoming_events').select('id, date'),
       db.from('event_registrations').select('id', { count: 'exact', head: true }),
       db.from('career_bookings').select('id, status, is_member_free, slot_date, created_at'),
-      db.from('featured_reports').select('id, title, description, pdf_url, created_at'),
+      db.from('contenuti').select('id', { count: 'exact', head: true })
+        .eq('tipo', 'report').gte('data_pubblicazione', qsDate),
       db.from('job_offers').select('id, active'),
-    ]).then(([mRes, eRes, rRes, bRes, rpRes, jRes]) => {
+      db.from('analytics_quarter_snapshots').select('*')
+        .order('year', { ascending: false })
+        .order('quarter_number', { ascending: false }),
+    ]).then(([mRes, eRes, rRes, bRes, rpRes, jRes, snRes]) => {
       const ms  = (mRes.data  ?? []) as Member[]
       const es  = (eRes.data  ?? []) as Event[]
       const bs  = (bRes.data  ?? []) as Booking[]
-      const rps = (rpRes.data ?? []) as Report[]
       const js  = (jRes.data  ?? []) as JobOffer[]
+      const sns = (snRes.data ?? []) as QuarterSnapshot[]
 
       setMembers(ms)
       setEvents(es)
       setTotalRegs(rRes.count ?? 0)
       setBookings(bs)
-      setReports(rps)
+      setReportsQCount(rpRes.count ?? 0)
       setJobs(js)
+      setSnapshots(sns)
       setLoading(false)
       setTimeout(() => setBarMounted(true), 80)
 
-      void qs; void today
+      // Banner: show if previous quarter has no snapshot yet (and at least one snap exists)
+      const hasPrevSnap = sns.some(s => s.quarter_number === prevQ && s.year === prevY)
+      const hasAnySnap  = sns.length > 0
+      const mostRecent  = sns[0]
+      const mostRecentIsCurrent = mostRecent?.quarter_number === curQ && mostRecent?.year === curY
+      if (hasAnySnap && !mostRecentIsCurrent && !hasPrevSnap) {
+        setShowBanner(true)
+      }
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const qs    = getQuarterStart()
@@ -118,19 +174,93 @@ function OverviewTab() {
   const bookingsThisQuarter = bookings.filter(b => b.created_at >= qs).length
   const memberFreeBookings  = bookings.filter(b => b.is_member_free).length
 
-  const reportsThisQuarter = reports.filter(r => r.created_at >= qs).length
-  const totalJobs          = jobs.length
-  const activeJobs         = jobs.filter(j => j.active).length
+  const totalJobs  = jobs.length
+  const activeJobs = jobs.filter(j => j.active).length
+  void totalJobs
 
-  // Stacked bar percentages
-  const bodPct      = totalMembers > 0 ? (membersBod      / totalMembers) * 100 : 0
-  const dirPct      = totalMembers > 0 ? (membersDirector / totalMembers) * 100 : 0
-  const memberPct   = totalMembers > 0 ? (membersMember   / totalMembers) * 100 : 0
+  const bodPct    = totalMembers > 0 ? (membersBod      / totalMembers) * 100 : 0
+  const dirPct    = totalMembers > 0 ? (membersDirector / totalMembers) * 100 : 0
+  const memberPct = totalMembers > 0 ? (membersMember   / totalMembers) * 100 : 0
+
+  const handleArchive = async () => {
+    setArchiving(true)
+    try {
+      const kpiData = {
+        total_members:      totalMembers,
+        new_members:        newMembersThisQuarter,
+        total_events:       totalEvents,
+        total_registrations: totalRegs,
+        total_bookings:     totalBookings,
+        confirmed_bookings: confirmedBookings,
+        reports_published:  reportsQCount,
+      }
+      const res = await fetch('/api/admin/analytics/snapshot', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ quarter_number: prevQ, year: prevY, kpi_data: kpiData }),
+      })
+      if (res.ok) {
+        const newSnap: QuarterSnapshot = {
+          id:             'local-' + Date.now(),
+          quarter_number: prevQ,
+          year:           prevY,
+          kpi_data:       kpiData,
+          created_at:     new Date().toISOString(),
+        }
+        setSnapshots(prev => [newSnap, ...prev])
+        setShowBanner(false)
+        setArchiveSuccess(true)
+        setTimeout(() => setArchiveSuccess(false), 3000)
+      }
+    } finally {
+      setArchiving(false)
+    }
+  }
+
+  const toggleSnap = (id: string) => {
+    setExpandedSnaps(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
   return (
     <div className="space-y-4">
+
+      {/* ── Archive banner ── */}
+      {showBanner && (
+        <div className="border border-[#1a4a3a] bg-[#f0f5f3] px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
+          <p className="text-sm font-semibold text-[#1a4a3a]">
+            A new quarter has started. Archive Q{prevQ} {prevY} data before it updates?
+          </p>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={handleArchive}
+              disabled={archiving}
+              className="bg-[#1a4a3a] hover:bg-[#123a2d] disabled:opacity-60 text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors"
+            >
+              {archiving ? 'Archiving…' : `Archive Q${prevQ} ${prevY}`}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowBanner(false)}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {archiveSuccess && (
+        <div className="border border-green-300 bg-green-50 px-5 py-3 text-sm font-semibold text-green-800">
+          Archived successfully.
+        </div>
+      )}
 
       {/* ── Row 1: 3 Hero cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -140,20 +270,13 @@ function OverviewTab() {
           <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Total Members</p>
           <div>
             <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalMembers}</p>
-            {/* Stacked role bar */}
             <div className="flex h-3 w-full mt-5 overflow-hidden">
-              <div
-                className="h-full transition-all duration-700 ease-out"
-                style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: '#ccff00' }}
-              />
-              <div
-                className="h-full transition-all duration-700 ease-out delay-100"
-                style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }}
-              />
-              <div
-                className="h-full transition-all duration-700 ease-out delay-200"
-                style={{ width: barMounted ? `${memberPct}%` : '0%', backgroundColor: '#e5e7eb' }}
-              />
+              <div className="h-full transition-all duration-700 ease-out"
+                style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: '#ccff00' }} />
+              <div className="h-full transition-all duration-700 ease-out delay-100"
+                style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }} />
+              <div className="h-full transition-all duration-700 ease-out delay-200"
+                style={{ width: barMounted ? `${memberPct}%` : '0%', backgroundColor: '#e5e7eb' }} />
             </div>
             <div className="flex items-center gap-4 mt-2.5">
               <span className="flex items-center gap-1.5 text-[10px] text-white/60">
@@ -209,7 +332,7 @@ function OverviewTab() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'New Members This Quarter', value: newMembersThisQuarter },
-          { label: 'Reports This Quarter',     value: reportsThisQuarter },
+          { label: 'Reports This Quarter',     value: reportsQCount },
           { label: 'Total Registrations',      value: totalRegs },
           { label: 'Active Job Offers',        value: activeJobs },
         ].map(({ label, value }) => (
@@ -228,20 +351,13 @@ function OverviewTab() {
           <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-5">
             Members Breakdown
           </p>
-          {/* Full-width stacked bar */}
           <div className="flex h-3 w-full overflow-hidden mb-4">
-            <div
-              className="h-full transition-all duration-700 ease-out"
-              style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: '#1a4a3a' }}
-            />
-            <div
-              className="h-full transition-all duration-700 ease-out delay-100"
-              style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }}
-            />
-            <div
-              className="h-full transition-all duration-700 ease-out delay-200"
-              style={{ width: barMounted ? `${memberPct}%` : '0%', backgroundColor: '#e5e7eb' }}
-            />
+            <div className="h-full transition-all duration-700 ease-out"
+              style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: '#1a4a3a' }} />
+            <div className="h-full transition-all duration-700 ease-out delay-100"
+              style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }} />
+            <div className="h-full transition-all duration-700 ease-out delay-200"
+              style={{ width: barMounted ? `${memberPct}%` : '0%', backgroundColor: '#e5e7eb' }} />
           </div>
           <div className="space-y-2.5">
             {[
@@ -274,10 +390,10 @@ function OverviewTab() {
           </p>
           <div className="grid grid-cols-2 gap-px bg-[#e5e7eb]">
             {[
-              { label: 'Total Bookings',  value: totalBookings },
-              { label: 'Confirmed',       value: confirmedBookings },
-              { label: 'This Quarter',    value: bookingsThisQuarter },
-              { label: 'Member Free',     value: memberFreeBookings },
+              { label: 'Total Bookings', value: totalBookings },
+              { label: 'Confirmed',      value: confirmedBookings },
+              { label: 'This Quarter',   value: bookingsThisQuarter },
+              { label: 'Member Free',    value: memberFreeBookings },
             ].map(({ label, value }) => (
               <div key={label} className="bg-white px-5 py-5 flex flex-col">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">{label}</p>
@@ -286,8 +402,199 @@ function OverviewTab() {
             ))}
           </div>
         </div>
-
       </div>
+
+      {/* ── Past Quarters (collapsible) ── */}
+      {snapshots.length > 0 && (
+        <div className="border border-gray-200 bg-white">
+          <button
+            type="button"
+            onClick={() => setPastExpanded(v => !v)}
+            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-[#fafaf9] transition-colors"
+          >
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+              Past Quarters
+            </span>
+            <svg
+              className={`w-4 h-4 text-gray-400 transition-transform ${pastExpanded ? 'rotate-180' : ''}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {pastExpanded && (
+            <div className="border-t border-gray-200 divide-y divide-gray-100">
+              {snapshots.map(snap => {
+                const isExpanded = expandedSnaps.has(snap.id)
+                const kd = snap.kpi_data
+                const kpiItems = [
+                  { label: 'Total Members',       value: kd.total_members      ?? '—' },
+                  { label: 'New Members',          value: kd.new_members        ?? '—' },
+                  { label: 'Total Events',         value: kd.total_events       ?? '—' },
+                  { label: 'Total Registrations',  value: kd.total_registrations ?? '—' },
+                  { label: 'Total Bookings',       value: kd.total_bookings     ?? '—' },
+                  { label: 'Confirmed Bookings',   value: kd.confirmed_bookings  ?? '—' },
+                  { label: 'Reports Published',    value: kd.reports_published   ?? '—' },
+                ]
+                return (
+                  <div key={snap.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSnap(snap.id)}
+                      className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-[#fafaf9] transition-colors"
+                    >
+                      <span className="text-sm font-semibold text-gray-700">
+                        Q{snap.quarter_number} {snap.year}
+                        <span className="ml-3 text-[10px] font-normal text-gray-400 uppercase tracking-widest">
+                          archived on {fmtDate(snap.created_at)}
+                        </span>
+                      </span>
+                      <svg
+                        className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {isExpanded && (
+                      <div className="px-6 pb-5 opacity-80">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {kpiItems.map(item => (
+                            <div key={item.label} className="bg-[#fafaf9] border border-gray-100 px-4 py-4 flex flex-col">
+                              <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">{item.label}</p>
+                              <p className="font-serif text-2xl font-bold text-[#1a4a3a] leading-none">{item.value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Quarter Comparison Tab ─────────────────────────────────────────────────────
+
+const COMPARISON_METRICS: { label: string; key: keyof QuarterSnapshot['kpi_data'] }[] = [
+  { label: 'Total Members',       key: 'total_members' },
+  { label: 'New Members',         key: 'new_members' },
+  { label: 'Total Events',        key: 'total_events' },
+  { label: 'Total Registrations', key: 'total_registrations' },
+  { label: 'Total Bookings',      key: 'total_bookings' },
+  { label: 'Confirmed Bookings',  key: 'confirmed_bookings' },
+  { label: 'Reports Published',   key: 'reports_published' },
+]
+
+function QuarterComparisonTab() {
+  const [snapshots, setSnapshots] = useState<QuarterSnapshot[]>([])
+  const [loading, setLoading]     = useState(true)
+
+  useEffect(() => {
+    createClient()
+      .from('analytics_quarter_snapshots')
+      .select('*')
+      .order('year', { ascending: false })
+      .order('quarter_number', { ascending: false })
+      .then(({ data }) => {
+        setSnapshots((data ?? []) as QuarterSnapshot[])
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) return <p className="text-sm text-gray-400">Loading…</p>
+
+  if (snapshots.length < 2) {
+    return (
+      <div className="py-16 text-center border border-dashed border-gray-200">
+        <p className="text-sm font-semibold text-gray-600 mb-1">Archive at least two quarters to see comparisons.</p>
+        <p className="text-xs text-gray-400">Use the Overview tab to archive a quarter when prompted.</p>
+      </div>
+    )
+  }
+
+  // Show last 4 quarters (most recent first)
+  const cols = snapshots.slice(0, 4)
+  const latest  = cols[0]
+  const previous = cols[1]
+
+  return (
+    <div>
+      <div className="border border-gray-200 overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[480px]">
+          <thead>
+            <tr className="bg-[#fafaf9] border-b border-gray-200">
+              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-48">
+                Metric
+              </th>
+              {cols.map(s => (
+                <th key={s.id} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a]">
+                  Q{s.quarter_number} {s.year}
+                </th>
+              ))}
+              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+                Δ vs prev
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {COMPARISON_METRICS.map(metric => {
+              const values = cols.map(s => s.kpi_data[metric.key] ?? null)
+              const defined = values.filter((v): v is number => v !== null)
+              const maxVal  = defined.length > 0 ? Math.max(...defined) : null
+
+              const latestVal   = latest.kpi_data[metric.key] ?? null
+              const previousVal = previous.kpi_data[metric.key] ?? null
+              const delta = latestVal !== null && previousVal !== null
+                ? latestVal - previousVal
+                : null
+
+              return (
+                <tr key={metric.key} className="bg-white hover:bg-[#fafaf9] transition-colors">
+                  <td className="px-5 py-3.5 text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                    {metric.label}
+                  </td>
+                  {values.map((val, i) => {
+                    const isMax = val !== null && val === maxVal && defined.length > 1
+                    return (
+                      <td
+                        key={i}
+                        className="px-5 py-3.5 font-serif text-lg font-bold"
+                        style={isMax
+                          ? { backgroundColor: '#1a4a3a', color: '#ffffff' }
+                          : { color: '#1a4a3a' }
+                        }
+                      >
+                        {val ?? '—'}
+                      </td>
+                    )
+                  })}
+                  <td className="px-5 py-3.5 font-semibold text-sm">
+                    {delta === null ? (
+                      <span className="text-gray-300">—</span>
+                    ) : delta > 0 ? (
+                      <span className="text-green-600">+{delta}</span>
+                    ) : delta < 0 ? (
+                      <span className="text-red-600">{delta}</span>
+                    ) : (
+                      <span className="text-gray-400">0</span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[10px] text-gray-400 mt-3 uppercase tracking-widest">
+        Showing last {cols.length} archived quarter{cols.length > 1 ? 's' : ''}. Δ = latest vs previous.
+      </p>
     </div>
   )
 }
@@ -388,7 +695,7 @@ function SponsorsTab() {
       })
   }, [])
 
-  const sponsors = partners.filter(p => p.type === 'sponsor').length
+  const sponsors     = partners.filter(p => p.type === 'sponsor').length
   const partnerCount = partners.filter(p => p.type === 'partner').length
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
@@ -407,7 +714,6 @@ function SponsorsTab() {
         </p>
       ) : (
         <div className="border border-gray-200 mb-4">
-          {/* Table header */}
           <div className="grid grid-cols-[1fr_100px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200">
             <span className={labelCls}>Name</span>
             <span className={labelCls}>Type</span>
@@ -540,17 +846,18 @@ function FinanceTab() {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'overview',  label: 'Overview' },
-  { key: 'linkedin',  label: 'LinkedIn Posts' },
-  { key: 'sponsors',  label: 'Sponsors' },
-  { key: 'finance',   label: 'Finance' },
+  { key: 'overview',           label: 'Overview' },
+  { key: 'quarter-comparison', label: 'Quarter Comparison' },
+  { key: 'linkedin',           label: 'LinkedIn Posts' },
+  { key: 'sponsors',           label: 'Sponsors' },
+  { key: 'finance',            label: 'Finance' },
 ]
 
 export default function AdminAnalyticsPage() {
-  const router                          = useRouter()
-  const [userEmail, setUserEmail]       = useState('')
-  const [ready, setReady]               = useState(false)
-  const [tab, setTab]                   = useState<Tab>('overview')
+  const router                    = useRouter()
+  const [userEmail, setUserEmail] = useState('')
+  const [ready, setReady]         = useState(false)
+  const [tab, setTab]             = useState<Tab>('overview')
 
   useEffect(() => {
     const db = createClient()
@@ -595,7 +902,6 @@ export default function AdminAnalyticsPage() {
               <div className="w-8 h-px bg-[#1a4a3a]" />
             </div>
 
-            {/* GA4 external link — outside tabs */}
             <a
               href="https://analytics.google.com"
               target="_blank"
@@ -611,13 +917,13 @@ export default function AdminAnalyticsPage() {
           </div>
 
           {/* Tab bar */}
-          <div className="flex gap-0 border-b border-gray-200 mb-8">
+          <div className="flex gap-0 border-b border-gray-200 mb-8 overflow-x-auto">
             {TABS.map(t => (
               <button
                 key={t.key}
                 type="button"
                 onClick={() => setTab(t.key)}
-                className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px ${
+                className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px whitespace-nowrap ${
                   tab === t.key
                     ? 'border-[#1a4a3a] text-[#1a4a3a]'
                     : 'border-transparent text-gray-400 hover:text-gray-700'
@@ -629,10 +935,11 @@ export default function AdminAnalyticsPage() {
           </div>
 
           {/* Tab content */}
-          {tab === 'overview' && <OverviewTab />}
-          {tab === 'linkedin' && <LinkedInPostsTab />}
-          {tab === 'sponsors' && <SponsorsTab />}
-          {tab === 'finance'  && <FinanceTab />}
+          {tab === 'overview'           && <OverviewTab />}
+          {tab === 'quarter-comparison' && <QuarterComparisonTab />}
+          {tab === 'linkedin'           && <LinkedInPostsTab />}
+          {tab === 'sponsors'           && <SponsorsTab />}
+          {tab === 'finance'            && <FinanceTab />}
 
         </div>
       </main>
