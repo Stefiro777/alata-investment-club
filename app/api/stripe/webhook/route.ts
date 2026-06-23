@@ -241,7 +241,12 @@ export async function POST(req: NextRequest) {
 
     // ── Auto-record finance transaction ───────────────────────────────────────
     try {
-      const amount      = paymentIntent.amount / 100
+      const gross = paymentIntent.amount / 100
+      const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string)
+      const balanceTx = await stripe.balanceTransactions.retrieve(charge.balance_transaction as string)
+      const net = balanceTx.net / 100
+      const fee = balanceTx.fee / 100
+
       const description = (paymentIntent.metadata?.service_name as string | undefined)
         ?? paymentIntent.description
         ?? 'Stripe Payment'
@@ -270,10 +275,10 @@ export async function POST(req: NextRequest) {
       await supabaseAdmin.from('transactions').insert({
         type:        'revenue',
         date,
-        amount,
+        amount:      net,
         description,
         category_id: categoryId,
-        note:        'Auto-recorded from Stripe payment ' + paymentIntent.id,
+        note:        `Netto: €${net.toFixed(2)} | Lordo: €${gross.toFixed(2)} | Commissioni Stripe: €${fee.toFixed(2)} | ${paymentIntent.id}`,
         receipt_url: null,
       })
     } catch (txErr) {
