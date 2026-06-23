@@ -13,7 +13,7 @@ const CSP = [
   // Images: Supabase storage, Brandfetch logos, LinkedIn CDN (featured report thumbnails via Make), data URIs, blobs
   "img-src 'self' data: blob: https://iyigyfygsalvvveeeheq.supabase.co https://*.supabase.co https://*.supabase.in https://api.brandfetch.io https://cdn.brandfetch.io https://asset.brandfetch.io https://media.licdn.com https://*.licdn.com https://*.cdninstagram.com https://www.googletagmanager.com https://www.google-analytics.com",
   // XHR/fetch: Supabase API, Vercel Analytics, unpkg (PDF.js fetches worker + cMaps)
-  "connect-src 'self' https://iyigyfygsalvvveeeheq.supabase.co https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://vitals.vercel-insights.com https://va.vercel-scripts.com https://unpkg.com https://api.stripe.com https://www.google-analytics.com",
+  "connect-src 'self' https://iyigyfygsalvvveeeheq.supabase.co https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://vitals.vercel-insights.com https://va.vercel-scripts.com https://unpkg.com https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://region1.analytics.google.com",
   // PDF.js Web Worker loaded from unpkg at runtime
   "worker-src 'self' blob: https://unpkg.com",
   // PDF preview via blob: and Supabase storage + YouTube/Vimeo gallery embeds
