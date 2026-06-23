@@ -119,7 +119,7 @@ function OverviewTab() {
     Promise.all([
       db.from('club_members').select('role, created_at'),
       db.from('upcoming_events').select('id, date'),
-      db.from('event_registrations').select('id', { count: 'exact', head: true }),
+      db.from('event_registrations').select('id'),
       db.from('career_bookings').select('id, status, is_member_free, slot_date, created_at'),
       db.from('contenuti').select('id', { count: 'exact', head: true })
         .eq('tipo', 'report').gte('data_pubblicazione', qsDate),
@@ -136,7 +136,7 @@ function OverviewTab() {
 
       setMembers(ms)
       setEvents(es)
-      setTotalRegs(rRes.count ?? 0)
+      setTotalRegs(rRes.data?.length ?? 0)
       setBookings(bs)
       setReportsQCount(rpRes.count ?? 0)
       setJobs(js)
@@ -301,9 +301,9 @@ function OverviewTab() {
           <div>
             <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalEvents}</p>
             <p className="text-sm text-white/70 mt-4">
-              <span className="font-semibold text-white">{upcomingEvents}</span> upcoming
+              <span className="font-semibold text-white">{upcomingEvents}</span>{' '}upcoming
               &nbsp;·&nbsp;
-              <span className="font-semibold text-white">{totalRegs}</span> total registrations
+              <span className="font-semibold text-white">{totalRegs}</span>{' '}total registrations
             </p>
             <p className="text-[10px] text-white/40 mt-1 uppercase tracking-widest">
               {avgRegs} avg regs / event
@@ -317,9 +317,9 @@ function OverviewTab() {
           <div>
             <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalBookings}</p>
             <p className="text-sm text-white/70 mt-4">
-              <span className="font-semibold text-white">{confirmedBookings}</span> confirmed
+              <span className="font-semibold text-white">{confirmedBookings}</span>{' '}confirmed
               &nbsp;·&nbsp;
-              <span className="font-semibold text-white">{memberFreeBookings}</span> member free
+              <span className="font-semibold text-white">{memberFreeBookings}</span>{' '}member free
             </p>
             <p className="text-[10px] text-white/40 mt-1 uppercase tracking-widest">
               {bookingsThisQuarter} this quarter
