@@ -7,8 +7,9 @@ import { createClient } from '@/lib/supabase'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 
-// Initialise once at module level
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+// Initialise once at module level — guard against missing key at runtime
+const stripeKey     = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null
 
 // ── Constants (identical to original page) ────────────────────────────────────
 
@@ -124,6 +125,11 @@ function PaymentForm({
   const [processing, setProcessing] = useState(false)
   const [error, setError]           = useState<string | null>(null)
 
+  useEffect(() => {
+    console.log('[Stripe] NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:', stripeKey || 'UNDEFINED/EMPTY')
+    console.log('[Stripe] stripe instance:', stripe)
+  }, [stripe])
+
   const isFree = isMember || service.price_cents === 0
 
   async function handleConfirm() {
@@ -202,24 +208,30 @@ function PaymentForm({
 
       {/* Card input */}
       {!isFree && (
-        <div>
-          <p className={labelCls}>Card Details</p>
-          <div className="border border-gray-200 px-3 py-3.5">
-            <CardElement
-              options={{
-                style: {
-                  base: {
-                    fontSize: '14px',
-                    color: '#1a1a1a',
-                    fontFamily: 'Inter, sans-serif',
-                    '::placeholder': { color: '#9ca3af' },
+        !stripeKey ? (
+          <p className="text-sm text-red-600 border-l-2 border-red-400 pl-3">
+            Payment unavailable — please contact us to book.
+          </p>
+        ) : (
+          <div>
+            <p className={labelCls}>Card Details</p>
+            <div className="border border-gray-200 px-3 py-3.5">
+              <CardElement
+                options={{
+                  style: {
+                    base: {
+                      fontSize: '14px',
+                      color: '#1a1a1a',
+                      fontFamily: 'Inter, sans-serif',
+                      '::placeholder': { color: '#9ca3af' },
+                    },
+                    invalid: { color: '#ef4444' },
                   },
-                  invalid: { color: '#ef4444' },
-                },
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
-        </div>
+        )
       )}
 
       {error && (
