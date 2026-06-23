@@ -153,6 +153,7 @@ function RegistrationsList({ eventId }: { eventId: string }) {
 function QRScannerTab() {
   const scannerRef = useRef<import('html5-qrcode').Html5Qrcode | null>(null)
   const [cameraActive, setCameraActive] = useState(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const lastTokenRef = useRef<{ token: string; ts: number } | null>(null)
   const processingRef = useRef(false)
@@ -197,23 +198,41 @@ function QRScannerTab() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function startCamera() {
-    const { Html5Qrcode } = await import('html5-qrcode')
-    const scanner = new Html5Qrcode('qr-reader')
-    scannerRef.current = scanner
-    await scanner.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 240, height: 240 } },
-      onScanSuccess,
-      () => {}
-    )
-    setCameraActive(true)
+    if (scannerRef.current?.isScanning) return
+    setCameraError(null)
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode')
+      const scanner = new Html5Qrcode('qr-reader')
+      scannerRef.current = scanner
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 240, height: 240 } },
+        onScanSuccess,
+        () => {}
+      )
+      setCameraActive(true)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('denied')) {
+        setCameraError('Camera permission denied. Please allow camera access in your browser settings.')
+      } else {
+        setCameraError(`Could not start camera: ${msg}`)
+      }
+      scannerRef.current = null
+    }
   }
 
   async function stopCamera() {
-    if (scannerRef.current?.isScanning) {
-      await scannerRef.current.stop()
+    try {
+      if (scannerRef.current?.isScanning) {
+        await scannerRef.current.stop()
+      }
+    } catch {
+      // ignore stop errors
     }
+    scannerRef.current = null
     setCameraActive(false)
+    setCameraError(null)
   }
 
   // Clean up on unmount
@@ -253,16 +272,20 @@ function QRScannerTab() {
         )}
       </div>
 
-      {/* Camera container — never unmounted */}
-      <div className="relative">
+      {cameraError && (
+        <p className="text-xs text-red-600 border-l-2 border-red-400 pl-3">{cameraError}</p>
+      )}
+
+      {/* Camera container — always in DOM so Html5Qrcode can mount into it */}
+      <div className="relative w-full max-w-sm">
         <div
           id="qr-reader"
-          className="w-full max-w-sm border border-[#e5e5e5] bg-[#f9f9f9]"
-          style={{ minHeight: cameraActive ? 300 : 0, display: cameraActive ? 'block' : 'none' }}
+          className="w-full border border-[#e5e5e5] bg-[#f9f9f9]"
+          style={{ minHeight: cameraActive ? 300 : 0, overflow: 'hidden' }}
         />
 
         {/* Overlay — stacked on top of camera */}
-        {scanResult && (
+        {scanResult && cameraActive && (
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
@@ -310,8 +333,8 @@ function QRScannerTab() {
         )}
       </div>
 
-      {/* Show placeholder when camera is off */}
-      {!cameraActive && (
+      {/* Placeholder when camera is off */}
+      {!cameraActive && !cameraError && (
         <div className="w-full max-w-sm border border-dashed border-[#d1d5db] bg-[#f9f9f9] flex items-center justify-center" style={{ height: 240 }}>
           <p className="text-xs text-[#6b7280] uppercase tracking-widest">Camera off</p>
         </div>
