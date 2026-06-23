@@ -284,15 +284,21 @@ export default function JobApplicationsClient({ applications: initial }: { appli
   }
 
   async function handleArchive(id: string) {
-    const supabase = createClient()
-    const { error } = await supabase.from('job_applications').update({ archived: true }).eq('id', id)
-    if (!error) setApplications(prev => prev.map(a => a.id === id ? { ...a, archived: true } : a))
+    const res = await fetch('/api/admin/archive-job-application', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, archived: true }),
+    })
+    if (res.ok) setApplications(prev => prev.map(a => a.id === id ? { ...a, archived: true } : a))
   }
 
   async function handleRestore(id: string) {
-    const supabase = createClient()
-    const { error } = await supabase.from('job_applications').update({ archived: false }).eq('id', id)
-    if (!error) setApplications(prev => prev.map(a => a.id === id ? { ...a, archived: false } : a))
+    const res = await fetch('/api/admin/archive-job-application', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, archived: false }),
+    })
+    if (res.ok) setApplications(prev => prev.map(a => a.id === id ? { ...a, archived: false } : a))
   }
 
   async function handleDelete(id: string) {
