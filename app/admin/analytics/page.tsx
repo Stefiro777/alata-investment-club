@@ -15,7 +15,7 @@ type Booking  = { id: string; status: string; is_member_free: boolean; slot_date
 type Partner  = { id: string; name: string; type: string; created_at: string }
 type Transaction    = { id: string; type: 'revenue' | 'cost' | 'rimborso'; amount: number; category_id: string | null }
 type BudgetCategory = { id: string; name: string }
-type JobOffer       = { id: string; active: boolean }
+type JobOffer       = { id: string; type: string }
 
 type QuarterSnapshot = {
   id: string
@@ -123,7 +123,7 @@ function OverviewTab() {
       db.from('career_bookings').select('id, status, is_member_free, slot_date, created_at'),
       db.from('contenuti').select('id', { count: 'exact', head: true })
         .eq('tipo', 'report').gte('data_pubblicazione', qsDate),
-      db.from('job_offers').select('id, active'),
+      db.from('job_offers').select('id, type'),
       db.from('analytics_quarter_snapshots').select('*')
         .order('year', { ascending: false })
         .order('quarter_number', { ascending: false }),
@@ -175,7 +175,7 @@ function OverviewTab() {
   const memberFreeBookings  = bookings.filter(b => b.is_member_free).length
 
   const totalJobs  = jobs.length
-  const activeJobs = jobs.filter(j => j.active).length
+  const activeJobs = jobs.filter(j => j.type === 'official').length
   void totalJobs
 
   const bodPct    = totalMembers > 0 ? (membersBod      / totalMembers) * 100 : 0
