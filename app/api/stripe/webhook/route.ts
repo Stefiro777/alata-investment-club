@@ -173,11 +173,14 @@ export async function POST(req: NextRequest) {
     // ── Career booking handling ────────────────────────────────────────────────
     const { data: booking, error: findErr } = await supabaseAdmin
       .from('career_bookings')
-      .select('id, service_id, slot_date, slot_time, name, email, motivation, goal, cv_url')
+      .select('id, status, service_id, slot_date, slot_time, name, email, motivation, goal, cv_url')
       .eq('stripe_payment_intent_id', paymentIntent.id)
       .single()
 
     if (!findErr && booking) {
+      if (booking.status === 'confirmed') {
+        return NextResponse.json({ received: true, skipped: 'already_processed' })
+      }
       await supabaseAdmin
         .from('career_bookings')
         .update({ status: 'confirmed' })
