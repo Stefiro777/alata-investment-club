@@ -379,21 +379,31 @@ function QuoteForm({ onSaved }: { onSaved: () => void }) {
 
 // ── Quotes history ────────────────────────────────────────────────────────────
 
-function QuotesHistory() {
+function QuotesHistory({ reloadTrigger }: { reloadTrigger?: number }) {
   const [quotes,  setQuotes]  = useState<SavedQuote[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchErr, setFetchErr] = useState<string | null>(null)
   const [dlding,  setDlding]  = useState<string | null>(null)
   const [showSend, setShowSend] = useState<SavedQuote | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setFetchErr(null)
     const token = await getToken()
-    const data = await fetch('/api/finance/quotes', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
+    console.log('[QuotesHistory] token present:', !!token)
+    const res = await fetch('/api/finance/quotes', { headers: { Authorization: `Bearer ${token}` } })
+    const data = await res.json()
+    console.log('[QuotesHistory] GET /api/finance/quotes →', res.status, data)
+    if (!res.ok) {
+      setFetchErr(data?.error ?? `Errore ${res.status}`)
+      setLoading(false)
+      return
+    }
     setQuotes(data.quotes ?? [])
     setLoading(false)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load() }, [load, reloadTrigger])
 
   async function downloadPDF(q: SavedQuote) {
     setDlding(q.id)
@@ -413,6 +423,12 @@ function QuotesHistory() {
   }
 
   if (loading) return <p className="text-sm text-gray-400">Caricamento...</p>
+  if (fetchErr) return (
+    <div className="text-xs text-red-600 bg-red-50 border border-red-200 px-4 py-3">
+      Errore nel caricamento dei preventivi: {fetchErr}
+      <button onClick={load} className="ml-3 underline">Riprova</button>
+    </div>
+  )
   if (!quotes.length) return <p className="text-sm text-gray-400">Nessun preventivo ancora.</p>
 
   return (
@@ -493,7 +509,7 @@ export default function QuoteClient() {
 
       {tab === 'nuovo'
         ? <QuoteForm key={refreshKey} onSaved={() => setRefreshKey(k => k + 1)} />
-        : <QuotesHistory key={refreshKey} />}
+        : <QuotesHistory reloadTrigger={refreshKey} />}
     </div>
   )
 }
