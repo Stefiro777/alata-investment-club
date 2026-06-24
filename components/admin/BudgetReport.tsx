@@ -79,6 +79,81 @@ function beforeOrInPeriod(dateStr: string, mode: PeriodMode, offset: number): bo
   return d <= new Date(year, 11, 31)
 }
 
+const MONTHS_IT_FULL = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre']
+
+interface CatRow { name: string; entrate: number; uscite: number; saldo: number }
+
+function BudgetPreview({ period, catRows, entrate, uscite, saldo }: {
+  period: string; catRows: CatRow[]; entrate: number; uscite: number; saldo: number
+}) {
+  const now = new Date()
+  const todayStr = `${now.getDate()} ${MONTHS_IT_FULL[now.getMonth()]} ${now.getFullYear()}`
+
+  return (
+    <div style={{ background: 'white', border: '1px solid #e5e5e5', fontFamily: 'Helvetica, Arial, sans-serif', fontSize: 13, color: '#000', minHeight: 640 }}>
+      {/* Header band */}
+      <div style={{ background: '#1a4a3a', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>ALATA INVESTMENT CLUB</p>
+          <p style={{ margin: '3px 0 0', fontSize: 9, color: '#b8d4c8' }}>RENDICONTO FINANZIARIO</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff' }}>BUDGET REPORT</p>
+            <p style={{ margin: '3px 0 0', fontSize: 9, color: '#b8d4c8' }}>{period}</p>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/white.png" alt="Alata" style={{ height: 36, width: 'auto' }} />
+        </div>
+      </div>
+
+      <div style={{ padding: '18px 24px' }}>
+        {/* Info block */}
+        <p style={{ fontSize: 10, margin: '0 0 3px' }}><strong>Periodo:</strong> {period}</p>
+        <p style={{ fontSize: 10, margin: '0 0 16px' }}><strong>Data di redazione:</strong> Brescia, {todayStr}</p>
+
+        {/* Category table */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, marginBottom: 0 }}>
+          <thead>
+            <tr style={{ background: '#1a4a3a', color: '#fff' }}>
+              <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 700, fontSize: 9 }}>CATEGORIA</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 700, fontSize: 9 }}>ENTRATE</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 700, fontSize: 9 }}>USCITE</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 700, fontSize: 9 }}>SALDO</th>
+            </tr>
+          </thead>
+          <tbody>
+            {catRows.length === 0 ? (
+              <tr><td colSpan={4} style={{ padding: '14px 8px', color: '#9ca3af', textAlign: 'center' }}>Nessuna transazione per questo periodo.</td></tr>
+            ) : catRows.map((row, i) => (
+              <tr key={i} style={{ background: i % 2 === 1 ? '#f8f8f8' : '#fff' }}>
+                <td style={{ padding: '6px 8px' }}>{row.name}</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.entrate > 0 ? fmtAmt(row.entrate) : '—'}</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right' }}>{row.uscite > 0 ? fmtAmt(row.uscite) : '—'}</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600 }}>{(row.saldo >= 0 ? '+' : '') + fmtAmt(Math.abs(row.saldo))}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr style={{ background: '#edf7f0', borderTop: '2px solid #1a4a3a' }}>
+              <td style={{ padding: '8px', fontWeight: 700, fontSize: 11 }}>TOTALE</td>
+              <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700 }}>{fmtAmt(entrate)}</td>
+              <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700 }}>{fmtAmt(uscite)}</td>
+              <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700 }}>{(saldo >= 0 ? '+' : '') + fmtAmt(Math.abs(saldo))}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        {/* Signature block */}
+        <div style={{ marginTop: 30, paddingTop: 10, borderTop: '1px solid #1a4a3a' }}>
+          <p style={{ fontWeight: 700, fontSize: 9, margin: '0 0 4px' }}>Alata Investment Club — Il Presidente</p>
+          <p style={{ fontSize: 8, color: '#777', margin: 0 }}>alatainvestmentclub.com — info@alatainvestmentclub.com</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SummaryCard({ label, value, dark }: { label: string; value: string; dark?: boolean }) {
   return (
     <div
@@ -102,6 +177,7 @@ export default function BudgetReport() {
   const [mode, setMode] = useState<PeriodMode>('mensile')
   const [offset, setOffset] = useState(0)
   const [exporting, setExporting] = useState(false)
+  const [view, setView] = useState<'anteprima' | 'scarica'>('anteprima')
 
   useEffect(() => {
     const supabase = createClient()
@@ -174,6 +250,50 @@ export default function BudgetReport() {
 
   return (
     <div className="space-y-6">
+      {/* Anteprima / Scarica tab switcher */}
+      <div className="border-b border-gray-200">
+        <div className="flex gap-6">
+          {(['anteprima', 'scarica'] as const).map(v => (
+            <button key={v} onClick={() => setView(v)}
+              className="pb-2 text-sm font-['Inter'] transition-colors capitalize"
+              style={view === v
+                ? { borderBottom: '2px solid #1a4a3a', color: '#1a4a3a', fontWeight: 600 }
+                : { borderBottom: '2px solid transparent', color: '#9ca3af' }}>
+              {v === 'anteprima' ? 'Anteprima' : 'Scarica PDF'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {view === 'anteprima' ? (
+        <>
+          {/* Period controls for preview */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex border border-line overflow-hidden">
+              {(['mensile', 'trimestrale', 'annuale'] as const).map(m => (
+                <button key={m} onClick={() => { setMode(m); setOffset(0) }}
+                  className="px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors"
+                  style={mode === m ? { backgroundColor: '#1a4a3a', color: 'white' } : { backgroundColor: 'white', color: '#6b7280' }}>
+                  {m === 'mensile' ? 'Mensile' : m === 'trimestrale' ? 'Trimestrale' : 'Annuale'}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setOffset(o => o - 1)} className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <span className="px-3 text-sm font-medium text-ink-900 min-w-[120px] text-center">{label}</span>
+              <button onClick={() => setOffset(o => Math.min(o + 1, 0))} disabled={offset >= 0} className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors disabled:opacity-30">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+          <div className="overflow-auto border border-gray-200">
+            <BudgetPreview period={label} catRows={catRows} entrate={entrate} uscite={uscite} saldo={saldoPeriodo} />
+          </div>
+        </>
+      ) : (
+      <>
       {/* Controls */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
@@ -287,6 +407,8 @@ export default function BudgetReport() {
           )}
         </table>
       </div>
+      </>
+      )}
     </div>
   )
 }

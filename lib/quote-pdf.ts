@@ -11,7 +11,7 @@ function paeth(a: number, b: number, c: number): number {
   if (pa <= pb && pa <= pc) return a; if (pb <= pc) return b; return c
 }
 
-export function loadLogoPNG(filePath: string): PNGImg | null {
+export function loadLogoPNG(filePath: string, bg: [number, number, number] = [255, 255, 255]): PNGImg | null {
   try {
     const buf = fs.readFileSync(filePath)
     const SIG = [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]
@@ -40,7 +40,7 @@ export function loadLogoPNG(filePath: string): PNGImg | null {
       }
       inP+=stride; cur.copy(prev)
       for (let x = 0; x < width; x++) {
-        if (ch===4){const r=cur[x*4],g=cur[x*4+1],b=cur[x*4+2],a=cur[x*4+3]/255;rgb[outP++]=Math.round(a*r+(1-a)*255);rgb[outP++]=Math.round(a*g+(1-a)*255);rgb[outP++]=Math.round(a*b+(1-a)*255)}
+        if (ch===4){const r=cur[x*4],g=cur[x*4+1],b=cur[x*4+2],a=cur[x*4+3]/255;rgb[outP++]=Math.round(a*r+(1-a)*bg[0]);rgb[outP++]=Math.round(a*g+(1-a)*bg[1]);rgb[outP++]=Math.round(a*b+(1-a)*bg[2])}
         else{rgb[outP++]=cur[x*3];rgb[outP++]=cur[x*3+1];rgb[outP++]=cur[x*3+2]}
       }
     }
@@ -100,8 +100,7 @@ export function buildQuotePDF(q: QuoteData, logo: PNGImg | null): Buffer {
   // Header band
   ops.push(rect(0, PH - HDR_H, PW, HDR_H, GREEN))
   ops.push(tx(ML, PH - 28, 'F2', 14, WHITE, 'ALATA INVESTMENT CLUB'))
-  ops.push(tx(ML, PH - 46, 'F1', 9, GSUB, "Universita' degli Studi di Brescia"))
-  ops.push(tx(ML, PH - 64, 'F1', 8, GSUB, 'alatainvestmentclub.com'))
+  ops.push(tx(ML, PH - 46, 'F1', 8, GSUB, 'alatainvestmentclub.com'))
   ops.push(tx(370, PH - 28, 'F2', 13, WHITE, 'PREVENTIVO'))
   ops.push(tx(370, PH - 46, 'F1', 8, GSUB, q.number))
   ops.push(tx(370, PH - 60, 'F1', 8, GSUB, fmtDate(q.issued_at)))
@@ -116,7 +115,7 @@ export function buildQuotePDF(q: QuoteData, logo: PNGImg | null): Buffer {
   ops.push(tx(ML,       curY, 'F2', 9, GREEN, 'MITTENTE'))
   ops.push(tx(ML + 260, curY, 'F2', 9, GREEN, 'DESTINATARIO'))
   curY -= 14
-  const sender = ['Alata Investment Club', "Universita' degli Studi di Brescia", 'info@alatainvestmentclub.com']
+  const sender = ['Alata Investment Club', 'info@alatainvestmentclub.com']
   const recip  = [q.recipient_name, q.recipient_org ?? '', q.recipient_email ?? '']
   for (let i = 0; i < 3; i++) {
     if (sender[i]) ops.push(tx(ML,       curY, 'F1', 9, BLACK, sender[i]))
@@ -177,7 +176,7 @@ export function buildQuotePDF(q: QuoteData, logo: PNGImg | null): Buffer {
   ops.push(hline(ML, 120, MR, GREEN, 0.5))
   ops.push(tx(ML, 105, 'F2', 9, BLACK, 'Alata Investment Club'))
   ops.push(tx(ML, 92,  'F1', 8, MUTED, 'alatainvestmentclub.com — info@alatainvestmentclub.com'))
-  ops.push(tx(ML, 38,  'F1', 8, MUTED, "Documento emesso da Alata Investment Club — Universita' degli Studi di Brescia"))
+  ops.push(tx(ML, 38,  'F1', 8, MUTED, 'Documento emesso da Alata Investment Club'))
 
   // ── PDF binary assembly ───────────────────────────────────────────────────
   // Objects: 1=Catalog, 2=Pages, 3=Page, 4=Content, 5=F1, 6=F2[, 7=Logo]

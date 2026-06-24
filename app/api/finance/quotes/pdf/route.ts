@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const q: QuoteData = await req.json()
-  const logo = loadLogoPNG(path.join(process.cwd(), 'public', 'white-black.png'))
+  const logo = loadLogoPNG(path.join(process.cwd(), 'public', 'white.png'), [26, 74, 58])
   const pdf = buildQuotePDF(q, logo)
 
   return new NextResponse(new Uint8Array(pdf), {

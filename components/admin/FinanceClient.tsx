@@ -24,8 +24,8 @@ export default function FinanceClient() {
           {([
             { key: 'transactions' as const, label: 'Transactions' },
             { key: 'budget'       as const, label: 'Budget Report' },
-            { key: 'documents'    as const, label: 'Documents' },
             { key: 'preventivo'   as const, label: 'Preventivo' },
+            { key: 'documents'    as const, label: 'Documents' },
           ] as const).map(t => (
             <button
               key={t.key}

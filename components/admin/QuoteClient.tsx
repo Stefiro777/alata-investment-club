@@ -48,13 +48,16 @@ function QuotePreview({ q }: { q: QuoteData }) {
       <div style={{ background: '#1a4a3a', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>ALATA INVESTMENT CLUB</p>
-          <p style={{ margin: '3px 0 0', fontSize: 9, color: '#b8d4c8' }}>Università degli Studi di Brescia</p>
-          <p style={{ margin: '2px 0 0', fontSize: 8, color: '#b8d4c8' }}>alatainvestmentclub.com</p>
+            <p style={{ margin: '2px 0 0', fontSize: 8, color: '#b8d4c8' }}>alatainvestmentclub.com</p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff' }}>PREVENTIVO</p>
-          <p style={{ margin: '3px 0 0', fontSize: 9, color: '#b8d4c8' }}>{q.number || 'ALATA-XXXX-XXX'}</p>
-          <p style={{ margin: '2px 0 0', fontSize: 9, color: '#b8d4c8' }}>{q.issued_at ? fmtDate(q.issued_at) : ''}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff' }}>PREVENTIVO</p>
+            <p style={{ margin: '3px 0 0', fontSize: 9, color: '#b8d4c8' }}>{q.number || 'ALATA-XXXX-XXX'}</p>
+            <p style={{ margin: '2px 0 0', fontSize: 9, color: '#b8d4c8' }}>{q.issued_at ? fmtDate(q.issued_at) : ''}</p>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/white.png" alt="Alata" style={{ height: 36, width: 'auto' }} />
         </div>
       </div>
 
@@ -67,7 +70,6 @@ function QuotePreview({ q }: { q: QuoteData }) {
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 8, fontWeight: 700, color: '#1a4a3a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Mittente</p>
             <p style={{ margin: '0 0 2px', fontSize: 10 }}>Alata Investment Club</p>
-            <p style={{ margin: '0 0 2px', fontSize: 10 }}>Università degli Studi di Brescia</p>
             <p style={{ margin: 0, fontSize: 10 }}>info@alatainvestmentclub.com</p>
           </div>
           <div style={{ flex: 1 }}>

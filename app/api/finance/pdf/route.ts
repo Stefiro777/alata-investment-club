@@ -323,8 +323,7 @@ export async function POST(request: NextRequest) {
   catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
 
   // Load logo from public directory
-  const logoPath = path.join(process.cwd(), 'public', 'white-black.png')
-  const logo = loadLogoPNG(logoPath)
+  const logo = loadLogoPNG(path.join(process.cwd(), 'public', 'white.png'), [26, 74, 58])
 
   const pdf = buildPDF(payload, logo)
   const safePeriod = payload.period.replace(/[^a-zA-Z0-9\-_]/g, '-')
