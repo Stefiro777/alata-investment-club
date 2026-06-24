@@ -8,6 +8,8 @@ export type MemberProfile = {
   teams: string[] | null
   email: string
   membership_expires_at: string | null
+  member_id: string | null
+  created_at: string | null
 }
 
 const DashboardProfileContext = createContext<MemberProfile | null>(null)

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from './DashboardProfileContext'
+import MembershipCard from '@/components/dashboard/MembershipCard'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -286,8 +287,26 @@ export default function DashboardPage() {
 
   const urgentCount = tasks.filter(t => isToday(t.due_date) || isTomorrow(t.due_date)).length
 
+  const memberSince = profile?.created_at ? String(new Date(profile.created_at).getFullYear()) : null
+
   return (
     <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
+
+      {/* Membership Card */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-1">La tua Membership Card</h2>
+          <div className="w-8 h-px bg-forest mb-5" />
+          <MembershipCard
+            name={profile?.full_name ?? ''}
+            role={profile?.role ?? ''}
+            memberId={profile?.member_id ?? null}
+            memberSince={memberSince}
+            expiresAt={profile?.membership_expires_at ?? null}
+          />
+        </div>
+        <div className="hidden lg:block" />
+      </div>
 
       {/* Banner scadenze */}
       {urgentCount > 0 && (

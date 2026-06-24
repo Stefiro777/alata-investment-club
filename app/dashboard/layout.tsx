@@ -66,7 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       const { data: profileData, error } = await supabase
         .from('club_members')
-        .select('full_name, role, teams, membership_expires_at')
+        .select('full_name, role, teams, membership_expires_at, member_id, created_at')
         .eq('email', user?.email ?? '')
         .maybeSingle()
 
@@ -94,6 +94,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         email:                 user.email ?? '',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         membership_expires_at: (profileData as any).membership_expires_at ?? null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        member_id:             (profileData as any).member_id ?? null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        created_at:            (profileData as any).created_at ?? null,
       })
       setStatus('ok')
     }
