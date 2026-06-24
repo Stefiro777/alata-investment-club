@@ -42,21 +42,24 @@ export async function POST(req: NextRequest) {
     const priceCents = settings?.price_cents ?? 2000
 
     // Step 4: Stripe PaymentIntent
+    const amount = Math.round(Number(settings?.price_cents ?? 2000))
+    if (!amount || amount < 50) throw new Error('Invalid amount: ' + amount)
+
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-    console.log('[payment-intent] creating PaymentIntent, amount:', priceCents)
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: priceCents,
+    console.log('[payment-intent] creating PaymentIntent, amount:', amount)
+    const pi = await stripe.paymentIntents.create({
+      amount,
       currency: 'eur',
+      automatic_payment_methods: { enabled: true },
       metadata: {
         type:       'membership',
         user_id:    user.id,
         user_email: member.email ?? '',
-        name:       member.full_name ?? '',
       },
     })
-    console.log('[payment-intent] PaymentIntent created:', paymentIntent.id)
+    console.log('[payment-intent] created:', pi.id, 'amount:', pi.amount)
 
-    return NextResponse.json({ clientSecret: paymentIntent.client_secret })
+    return NextResponse.json({ clientSecret: pi.client_secret })
   } catch (err: unknown) {
     console.error('[payment-intent] CRASH:', err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
