@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { loadStripe } from '@stripe/stripe-js'
@@ -13,9 +13,9 @@ import {
   useElements,
 } from '@stripe/react-stripe-js'
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
-type Settings  = { price_cents: number; description: string | null }
+type Settings   = { price_cents: number; description: string | null }
 type MemberData = { full_name: string; email: string; membership_expires_at: string | null }
 type View = 'main' | 'summary' | 'payment' | 'success'
 
@@ -31,7 +31,7 @@ function nextYearDate(): string {
   return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
-// ── Stripe Elements form ──────────────────────────────────────────────────────
+// ── Stripe Elements payment form ──────────────────────────────────────────────
 
 const ELEM_STYLE = {
   base: {
@@ -66,6 +66,10 @@ function PaymentForm({
   const [processing, setProcessing] = useState(false)
   const [error,      setError]      = useState<string | null>(null)
 
+  function border(field: string) {
+    return focused === field ? '1px solid #1a4a3a' : '1px solid #d1d5db'
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!stripe || !elements) return
@@ -75,34 +79,35 @@ function PaymentForm({
     const cardNumber = elements.getElement(CardNumberElement)
     if (!cardNumber) { setProcessing(false); return }
 
-    const { error: stripeErr, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: cardNumber,
-        billing_details: { name },
-      },
-    })
+    try {
+      const { error: stripeErr, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardNumber,
+          billing_details: { name },
+        },
+      })
 
-    if (stripeErr) {
-      setError(stripeErr.message ?? 'Errore durante il pagamento')
+      if (stripeErr) {
+        setError(stripeErr.message ?? 'Errore durante il pagamento')
+        setProcessing(false)
+        return
+      }
+
+      if (paymentIntent?.status === 'succeeded') {
+        onSuccess()
+      } else {
+        setError('Pagamento non completato. Riprova.')
+        setProcessing(false)
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Errore imprevisto')
       setProcessing(false)
-      return
     }
-
-    if (paymentIntent?.status === 'succeeded') {
-      onSuccess()
-    } else {
-      setError('Pagamento non completato. Riprova.')
-      setProcessing(false)
-    }
-  }
-
-  function borderClass(field: string) {
-    return `border ${focused === field ? 'border-[#1a4a3a]' : 'border-[#d1d5db]'} transition-colors`
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ fontFamily: 'Inter, sans-serif' }}>
-      {/* Cardholder name */}
+    <form onSubmit={handleSubmit}>
+      {/* Name */}
       <div className="mb-5">
         <FieldLabel>Nome sulla carta</FieldLabel>
         <input
@@ -113,15 +118,20 @@ function PaymentForm({
           onBlur={() => setFocused(null)}
           placeholder="Mario Rossi"
           required
-          className={`w-full text-sm text-gray-900 placeholder-gray-400 px-3 py-3 outline-none bg-white ${borderClass('name')}`}
-          style={{ borderRadius: 0 }}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            fontSize: 14, color: '#1a1a1a',
+            padding: '12px', border: border('name'),
+            borderRadius: 0, outline: 'none',
+            fontFamily: 'Inter, sans-serif',
+          }}
         />
       </div>
 
       {/* Card number */}
       <div className="mb-5">
         <FieldLabel>Numero carta</FieldLabel>
-        <div className={`px-3 py-3 ${borderClass('number')}`}>
+        <div style={{ padding: '12px', border: border('number') }}>
           <CardNumberElement
             options={{ style: ELEM_STYLE }}
             onFocus={() => setFocused('number')}
@@ -131,10 +141,10 @@ function PaymentForm({
       </div>
 
       {/* Expiry + CVC */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
         <div>
-          <FieldLabel>Data scadenza</FieldLabel>
-          <div className={`px-3 py-3 ${borderClass('expiry')}`}>
+          <FieldLabel>Scadenza</FieldLabel>
+          <div style={{ padding: '12px', border: border('expiry') }}>
             <CardExpiryElement
               options={{ style: ELEM_STYLE }}
               onFocus={() => setFocused('expiry')}
@@ -144,7 +154,7 @@ function PaymentForm({
         </div>
         <div>
           <FieldLabel>CVC</FieldLabel>
-          <div className={`px-3 py-3 ${borderClass('cvc')}`}>
+          <div style={{ padding: '12px', border: border('cvc') }}>
             <CardCvcElement
               options={{ style: ELEM_STYLE }}
               onFocus={() => setFocused('cvc')}
@@ -155,26 +165,33 @@ function PaymentForm({
       </div>
 
       {error && (
-        <p className="mb-4 text-xs text-red-600 border-l-2 border-red-400 pl-3">{error}</p>
+        <p style={{ marginBottom: 16, fontSize: 12, color: '#dc2626', borderLeft: '2px solid #f87171', paddingLeft: 12 }}>
+          {error}
+        </p>
       )}
 
       <button
         type="submit"
         disabled={processing || !stripe}
-        className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
-        style={{ height: 48 }}
+        style={{
+          width: '100%', height: 48,
+          background: processing || !stripe ? '#9ca3af' : '#1a4a3a',
+          color: 'white', border: 'none', cursor: processing || !stripe ? 'not-allowed' : 'pointer',
+          fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          fontFamily: 'Inter, sans-serif',
+        }}
       >
         {processing ? (
           <>
-            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+            <svg style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} fill="none" viewBox="0 0 24 24">
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
             Elaborazione…
           </>
-        ) : (
-          `PAGA ${formatEuros(priceCents)}`
-        )}
+        ) : `PAGA ${formatEuros(priceCents)}`}
       </button>
     </form>
   )
@@ -183,19 +200,17 @@ function PaymentForm({
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function MembershipPage() {
-  const searchParams = useSearchParams()
-  const router       = useRouter()
-  const isSuccess    = searchParams.get('membership') === 'success'
+  const searchParams   = useSearchParams()
+  const router         = useRouter()
   const isExpiredParam = searchParams.get('expired') === 'true'
 
-  const [view,         setView]         = useState<View>(isSuccess ? 'success' : 'main')
+  const [view,         setView]         = useState<View>('main')
   const [member,       setMember]       = useState<MemberData | null>(null)
   const [settings,     setSettings]     = useState<Settings | null>(null)
   const [loading,      setLoading]      = useState(true)
-  const [fetching,     setFetching]     = useState(false)   // loading PI
+  const [fetching,     setFetching]     = useState(false)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [piError,      setPiError]      = useState<string | null>(null)
-  const tokenRef = useRef<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -203,11 +218,12 @@ export default function MembershipPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: { session } } = await supabase.auth.getSession()
-      tokenRef.current = session?.access_token ?? null
-
       const [{ data: m }, sRes] = await Promise.all([
-        supabase.from('club_members').select('full_name, email, membership_expires_at').eq('email', user.email ?? '').maybeSingle(),
+        supabase
+          .from('club_members')
+          .select('full_name, email, membership_expires_at')
+          .eq('email', user.email ?? '')
+          .maybeSingle(),
         fetch('/api/membership/settings'),
       ])
       const s = await sRes.json()
@@ -219,23 +235,35 @@ export default function MembershipPage() {
   }, [])
 
   async function handleGoToPayment() {
-    setFetching(true); setPiError(null)
-    const token = tokenRef.current
-    if (!token) { setPiError('Non autenticato'); setFetching(false); return }
+    setFetching(true)
+    setPiError(null)
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      if (!token) {
+        setPiError('Sessione scaduta. Ricarica la pagina.')
+        return
+      }
 
-    const res = await fetch('/api/membership/payment-intent', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    const data = await res.json()
-    if (!res.ok || !data.clientSecret) {
-      setPiError(data.error ?? 'Errore durante la preparazione del pagamento')
+      const res = await fetch('/api/membership/payment-intent', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+
+      if (!res.ok || !data.clientSecret) {
+        setPiError(data.error ?? 'Errore durante la preparazione del pagamento')
+        return
+      }
+
+      setClientSecret(data.clientSecret)
+      setView('payment')
+    } catch (err: unknown) {
+      setPiError(err instanceof Error ? err.message : 'Errore di rete. Riprova.')
+    } finally {
       setFetching(false)
-      return
     }
-    setClientSecret(data.clientSecret)
-    setView('payment')
-    setFetching(false)
   }
 
   const expires   = member?.membership_expires_at ? new Date(member.membership_expires_at) : null
@@ -257,9 +285,7 @@ export default function MembershipPage() {
           <h1 className="font-serif text-3xl font-bold text-gray-900 mb-3">Pagamento completato</h1>
           <div className="w-8 h-px bg-[#1a4a3a] mb-5" />
           <p className="text-sm text-gray-600 mb-2">La tua membership è stata rinnovata con successo.</p>
-          <p className="text-sm font-semibold text-[#1a4a3a] mb-8">
-            Valida fino al {nextYearDate()}
-          </p>
+          <p className="text-sm font-semibold text-[#1a4a3a] mb-8">Valida fino al {nextYearDate()}</p>
           <button
             onClick={() => router.push('/dashboard')}
             className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest px-8 py-4 transition-colors"
@@ -276,17 +302,21 @@ export default function MembershipPage() {
     return (
       <div className="max-w-2xl mx-auto px-6 lg:px-8 py-12" style={{ fontFamily: 'Inter, sans-serif' }}>
         <div className="mb-8">
-          <button onClick={() => setView('summary')} className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 mb-4 flex items-center gap-1">
+          <button
+            onClick={() => setView('summary')}
+            className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 mb-4 flex items-center gap-1"
+          >
             ← Torna al riepilogo
           </button>
           <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Pagamento</h1>
           <div className="w-8 h-px bg-[#1a4a3a]" />
         </div>
 
-        {/* Order recap */}
         <div className="border border-gray-100 bg-gray-50 px-5 py-4 mb-6 flex justify-between items-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Membership Annuale</p>
-          <p className="font-serif text-lg font-bold text-gray-900">{settings ? formatEuros(settings.price_cents) : '—'}</p>
+          <p className="font-serif text-lg font-bold text-gray-900">
+            {settings ? formatEuros(settings.price_cents) : '—'}
+          </p>
         </div>
 
         <Elements stripe={stripePromise} options={{ clientSecret }}>
@@ -305,7 +335,10 @@ export default function MembershipPage() {
     return (
       <div className="max-w-2xl mx-auto px-6 lg:px-8 py-12" style={{ fontFamily: 'Inter, sans-serif' }}>
         <div className="mb-10">
-          <button onClick={() => setView('main')} className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 mb-4 flex items-center gap-1">
+          <button
+            onClick={() => { setView('main'); setPiError(null) }}
+            className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 mb-4 flex items-center gap-1"
+          >
             ← Torna indietro
           </button>
           <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Riepilogo ordine</h1>
@@ -332,11 +365,15 @@ export default function MembershipPage() {
           </div>
           <div className="border-t border-gray-100 mt-5 pt-5 flex justify-between items-baseline">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Totale</span>
-            <span className="font-serif text-3xl font-bold text-gray-900">{settings ? formatEuros(settings.price_cents) : '—'}</span>
+            <span className="font-serif text-3xl font-bold text-gray-900">
+              {settings ? formatEuros(settings.price_cents) : '—'}
+            </span>
           </div>
         </div>
 
-        <p className="text-xs text-gray-400 mb-6">Il pagamento è sicuro e protetto. I dati della carta non vengono mai salvati.</p>
+        <p className="text-xs text-gray-400 mb-6">
+          Il pagamento è sicuro e protetto. I dati della carta non vengono mai salvati.
+        </p>
 
         {piError && (
           <p className="mb-4 text-xs text-red-600 border-l-2 border-red-400 pl-3">{piError}</p>
@@ -346,7 +383,7 @@ export default function MembershipPage() {
           <button
             onClick={handleGoToPayment}
             disabled={fetching}
-            className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+            className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {fetching ? (
               <>
