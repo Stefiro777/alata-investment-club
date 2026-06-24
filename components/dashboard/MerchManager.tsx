@@ -58,21 +58,29 @@ function VisibilityToggle() {
   const [saving,  setSaving]  = useState(false)
 
   useEffect(() => {
-    supabase.from('settings').select('value').eq('key', 'merch_page_visible').maybeSingle()
-      .then(({ data }) => setVisible(data?.value === 'true'))
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      fetch('/api/admin/merch/visibility', {
+        headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
+      })
+        .then(r => r.json())
+        .then(d => { if (typeof d.visible === 'boolean') setVisible(d.visible) })
+    })
   }, [])
 
   async function toggle() {
     if (visible === null) return
     setSaving(true)
-    const { data: { session } } = await supabase.auth.getSession()
-    await fetch('/api/admin/merch/visibility', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ visible: !visible }),
-    })
-    setVisible(v => !v)
-    setSaving(false)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/merch/visibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ visible: !visible }),
+      }).then(r => r.json())
+      if (res.ok) setVisible(v => !v)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Cormorant_Garamond, Inter } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
+import { unstable_noStore as noStore } from 'next/cache'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import './globals.css'
 import MobileMenu from './components/MobileMenu'
@@ -79,6 +80,7 @@ const supabaseAdmin = createSupabaseAdmin(
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  noStore()
   const { data: setting } = await supabaseAdmin
     .from('settings').select('value').eq('key', 'merch_page_visible').maybeSingle()
   const merchVisible = setting?.value === 'true'
