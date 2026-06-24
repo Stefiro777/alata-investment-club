@@ -1,49 +1,201 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { loadStripe } from '@stripe/stripe-js'
+import {
+  Elements,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js'
 
-type Settings = {
-  price_cents: number
-  description: string | null
-}
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
-type MemberData = {
-  full_name: string
-  email: string
-  membership_expires_at: string | null
-}
-
-type View = 'main' | 'summary'
+type Settings  = { price_cents: number; description: string | null }
+type MemberData = { full_name: string; email: string; membership_expires_at: string | null }
+type View = 'main' | 'summary' | 'payment' | 'success'
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('it-IT', {
-    day: '2-digit', month: 'long', year: 'numeric',
-  })
+  return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
 }
-
 function formatEuros(cents: number): string {
   return `€${(cents / 100).toFixed(2).replace('.', ',')}`
 }
-
 function nextYearDate(): string {
   const d = new Date()
   d.setFullYear(d.getFullYear() + 1)
   return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
+// ── Stripe Elements form ──────────────────────────────────────────────────────
+
+const ELEM_STYLE = {
+  base: {
+    fontFamily: 'Inter, sans-serif',
+    fontSize: '14px',
+    color: '#1a1a1a',
+    '::placeholder': { color: '#9ca3af' },
+  },
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#1a4a3a' }}>
+      {children}
+    </p>
+  )
+}
+
+function PaymentForm({
+  clientSecret,
+  priceCents,
+  onSuccess,
+}: {
+  clientSecret: string
+  priceCents: number
+  onSuccess: () => void
+}) {
+  const stripe   = useStripe()
+  const elements = useElements()
+  const [name,       setName]       = useState('')
+  const [focused,    setFocused]    = useState<string | null>(null)
+  const [processing, setProcessing] = useState(false)
+  const [error,      setError]      = useState<string | null>(null)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!stripe || !elements) return
+    setProcessing(true)
+    setError(null)
+
+    const cardNumber = elements.getElement(CardNumberElement)
+    if (!cardNumber) { setProcessing(false); return }
+
+    const { error: stripeErr, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: cardNumber,
+        billing_details: { name },
+      },
+    })
+
+    if (stripeErr) {
+      setError(stripeErr.message ?? 'Errore durante il pagamento')
+      setProcessing(false)
+      return
+    }
+
+    if (paymentIntent?.status === 'succeeded') {
+      onSuccess()
+    } else {
+      setError('Pagamento non completato. Riprova.')
+      setProcessing(false)
+    }
+  }
+
+  function borderClass(field: string) {
+    return `border ${focused === field ? 'border-[#1a4a3a]' : 'border-[#d1d5db]'} transition-colors`
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ fontFamily: 'Inter, sans-serif' }}>
+      {/* Cardholder name */}
+      <div className="mb-5">
+        <FieldLabel>Nome sulla carta</FieldLabel>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onFocus={() => setFocused('name')}
+          onBlur={() => setFocused(null)}
+          placeholder="Mario Rossi"
+          required
+          className={`w-full text-sm text-gray-900 placeholder-gray-400 px-3 py-3 outline-none bg-white ${borderClass('name')}`}
+          style={{ borderRadius: 0 }}
+        />
+      </div>
+
+      {/* Card number */}
+      <div className="mb-5">
+        <FieldLabel>Numero carta</FieldLabel>
+        <div className={`px-3 py-3 ${borderClass('number')}`}>
+          <CardNumberElement
+            options={{ style: ELEM_STYLE }}
+            onFocus={() => setFocused('number')}
+            onBlur={() => setFocused(null)}
+          />
+        </div>
+      </div>
+
+      {/* Expiry + CVC */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div>
+          <FieldLabel>Data scadenza</FieldLabel>
+          <div className={`px-3 py-3 ${borderClass('expiry')}`}>
+            <CardExpiryElement
+              options={{ style: ELEM_STYLE }}
+              onFocus={() => setFocused('expiry')}
+              onBlur={() => setFocused(null)}
+            />
+          </div>
+        </div>
+        <div>
+          <FieldLabel>CVC</FieldLabel>
+          <div className={`px-3 py-3 ${borderClass('cvc')}`}>
+            <CardCvcElement
+              options={{ style: ELEM_STYLE }}
+              onFocus={() => setFocused('cvc')}
+              onBlur={() => setFocused(null)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <p className="mb-4 text-xs text-red-600 border-l-2 border-red-400 pl-3">{error}</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={processing || !stripe}
+        className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+        style={{ height: 48 }}
+      >
+        {processing ? (
+          <>
+            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+            </svg>
+            Elaborazione…
+          </>
+        ) : (
+          `PAGA ${formatEuros(priceCents)}`
+        )}
+      </button>
+    </form>
+  )
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 export default function MembershipPage() {
   const searchParams = useSearchParams()
+  const router       = useRouter()
+  const isSuccess    = searchParams.get('membership') === 'success'
   const isExpiredParam = searchParams.get('expired') === 'true'
-  const isSuccess      = searchParams.get('membership') === 'success'
 
-  const [view,     setView]     = useState<View>('main')
-  const [member,   setMember]   = useState<MemberData | null>(null)
-  const [settings, setSettings] = useState<Settings | null>(null)
-  const [loading,  setLoading]  = useState(true)
-  const [paying,   setPaying]   = useState(false)
-  const [error,    setError]    = useState<string | null>(null)
+  const [view,         setView]         = useState<View>(isSuccess ? 'success' : 'main')
+  const [member,       setMember]       = useState<MemberData | null>(null)
+  const [settings,     setSettings]     = useState<Settings | null>(null)
+  const [loading,      setLoading]      = useState(true)
+  const [fetching,     setFetching]     = useState(false)   // loading PI
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [piError,      setPiError]      = useState<string | null>(null)
+  const tokenRef = useRef<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -51,16 +203,14 @@ export default function MembershipPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      const { data: { session } } = await supabase.auth.getSession()
+      tokenRef.current = session?.access_token ?? null
+
       const [{ data: m }, sRes] = await Promise.all([
-        supabase
-          .from('club_members')
-          .select('full_name, email, membership_expires_at')
-          .eq('email', user.email ?? '')
-          .maybeSingle(),
+        supabase.from('club_members').select('full_name, email, membership_expires_at').eq('email', user.email ?? '').maybeSingle(),
         fetch('/api/membership/settings'),
       ])
       const s = await sRes.json()
-
       if (m) setMember(m as MemberData)
       if (s?.settings) setSettings(s.settings as Settings)
       setLoading(false)
@@ -68,54 +218,106 @@ export default function MembershipPage() {
     load()
   }, [])
 
-  async function handleCheckout() {
-    setPaying(true); setError(null)
-    const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    const token = session?.access_token
-    if (!token) { setError('Non autenticato'); setPaying(false); return }
+  async function handleGoToPayment() {
+    setFetching(true); setPiError(null)
+    const token = tokenRef.current
+    if (!token) { setPiError('Non autenticato'); setFetching(false); return }
 
-    const res = await fetch('/api/membership/checkout', {
+    const res = await fetch('/api/membership/payment-intent', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
     const data = await res.json()
-    if (!res.ok || !data.url) {
-      setError(data.error ?? 'Errore durante il checkout')
-      setPaying(false)
+    if (!res.ok || !data.clientSecret) {
+      setPiError(data.error ?? 'Errore durante la preparazione del pagamento')
+      setFetching(false)
       return
     }
-    window.location.href = data.url
+    setClientSecret(data.clientSecret)
+    setView('payment')
+    setFetching(false)
   }
 
   const expires   = member?.membership_expires_at ? new Date(member.membership_expires_at) : null
-  const now       = new Date()
-  const diffMs    = expires ? expires.getTime() - now.getTime() : null
+  const diffMs    = expires ? expires.getTime() - Date.now() : null
   const isExpired = diffMs !== null && diffMs <= 0
   const isSoon    = diffMs !== null && diffMs > 0 && Math.floor(diffMs / 86400000) <= 7
   const isActive  = !isExpired && !isSoon
 
-  // ── Summary / cart view ────────────────────────────────────────────────────
+  // ── Success ───────────────────────────────────────────────────────────────
+  if (view === 'success') {
+    return (
+      <div className="max-w-2xl mx-auto px-6 lg:px-8 py-12" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <div className="flex flex-col items-center text-center py-12">
+          <div className="w-16 h-16 bg-[#1a4a3a] flex items-center justify-center mb-6">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="font-serif text-3xl font-bold text-gray-900 mb-3">Pagamento completato</h1>
+          <div className="w-8 h-px bg-[#1a4a3a] mb-5" />
+          <p className="text-sm text-gray-600 mb-2">La tua membership è stata rinnovata con successo.</p>
+          <p className="text-sm font-semibold text-[#1a4a3a] mb-8">
+            Valida fino al {nextYearDate()}
+          </p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest px-8 py-4 transition-colors"
+          >
+            TORNA ALLA DASHBOARD
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Payment form ──────────────────────────────────────────────────────────
+  if (view === 'payment' && clientSecret) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 lg:px-8 py-12" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <div className="mb-8">
+          <button onClick={() => setView('summary')} className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 mb-4 flex items-center gap-1">
+            ← Torna al riepilogo
+          </button>
+          <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Pagamento</h1>
+          <div className="w-8 h-px bg-[#1a4a3a]" />
+        </div>
+
+        {/* Order recap */}
+        <div className="border border-gray-100 bg-gray-50 px-5 py-4 mb-6 flex justify-between items-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Membership Annuale</p>
+          <p className="font-serif text-lg font-bold text-gray-900">{settings ? formatEuros(settings.price_cents) : '—'}</p>
+        </div>
+
+        <Elements stripe={stripePromise} options={{ clientSecret }}>
+          <PaymentForm
+            clientSecret={clientSecret}
+            priceCents={settings?.price_cents ?? 0}
+            onSuccess={() => setView('success')}
+          />
+        </Elements>
+      </div>
+    )
+  }
+
+  // ── Summary ───────────────────────────────────────────────────────────────
   if (view === 'summary') {
     return (
       <div className="max-w-2xl mx-auto px-6 lg:px-8 py-12" style={{ fontFamily: 'Inter, sans-serif' }}>
         <div className="mb-10">
+          <button onClick={() => setView('main')} className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-600 mb-4 flex items-center gap-1">
+            ← Torna indietro
+          </button>
           <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Riepilogo ordine</h1>
           <div className="w-8 h-px bg-[#1a4a3a]" />
         </div>
 
-        {/* Order card */}
         <div className="border border-gray-200 p-6 mb-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-5">
-            Dettagli
-          </p>
-
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-5">Dettagli</p>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Servizio</span>
-              <span className="font-semibold text-gray-900 text-right max-w-xs">
-                Membership Annuale Alata Investment Club
-              </span>
+              <span className="font-semibold text-gray-900">Membership Annuale Alata Investment Club</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Periodo</span>
@@ -128,44 +330,37 @@ export default function MembershipPage() {
               </div>
             )}
           </div>
-
           <div className="border-t border-gray-100 mt-5 pt-5 flex justify-between items-baseline">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Totale</span>
-            <span className="font-serif text-3xl font-bold text-gray-900">
-              {settings ? formatEuros(settings.price_cents) : '—'}
-            </span>
+            <span className="font-serif text-3xl font-bold text-gray-900">{settings ? formatEuros(settings.price_cents) : '—'}</span>
           </div>
         </div>
 
-        <p className="text-xs text-gray-400 mb-6">
-          Il pagamento avviene su piattaforma Stripe sicura. Verrai reindirizzato al termine.
-        </p>
+        <p className="text-xs text-gray-400 mb-6">Il pagamento è sicuro e protetto. I dati della carta non vengono mai salvati.</p>
 
-        {error && (
-          <p className="mb-4 text-xs text-red-600 border-l-2 border-red-400 pl-3">{error}</p>
+        {piError && (
+          <p className="mb-4 text-xs text-red-600 border-l-2 border-red-400 pl-3">{piError}</p>
         )}
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={handleCheckout}
-            disabled={paying}
+            onClick={handleGoToPayment}
+            disabled={fetching}
             className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
           >
-            {paying ? (
+            {fetching ? (
               <>
                 <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                Reindirizzamento…
+                Preparazione…
               </>
-            ) : (
-              'PROCEDI AL PAGAMENTO →'
-            )}
+            ) : 'PROCEDI AL PAGAMENTO →'}
           </button>
           <button
-            onClick={() => { setView('main'); setError(null) }}
-            disabled={paying}
+            onClick={() => { setView('main'); setPiError(null) }}
+            disabled={fetching}
             className="w-full border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs font-semibold uppercase tracking-widest py-3 transition-colors disabled:opacity-40"
           >
             ANNULLA
@@ -175,10 +370,9 @@ export default function MembershipPage() {
     )
   }
 
-  // ── Main view ──────────────────────────────────────────────────────────────
+  // ── Main ──────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-2xl mx-auto px-6 lg:px-8 py-12" style={{ fontFamily: 'Inter, sans-serif' }}>
-
       <div className="mb-10">
         <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Membership</h1>
         <div className="w-8 h-px bg-[#1a4a3a]" />
@@ -188,17 +382,7 @@ export default function MembershipPage() {
         <p className="text-sm text-gray-400">Caricamento…</p>
       ) : (
         <>
-          {/* Success banner */}
-          {isSuccess && (
-            <div className="mb-6 border border-[#1a4a3a] bg-[#1a4a3a]/5 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a]">
-                ✓ Membership rinnovata con successo!
-              </p>
-            </div>
-          )}
-
-          {/* Expired param banner */}
-          {isExpiredParam && !isSuccess && (
+          {isExpiredParam && (
             <div className="mb-6 border border-red-400 bg-red-50 px-5 py-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-red-600">
                 La tua membership è scaduta — rinnova per accedere alla dashboard.
@@ -206,12 +390,9 @@ export default function MembershipPage() {
             </div>
           )}
 
-          {/* Member info */}
           {member && (
             <div className="border border-gray-200 p-6 mb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
-                I tuoi dati
-              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">I tuoi dati</p>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Nome</span>
@@ -233,28 +414,21 @@ export default function MembershipPage() {
             </div>
           )}
 
-          {/* Status banners */}
           {isExpired && (
             <div className="mb-6 border border-red-400 bg-red-50 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-red-600 mb-0.5">
-                Membership scaduta
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-red-600 mb-0.5">Membership scaduta</p>
               <p className="text-sm text-red-500">Rinnova per riprendere l&apos;accesso completo.</p>
             </div>
           )}
-
           {isSoon && !isExpired && (
             <div className="mb-6 border border-yellow-400 bg-yellow-50 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-yellow-700 mb-0.5">
-                Scade tra pochi giorni
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-yellow-700 mb-0.5">Scade tra pochi giorni</p>
               <p className="text-sm text-yellow-600">
                 La tua membership scade il {expires ? formatDate(expires.toISOString()) : '—'}. Rinnova ora.
               </p>
             </div>
           )}
-
-          {isActive && !isSuccess && (
+          {isActive && (
             <div className="mb-6 border border-[#1a4a3a] bg-[#1a4a3a]/5 px-5 py-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a]">
                 Membership attiva fino al {expires ? formatDate(expires.toISOString()) : '—'}
@@ -262,27 +436,21 @@ export default function MembershipPage() {
             </div>
           )}
 
-          {/* Pricing + CTA */}
-          {!isSuccess && (
-            <div className="border border-gray-200 p-6">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
-                Quota annuale
-              </p>
-              <p className="font-serif text-3xl font-bold text-gray-900 mb-1">
-                {settings ? formatEuros(settings.price_cents) : '—'}
-              </p>
-              {settings?.description && (
-                <p className="text-sm text-gray-500 mb-6">{settings.description}</p>
-              )}
-
-              <button
-                onClick={() => setView('summary')}
-                className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors"
-              >
-                RINNOVA ORA →
-              </button>
-            </div>
-          )}
+          <div className="border border-gray-200 p-6">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">Quota annuale</p>
+            <p className="font-serif text-3xl font-bold text-gray-900 mb-1">
+              {settings ? formatEuros(settings.price_cents) : '—'}
+            </p>
+            {settings?.description && (
+              <p className="text-sm text-gray-500 mb-6">{settings.description}</p>
+            )}
+            <button
+              onClick={() => setView('summary')}
+              className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors"
+            >
+              RINNOVA ORA →
+            </button>
+          </div>
         </>
       )}
     </div>

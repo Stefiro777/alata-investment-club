@@ -269,6 +269,55 @@ export async function POST(req: NextRequest) {
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
 
+    // ── Membership PaymentIntent ───────────────────────────────────────────────
+    if (paymentIntent.metadata?.type === 'membership') {
+      const userEmail = paymentIntent.metadata.user_email ?? ''
+      const expiresAt = new Date()
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+
+      await supabaseAdmin
+        .from('club_members')
+        .update({ membership_expires_at: expiresAt.toISOString() })
+        .eq('email', userEmail)
+
+      try {
+        const net = paymentIntent.amount / 100
+
+        let categoryId: string | null = null
+        const { data: cat } = await supabaseAdmin
+          .from('budget_categories').select('id').eq('name', 'Membership').maybeSingle()
+        if (cat) {
+          categoryId = cat.id
+        } else {
+          const { data: newCat } = await supabaseAdmin
+            .from('budget_categories').insert({ name: 'Membership', type: 'revenue' }).select('id').single()
+          categoryId = newCat?.id ?? null
+        }
+
+        await supabaseAdmin.from('transactions').insert({
+          type:        'revenue',
+          date:        new Date().toISOString().slice(0, 10),
+          amount:      net,
+          description: `Quota membership ${userEmail}`,
+          category_id: categoryId,
+          note:        `PaymentIntent: ${paymentIntent.id} | User: ${paymentIntent.metadata.user_id}`,
+          receipt_url: null,
+        })
+
+        if (userEmail) {
+          const name = paymentIntent.metadata.name ?? userEmail
+          await supabaseAdmin.from('crm_customers').insert({
+            name: name || userEmail, email: userEmail, type: 'membership',
+            reference: 'Quota Membership', amount: net, purchased_at: new Date().toISOString(),
+          }).then(() => {})
+        }
+      } catch (e) {
+        console.error('Failed to record membership transaction (PI):', e)
+      }
+
+      return NextResponse.json({ received: true })
+    }
+
     // ── Career booking handling ────────────────────────────────────────────────
     const { data: booking, error: findErr } = await supabaseAdmin
       .from('career_bookings')
