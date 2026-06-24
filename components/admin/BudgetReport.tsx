@@ -177,7 +177,6 @@ export default function BudgetReport() {
   const [mode, setMode] = useState<PeriodMode>('mensile')
   const [offset, setOffset] = useState(0)
   const [exporting, setExporting] = useState(false)
-  const [view, setView] = useState<'anteprima' | 'scarica'>('anteprima')
 
   useEffect(() => {
     const supabase = createClient()
@@ -249,90 +248,29 @@ export default function BudgetReport() {
   const label = periodLabel(mode, offset)
 
   return (
-    <div className="space-y-6">
-      {/* Anteprima / Scarica tab switcher */}
-      <div className="border-b border-gray-200">
-        <div className="flex gap-6">
-          {(['anteprima', 'scarica'] as const).map(v => (
-            <button key={v} onClick={() => setView(v)}
-              className="pb-2 text-sm font-['Inter'] transition-colors capitalize"
-              style={view === v
-                ? { borderBottom: '2px solid #1a4a3a', color: '#1a4a3a', fontWeight: 600 }
-                : { borderBottom: '2px solid transparent', color: '#9ca3af' }}>
-              {v === 'anteprima' ? 'Anteprima' : 'Scarica PDF'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {view === 'anteprima' ? (
-        <>
-          {/* Period controls for preview */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex border border-line overflow-hidden">
-              {(['mensile', 'trimestrale', 'annuale'] as const).map(m => (
-                <button key={m} onClick={() => { setMode(m); setOffset(0) }}
-                  className="px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors"
-                  style={mode === m ? { backgroundColor: '#1a4a3a', color: 'white' } : { backgroundColor: 'white', color: '#6b7280' }}>
-                  {m === 'mensile' ? 'Mensile' : m === 'trimestrale' ? 'Trimestrale' : 'Annuale'}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setOffset(o => o - 1)} className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-              </button>
-              <span className="px-3 text-sm font-medium text-ink-900 min-w-[120px] text-center">{label}</span>
-              <button onClick={() => setOffset(o => Math.min(o + 1, 0))} disabled={offset >= 0} className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors disabled:opacity-30">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-              </button>
-            </div>
-          </div>
-          <div className="overflow-auto border border-gray-200">
-            <BudgetPreview period={label} catRows={catRows} entrate={entrate} uscite={uscite} saldo={saldoPeriodo} />
-          </div>
-        </>
-      ) : (
-      <>
-      {/* Controls */}
+    <div className="space-y-4">
+      {/* Controls + download button */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          {/* Mode toggle */}
           <div className="flex border border-line overflow-hidden">
             {(['mensile', 'trimestrale', 'annuale'] as const).map(m => (
               <button
                 key={m}
                 onClick={() => { setMode(m); setOffset(0) }}
                 className="px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors"
-                style={mode === m
-                  ? { backgroundColor: '#1a4a3a', color: 'white' }
-                  : { backgroundColor: 'white', color: '#6b7280' }
-                }
+                style={mode === m ? { backgroundColor: '#1a4a3a', color: 'white' } : { backgroundColor: 'white', color: '#6b7280' }}
               >
                 {m === 'mensile' ? 'Mensile' : m === 'trimestrale' ? 'Trimestrale' : 'Annuale'}
               </button>
             ))}
           </div>
-
-          {/* Navigation */}
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setOffset(o => o - 1)}
-              className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+            <button onClick={() => setOffset(o => o - 1)} className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
             <span className="px-3 text-sm font-medium text-ink-900 min-w-[120px] text-center">{label}</span>
-            <button
-              onClick={() => setOffset(o => Math.min(o + 1, 0))}
-              disabled={offset >= 0}
-              className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors disabled:opacity-30"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+            <button onClick={() => setOffset(o => Math.min(o + 1, 0))} disabled={offset >= 0} className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors disabled:opacity-30">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
           </div>
         </div>
@@ -340,75 +278,21 @@ export default function BudgetReport() {
         <button
           onClick={handleExportPDF}
           disabled={exporting}
-          className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase tracking-widest px-5 py-2.5 transition-colors disabled:opacity-40 flex items-center gap-2"
+          className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40 flex items-center gap-2"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          {exporting ? 'Generazione…' : 'Export PDF'}
+          {exporting ? 'Generazione…' : 'Scarica PDF'}
         </button>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <SummaryCard label="Entrate" value={fmtAmt(entrate)} />
-        <SummaryCard label="Uscite" value={fmtAmt(uscite)} />
-        <SummaryCard label="Saldo Periodo" value={fmtAmt(saldoPeriodo)} />
-        <SummaryCard label="Saldo Cumulativo" value={fmtAmt(saldoCumulativo)} dark />
+      {/* A4 preview */}
+      <div className="overflow-x-auto">
+        <div style={{ width: 794, minHeight: 1123, margin: '0 auto', boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
+          <BudgetPreview period={label} catRows={catRows} entrate={entrate} uscite={uscite} saldo={saldoPeriodo} />
+        </div>
       </div>
-
-      {/* Category breakdown table */}
-      <div className="border border-line overflow-x-auto">
-        <table className="w-full text-sm font-['Inter'] border-collapse">
-          <thead>
-            <tr className="border-b border-line bg-[#f9f9f9]">
-              {['CATEGORIA', 'ENTRATE', 'USCITE', 'SALDO'].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-ink-500">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {catRows.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="text-center text-ink-400 text-sm py-10">
-                  Nessuna transazione per questo periodo.
-                </td>
-              </tr>
-            ) : (
-              catRows.map((row, i) => (
-                <tr key={i} className="border-b border-black/5 last:border-0 hover:bg-[#f9f9f9] transition-colors">
-                  <td className="px-4 py-3 text-ink-900 font-medium">{row.name}</td>
-                  <td className="px-4 py-3 text-green-700 font-semibold tabular-nums">
-                    {row.entrate > 0 ? fmtAmt(row.entrate) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-red-700 font-semibold tabular-nums">
-                    {row.uscite > 0 ? fmtAmt(row.uscite) : '—'}
-                  </td>
-                  <td className={`px-4 py-3 font-bold tabular-nums ${row.saldo >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                    {row.saldo >= 0 ? '+' : ''}{fmtAmt(row.saldo)}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-          {catRows.length > 0 && (
-            <tfoot>
-              <tr className="border-t-2 border-[#1a4a3a]/20 bg-[#f0f5f3]">
-                <td className="px-4 py-3 text-xs font-bold uppercase tracking-wide text-ink-600">Totale</td>
-                <td className="px-4 py-3 font-bold text-green-700 tabular-nums">{fmtAmt(entrate)}</td>
-                <td className="px-4 py-3 font-bold text-red-700 tabular-nums">{fmtAmt(uscite)}</td>
-                <td className={`px-4 py-3 font-bold tabular-nums ${saldoPeriodo >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                  {saldoPeriodo >= 0 ? '+' : ''}{fmtAmt(saldoPeriodo)}
-                </td>
-              </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
-      </>
-      )}
     </div>
   )
 }
