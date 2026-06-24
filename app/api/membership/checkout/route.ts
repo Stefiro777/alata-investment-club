@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         price_data: {
           currency: 'eur',
           product_data: {
-            name: 'Membership Alata Investment Club',
+            name: 'Quota Membership Alata Investment Club',
             description,
           },
           unit_amount: priceCents,
@@ -57,11 +57,11 @@ export async function POST(req: NextRequest) {
     success_url: `${BASE_URL}/dashboard?membership=success`,
     cancel_url:  `${BASE_URL}/dashboard/membership`,
     metadata: {
-      type:      'membership',
-      user_id:   user.id,
-      member_id: member.id,
-      email:     member.email ?? '',
-      name:      member.full_name ?? '',
+      type:       'membership',
+      user_id:    user.id,
+      member_id:  member.id,
+      user_email: member.email ?? '',
+      name:       member.full_name ?? '',
     },
   })
 
