@@ -84,8 +84,9 @@ export default async function RootLayout({
   const merchVisible = setting?.value === 'true'
 
   const allNavLinks = [
-    ...navLinks,
+    ...navLinks.slice(0, 5),
     ...(merchVisible ? [{ href: '/merch', label: 'Merch' }] : []),
+    ...navLinks.slice(5),
   ]
 
   return (
