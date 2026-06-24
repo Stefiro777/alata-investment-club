@@ -78,9 +78,15 @@ export async function middleware(request: NextRequest) {
           .eq('email', user.email ?? '')
           .maybeSingle()
 
-        if (member?.membership_expires_at) {
-          const isExpired = new Date(member.membership_expires_at) < new Date()
-          if (isExpired) {
+        if (member) {
+          if (!member.membership_expires_at) {
+            // Never set — new member, needs to activate
+            const url = new URL('/dashboard/membership', request.url)
+            url.searchParams.set('new', 'true')
+            return NextResponse.redirect(url)
+          }
+          if (new Date(member.membership_expires_at) < new Date()) {
+            // Expired
             const url = new URL('/dashboard', request.url)
             url.searchParams.set('membership', 'expired')
             return NextResponse.redirect(url)

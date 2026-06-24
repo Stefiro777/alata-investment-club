@@ -271,14 +271,135 @@ export async function POST(req: NextRequest) {
 
     // ── Membership PaymentIntent ───────────────────────────────────────────────
     if (paymentIntent.metadata?.type === 'membership') {
-      const userEmail = paymentIntent.metadata.user_email ?? ''
-      const expiresAt = new Date()
+      const userEmail  = paymentIntent.metadata.user_email ?? ''
+      const memberName = paymentIntent.metadata.name ?? userEmail
+      const expiresAt  = new Date()
       expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+
+      // Fetch member_id for the email
+      const { data: memberRow } = await supabaseAdmin
+        .from('club_members')
+        .select('member_id')
+        .eq('email', userEmail)
+        .maybeSingle()
 
       await supabaseAdmin
         .from('club_members')
         .update({ membership_expires_at: expiresAt.toISOString() })
         .eq('email', userEmail)
+
+      // Confirmation email
+      try {
+        const net = paymentIntent.amount / 100
+        const expiresFormatted = expiresAt.toLocaleDateString('it-IT', {
+          day: '2-digit', month: 'long', year: 'numeric',
+        })
+        const amountFormatted = `€${net.toFixed(2).replace('.', ',')}`
+        const memberId = memberRow?.member_id ?? '—'
+
+        await resend.emails.send({
+          from: 'noreply@alatainvestmentclub.com',
+          to:   userEmail,
+          subject: 'Membership rinnovata — Alata Investment Club',
+          html: `<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Inter,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#1a4a3a;padding:28px 32px;text-align:left;">
+            <img src="https://alatainvestmentclub.com/white.png"
+                 alt="Alata Investment Club" height="36"
+                 style="display:block;height:36px;width:auto;" />
+          </td>
+        </tr>
+
+        <!-- Title -->
+        <tr>
+          <td style="padding:36px 32px 24px;">
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1a1a1a;">
+              Membership rinnovata con successo
+            </h1>
+            <div style="width:32px;height:2px;background:#1a4a3a;margin:0 0 20px;"></div>
+            <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.6;">
+              Ciao ${memberName},<br/>
+              la tua membership Alata Investment Club è stata rinnovata con successo.
+              Di seguito trovi il riepilogo del tuo account.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Summary box -->
+        <tr>
+          <td style="padding:0 32px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border:1px solid #e5e7eb;">
+              <tr>
+                <td style="padding:10px 16px;background:#f9fafb;font-size:12px;
+                            font-weight:600;color:#6b7280;text-transform:uppercase;
+                            letter-spacing:1px;width:40%;">Membro</td>
+                <td style="padding:10px 16px;background:#f9fafb;font-size:14px;
+                            color:#1a1a1a;">${memberName}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-size:12px;font-weight:600;
+                            color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Member ID</td>
+                <td style="padding:10px 16px;font-size:14px;color:#1a1a1a;
+                            font-family:monospace;">${memberId}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;background:#f9fafb;font-size:12px;
+                            font-weight:600;color:#6b7280;text-transform:uppercase;
+                            letter-spacing:1px;">Valida fino al</td>
+                <td style="padding:10px 16px;background:#f9fafb;font-size:14px;
+                            color:#1a4a3a;font-weight:600;">${expiresFormatted}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-size:12px;font-weight:600;
+                            color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Importo pagato</td>
+                <td style="padding:10px 16px;font-size:14px;color:#1a1a1a;
+                            font-weight:700;">${amountFormatted}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- CTA -->
+        <tr>
+          <td style="padding:0 32px 36px;text-align:center;">
+            <a href="https://alatainvestmentclub.com/dashboard"
+               style="display:inline-block;background:#1a4a3a;color:#ffffff;
+                      text-decoration:none;font-size:11px;font-weight:600;
+                      letter-spacing:2px;text-transform:uppercase;
+                      padding:14px 32px;">
+              VAI ALLA DASHBOARD
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 32px;background:#f4f4f4;border-top:1px solid #e5e7eb;">
+            <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
+              Alata Investment Club — Università degli Studi di Brescia
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+        })
+      } catch (emailErr) {
+        console.error('Failed to send membership confirmation email:', emailErr)
+      }
 
       try {
         const net = paymentIntent.amount / 100
@@ -305,9 +426,8 @@ export async function POST(req: NextRequest) {
         })
 
         if (userEmail) {
-          const name = paymentIntent.metadata.name ?? userEmail
           await supabaseAdmin.from('crm_customers').insert({
-            name: name || userEmail, email: userEmail, type: 'membership',
+            name: memberName || userEmail, email: userEmail, type: 'membership',
             reference: 'Quota Membership', amount: net, purchased_at: new Date().toISOString(),
           }).then(() => {})
         }

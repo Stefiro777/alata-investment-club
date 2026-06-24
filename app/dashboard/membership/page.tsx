@@ -203,6 +203,7 @@ export default function MembershipPage() {
   const searchParams   = useSearchParams()
   const router         = useRouter()
   const isExpiredParam = searchParams.get('expired') === 'true'
+  const isNewMember    = searchParams.get('new') === 'true'
 
   const [view,         setView]         = useState<View>('main')
   const [member,       setMember]       = useState<MemberData | null>(null)
@@ -419,7 +420,18 @@ export default function MembershipPage() {
         <p className="text-sm text-gray-400">Caricamento…</p>
       ) : (
         <>
-          {isExpiredParam && (
+          {isNewMember && (
+            <div className="mb-6 border border-[#1a4a3a] bg-[#1a4a3a]/5 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-1">
+                Benvenuto in Alata Investment Club!
+              </p>
+              <p className="text-sm text-gray-600">
+                Per accedere alla dashboard completa è necessario attivare la tua membership.
+              </p>
+            </div>
+          )}
+
+          {isExpiredParam && !isNewMember && (
             <div className="mb-6 border border-red-400 bg-red-50 px-5 py-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-red-600">
                 La tua membership è scaduta — rinnova per accedere alla dashboard.
