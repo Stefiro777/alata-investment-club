@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from './DashboardProfileContext'
 import MembershipCard from '@/components/dashboard/MembershipCard'
@@ -175,8 +176,10 @@ function CommentCard({ comment }: { comment: Comment }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const profile = useProfile()
-  const router = useRouter()
+  const profile      = useProfile()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const membershipExpiredBanner = searchParams.get('membership') === 'expired'
 
   const [tasks, setTasks] = useState<Task[]>([])
   const [comments, setComments] = useState<Comment[]>([])
@@ -291,6 +294,21 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
+
+      {/* Membership expired banner */}
+      {membershipExpiredBanner && (
+        <div className="border border-red-300 bg-red-50 px-5 py-4 flex items-center justify-between gap-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-red-600">
+            La tua membership è scaduta — Rinnova per accedere a tutte le funzionalità
+          </p>
+          <Link
+            href="/dashboard/membership"
+            className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] underline"
+          >
+            Rinnova →
+          </Link>
+        </div>
+      )}
 
       {/* Banner scadenze */}
       {urgentCount > 0 && (

@@ -316,8 +316,9 @@ function BookingOverlay({
   const [serviceError, setServiceError] = useState<string | null>(null)
 
   // Auth
-  const [isMember, setIsMember]     = useState(false)
-  const [authToken, setAuthToken]   = useState<string | null>(null)
+  const [isMember,          setIsMember]          = useState(false)
+  const [membershipExpired, setMembershipExpired]  = useState(false)
+  const [authToken,         setAuthToken]          = useState<string | null>(null)
 
   // Calendar / slot state
   const today      = new Date()
@@ -389,10 +390,16 @@ function BookingOverlay({
       setAuthToken(session.access_token)
       const { data: member } = await supabase
         .from('club_members')
-        .select('id')
+        .select('id, membership_expires_at')
         .eq('email', session.user.email ?? '')
         .maybeSingle()
-      if (member) setIsMember(true)
+      if (member) {
+        setIsMember(true)
+        const expired = member.membership_expires_at
+          ? new Date(member.membership_expires_at) < new Date()
+          : true
+        if (expired) setMembershipExpired(true)
+      }
     }
     init()
   }, [serviceTitle])
@@ -682,15 +689,30 @@ function BookingOverlay({
 
           {/* ── STEP 3: Cart ── */}
           {!serviceError && !confirmed && step === 3 && service && selectedDate && selectedTime && (
-            <BookingCart
-              serviceName={service.name}
-              servicePrice={service.price_cents}
-              isMember={isMember}
-              slot={{ date: selectedDate, time: selectedTime }}
-              formatDate={formatDateLong}
-              onProceed={(extras) => { setCartExtras(extras); setStep(4) }}
-              onBack={() => setStep(2)}
-            />
+            <>
+              {isMember && membershipExpired && (
+                <div className="mb-4 flex items-center justify-between gap-3 border border-yellow-300 bg-yellow-50 px-4 py-3">
+                  <p className="text-xs text-yellow-800">
+                    Rinnova la membership per accedere ai prezzi riservati.
+                  </p>
+                  <a
+                    href="/dashboard/membership"
+                    className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] underline"
+                  >
+                    Rinnova →
+                  </a>
+                </div>
+              )}
+              <BookingCart
+                serviceName={service.name}
+                servicePrice={service.price_cents}
+                isMember={isMember && !membershipExpired}
+                slot={{ date: selectedDate, time: selectedTime }}
+                formatDate={formatDateLong}
+                onProceed={(extras) => { setCartExtras(extras); setStep(4) }}
+                onBack={() => setStep(2)}
+              />
+            </>
           )}
 
           {/* ── STEP 4: Payment ── */}
@@ -699,7 +721,7 @@ function BookingOverlay({
               service={service}
               slot={{ date: selectedDate, time: selectedTime }}
               form={{ name, email, motivation, goal, cvUrl }}
-              isMember={isMember}
+              isMember={isMember && !membershipExpired}
               authToken={authToken}
               extraItems={cartExtras}
               onSuccess={() => setConfirmed(true)}

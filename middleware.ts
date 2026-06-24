@@ -53,34 +53,42 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Membership expiry gate — only for /dashboard/* (not /dashboard/membership itself)
+  // Membership expiry gate
+  // Allowed even when expired: /dashboard (exact) and /dashboard/membership[/*]
+  // Everything else under /dashboard/* → redirect to /dashboard?membership=expired
   if (
     user &&
     request.nextUrl.pathname.startsWith('/dashboard') &&
-    !request.nextUrl.pathname.startsWith('/dashboard/membership') &&
     user.email !== MEMBERSHIP_EXEMPT_EMAIL
   ) {
-    try {
-      const adminClient = createSupabaseAdmin(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
-      const { data: member } = await adminClient
-        .from('club_members')
-        .select('membership_expires_at')
-        .eq('email', user.email ?? '')
-        .maybeSingle()
+    const path = request.nextUrl.pathname
+    const isExpiredExempt =
+      path === '/dashboard' ||
+      path.startsWith('/dashboard/membership')
 
-      if (member?.membership_expires_at) {
-        const isExpired = new Date(member.membership_expires_at) < new Date()
-        if (isExpired) {
-          const url = new URL('/dashboard/membership', request.url)
-          url.searchParams.set('expired', 'true')
-          return NextResponse.redirect(url)
+    if (!isExpiredExempt) {
+      try {
+        const adminClient = createSupabaseAdmin(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        const { data: member } = await adminClient
+          .from('club_members')
+          .select('membership_expires_at')
+          .eq('email', user.email ?? '')
+          .maybeSingle()
+
+        if (member?.membership_expires_at) {
+          const isExpired = new Date(member.membership_expires_at) < new Date()
+          if (isExpired) {
+            const url = new URL('/dashboard', request.url)
+            url.searchParams.set('membership', 'expired')
+            return NextResponse.redirect(url)
+          }
         }
+      } catch {
+        // Non-blocking: if check fails, let the request through
       }
-    } catch {
-      // Non-blocking: if check fails, let the request through
     }
   }
 

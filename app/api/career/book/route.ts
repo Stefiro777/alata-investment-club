@@ -229,7 +229,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check if authenticated user is a club member
+    // Check if authenticated user is a club member with active membership
     let isMemberFree = false
     const authHeader = req.headers.get('authorization')
     if (authHeader?.startsWith('Bearer ')) {
@@ -238,10 +238,15 @@ export async function POST(req: NextRequest) {
       if (user?.email) {
         const { data: member } = await supabaseAdmin
           .from('club_members')
-          .select('id')
+          .select('id, membership_expires_at')
           .eq('email', user.email)
           .maybeSingle()
-        if (member) isMemberFree = true
+        if (member) {
+          const membershipActive = member.membership_expires_at
+            ? new Date(member.membership_expires_at) > new Date()
+            : false
+          if (membershipActive) isMemberFree = true
+        }
       }
     }
 
