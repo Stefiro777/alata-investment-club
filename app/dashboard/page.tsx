@@ -292,22 +292,6 @@ export default function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
 
-      {/* Membership Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <div>
-          <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-1">La tua Membership Card</h2>
-          <div className="w-8 h-px bg-forest mb-5" />
-          <MembershipCard
-            name={profile?.full_name ?? ''}
-            role={profile?.role ?? ''}
-            memberId={profile?.member_id ?? null}
-            memberSince={memberSince}
-            expiresAt={profile?.membership_expires_at ?? null}
-          />
-        </div>
-        <div className="hidden lg:block" />
-      </div>
-
       {/* Banner scadenze */}
       {urgentCount > 0 && (
         <div className="bg-[#1a4a3a] text-white px-5 py-3 text-sm font-medium">
@@ -354,6 +338,20 @@ export default function DashboardPage() {
         </div>
 
       </div>
+
+      {/* Membership Card — bottom */}
+      <div>
+        <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-1">La tua Membership Card</h2>
+        <div className="w-8 h-px bg-forest mb-5" />
+        <MembershipCard
+          name={profile?.full_name ?? ''}
+          role={profile?.role ?? ''}
+          memberId={profile?.member_id ?? null}
+          memberSince={memberSince}
+          expiresAt={profile?.membership_expires_at ?? null}
+        />
+      </div>
+
     </div>
   )
 }

@@ -7,20 +7,20 @@ interface MembershipCardProps {
   name: string
   role: string
   memberId: string | null
-  memberSince: string | null  // year string e.g. "2024"
+  memberSince: string | null
   expiresAt: string | null
 }
 
-const MONTHS_IT = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic']
+const MONTHS_UP = ['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT','NOV','DIC']
 
-function fmtDateShort(iso: string) {
+function fmtDate(iso: string) {
   const d = new Date(iso)
-  return `${d.getDate()} ${MONTHS_IT[d.getMonth()]} ${d.getFullYear()}`
+  return `${d.getDate()} ${MONTHS_UP[d.getMonth()]} ${d.getFullYear()}`
 }
 
 export default function MembershipCard({ name, role, memberId, memberSince, expiresAt }: MembershipCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [qrUrl, setQrUrl] = useState<string | null>(null)
+  const cardRef  = useRef<HTMLDivElement>(null)
+  const [qrUrl,  setQrUrl]  = useState<string | null>(null)
   const [downloading, setDownloading] = useState(false)
 
   const isExpired = expiresAt ? new Date(expiresAt) <= new Date() : true
@@ -28,18 +28,16 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
     ? (new Date(expiresAt).getTime() - Date.now()) < 7 * 86400000
     : false
 
-  // Generate QR code on client only
   useEffect(() => {
     if (!memberId) return
-    const verifyUrl = `https://alatainvestmentclub.com/verify/${memberId}`
-    import('qrcode').then(QRCode => {
-      QRCode.toDataURL(verifyUrl, {
+    import('qrcode').then(QRCode =>
+      QRCode.toDataURL(`https://alatainvestmentclub.com/verify/${memberId}`, {
         color: { dark: '#ffffffff', light: '#00000000' },
         errorCorrectionLevel: 'M',
-        width: 160,
+        width: 52,
         margin: 1,
-      }).then(url => setQrUrl(url))
-    })
+      }).then(setQrUrl)
+    )
   }, [memberId])
 
   async function handleDownload() {
@@ -47,7 +45,7 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
     setDownloading(true)
     try {
       const { toJpeg } = await import('html-to-image')
-      const dataUrl = await toJpeg(cardRef.current, { quality: 0.97, pixelRatio: 2 })
+      const dataUrl = await toJpeg(cardRef.current, { quality: 0.97, pixelRatio: 3 })
       const a = document.createElement('a')
       a.href = dataUrl
       a.download = `membership-card-${memberId ?? 'alata'}.jpg`
@@ -57,11 +55,11 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
     }
   }
 
-  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1).replace(/_/g, ' ')
+  const roleLabel = role.toUpperCase().replace(/_/g, ' ')
 
   return (
-    <div className="space-y-3">
-      {/* Card */}
+    <div style={{ maxWidth: 480, width: '100%' }}>
+      {/* ── Card ── */}
       <div
         ref={cardRef}
         style={{
@@ -77,62 +75,79 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
         {/* Dot grid */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: 'radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px)',
-          backgroundSize: '22px 22px',
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
         }} />
         {/* Vignette */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(0,0,0,0.45) 100%)',
+          background: 'radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.5) 100%)',
         }} />
 
-        {/* Content layer */}
-        <div style={{ position: 'absolute', inset: 0, padding: '5%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        {/* Content */}
+        <div style={{ position: 'absolute', inset: 0, padding: '6%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
 
           {/* TOP ROW */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.6)', fontSize: '1.8cqi', fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase' }}>MEMBERSHIP</p>
-            <p style={{ margin: 0, color: 'white', fontSize: '2cqi', fontWeight: 700, letterSpacing: '0.08em', fontFamily: 'var(--font-cormorant, Georgia, serif)' }}>ALATA INVESTMENT CLUB</p>
+            {/* Logo */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/white.png" alt="Alata" style={{ height: 28, width: 'auto', objectFit: 'contain', display: 'block' }} />
+            {/* Club name */}
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: 500, letterSpacing: '0.25em', textTransform: 'uppercase' }}>
+              ALATA INVESTMENT CLUB
+            </p>
           </div>
 
           {/* CENTER */}
-          <div>
-            <p style={{ margin: '0 0 0.3em', color: 'white', fontSize: '5.5cqi', fontWeight: 300, letterSpacing: '0.02em', lineHeight: 1.1 }}>{name}</p>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '1.8cqi', fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase' }}>{roleLabel}</p>
+          <div style={{ paddingTop: '4%', paddingBottom: '2%' }}>
+            <p style={{
+              margin: '0 0 6px',
+              color: 'white',
+              fontSize: 'clamp(22px, 4.5vw, 34px)',
+              fontWeight: 300,
+              letterSpacing: '-0.01em',
+              lineHeight: 1.1,
+              fontFamily: 'var(--font-cormorant, "Playfair Display", Georgia, serif)',
+            }}>
+              {name}
+            </p>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.6)', fontSize: 8, fontWeight: 500, letterSpacing: '0.4em', textTransform: 'uppercase' }}>
+              {roleLabel}
+            </p>
           </div>
 
           {/* BOTTOM ROW */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            {/* Left */}
+            {/* Left: membro dal */}
             <div>
-              <p style={{ margin: '0 0 0.4em', color: 'rgba(255,255,255,0.45)', fontSize: '1.4cqi', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600 }}>MEMBRO DAL</p>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.9)', fontSize: '2.4cqi', fontWeight: 600 }}>{memberSince ?? '—'}</p>
+              <p style={{ margin: '0 0 5px', color: 'rgba(255,255,255,0.5)', fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase' }}>MEMBRO DAL</p>
+              <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 300 }}>{memberSince ?? '—'}</p>
             </div>
 
-            {/* QR code */}
+            {/* Center: QR */}
             {qrUrl && (
-              <div style={{ width: '17%', flexShrink: 0 }}>
+              <div style={{ flexShrink: 0 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={qrUrl} alt="QR" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                <img src={qrUrl} alt="QR" style={{ width: 52, height: 52, display: 'block' }} />
               </div>
             )}
 
-            {/* Right */}
+            {/* Right: expiry */}
             <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: '0 0 0.4em', color: 'rgba(255,255,255,0.45)', fontSize: '1.4cqi', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600 }}>VALIDA FINO AL</p>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.9)', fontSize: '2cqi', fontWeight: 600 }}>
-                {expiresAt ? fmtDateShort(expiresAt) : '—'}
+              <p style={{ margin: '0 0 5px', color: 'rgba(255,255,255,0.5)', fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase' }}>VALIDA FINO AL</p>
+              <p style={{ margin: 0, color: 'white', fontSize: 14, fontWeight: 300 }}>
+                {expiresAt ? fmtDate(expiresAt) : '—'}
               </p>
               {memberId && (
-                <p style={{ margin: '0.4em 0 0', color: 'rgba(255,255,255,0.4)', fontSize: '1.4cqi', letterSpacing: '0.12em', fontFamily: 'monospace' }}>{memberId}</p>
+                <p style={{ margin: '5px 0 0', color: 'rgba(255,255,255,0.4)', fontSize: 8, letterSpacing: '0.15em' }}>{memberId}</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Bottom accent bar */}
+        {/* Accent bar */}
         <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', pointerEvents: 'none',
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, pointerEvents: 'none',
           background: 'linear-gradient(90deg, #1a4a3a 0%, #2d7a5a 50%, #1a4a3a 100%)',
         }} />
 
@@ -140,16 +155,16 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
         {isExpired && (
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'rgba(15,15,15,0.55)',
+            background: 'rgba(0,0,0,0.6)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <p style={{ color: '#ef4444', fontSize: '7cqi', fontWeight: 900, letterSpacing: '0.25em', textTransform: 'uppercase', margin: 0, textShadow: '0 2px 12px rgba(239,68,68,0.5)' }}>SCADUTA</p>
+            <p style={{ margin: 0, color: '#ef4444', fontSize: 18, fontWeight: 700, letterSpacing: '0.5em', textTransform: 'uppercase' }}>SCADUTA</p>
           </div>
         )}
       </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* Buttons */}
+      <div className="flex items-center gap-3 mt-3 flex-wrap">
         <button
           onClick={handleDownload}
           disabled={downloading}
