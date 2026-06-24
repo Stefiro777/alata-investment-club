@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import AdminNavbar from '../components/AdminNavbar'
 
@@ -150,6 +150,7 @@ function MembersTable({ token }: { token: string }) {
   const [loading,   setLoading]   = useState(true)
   const [editId,    setEditId]    = useState<string | null>(null)
   const [editDate,  setEditDate]  = useState('')
+  const editDateRef               = useRef('')
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState<string | null>(null)
 
@@ -160,13 +161,17 @@ function MembersTable({ token }: { token: string }) {
   }, [token])
 
   function startEdit(m: MemberRow) {
+    const d = m.membership_expires_at ? m.membership_expires_at.slice(0, 10) : ''
+    editDateRef.current = d
     setEditId(m.id)
-    setEditDate(m.membership_expires_at ? m.membership_expires_at.slice(0, 10) : '')
+    setEditDate(d)
   }
 
   async function saveExpiry(id: string) {
     setSaving(true); setError(null)
-    const iso = editDate ? new Date(editDate + 'T23:59:59Z').toISOString() : null
+    // Read from ref first: it's always current even if React state lags behind
+    const dateValue = editDateRef.current || editDate
+    const iso = dateValue ? new Date(dateValue + 'T23:59:59Z').toISOString() : null
     const res = await fetch('/api/membership/members', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -205,7 +210,8 @@ function MembersTable({ token }: { token: string }) {
               <div className="pr-3">
                 {isEdit ? (
                   <div className="flex items-center gap-2">
-                    <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+                    <input type="date" value={editDate}
+                      onChange={e => { editDateRef.current = e.target.value; setEditDate(e.target.value) }}
                       className="border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:border-[#1a4a3a] w-32" />
                     <button onClick={() => saveExpiry(m.id)} disabled={saving}
                       className="text-xs font-semibold text-[#1a4a3a] hover:underline disabled:opacity-40">
