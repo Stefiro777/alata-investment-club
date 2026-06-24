@@ -4,11 +4,13 @@ import { useState } from 'react'
 import MembersTable from './MembersTable'
 import EventContactsTable from './EventContactsTable'
 import SponsorsTable from './SponsorsTable'
+import CustomersTable from './CustomersTable'
 
 const TABS = [
-  { key: 'members',  label: 'Members' },
-  { key: 'contacts', label: 'Event Contacts' },
-  { key: 'sponsors', label: 'Sponsors' },
+  { key: 'members',   label: 'Members' },
+  { key: 'contacts',  label: 'Event Contacts' },
+  { key: 'sponsors',  label: 'Sponsors' },
+  { key: 'customers', label: 'Clienti' },
 ] as const
 
 type Tab = typeof TABS[number]['key']
@@ -40,9 +42,10 @@ export default function CRMClient() {
         ))}
       </div>
 
-      {tab === 'members'  && <MembersTable />}
-      {tab === 'contacts' && <EventContactsTable />}
-      {tab === 'sponsors' && <SponsorsTable />}
+      {tab === 'members'   && <MembersTable />}
+      {tab === 'contacts'  && <EventContactsTable />}
+      {tab === 'sponsors'  && <SponsorsTable />}
+      {tab === 'customers' && <CustomersTable />}
     </div>
   )
 }

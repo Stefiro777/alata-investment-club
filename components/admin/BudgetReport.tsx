@@ -289,7 +289,7 @@ export default function BudgetReport() {
 
       {/* A4 preview */}
       <div className="overflow-x-auto">
-        <div style={{ width: 794, minHeight: 1123, margin: '0 auto', boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
+        <div style={{ width: 794, margin: '0 auto', paddingBottom: 64, boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
           <BudgetPreview period={label} catRows={catRows} entrate={entrate} uscite={uscite} saldo={saldoPeriodo} />
         </div>
       </div>

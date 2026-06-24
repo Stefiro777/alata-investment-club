@@ -195,6 +195,17 @@ export async function POST(req: NextRequest) {
           note:        `Stripe Session: ${session.id}`,
           receipt_url: null,
         })
+
+        // CRM: record customer
+        const custEmail = session.customer_details?.email ?? session.metadata.email ?? ''
+        const custName  = session.customer_details?.name  ?? session.metadata.name  ?? ''
+        if (custEmail) {
+          await supabaseAdmin.from('crm_customers').insert({
+            name: custName || custEmail, email: custEmail, type: 'merch',
+            reference: (session.metadata.product_names ?? '').slice(0, 255),
+            amount: net, purchased_at: new Date().toISOString(),
+          }).then(() => {})
+        }
       } catch (e) { console.error('Failed to record merch transaction:', e) }
     } else if (session.metadata?.type === 'membership') {
       const userId   = session.metadata.user_id
@@ -242,6 +253,13 @@ export async function POST(req: NextRequest) {
           note:        `Stripe Session: ${session.id} | User: ${userId}`,
           receipt_url: null,
         })
+        // CRM: record customer
+        if (email) {
+          await supabaseAdmin.from('crm_customers').insert({
+            name: name || email, email, type: 'membership',
+            reference: 'Quota Membership', amount: net, purchased_at: new Date().toISOString(),
+          }).then(() => {})
+        }
       } catch (txErr) {
         console.error('Failed to record membership transaction:', txErr)
       }
@@ -362,6 +380,14 @@ export async function POST(req: NextRequest) {
         note:        `Netto: €${net.toFixed(2)} | Lordo: €${gross.toFixed(2)} | Commissioni Stripe: €${fee.toFixed(2)} | ${paymentIntent.id}`,
         receipt_url: null,
       })
+
+      // CRM: record career service customer
+      if (booking?.email) {
+        await supabaseAdmin.from('crm_customers').insert({
+          name: booking.name || booking.email, email: booking.email, type: 'career_service',
+          reference: description, amount: net, purchased_at: new Date().toISOString(),
+        }).then(() => {})
+      }
     } catch (txErr) {
       console.error('Failed to record transaction for payment intent:', paymentIntent.id, txErr)
     }
