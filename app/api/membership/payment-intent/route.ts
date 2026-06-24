@@ -32,16 +32,23 @@ export async function POST(req: NextRequest) {
 
   const priceCents = settings?.price_cents ?? 2000
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: priceCents,
-    currency: 'eur',
-    metadata: {
-      type:       'membership',
-      user_id:    user.id,
-      user_email: member.email ?? '',
-      name:       member.full_name ?? '',
-    },
-  })
+  let paymentIntent
+  try {
+    paymentIntent = await stripe.paymentIntents.create({
+      amount: priceCents,
+      currency: 'eur',
+      metadata: {
+        type:       'membership',
+        user_id:    user.id,
+        user_email: member.email ?? '',
+        name:       member.full_name ?? '',
+      },
+    })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[payment-intent] Stripe error:', msg)
+    return NextResponse.json({ error: `Stripe error: ${msg}` }, { status: 500 })
+  }
 
   return NextResponse.json({ clientSecret: paymentIntent.client_secret })
 }

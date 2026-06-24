@@ -227,9 +227,21 @@ export default function MembershipPage() {
           .maybeSingle(),
         fetch('/api/membership/settings'),
       ])
-      const s = await sRes.json()
+
+      console.log('[membership/settings] status:', sRes.status, 'content-type:', sRes.headers.get('content-type'))
+      if (sRes.ok && sRes.headers.get('content-type')?.includes('application/json')) {
+        try {
+          const s = await sRes.json()
+          if (s?.settings) setSettings(s.settings as Settings)
+        } catch (e) {
+          console.error('[membership/settings] JSON parse error:', e)
+        }
+      } else {
+        const raw = await sRes.text()
+        console.error('[membership/settings] unexpected response:', raw.slice(0, 200))
+      }
+
       if (m) setMember(m as MemberData)
-      if (s?.settings) setSettings(s.settings as Settings)
       setLoading(false)
     }
     load()
@@ -251,7 +263,24 @@ export default function MembershipPage() {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })
-      const data = await res.json()
+
+      console.log('[payment-intent] status:', res.status, 'content-type:', res.headers.get('content-type'))
+
+      let data: { clientSecret?: string; error?: string } = {}
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        try {
+          data = await res.json()
+        } catch (e) {
+          console.error('[payment-intent] JSON parse error:', e)
+          setPiError('Risposta non valida dal server. Riprova.')
+          return
+        }
+      } else {
+        const raw = await res.text()
+        console.error('[payment-intent] unexpected response:', raw.slice(0, 200))
+        setPiError('Errore del server. Riprova.')
+        return
+      }
 
       if (!res.ok || !data.clientSecret) {
         setPiError(data.error ?? 'Errore durante la preparazione del pagamento')
