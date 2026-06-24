@@ -6,6 +6,7 @@ import Reveal from '../components/Reveal'
 import { createClient } from '@/lib/supabase'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import BookingCart, { type CartItem } from '../components/career/BookingCart'
 
 // Initialise once at module level — guard against missing key at runtime
 const stripeKey     = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
@@ -111,6 +112,7 @@ function PaymentForm({
   form,
   isMember,
   authToken,
+  extraItems,
   onSuccess,
 }: {
   service: ServiceInfo
@@ -118,6 +120,7 @@ function PaymentForm({
   form: BookingForm
   isMember: boolean
   authToken: string | null
+  extraItems: CartItem[]
   onSuccess: () => void
 }) {
   const stripe   = useStripe()
@@ -130,7 +133,9 @@ function PaymentForm({
     console.log('[Stripe] stripe instance:', stripe)
   }, [stripe])
 
-  const isFree = isMember || service.price_cents === 0
+  const isFree      = isMember || service.price_cents === 0
+  const extrasTotal = extraItems.reduce((s, e) => s + e.price_cents, 0)
+  const totalCents  = (isFree ? 0 : service.price_cents) + extrasTotal
 
   async function handleConfirm() {
     if (processing) return
@@ -144,14 +149,15 @@ function PaymentForm({
         method: 'POST',
         headers,
         body: JSON.stringify({
-          service_id: service.id,
-          slot_date:  slot.date,
-          slot_time:  slot.time,
-          name:       form.name,
-          email:      form.email,
-          motivation: form.motivation,
-          goal:       form.goal,
-          cv_url:     form.cvUrl ?? undefined,
+          service_id:  service.id,
+          slot_date:   slot.date,
+          slot_time:   slot.time,
+          name:        form.name,
+          email:       form.email,
+          motivation:  form.motivation,
+          goal:        form.goal,
+          cv_url:      form.cvUrl ?? undefined,
+          extra_items: extraItems.length > 0 ? extraItems : undefined,
         }),
       })
 
@@ -190,6 +196,18 @@ function PaymentForm({
             </span>
           </div>
           <p className="text-xs text-gray-400">{formatDateLong(slot.date)} at {slot.time}</p>
+          {extraItems.map(e => (
+            <div key={e.id} className="flex items-center justify-between text-xs text-gray-500">
+              <span>+ {e.label}</span>
+              <span>{formatEuros(e.price_cents)}</span>
+            </div>
+          ))}
+          {(extraItems.length > 0 || !isFree) && (
+            <div className="flex items-center justify-between text-sm pt-1 border-t border-gray-100 mt-1">
+              <span className="font-semibold text-gray-700">Total</span>
+              <span className="font-bold text-gray-900">{totalCents === 0 ? 'Free' : formatEuros(totalCents)}</span>
+            </div>
+          )}
         </div>
 
         {/* Member badge */}
@@ -272,9 +290,9 @@ function PaymentForm({
       >
         {processing
           ? 'Processing…'
-          : isFree
+          : (isFree && extrasTotal === 0)
             ? 'Confirm Booking'
-            : `Pay ${formatEuros(service.price_cents)} & Confirm`}
+            : `Pay ${formatEuros(totalCents)} & Confirm`}
       </button>
     </div>
   )
@@ -289,8 +307,9 @@ function BookingOverlay({
   serviceTitle: string
   onClose: () => void
 }) {
-  const [step, setStep]           = useState<1 | 2 | 3>(1)
+  const [step, setStep]           = useState<1 | 2 | 3 | 4>(1)
   const [confirmed, setConfirmed] = useState(false)
+  const [cartExtras, setCartExtras] = useState<CartItem[]>([])
 
   // Service discovery
   const [service, setService]           = useState<ServiceInfo | null>(null)
@@ -431,6 +450,7 @@ function BookingOverlay({
   const stepLabel = confirmed ? 'Booking Confirmed'
     : step === 1 ? 'Pick a Slot'
     : step === 2 ? 'Your Details'
+    : step === 3 ? 'Your Cart'
     : 'Confirm Booking'
 
   return (
@@ -456,7 +476,7 @@ function BookingOverlay({
             {/* Step dots */}
             {!confirmed && !serviceError && (
               <div className="flex items-center gap-1.5">
-                {([1, 2, 3] as const).map(n => (
+                {([1, 2, 3, 4] as const).map(n => (
                   <span key={n}
                     className="w-2 h-2 rounded-full transition-colors"
                     style={{ background: step >= n ? '#1a4a3a' : '#e5e7eb' }}
@@ -660,14 +680,28 @@ function BookingOverlay({
             </div>
           )}
 
-          {/* ── STEP 3: Payment ── */}
+          {/* ── STEP 3: Cart ── */}
           {!serviceError && !confirmed && step === 3 && service && selectedDate && selectedTime && (
+            <BookingCart
+              serviceName={service.name}
+              servicePrice={service.price_cents}
+              isMember={isMember}
+              slot={{ date: selectedDate, time: selectedTime }}
+              formatDate={formatDateLong}
+              onProceed={(extras) => { setCartExtras(extras); setStep(4) }}
+              onBack={() => setStep(2)}
+            />
+          )}
+
+          {/* ── STEP 4: Payment ── */}
+          {!serviceError && !confirmed && step === 4 && service && selectedDate && selectedTime && (
             <PaymentForm
               service={service}
               slot={{ date: selectedDate, time: selectedTime }}
               form={{ name, email, motivation, goal, cvUrl }}
               isMember={isMember}
               authToken={authToken}
+              extraItems={cartExtras}
               onSuccess={() => setConfirmed(true)}
             />
           )}
@@ -706,7 +740,7 @@ function BookingOverlay({
         </div>
 
         {/* ── Footer navigation ── */}
-        {!confirmed && !serviceError && step !== 3 && (
+        {!confirmed && !serviceError && (step === 1 || step === 2) && (
           <div className="flex items-center justify-between px-7 py-5 border-t border-gray-200 flex-shrink-0">
             {step > 1 ? (
               <button

@@ -7,6 +7,7 @@ export type MemberProfile = {
   role: string
   teams: string[] | null
   email: string
+  membership_expires_at: string | null
 }
 
 const DashboardProfileContext = createContext<MemberProfile | null>(null)

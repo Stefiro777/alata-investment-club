@@ -59,6 +59,7 @@ const TABS = [
   { key: 'availability' as const,  label: 'Availability' },
   { key: 'bookings' as const,      label: 'Bookings' },
   { key: 'notifications' as const, label: 'Notifications' },
+  { key: 'suggestions' as const,   label: 'Suggerimenti Carrello' },
 ]
 type Tab = typeof TABS[number]['key']
 
@@ -1010,6 +1011,246 @@ function NotificationsTab({ services }: { services: CareerService[] }) {
   )
 }
 
+// ── SUGGESTIONS TAB ──────────────────────────────────────────────────────────
+
+type CartSuggestionRow = {
+  id: string
+  type: 'career_service' | 'merch_product'
+  reference_id: string
+  label: string
+  description: string | null
+  visible: boolean
+  sort_order: number
+}
+
+function SuggestionsTab({ services }: { services: CareerService[] }) {
+  const [rows, setRows]               = useState<CartSuggestionRow[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState<string | null>(null)
+  const [confirmDel, setConfirmDel]   = useState<string | null>(null)
+  const [deleting, setDeleting]       = useState(false)
+  const [showForm, setShowForm]       = useState(false)
+  const [saving, setSaving]           = useState(false)
+
+  const [newType, setNewType]         = useState<'career_service' | 'merch_product'>('career_service')
+  const [newRef, setNewRef]           = useState('')
+  const [newLabel, setNewLabel]       = useState('')
+  const [newDesc, setNewDesc]         = useState('')
+  const [newOrder, setNewOrder]       = useState('0')
+
+  async function getToken() {
+    const { createClient } = await import('@/lib/supabase')
+    const { data: { session } } = await createClient().auth.getSession()
+    return session?.access_token ?? null
+  }
+
+  async function load() {
+    setLoading(true)
+    const res = await fetch('/api/cart-suggestions')
+    const json = await res.json()
+    setRows((json.suggestions ?? []) as CartSuggestionRow[])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function toggleVisible(row: CartSuggestionRow) {
+    const token = await getToken()
+    await fetch('/api/cart-suggestions/manage', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ id: row.id, visible: !row.visible }),
+    })
+    setRows(prev => prev.map(r => r.id === row.id ? { ...r, visible: !r.visible } : r))
+  }
+
+  async function updateOrder(row: CartSuggestionRow, value: string) {
+    const order = parseInt(value, 10)
+    if (isNaN(order)) return
+    const token = await getToken()
+    await fetch('/api/cart-suggestions/manage', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ id: row.id, sort_order: order }),
+    })
+    setRows(prev => prev.map(r => r.id === row.id ? { ...r, sort_order: order } : r))
+  }
+
+  async function deleteSuggestion(id: string) {
+    setDeleting(true)
+    const token = await getToken()
+    await fetch(`/api/cart-suggestions/manage?id=${id}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    setRows(prev => prev.filter(r => r.id !== id))
+    setConfirmDel(null)
+    setDeleting(false)
+  }
+
+  async function addSuggestion() {
+    if (!newRef || !newLabel.trim()) { setError('Reference e label obbligatori'); return }
+    setSaving(true); setError(null)
+    const token = await getToken()
+    const res = await fetch('/api/cart-suggestions/manage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({
+        type: newType,
+        reference_id: newRef,
+        label: newLabel.trim(),
+        description: newDesc.trim() || null,
+        sort_order: parseInt(newOrder, 10) || 0,
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok) { setError(json.error ?? 'Insert failed'); setSaving(false); return }
+    setRows(prev => [...prev, json.suggestion as CartSuggestionRow])
+    setNewLabel(''); setNewDesc(''); setNewOrder('0'); setNewRef('')
+    setShowForm(false); setSaving(false)
+  }
+
+  const svcOptions = services.map(s => ({ id: s.id, label: s.name }))
+
+  return (
+    <div>
+      <p className="text-sm text-gray-500 mb-6">
+        Max 3 suggerimenti vengono mostrati nel carrello (ordinati per sort_order).
+      </p>
+
+      {/* List */}
+      {loading ? (
+        <p className="text-sm text-gray-400 mb-6">Caricamento…</p>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-gray-400 py-5 border border-dashed border-gray-200 text-center mb-6">
+          Nessun suggerimento ancora.
+        </p>
+      ) : (
+        <div className="border border-gray-200 mb-6">
+          {rows.map((row, i) => (
+            <div key={row.id}
+              className={`flex items-center gap-4 px-5 py-3 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900">{row.label}</p>
+                {row.description && <p className="text-xs text-gray-400 truncate">{row.description}</p>}
+                <p className="text-[10px] uppercase tracking-widest text-gray-300 mt-0.5">{row.type}</p>
+              </div>
+              {/* Sort order */}
+              <input
+                type="number"
+                defaultValue={row.sort_order}
+                onBlur={e => updateOrder(row, e.target.value)}
+                className="w-16 border border-gray-200 px-2 py-1 text-xs text-center focus:outline-none focus:border-[#1a4a3a]"
+                title="Sort order"
+              />
+              {/* Visible toggle */}
+              <button
+                onClick={() => toggleVisible(row)}
+                className={`text-xs font-semibold uppercase tracking-widest px-3 py-1 border transition-colors ${
+                  row.visible
+                    ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
+                    : 'border-gray-300 text-gray-400'
+                }`}
+              >
+                {row.visible ? 'Visibile' : 'Nascosto'}
+              </button>
+              {/* Delete */}
+              {confirmDel === row.id ? (
+                <ConfirmDelete
+                  onConfirm={() => deleteSuggestion(row.id)}
+                  onCancel={() => setConfirmDel(null)}
+                  busy={deleting}
+                />
+              ) : (
+                <button onClick={() => setConfirmDel(row.id)} title="Elimina"
+                  className="p-1.5 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0">
+                  <TrashIcon />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add form */}
+      {showForm ? (
+        <div className="border border-[#1a4a3a]/30 bg-[#f9f9f8] px-5 py-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-4">Nuovo Suggerimento</p>
+          <div className="grid sm:grid-cols-2 gap-4 mb-4">
+            {/* Type */}
+            <div>
+              <label className={labelCls}>Tipo *</label>
+              <div className="relative">
+                <select value={newType} onChange={e => { setNewType(e.target.value as 'career_service' | 'merch_product'); setNewRef('') }}
+                  className={`${inputCls} appearance-none pr-8`}>
+                  <option value="career_service">Servizio Career</option>
+                  <option value="merch_product">Prodotto Merch</option>
+                </select>
+                <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+            {/* Reference */}
+            <div>
+              <label className={labelCls}>Riferimento *</label>
+              {newType === 'career_service' ? (
+                <div className="relative">
+                  <select value={newRef} onChange={e => setNewRef(e.target.value)}
+                    className={`${inputCls} appearance-none pr-8`}>
+                    <option value="">Seleziona servizio…</option>
+                    {svcOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  </select>
+                  <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              ) : (
+                <input value={newRef} onChange={e => setNewRef(e.target.value)}
+                  placeholder="UUID prodotto" className={inputCls} />
+              )}
+            </div>
+            {/* Label */}
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Label (override titolo) *</label>
+              <input value={newLabel} onChange={e => setNewLabel(e.target.value)}
+                placeholder="Es. CV Review — offerta speciale" className={inputCls} />
+            </div>
+            {/* Description */}
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Descrizione breve</label>
+              <textarea rows={2} value={newDesc} onChange={e => setNewDesc(e.target.value)}
+                placeholder="Breve copy promozionale…" className={`${inputCls} resize-none`} />
+            </div>
+            {/* Sort order */}
+            <div>
+              <label className={labelCls}>Sort order</label>
+              <input type="number" value={newOrder} onChange={e => setNewOrder(e.target.value)}
+                className={inputCls} />
+            </div>
+          </div>
+          {error && <p className="mb-3 text-xs text-red-600 border-l-2 border-red-400 pl-2">{error}</p>}
+          <div className="flex gap-3">
+            <button onClick={addSuggestion} disabled={saving || !newLabel.trim() || !newRef}
+              className={btnPrimary}>
+              {saving ? 'Salvataggio…' : 'Aggiungi'}
+            </button>
+            <button onClick={() => { setShowForm(false); setError(null) }} className={btnGhost}>
+              Annulla
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setShowForm(true)} className={btnPrimary}>
+          + Aggiungi Suggerimento
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 
 export default function CareerBookingsPage() {
@@ -1091,6 +1332,7 @@ export default function CareerBookingsPage() {
           {tab === 'availability'  && <AvailabilityTab services={services} />}
           {tab === 'bookings'      && <BookingsTab services={services} />}
           {tab === 'notifications' && <NotificationsTab services={services} />}
+          {tab === 'suggestions'   && <SuggestionsTab services={services} />}
         </>
       )}
     </div>

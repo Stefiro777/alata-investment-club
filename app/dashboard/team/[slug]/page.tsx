@@ -12,6 +12,7 @@ import UpcomingEventsAdminSection from '@/app/admin/components/UpcomingEventsAdm
 import PartnersSection from '@/app/admin/components/PartnersSection'
 import NewsEventsSection from '@/app/admin/components/NewsEventsSection'
 import FeaturedGalleryAdminClient from '@/app/admin/components/FeaturedGalleryAdminClient'
+import MerchManager from '@/components/dashboard/MerchManager'
 import type { FeaturedReport, UpcomingEvent, Partner, FeaturedGalleryItem } from '@/lib/types'
 
 // ── HistoryToggle ─────────────────────────────────────────────────────────────
@@ -1686,7 +1687,7 @@ export default function TeamPage() {
   const [collapsed, setCollapsed]       = useState<Set<string>>(new Set(['done']))
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [togglingTask, setTogglingTask] = useState<string | null>(null)
-  const [activeTab, setActiveTab]       = useState<'tasks' | 'goals' | 'reports' | 'content' | 'pr-tracker' | 'bookings'>('tasks')
+  const [activeTab, setActiveTab]       = useState<'tasks' | 'goals' | 'reports' | 'content' | 'pr-tracker' | 'bookings' | 'merch'>('tasks')
 
   const teamName = TEAM_NAMES[slug] ?? slug
   const canEdit       = profile?.role === 'bod' || profile?.role === 'director'
@@ -1858,6 +1859,7 @@ export default function TeamPage() {
             ...(slug === 'events' ? [{ key: 'content'    as const, label: 'Content' }] : []),
             ...(slug === 'career' ? [{ key: 'pr-tracker' as const, label: 'PR Tracker' }] : []),
             ...(slug === 'career' ? [{ key: 'bookings' as const, label: 'Booking Management' }] : []),
+            ...(slug === 'media'  ? [{ key: 'merch' as const, label: 'Merch' }] : []),
           ].map(tab => (
             <button
               key={tab.key}
@@ -1894,6 +1896,8 @@ export default function TeamPage() {
         <EventsContentTab />
       ) : activeTab === 'pr-tracker' ? (
         <PRTracker />
+      ) : activeTab === 'merch' ? (
+        <MerchManager />
       ) : (
         <>
 

@@ -1,5 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
+
+const MEMBERSHIP_EXEMPT_EMAIL = 'finullistefano@gmail.com'
 
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname === '/api/sync-notion-calendar') {
@@ -48,6 +51,37 @@ export async function middleware(request: NextRequest) {
   // Redirect authenticated users away from /login
   if (user && request.nextUrl.pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // Membership expiry gate — only for /dashboard/* (not /dashboard/membership itself)
+  if (
+    user &&
+    request.nextUrl.pathname.startsWith('/dashboard') &&
+    !request.nextUrl.pathname.startsWith('/dashboard/membership') &&
+    user.email !== MEMBERSHIP_EXEMPT_EMAIL
+  ) {
+    try {
+      const adminClient = createSupabaseAdmin(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+      const { data: member } = await adminClient
+        .from('club_members')
+        .select('membership_expires_at')
+        .eq('email', user.email ?? '')
+        .maybeSingle()
+
+      if (member?.membership_expires_at) {
+        const isExpired = new Date(member.membership_expires_at) < new Date()
+        if (isExpired) {
+          const url = new URL('/dashboard/membership', request.url)
+          url.searchParams.set('expired', 'true')
+          return NextResponse.redirect(url)
+        }
+      }
+    } catch {
+      // Non-blocking: if check fails, let the request through
+    }
   }
 
   return supabaseResponse

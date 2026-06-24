@@ -45,7 +45,10 @@
       "Bash(npx tsc:*)",
       "Bash(npx next:*)",
       "Bash(ls C:/Users/finul/Desktop/alata-investment-club/public/*.jpg C:/Users/finul/Desktop/alata-investment-club/public/*.jpeg C:/Users/finul/Desktop/alata-investment-club/public/*.png)",
-      "Bash(xargs -I{} basename {})"
+      "Bash(xargs -I{} basename {})",
+      "Bash(grep -r \"CLARITY\" .env*)",
+      "Bash(ls .env*)",
+      "PowerShell(cd \"C:\\\\Users\\\\finul\\\\Desktop\\\\alata-investment-club\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"career\" } | Select-Object -First 20)"
     ]
   }
 }

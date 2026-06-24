@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import { Cormorant_Garamond, Inter } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import './globals.css'
 import MobileMenu from './components/MobileMenu'
 import CookieBanner from './components/CookieBanner'
 import CookiePolicy from './components/CookiePolicy'
 import AnalyticsWrapper from './components/AnalyticsWrapper'
+import { CartProvider } from './components/CartContext'
 import Script from 'next/script'
 
 const cormorant = Cormorant_Garamond({
@@ -69,9 +71,23 @@ function MailIcon({ className }: { className?: string }) {
   )
 }
 
-export default function RootLayout({
+const supabaseAdmin = createSupabaseAdmin(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const { data: setting } = await supabaseAdmin
+    .from('settings').select('value').eq('key', 'merch_page_visible').maybeSingle()
+  const merchVisible = setting?.value === 'true'
+
+  const allNavLinks = [
+    ...navLinks,
+    ...(merchVisible ? [{ href: '/merch', label: 'Merch' }] : []),
+  ]
+
   return (
     <html lang="en" className={`${cormorant.variable} ${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col">
@@ -93,7 +109,7 @@ export default function RootLayout({
 
               {/* Desktop nav */}
               <div className="hidden md:flex items-center gap-8">
-                {navLinks.map((link) =>
+                {allNavLinks.map((link) =>
                   link.subLinks ? (
                     <div key={link.href} className="relative group">
                       <button className={`flex items-center gap-1 text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-fast ${link.label === 'Team' ? 'font-bold' : 'font-medium'}`}>
@@ -131,13 +147,15 @@ export default function RootLayout({
               </div>
 
               {/* Mobile menu */}
-              <MobileMenu links={navLinks} />
+              <MobileMenu links={allNavLinks} />
             </div>
           </nav>
         </header>
 
         {/* Main */}
-        <main className="flex-1">{children}</main>
+        <CartProvider>
+          <main className="flex-1">{children}</main>
+        </CartProvider>
         <AnalyticsWrapper />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-1DKFFPXFT6"
@@ -168,7 +186,7 @@ export default function RootLayout({
 
               {/* Nav links */}
               <div className="flex flex-wrap gap-6">
-                {navLinks.map((link) => (
+                {allNavLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}

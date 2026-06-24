@@ -4,8 +4,9 @@ import { useState } from 'react'
 import TransactionManager from './TransactionManager'
 import BudgetReport from './BudgetReport'
 import FinanceDocuments from './FinanceDocuments'
+import QuoteClient from './QuoteClient'
 
-type Tab = 'transactions' | 'budget' | 'documents'
+type Tab = 'transactions' | 'budget' | 'documents' | 'preventivo'
 
 export default function FinanceClient() {
   const [tab, setTab] = useState<Tab>('transactions')
@@ -24,6 +25,7 @@ export default function FinanceClient() {
             { key: 'transactions' as const, label: 'Transactions' },
             { key: 'budget'       as const, label: 'Budget Report' },
             { key: 'documents'    as const, label: 'Documents' },
+            { key: 'preventivo'   as const, label: 'Preventivo' },
           ] as const).map(t => (
             <button
               key={t.key}
@@ -44,6 +46,7 @@ export default function FinanceClient() {
 
       {tab === 'transactions' ? <TransactionManager /> :
        tab === 'budget'       ? <BudgetReport /> :
+       tab === 'preventivo'   ? <QuoteClient /> :
                                 <FinanceDocuments />}
     </div>
   )

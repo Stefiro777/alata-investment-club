@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import * as zlib from 'zlib'
+import * as path from 'path'
+import { loadLogoPNG } from '@/lib/quote-pdf'
+import type { PNGImg } from '@/lib/quote-pdf'
 
 export const dynamic = 'force-dynamic'
+
+// ── PDF payload ───────────────────────────────────────────────────────────────
 
 interface PDFPayload {
   period: string
@@ -19,53 +25,64 @@ function italianDate(): string {
 }
 
 function esc(s: string): string {
-  return s
-    .replace(/\\/g, '\\\\')
-    .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)')
-    .replace(/[Ā-￿]/g, '?')
+  return s.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[Ā-￿]/g,'?')
 }
 
 function fmtEur(n: number): string {
   const sign = n < 0 ? '-' : ''
   const parts = Math.abs(n).toFixed(2).split('.')
-  const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-  return `${sign}EUR ${intPart},${parts[1]}`
+  return `${sign}EUR ${parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.')},${parts[1]}`
 }
 
-// PDF color strings (r g b, 0-1)
+// ── Color constants (palette — all values now BLACK) ──────────────────────────
 const GREEN = '0.102 0.290 0.227'
 const WHITE = '1 1 1'
-const DARK  = '0.067 0.094 0.153'
+const BLACK = '0 0 0'
+const DARK  = '0 0 0'      // body text
 const MUTED = '0.420 0.447 0.502'
 const LGRAY = '0.976 0.980 0.984'
-const TGRN  = '0.086 0.639 0.290'
-const TRED  = '0.863 0.149 0.149'
 const GSUB  = '0.7 0.85 0.78'
 const LGRN  = '0.940 0.970 0.960'
 const SGRAY = '0.75 0.75 0.75'
 
 const PW = 595, PH = 842
 const ML = 50, MR = 545
-const CW = MR - ML  // 495
+const CW = MR - ML
+
+// ── Operators ─────────────────────────────────────────────────────────────────
 
 function rect(x: number, y: number, w: number, h: number, c: string): string {
   return `q ${c} rg ${x} ${y} ${w} ${h} re f Q`
 }
-function hline(x1: number, y1: number, x2: number, c: string, lw = 0.5): string {
-  return `q ${c} RG ${lw} w ${x1} ${y1} m ${x2} ${y1} l S Q`
+function hline(x1: number, y: number, x2: number, c: string, lw = 0.5): string {
+  return `q ${c} RG ${lw} w ${x1} ${y} m ${x2} ${y} l S Q`
 }
 function tx(x: number, y: number, f: 'F1'|'F2', sz: number, c: string, s: string): string {
   return `q ${c} rg BT /${f} ${sz} Tf ${x} ${y} Td (${esc(s)}) Tj ET Q`
 }
+function drawImage(name: string, x: number, y: number, w: number, h: number): string {
+  return `q ${w} 0 0 ${h} ${x} ${y} cm /${name} Do Q`
+}
 
-function buildPDF(payload: PDFPayload): Buffer {
+// ── Build PDF ─────────────────────────────────────────────────────────────────
+
+function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
   const today = italianDate()
   const ROW_H = 18
   const FOOTER_MIN = 50
   const COL = { name: ML, rev: ML + 210, cost: ML + 322, bal: ML + 430 }
 
-  const pageStreams: string[][] = []
+  // Compressed logo image data
+  let logoStream: Buffer | null = null
+  let logoW = 0, logoH = 0
+  if (logo) {
+    logoStream = zlib.deflateSync(logo.rgbData)
+    logoH = 40
+    logoW = Math.round((logo.width / logo.height) * logoH)
+  }
+
+  // Collect page streams as Buffer arrays
+  const pageStreams: Buffer[][] = []
   let ops: string[] = []
   let curY = 0
   let pageNum = 0
@@ -76,9 +93,15 @@ function buildPDF(payload: PDFPayload): Buffer {
     ops.push(tx(MR - 50, FOOTER_MIN - 15, 'F1', 8, MUTED, `Pagina ${pageNum}`))
   }
 
-  function flushPage() {
+  function flushPage(isFirstPage = false) {
     addFooter()
-    pageStreams.push(ops)
+    const bufs: Buffer[] = []
+    const joined = ops.join('\n')
+    bufs.push(Buffer.from(joined, 'latin1'))
+    if (isFirstPage && logo && logoStream) {
+      bufs.push(Buffer.from(`\nq ${logoW} 0 0 ${logoH} ${MR - logoW - 8} ${PH - (72 + logoH) / 2} cm /Logo Do Q`, 'latin1'))
+    }
+    pageStreams.push(bufs)
     ops = []
   }
 
@@ -92,18 +115,16 @@ function buildPDF(payload: PDFPayload): Buffer {
   }
 
   function checkSpace(need: number) {
-    if (curY - need < FOOTER_MIN + 10) {
-      flushPage()
-      startNewPage()
-    }
+    if (curY - need < FOOTER_MIN + 10) { flushPage(); startNewPage() }
   }
 
-  // ── Page 1 header ────────────────────────────────────────────────────────
+  // ── Page 1 header ─────────────────────────────────────────────────────────
   pageNum++
   const HDR_H = 72
   ops.push(rect(0, PH - HDR_H, PW, HDR_H, GREEN))
   ops.push(tx(ML, PH - 28, 'F2', 16, WHITE, 'ALATA INVESTMENT CLUB'))
   ops.push(tx(ML, PH - 46, 'F1', 9, GSUB, 'Associazione Studentesca di Finanza'))
+  ops.push(tx(ML, PH - 64, 'F1', 8, GSUB, 'Università degli Studi di Brescia'))
   ops.push(tx(370, PH - 28, 'F2', 13, WHITE, 'BUDGET REPORT'))
   ops.push(tx(370, PH - 46, 'F1', 9, GSUB, payload.period))
   curY = PH - HDR_H - 26
@@ -116,37 +137,36 @@ function buildPDF(payload: PDFPayload): Buffer {
   ]
   for (const [label, value] of infoRows) {
     ops.push(tx(ML, curY, 'F2', 10, DARK, label))
-    const lw = label.length * 6.0
-    ops.push(tx(ML + lw, curY, 'F1', 10, DARK, value))
+    ops.push(tx(ML + label.length * 6.0, curY, 'F1', 10, DARK, value))
     curY -= 17
   }
   curY -= 8
   ops.push(hline(ML, curY, MR, GREEN, 0.5))
   curY -= 22
 
-  // ── RIEPILOGO ────────────────────────────────────────────────────────────
+  // ── RIEPILOGO ─────────────────────────────────────────────────────────────
   ops.push(tx(ML, curY, 'F2', 11, GREEN, 'RIEPILOGO'))
   curY -= 5
   ops.push(hline(ML, curY, ML + 78, GREEN, 1))
   curY -= 15
 
   const sumRows = [
-    { label: 'Entrate totali',   val: payload.summary.entrate,           c: TGRN },
-    { label: 'Uscite totali',    val: payload.summary.uscite,            c: TRED },
-    { label: 'Saldo periodo',    val: payload.summary.saldo,             c: payload.summary.saldo >= 0 ? TGRN : TRED },
-    { label: 'Saldo cumulativo', val: payload.summary.saldoCumulativo,   c: payload.summary.saldoCumulativo >= 0 ? TGRN : TRED },
+    { label: 'Entrate totali',   val: payload.summary.entrate },
+    { label: 'Uscite totali',    val: payload.summary.uscite },
+    { label: 'Saldo periodo',    val: payload.summary.saldo },
+    { label: 'Saldo cumulativo', val: payload.summary.saldoCumulativo },
   ]
   for (let i = 0; i < sumRows.length; i++) {
     const r = sumRows[i]
     const ry = curY - ROW_H
     if (i % 2 === 1) ops.push(rect(ML, ry, CW, ROW_H, LGRAY))
-    ops.push(tx(ML + 8, ry + 5, 'F1', 10, DARK, r.label))
-    ops.push(tx(ML + 230, ry + 5, 'F2', 10, r.c, fmtEur(r.val)))
+    ops.push(tx(ML + 8,  ry + 5, 'F1', 10, DARK, r.label))
+    ops.push(tx(ML + 230, ry + 5, 'F2', 10, BLACK, fmtEur(r.val)))
     curY = ry
   }
   curY -= 26
 
-  // ── DETTAGLIO PER CATEGORIA ──────────────────────────────────────────────
+  // ── DETTAGLIO PER CATEGORIA ───────────────────────────────────────────────
   checkSpace(60)
   ops.push(tx(ML, curY, 'F2', 11, GREEN, 'DETTAGLIO PER CATEGORIA'))
   curY -= 5
@@ -158,22 +178,21 @@ function buildPDF(payload: PDFPayload): Buffer {
   const hry = curY - ROW_H
   ops.push(rect(ML, hry, CW, ROW_H, GREEN))
   ops.push(tx(COL.name + 8, hry + 5, 'F2', 8.5, WHITE, 'CATEGORIA'))
-  ops.push(tx(COL.rev, hry + 5, 'F2', 8.5, WHITE, 'ENTRATE'))
+  ops.push(tx(COL.rev,  hry + 5, 'F2', 8.5, WHITE, 'ENTRATE'))
   ops.push(tx(COL.cost, hry + 5, 'F2', 8.5, WHITE, 'USCITE'))
-  ops.push(tx(COL.bal, hry + 5, 'F2', 8.5, WHITE, 'SALDO'))
+  ops.push(tx(COL.bal,  hry + 5, 'F2', 8.5, WHITE, 'SALDO'))
   curY = hry
 
-  // Data rows
+  // Data rows — all values in BLACK
   for (let i = 0; i < payload.categories.length; i++) {
     checkSpace(ROW_H + 5)
     const cat = payload.categories[i]
     const ry = curY - ROW_H
     if (i % 2 === 1) ops.push(rect(ML, ry, CW, ROW_H, LGRAY))
-    ops.push(tx(COL.name + 8, ry + 5, 'F1', 9, DARK, cat.name))
-    ops.push(tx(COL.rev,  ry + 5, 'F1', 9, cat.entrate > 0 ? TGRN : MUTED, cat.entrate > 0 ? fmtEur(cat.entrate) : '--'))
-    ops.push(tx(COL.cost, ry + 5, 'F1', 9, cat.uscite  > 0 ? TRED : MUTED, cat.uscite  > 0 ? fmtEur(cat.uscite)  : '--'))
-    const sc = cat.saldo >= 0 ? TGRN : TRED
-    ops.push(tx(COL.bal, ry + 5, 'F2', 9, sc, (cat.saldo >= 0 ? '+' : '') + fmtEur(cat.saldo)))
+    ops.push(tx(COL.name + 8, ry + 5, 'F1', 9, DARK,  cat.name))
+    ops.push(tx(COL.rev,  ry + 5, 'F1', 9, cat.entrate > 0 ? BLACK : MUTED, cat.entrate > 0 ? fmtEur(cat.entrate) : '--'))
+    ops.push(tx(COL.cost, ry + 5, 'F1', 9, cat.uscite  > 0 ? BLACK : MUTED, cat.uscite  > 0 ? fmtEur(cat.uscite)  : '--'))
+    ops.push(tx(COL.bal,  ry + 5, 'F2', 9, BLACK, (cat.saldo >= 0 ? '+' : '') + fmtEur(cat.saldo)))
     curY = ry
   }
 
@@ -182,14 +201,13 @@ function buildPDF(payload: PDFPayload): Buffer {
   ops.push(hline(ML, curY, MR, GREEN, 0.75))
   const totalRowY = curY - ROW_H
   ops.push(rect(ML, totalRowY, CW, ROW_H, LGRN))
-  ops.push(tx(COL.name + 8, totalRowY + 5, 'F2', 9, DARK, 'TOTALE'))
-  ops.push(tx(COL.rev,  totalRowY + 5, 'F2', 9, TGRN, fmtEur(payload.summary.entrate)))
-  ops.push(tx(COL.cost, totalRowY + 5, 'F2', 9, TRED, fmtEur(payload.summary.uscite)))
-  const ts = payload.summary.saldo
-  ops.push(tx(COL.bal, totalRowY + 5, 'F2', 9, ts >= 0 ? TGRN : TRED, (ts >= 0 ? '+' : '') + fmtEur(ts)))
+  ops.push(tx(COL.name + 8, totalRowY + 5, 'F2', 9, DARK,  'TOTALE'))
+  ops.push(tx(COL.rev,  totalRowY + 5, 'F2', 9, BLACK, fmtEur(payload.summary.entrate)))
+  ops.push(tx(COL.cost, totalRowY + 5, 'F2', 9, BLACK, fmtEur(payload.summary.uscite)))
+  ops.push(tx(COL.bal,  totalRowY + 5, 'F2', 9, BLACK, (payload.summary.saldo >= 0 ? '+' : '') + fmtEur(payload.summary.saldo)))
   curY = totalRowY - 40
 
-  // ── Signature block ──────────────────────────────────────────────────────
+  // ── Signature block ───────────────────────────────────────────────────────
   checkSpace(115)
   ops.push(hline(ML, curY, MR, GREEN, 0.5))
   curY -= 22
@@ -203,54 +221,77 @@ function buildPDF(payload: PDFPayload): Buffer {
   curY -= 16
   ops.push(tx(ML, curY, 'F1', 8, MUTED, "Il presente documento e' redatto ai sensi dello Statuto dell'Associazione Alata Investment Club, APS."))
 
-  // Finalize last page
-  flushPage()
+  // Finalize first (and possibly only) page
+  flushPage(pageNum === 1)
 
-  // ── Assemble PDF binary ──────────────────────────────────────────────────
+  // ── Assemble PDF binary ───────────────────────────────────────────────────
   const N = pageStreams.length
+  const hasLogo = logo !== null && logoStream !== null
+
+  // Object numbering:
+  // 1: Catalog, 2: Pages
+  // 3..N+2: Page objects
+  // N+3..2N+2: Content streams
+  // 2N+3: Font F1 (Helvetica)
+  // 2N+4: Font F2 (Helvetica-Bold)
+  // 2N+5: Logo XObject (if present)
   const f1Obj = 2 * N + 3
   const f2Obj = 2 * N + 4
-  const totalObjs = 2 * N + 4
+  const logoObj = 2 * N + 5
+  const totalObjs = hasLogo ? 2 * N + 5 : 2 * N + 4
 
-  const parts: string[] = []
+  const parts: Buffer[] = []
   const offsets: number[] = new Array(totalObjs).fill(0)
   let pos = 0
-  const push = (s: string) => { parts.push(s); pos += s.length }
+  const pushStr = (s: string) => { const b = Buffer.from(s, 'latin1'); parts.push(b); pos += b.length }
+  const pushBuf = (b: Buffer) => { parts.push(b); pos += b.length }
 
-  push('%PDF-1.4\n')
+  pushStr('%PDF-1.4\n')
 
   // obj 1: Catalog
   offsets[0] = pos
-  push('1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj\n')
+  pushStr('1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj\n')
 
   // obj 2: Pages
   offsets[1] = pos
   const kids = Array.from({ length: N }, (_, i) => `${i + 3} 0 R`).join(' ')
-  push(`2 0 obj\n<</Type/Pages/Kids[${kids}]/Count ${N}>>\nendobj\n`)
+  pushStr(`2 0 obj\n<</Type/Pages/Kids[${kids}]/Count ${N}>>\nendobj\n`)
 
   // Page objects: 3..N+2
   for (let i = 0; i < N; i++) {
     offsets[2 + i] = pos
     const pn = 3 + i
     const cn = N + 3 + i
-    push(`${pn} 0 obj\n<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Contents ${cn} 0 R/Resources<</Font<</F1 ${f1Obj} 0 R/F2 ${f2Obj} 0 R>>>>>>\nendobj\n`)
+    const xobjDict = hasLogo ? `/XObject<</Logo ${logoObj} 0 R>>` : ''
+    pushStr(`${pn} 0 obj\n<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Contents ${cn} 0 R/Resources<</Font<</F1 ${f1Obj} 0 R/F2 ${f2Obj} 0 R>>${xobjDict}>>\nendobj\n`)
   }
 
   // Content streams: N+3..2N+2
   for (let i = 0; i < N; i++) {
     offsets[N + 2 + i] = pos
     const cn = N + 3 + i
-    const stream = pageStreams[i].join('\n')
-    push(`${cn} 0 obj\n<</Length ${stream.length}>>\nstream\n${stream}\nendstream\nendobj\n`)
+    const pageBufs = pageStreams[i]
+    const streamData = Buffer.concat(pageBufs)
+    pushStr(`${cn} 0 obj\n<</Length ${streamData.length}>>\nstream\n`)
+    pushBuf(streamData)
+    pushStr('\nendstream\nendobj\n')
   }
 
-  // Font F1: Helvetica
+  // Font F1
   offsets[2 * N + 2] = pos
-  push(`${f1Obj} 0 obj\n<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>\nendobj\n`)
+  pushStr(`${f1Obj} 0 obj\n<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>\nendobj\n`)
 
-  // Font F2: Helvetica-Bold
+  // Font F2
   offsets[2 * N + 3] = pos
-  push(`${f2Obj} 0 obj\n<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>\nendobj\n`)
+  pushStr(`${f2Obj} 0 obj\n<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>\nendobj\n`)
+
+  // Logo Image XObject
+  if (hasLogo && logoStream && logo) {
+    offsets[2 * N + 4] = pos
+    pushStr(`${logoObj} 0 obj\n<</Type/XObject/Subtype/Image/Width ${logo.width}/Height ${logo.height}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/FlateDecode/Length ${logoStream.length}>>\nstream\n`)
+    pushBuf(logoStream)
+    pushStr('\nendstream\nendobj\n')
+  }
 
   // xref table
   const xrefPos = pos
@@ -260,10 +301,12 @@ function buildPDF(payload: PDFPayload): Buffer {
     xref += String(offsets[i]).padStart(10, '0') + ' 00000 n \n'
   }
   xref += `trailer\n<</Size ${totalObjs + 1}/Root 1 0 R>>\nstartxref\n${xrefPos}\n%%EOF`
-  push(xref)
+  pushStr(xref)
 
-  return Buffer.from(parts.join(''), 'latin1')
+  return Buffer.concat(parts)
 }
+
+// ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
@@ -276,13 +319,14 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let payload: PDFPayload
-  try {
-    payload = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
+  try { payload = await request.json() }
+  catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
 
-  const pdf = buildPDF(payload)
+  // Load logo from public directory
+  const logoPath = path.join(process.cwd(), 'public', 'white-black.png')
+  const logo = loadLogoPNG(logoPath)
+
+  const pdf = buildPDF(payload, logo)
   const safePeriod = payload.period.replace(/[^a-zA-Z0-9\-_]/g, '-')
 
   return new NextResponse(new Uint8Array(pdf), {

@@ -2,9 +2,48 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { DashboardProfileProvider, type MemberProfile } from './DashboardProfileContext'
 import DashboardNav from './DashboardNav'
+
+function MembershipBadge({ expiresAt }: { expiresAt: string | null }) {
+  if (!expiresAt) return null
+
+  const now       = new Date()
+  const expiry    = new Date(expiresAt)
+  const diffMs    = expiry.getTime() - now.getTime()
+  const diffDays  = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  const isExpired = diffMs <= 0
+  const isSoon    = !isExpired && diffDays <= 7
+
+  const formatted = expiry.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  if (isExpired) {
+    return (
+      <Link href="/dashboard/membership" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-600">
+        <span className="w-2 h-2 bg-red-500 inline-block" />
+        Membership scaduta — <span className="underline">Rinnova</span>
+      </Link>
+    )
+  }
+
+  if (isSoon) {
+    return (
+      <Link href="/dashboard/membership" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-yellow-700">
+        <span className="w-2 h-2 bg-yellow-400 inline-block" />
+        Membership scade il {formatted} — <span className="underline">Rinnova</span>
+      </Link>
+    )
+  }
+
+  return (
+    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#1a4a3a]">
+      <span className="w-2 h-2 bg-[#1a4a3a] inline-block" />
+      Membership attiva fino al {formatted}
+    </p>
+  )
+}
 
 type Status = 'loading' | 'ok' | 'not-found' | 'unauthenticated'
 
@@ -27,7 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       const { data: profileData, error } = await supabase
         .from('club_members')
-        .select('full_name, role, teams')
+        .select('full_name, role, teams, membership_expires_at')
         .eq('email', user?.email ?? '')
         .maybeSingle()
 
@@ -47,12 +86,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       setProfile({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        full_name: (profileData as any).full_name ?? 'Member',
+        full_name:             (profileData as any).full_name             ?? 'Member',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        role:      (profileData as any).role      ?? 'member',
+        role:                  (profileData as any).role                  ?? 'member',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        teams:     (profileData as any).teams     ?? null,
-        email:     user.email ?? '',
+        teams:                 (profileData as any).teams                 ?? null,
+        email:                 user.email ?? '',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        membership_expires_at: (profileData as any).membership_expires_at ?? null,
       })
       setStatus('ok')
     }
@@ -93,7 +134,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-4">
             Welcome back, {profile.full_name}
           </h1>
-          <div className="w-12 h-px bg-forest" />
+          <div className="w-12 h-px bg-forest mb-4" />
+          <MembershipBadge expiresAt={profile.membership_expires_at} />
         </div>
       </div>
 

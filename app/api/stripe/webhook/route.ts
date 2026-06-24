@@ -167,6 +167,87 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Webhook signature verification failed: ${message}` }, { status: 400 })
   }
 
+  // ── Membership: checkout.session.completed ───────────────────────────────────
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session
+    if (session.metadata?.type === 'merch') {
+      // Record merch sale as transaction
+      try {
+        const amountCents = session.amount_total ?? 0
+        const net = amountCents / 100
+
+        let categoryId: string | null = null
+        const { data: cat } = await supabaseAdmin
+          .from('budget_categories').select('id').eq('name', 'Merch').maybeSingle()
+        if (cat) {
+          categoryId = cat.id
+        } else {
+          const { data: nc } = await supabaseAdmin
+            .from('budget_categories').insert({ name: 'Merch', type: 'revenue' }).select('id').single()
+          categoryId = nc?.id ?? null
+        }
+        await supabaseAdmin.from('transactions').insert({
+          type:        'revenue',
+          date:        new Date().toISOString().slice(0, 10),
+          amount:      net,
+          description: `Vendita merch: ${(session.metadata.product_names ?? '').slice(0, 200)}`,
+          category_id: categoryId,
+          note:        `Stripe Session: ${session.id}`,
+          receipt_url: null,
+        })
+      } catch (e) { console.error('Failed to record merch transaction:', e) }
+    } else if (session.metadata?.type === 'membership') {
+      const userId   = session.metadata.user_id
+      const memberId = session.metadata.member_id
+      const email    = session.metadata.email ?? ''
+      const name     = session.metadata.name ?? ''
+
+      // Extend membership by 1 year from today
+      const expiresAt = new Date()
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+
+      await supabaseAdmin
+        .from('club_members')
+        .update({ membership_expires_at: expiresAt.toISOString() })
+        .eq('id', memberId)
+
+      // Record transaction
+      try {
+        const amountCents = session.amount_total ?? 0
+        const net = amountCents / 100
+
+        let categoryId: string | null = null
+        const { data: cat } = await supabaseAdmin
+          .from('budget_categories')
+          .select('id')
+          .eq('name', 'Membership')
+          .maybeSingle()
+        if (cat) {
+          categoryId = cat.id
+        } else {
+          const { data: newCat } = await supabaseAdmin
+            .from('budget_categories')
+            .insert({ name: 'Membership', type: 'revenue' })
+            .select('id')
+            .single()
+          categoryId = newCat?.id ?? null
+        }
+
+        await supabaseAdmin.from('transactions').insert({
+          type:        'revenue',
+          date:        new Date().toISOString().slice(0, 10),
+          amount:      net,
+          description: `Quota membership ${email}`,
+          category_id: categoryId,
+          note:        `Stripe Session: ${session.id} | User: ${userId}`,
+          receipt_url: null,
+        })
+      } catch (txErr) {
+        console.error('Failed to record membership transaction:', txErr)
+      }
+    }
+  }
+
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
 
