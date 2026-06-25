@@ -505,16 +505,12 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
     const productId: string = productRes.product?.id ?? productRes.id
     if (!productId) { setErr('Product created but no ID returned.'); setSaving(false); return }
 
-    // 2. Create each variant and attach its uploaded images
+    // 2. Create each variant (images included in POST body)
     await Promise.all(draftVariants.map(async (v, idx) => {
-      const variantRes = await authedPost('/api/admin/merch/variants', {
+      await authedPost('/api/admin/merch/variants', {
         product_id: productId, color: v.color, color_hex: v.colorHex,
         images: v.images, sort_order: idx,
       })
-      // If the API didn't accept images in POST, patch them in
-      if (v.images.length > 0 && variantRes.id && !variantRes.images?.length) {
-        await authedPatch('/api/admin/merch/variants', { id: variantRes.id, images: v.images })
-      }
     }))
 
     setSaving(false)
