@@ -6,6 +6,13 @@ import Image from 'next/image'
 
 const supabase = createClient()
 
+// ── Auth helpers (shared) ─────────────────────────────────────────────────────
+
+async function getToken() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token ?? ''
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Variant = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number }
@@ -19,37 +26,20 @@ type Product = {
 
 function fmtEur(cents: number) { return `€${(cents / 100).toFixed(2).replace('.', ',')}` }
 
-async function authedPost(path: string, body: unknown) {
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token ?? ''
-  return fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(body),
-  }).then(r => r.json())
+async function authedFetch(method: string, path: string, body?: unknown) {
+  const token = await getToken()
+  const opts: RequestInit = {
+    method,
+    headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  }
+  return fetch(path, opts).then(r => r.json())
 }
 
-async function authedPatch(path: string, body: unknown) {
-  const { data: { session } } = await supabase.auth.getSession()
-  return fetch(path, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-    body: JSON.stringify(body),
-  }).then(r => r.json())
-}
-
-async function authedDelete(path: string) {
-  const { data: { session } } = await supabase.auth.getSession()
-  return fetch(path, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${session?.access_token}` },
-  }).then(r => r.json())
-}
-
-async function authedGet(path: string) {
-  const { data: { session } } = await supabase.auth.getSession()
-  return fetch(path, { headers: { Authorization: `Bearer ${session?.access_token}` } }).then(r => r.json())
-}
+async function authedPost(path: string, body: unknown)  { return authedFetch('POST',   path, body) }
+async function authedPatch(path: string, body: unknown)  { return authedFetch('PATCH',  path, body) }
+async function authedDelete(path: string)                { return authedFetch('DELETE', path) }
+async function authedGet(path: string)                   { return authedFetch('GET',    path) }
 
 // ── VisibilityToggle ──────────────────────────────────────────────────────────
 
@@ -391,6 +381,229 @@ function AddProductForm({ onRefresh }: { onRefresh: () => void }) {
   )
 }
 
+// ── UpsellSection ─────────────────────────────────────────────────────────────
+
+type UpsellItem = {
+  id: string; type: 'product' | 'event'; reference_id: string
+  label: string | null; priority: number; active: boolean
+  resolvedName: string; resolvedPrice: number | null; resolvedDate: string | null
+}
+
+function UpsellSection() {
+  const [open,        setOpen]        = useState(false)
+  const [items,       setItems]       = useState<UpsellItem[]>([])
+  const [loading,     setLoading]     = useState(false)
+  const [showAdd,     setShowAdd]     = useState(false)
+  const [products,    setProducts]    = useState<{ id: string; name: string }[]>([])
+  const [events,      setEvents]      = useState<{ id: string; title: string; date: string }[]>([])
+  const [addType,     setAddType]     = useState<'product' | 'event'>('product')
+  const [addRef,      setAddRef]      = useState('')
+  const [addLabel,    setAddLabel]    = useState('')
+  const [addPriority, setAddPriority] = useState('0')
+  const [addSaving,   setAddSaving]   = useState(false)
+  const [addErr,      setAddErr]      = useState('')
+
+  async function loadUpsell() {
+    setLoading(true)
+    const data = await authedGet('/api/admin/merch/upsell')
+    setItems(data.items ?? [])
+    setLoading(false)
+  }
+
+  async function loadDropdowns() {
+    const [pData, eData] = await Promise.all([
+      authedGet('/api/admin/merch/products'),
+      fetch('/api/calendar/events').then(r => r.json()),
+    ])
+    setProducts((pData.products ?? []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
+    const now = new Date().toISOString().slice(0, 10)
+    setEvents(
+      ((eData.data ?? []) as { id: string; title: string; date: string }[])
+        .filter(e => e.date >= now)
+        .sort((a, b) => a.date.localeCompare(b.date))
+    )
+  }
+
+  useEffect(() => {
+    if (open && items.length === 0) loadUpsell()
+    if (open) loadDropdowns()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  async function toggleActive(item: UpsellItem) {
+    await authedPatch('/api/admin/merch/upsell', { id: item.id, active: !item.active })
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, active: !i.active } : i))
+  }
+
+  async function deleteItem(id: string) {
+    await authedDelete(`/api/admin/merch/upsell?id=${id}`)
+    setItems(prev => prev.filter(i => i.id !== id))
+  }
+
+  async function submitAdd(e: React.FormEvent) {
+    e.preventDefault()
+    setAddErr('')
+    if (!addRef) { setAddErr('Please select a product or event.'); return }
+    setAddSaving(true)
+    const res = await authedPost('/api/admin/merch/upsell', {
+      type: addType, reference_id: addRef,
+      label: addLabel.trim() || null, priority: parseInt(addPriority, 10) || 0,
+    })
+    setAddSaving(false)
+    if (res.error) { setAddErr(res.error); return }
+    setShowAdd(false); setAddRef(''); setAddLabel(''); setAddPriority('0')
+    loadUpsell()
+  }
+
+  const dropdownItems = addType === 'product'
+    ? products
+    : events.map(e => ({ id: e.id, name: `${e.title} (${e.date})` }))
+
+  return (
+    <div className="mt-8 border-t border-gray-200 pt-6">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <p className="text-sm font-semibold text-gray-900 font-['Inter']">Upsell Suggestions</p>
+        <svg
+          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="mt-4">
+          <p className="text-xs text-gray-500 mb-3 font-['Inter']">
+            Up to 3 active items shown to customers at checkout, ordered by priority.
+          </p>
+
+          {loading ? (
+            <p className="text-sm text-gray-400">Loading…</p>
+          ) : (
+            <div className="space-y-2 mb-3">
+              {items.length === 0 && (
+                <p className="text-sm text-gray-400 py-3 text-center border border-dashed border-gray-200">
+                  No upsell items yet.
+                </p>
+              )}
+              {items.map(item => (
+                <div key={item.id} className="border border-gray-200 px-3 py-2.5 flex items-center gap-3">
+                  <span className={`text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 flex-shrink-0 ${
+                    item.type === 'product' ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    {item.type}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{item.resolvedName}</p>
+                    {item.label && <p className="text-xs text-gray-500 truncate">"{item.label}"</p>}
+                    <p className="text-[10px] text-gray-400">Priority: {item.priority}</p>
+                  </div>
+                  <button
+                    onClick={() => toggleActive(item)}
+                    className={`text-[9px] font-semibold uppercase tracking-widest px-3 py-1.5 border transition-colors flex-shrink-0 ${
+                      item.active
+                        ? 'bg-[#1a4a3a] text-white border-[#1a4a3a] hover:bg-[#123a2d]'
+                        : 'bg-white text-gray-500 border-gray-300 hover:border-gray-500'
+                    }`}
+                  >
+                    {item.active ? 'Active' : 'Inactive'}
+                  </button>
+                  <button
+                    onClick={() => deleteItem(item.id)}
+                    className="text-[10px] font-semibold uppercase tracking-widest text-red-500 hover:text-red-700 flex-shrink-0"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!showAdd ? (
+            <button
+              onClick={() => setShowAdd(true)}
+              className="w-full py-2.5 border border-dashed border-gray-300 text-xs text-gray-500 hover:border-[#1a4a3a] hover:text-[#1a4a3a] transition-colors uppercase tracking-widest font-semibold"
+            >
+              + Add Upsell Item
+            </button>
+          ) : (
+            <form onSubmit={submitAdd} className="border border-[#1a4a3a] p-3 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-gray-900">New Upsell Item</p>
+              {addErr && <p className="text-xs text-red-600">{addErr}</p>}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Type</label>
+                  <select
+                    value={addType}
+                    onChange={e => { setAddType(e.target.value as 'product' | 'event'); setAddRef('') }}
+                    className="w-full text-sm border border-gray-300 px-2 py-1.5 focus:outline-none focus:border-[#1a4a3a]"
+                  >
+                    <option value="product">Product</option>
+                    <option value="event">Event</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">
+                    {addType === 'product' ? 'Product' : 'Event'} *
+                  </label>
+                  <select
+                    value={addRef}
+                    onChange={e => setAddRef(e.target.value)}
+                    className="w-full text-sm border border-gray-300 px-2 py-1.5 focus:outline-none focus:border-[#1a4a3a]"
+                    required
+                  >
+                    <option value="">Select…</option>
+                    {dropdownItems.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Label (optional)</label>
+                  <input
+                    value={addLabel}
+                    onChange={e => setAddLabel(e.target.value)}
+                    placeholder="e.g. Don't miss this"
+                    className="w-full text-sm border border-gray-300 px-2 py-1.5 focus:outline-none focus:border-[#1a4a3a]"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Priority</label>
+                  <input
+                    type="number"
+                    value={addPriority}
+                    onChange={e => setAddPriority(e.target.value)}
+                    className="w-full text-sm border border-gray-300 px-2 py-1.5 focus:outline-none focus:border-[#1a4a3a]"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={addSaving}
+                  className="px-4 py-2 bg-[#1a4a3a] text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 hover:bg-[#123a2d] transition-colors"
+                >
+                  {addSaving ? '…' : 'Add Item'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowAdd(false); setAddErr('') }}
+                  className="px-3 py-2 border border-gray-300 text-xs text-gray-600 hover:bg-gray-50 uppercase tracking-widest font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main MerchManager ─────────────────────────────────────────────────────────
 
 export default function MerchManager() {
@@ -426,6 +639,8 @@ export default function MerchManager() {
       </div>
 
       <AddProductForm onRefresh={load} />
+
+      <UpsellSection />
     </div>
   )
 }
