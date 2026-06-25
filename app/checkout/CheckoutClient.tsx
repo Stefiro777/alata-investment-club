@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart, type CartItem } from '@/app/components/CartContext'
+import { createClient } from '@/lib/supabase'
 import type { ShippingAddress } from '@/app/api/merch/checkout/route'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -20,7 +21,20 @@ type UpsellItem = {
   eventDate?:  string
 }
 
-type Step = 1 | 2 | 3
+type StepKey = 'order' | 'shipping' | 'registration' | 'payment'
+type StepDef = { key: StepKey; label: string }
+
+type EventRegEntry = {
+  eventId:               string
+  eventName:             string
+  registrationField:     'motivation' | 'panelists' | null
+  firstName:             string
+  lastName:              string
+  email:                 string
+  annoStudio:            string
+  motivation:            string
+  questionsForPanelists: string
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -63,46 +77,54 @@ const EU_COUNTRIES = [
   { code: 'SE', label: 'Sweden' },
 ]
 
-const INPUT_CLS = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1a4a3a] bg-white'
-const LABEL_CLS = 'block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1'
+const ANNO_OPTIONS = [
+  '1° anno triennale',
+  '2° anno triennale',
+  '3° anno triennale',
+  '1° anno magistrale',
+  '2° anno magistrale',
+  'Altro',
+]
+
+const INPUT_CLS   = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1a4a3a] bg-white'
+const LABEL_CLS   = 'block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1'
 const SECTION_CLS = 'text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2'
 
 // ── Stepper ────────────────────────────────────────────────────────────────────
 
-function Stepper({ step, hasMerch }: { step: Step; hasMerch: boolean }) {
-  const steps = hasMerch
-    ? [{ n: 1, label: 'Order' }, { n: 2, label: 'Shipping' }, { n: 3, label: 'Payment' }]
-    : [{ n: 1, label: 'Order' }, { n: 2, label: 'Contact' }, { n: 3, label: 'Payment' }]
-
+function Stepper({ step, stepDefs }: { step: number; stepDefs: StepDef[] }) {
   return (
     <div className="flex items-center justify-center mb-10">
-      {steps.map((s, i) => (
-        <div key={s.n} className="flex items-center">
-          <div className="flex flex-col items-center gap-1">
-            <div className={`w-8 h-8 flex items-center justify-center text-xs font-bold border-2 transition-colors ${
-              step > s.n
-                ? 'border-[#1a4a3a] bg-[#1a4a3a] text-white'
-                : step === s.n
-                  ? 'border-[#1a4a3a] bg-white text-[#1a4a3a]'
-                  : 'border-gray-300 bg-white text-gray-400'
-            }`}>
-              {step > s.n ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : s.n}
+      {stepDefs.map((s, i) => {
+        const n = i + 1
+        return (
+          <div key={s.key} className="flex items-center">
+            <div className="flex flex-col items-center gap-1">
+              <div className={`w-8 h-8 flex items-center justify-center text-xs font-bold border-2 transition-colors ${
+                step > n
+                  ? 'border-[#1a4a3a] bg-[#1a4a3a] text-white'
+                  : step === n
+                    ? 'border-[#1a4a3a] bg-white text-[#1a4a3a]'
+                    : 'border-gray-300 bg-white text-gray-400'
+              }`}>
+                {step > n ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : n}
+              </div>
+              <span className={`text-[9px] font-semibold uppercase tracking-widest ${
+                step >= n ? 'text-[#1a4a3a]' : 'text-gray-400'
+              }`}>{s.label}</span>
             </div>
-            <span className={`text-[9px] font-semibold uppercase tracking-widest ${
-              step >= s.n ? 'text-[#1a4a3a]' : 'text-gray-400'
-            }`}>{s.label}</span>
+            {i < stepDefs.length - 1 && (
+              <div className={`w-12 sm:w-20 h-px mx-2 mb-4 transition-colors ${
+                step > n ? 'bg-[#1a4a3a]' : 'bg-gray-200'
+              }`} />
+            )}
           </div>
-          {i < steps.length - 1 && (
-            <div className={`w-16 sm:w-24 h-px mx-2 mb-4 transition-colors ${
-              step > s.n ? 'bg-[#1a4a3a]' : 'bg-gray-200'
-            }`} />
-          )}
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -119,8 +141,8 @@ function StepOrder({
   totalCents:     number
   onContinue:     () => void
 }) {
-  const tickets = cartItems.filter(i => i.type === 'ticket')
-  const merch   = cartItems.filter(i => !i.type || i.type === 'merch')
+  const tickets  = cartItems.filter(i => i.type === 'ticket')
+  const merch    = cartItems.filter(i => !i.type || i.type === 'merch')
   const hasMixed = tickets.length > 0 && merch.length > 0
 
   function renderMerchItem(item: CartItem) {
@@ -166,8 +188,6 @@ function StepOrder({
     )
   }
 
-
-
   return (
     <div>
       <h2 className="font-serif text-2xl font-bold text-black mb-6">Your Order</h2>
@@ -185,7 +205,6 @@ function StepOrder({
             {merch.map(renderMerchItem)}
           </>
         )}
-
       </div>
 
       {/* Upsell — only when cart has merch */}
@@ -260,7 +279,7 @@ function StepOrder({
   )
 }
 
-// ── Step 2a: Shipping (merch present) ─────────────────────────────────────────
+// ── Step: Shipping ─────────────────────────────────────────────────────────────
 
 function StepShipping({
   shipping, onChange, onBack, onContinue, error,
@@ -322,64 +341,119 @@ function StepShipping({
         </button>
         <button onClick={onContinue}
           className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
-          Proceed to Payment →
+          Continue →
         </button>
       </div>
     </div>
   )
 }
 
-// ── Step 2b: Contact (no merch — only name + email needed) ────────────────────
+// ── Step: Event Registration ───────────────────────────────────────────────────
 
-type ContactInfo = { firstName: string; lastName: string; email: string }
-
-function StepContact({
-  contact, onChange, onBack, onContinue, error,
+function StepRegistration({
+  eventRegs, onChange, onBack, onContinue, error,
 }: {
-  contact:    ContactInfo
-  onChange:   (field: keyof ContactInfo, val: string) => void
+  eventRegs:  EventRegEntry[]
+  onChange:   (eventId: string, field: keyof EventRegEntry, val: string) => void
   onBack:     () => void
   onContinue: () => void
   error:      string
 }) {
   return (
     <div>
-      <h2 className="font-serif text-2xl font-bold text-black mb-6">Contact Details</h2>
+      <h2 className="font-serif text-2xl font-bold text-black mb-6">Event Registration</h2>
 
       {error && (
         <p className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2 mb-4">{error}</p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className={LABEL_CLS}>First Name *</label>
-          <input value={contact.firstName} onChange={e => onChange('firstName', e.target.value)} className={INPUT_CLS} />
-        </div>
-        <div>
-          <label className={LABEL_CLS}>Last Name *</label>
-          <input value={contact.lastName} onChange={e => onChange('lastName', e.target.value)} className={INPUT_CLS} />
-        </div>
-        <div className="sm:col-span-2">
-          <label className={LABEL_CLS}>Email *</label>
-          <input type="email" value={contact.email} onChange={e => onChange('email', e.target.value)} className={INPUT_CLS} />
-        </div>
+      <div className="space-y-8">
+        {eventRegs.map(reg => (
+          <div key={reg.eventId}>
+            {eventRegs.length > 1 && (
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] mb-4 pb-2 border-b border-[#1a4a3a]/20">
+                {reg.eventName}
+              </p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={LABEL_CLS}>First Name *</label>
+                <input
+                  value={reg.firstName}
+                  onChange={e => onChange(reg.eventId, 'firstName', e.target.value)}
+                  className={INPUT_CLS}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLS}>Last Name *</label>
+                <input
+                  value={reg.lastName}
+                  onChange={e => onChange(reg.eventId, 'lastName', e.target.value)}
+                  className={INPUT_CLS}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={LABEL_CLS}>Email *</label>
+                <input
+                  type="email"
+                  value={reg.email}
+                  onChange={e => onChange(reg.eventId, 'email', e.target.value)}
+                  className={INPUT_CLS}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={LABEL_CLS}>Anno di studio *</label>
+                <select
+                  value={reg.annoStudio}
+                  onChange={e => onChange(reg.eventId, 'annoStudio', e.target.value)}
+                  className={INPUT_CLS}
+                >
+                  <option value="">Select year</option>
+                  {ANNO_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              {reg.registrationField === 'motivation' && (
+                <div className="sm:col-span-2">
+                  <label className={LABEL_CLS}>Why do you want to attend? *</label>
+                  <textarea
+                    rows={3}
+                    value={reg.motivation}
+                    onChange={e => onChange(reg.eventId, 'motivation', e.target.value)}
+                    className={`${INPUT_CLS} resize-none`}
+                  />
+                </div>
+              )}
+              {reg.registrationField === 'panelists' && (
+                <div className="sm:col-span-2">
+                  <label className={LABEL_CLS}>Questions for the panelists *</label>
+                  <textarea
+                    rows={3}
+                    value={reg.questionsForPanelists}
+                    onChange={e => onChange(reg.eventId, 'questionsForPanelists', e.target.value)}
+                    className={`${INPUT_CLS} resize-none`}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 mt-6">
         <button onClick={onBack}
           className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors">
           ← Back
         </button>
         <button onClick={onContinue}
           className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
-          Proceed to Payment →
+          Continue →
         </button>
       </div>
     </div>
   )
 }
 
-// ── Step 3: Payment ────────────────────────────────────────────────────────────
+// ── Step: Payment ──────────────────────────────────────────────────────────────
 
 function StepPayment({
   totalCents, shipping, hasMerch, onBack, onPay, paying, error,
@@ -443,7 +517,16 @@ export default function CheckoutClient() {
   const hasMerch  = cartItems.some(i => !i.type || i.type === 'merch')
   const hasTicket = cartItems.some(i => i.type === 'ticket')
 
-  const [step,     setStep]     = useState<Step>(1)
+  // Dynamic step list based on cart contents
+  const stepDefs = useMemo<StepDef[]>(() => {
+    const s: StepDef[] = [{ key: 'order', label: 'Order' }]
+    if (hasMerch)  s.push({ key: 'shipping',     label: 'Shipping'     })
+    if (hasTicket) s.push({ key: 'registration',  label: 'Registration' })
+    s.push({ key: 'payment', label: 'Payment' })
+    return s
+  }, [hasMerch, hasTicket])
+
+  const [step,     setStep]     = useState(1)
   const [upsells,  setUpsells]  = useState<UpsellItem[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [paying,   setPaying]   = useState(false)
@@ -454,7 +537,7 @@ export default function CheckoutClient() {
     addressLine1: '', addressLine2: '', city: '', postalCode: '', country: 'IT',
   })
 
-  const [contact, setContact] = useState({ firstName: '', lastName: '', email: '' })
+  const [eventRegs, setEventRegs] = useState<EventRegEntry[]>([])
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -470,6 +553,44 @@ export default function CheckoutClient() {
       .catch(() => {})
   }, [hasMerch])
 
+  // Init event registration entries + fetch registration_field per event
+  useEffect(() => {
+    if (!hasTicket) return
+    const tickets = cartItems.filter(i => i.type === 'ticket')
+
+    setEventRegs(tickets.map(t => ({
+      eventId:               t.eventId ?? t.cartKey,
+      eventName:             t.name,
+      registrationField:     null,
+      firstName:             '',
+      lastName:              '',
+      email:                 '',
+      annoStudio:            '',
+      motivation:            '',
+      questionsForPanelists: '',
+    })))
+
+    const ids = tickets.map(t => t.eventId).filter(Boolean) as string[]
+    if (ids.length === 0) return
+
+    createClient()
+      .from('upcoming_events')
+      .select('id, registration_field')
+      .in('id', ids)
+      .then(({ data }) => {
+        if (!data) return
+        const fieldMap = new Map(
+          (data as { id: string; registration_field: 'motivation' | 'panelists' | null }[])
+            .map(e => [e.id, e.registration_field])
+        )
+        setEventRegs(prev => prev.map(r => ({
+          ...r,
+          registrationField: fieldMap.get(r.eventId) ?? null,
+        })))
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasTicket])
+
   function toggleUpsell(item: UpsellItem) {
     setSelected(prev => {
       const next = new Set(prev)
@@ -480,6 +601,8 @@ export default function CheckoutClient() {
 
   const selectedUpsells = upsells.filter(u => selected.has(u.id))
   const totalCents = cartTotal + selectedUpsells.reduce((s, u) => s + (u.price_cents ?? 0), 0)
+
+  // ── Validation ──────────────────────────────────────────────────────────────
 
   function validateShipping(): string {
     if (!shipping.firstName.trim()) return 'First name is required.'
@@ -492,22 +615,50 @@ export default function CheckoutClient() {
     return ''
   }
 
-  function validateContact(): string {
-    if (!contact.firstName.trim()) return 'First name is required.'
-    if (!contact.lastName.trim())  return 'Last name is required.'
-    if (!contact.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email))
-      return 'A valid email is required.'
+  function validateRegistrations(): string {
+    for (const r of eventRegs) {
+      if (!r.firstName.trim())  return 'First name is required.'
+      if (!r.lastName.trim())   return 'Last name is required.'
+      if (!r.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email))
+        return 'A valid email is required.'
+      if (!r.annoStudio) return 'Year of study is required.'
+      if (r.registrationField === 'motivation' && !r.motivation.trim())
+        return 'Please tell us why you want to attend.'
+      if (r.registrationField === 'panelists' && !r.questionsForPanelists.trim())
+        return 'Please enter your questions for the panelists.'
+    }
     return ''
   }
 
-  function handleStep2Continue() {
-    const err = hasMerch ? validateShipping() : validateContact()
+  // ── Step navigation ─────────────────────────────────────────────────────────
+
+  const currentKey = stepDefs[step - 1]?.key
+
+  function handleShippingContinue() {
+    const err = validateShipping()
     if (err) { setError(err); return }
     setError('')
-    setStep(3)
+    // Pre-fill registration entries with shipping contact info
+    if (hasTicket) {
+      setEventRegs(prev => prev.map(r => ({
+        ...r,
+        firstName: r.firstName || shipping.firstName,
+        lastName:  r.lastName  || shipping.lastName,
+        email:     r.email     || shipping.email,
+      })))
+    }
+    setStep(s => s + 1)
   }
 
-  // Derive customer name and email depending on which step 2 form was used
+  function handleRegistrationContinue() {
+    const err = validateRegistrations()
+    if (err) { setError(err); return }
+    setError('')
+    setStep(s => s + 1)
+  }
+
+  // ── Customer info derivation ─────────────────────────────────────────────────
+
   function getCustomerInfo() {
     if (hasMerch) {
       return {
@@ -515,11 +666,16 @@ export default function CheckoutClient() {
         email: shipping.email,
       }
     }
-    return {
-      name:  `${contact.firstName} ${contact.lastName}`.trim(),
-      email: contact.email,
+    if (hasTicket && eventRegs.length > 0) {
+      return {
+        name:  `${eventRegs[0].firstName} ${eventRegs[0].lastName}`.trim(),
+        email: eventRegs[0].email,
+      }
     }
+    return { name: '', email: '' }
   }
+
+  // ── Pay ──────────────────────────────────────────────────────────────────────
 
   async function handlePay() {
     setPaying(true)
@@ -538,12 +694,12 @@ export default function CheckoutClient() {
           quantity:     item.quantity,
         })),
         ...cartItems.filter(i => i.type === 'ticket').map(item => ({
-          type:        'ticket' as const,
-          referenceId: item.eventId ?? item.cartKey,
-          name:        item.name,
-          priceCents:  item.priceCents,
-          quantity:    item.quantity,
-          eventDate:   item.eventDate,
+          type:          'ticket' as const,
+          referenceId:   item.eventId ?? item.cartKey,
+          name:          item.name,
+          priceCents:    item.priceCents,
+          quantity:      item.quantity,
+          eventDate:     item.eventDate,
           eventLocation: item.eventLocation ?? undefined,
         })),
         ...selectedUpsells.map(u => ({
@@ -555,6 +711,18 @@ export default function CheckoutClient() {
         })),
       ]
 
+      const eventRegistrations = hasTicket
+        ? eventRegs.map(r => ({
+            eventId:               r.eventId,
+            firstName:             r.firstName,
+            lastName:              r.lastName,
+            email:                 r.email,
+            annoStudio:            r.annoStudio,
+            motivation:            r.motivation || undefined,
+            questionsForPanelists: r.questionsForPanelists || undefined,
+          }))
+        : undefined
+
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -563,6 +731,7 @@ export default function CheckoutClient() {
           customerName,
           customerEmail,
           shippingAddress: hasMerch ? shipping : null,
+          eventRegistrations,
         }),
       })
       const data = await res.json()
@@ -587,7 +756,7 @@ export default function CheckoutClient() {
   return (
     <div className="min-h-screen flex" style={{ fontFamily: 'Inter, sans-serif' }}>
 
-      {/* Left — branding panel (desktop only, mirrors /login) */}
+      {/* Left — branding panel (desktop only) */}
       <div className="hidden md:block md:w-1/2 relative">
         <Image
           src="/capitolino.jpg"
@@ -621,9 +790,9 @@ export default function CheckoutClient() {
 
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-6 py-10">
-            <Stepper step={step} hasMerch={hasMerch} />
+            <Stepper step={step} stepDefs={stepDefs} />
 
-            {step === 1 && (
+            {currentKey === 'order' && (
               <StepOrder
                 cartItems={cartItems}
                 upsells={upsells}
@@ -633,30 +802,37 @@ export default function CheckoutClient() {
                 onContinue={() => { setError(''); setStep(2) }}
               />
             )}
-            {step === 2 && hasMerch && (
+
+            {currentKey === 'shipping' && (
               <StepShipping
                 shipping={shipping}
                 onChange={(f, v) => setShipping(prev => ({ ...prev, [f]: v }))}
-                onBack={() => { setError(''); setStep(1) }}
-                onContinue={handleStep2Continue}
+                onBack={() => { setError(''); setStep(s => s - 1) }}
+                onContinue={handleShippingContinue}
                 error={error}
               />
             )}
-            {step === 2 && !hasMerch && (
-              <StepContact
-                contact={contact}
-                onChange={(f, v) => setContact(prev => ({ ...prev, [f]: v }))}
-                onBack={() => { setError(''); setStep(1) }}
-                onContinue={handleStep2Continue}
+
+            {currentKey === 'registration' && (
+              <StepRegistration
+                eventRegs={eventRegs}
+                onChange={(eventId, field, val) =>
+                  setEventRegs(prev => prev.map(r =>
+                    r.eventId === eventId ? { ...r, [field]: val } : r
+                  ))
+                }
+                onBack={() => { setError(''); setStep(s => s - 1) }}
+                onContinue={handleRegistrationContinue}
                 error={error}
               />
             )}
-            {step === 3 && (
+
+            {currentKey === 'payment' && (
               <StepPayment
                 totalCents={totalCents}
                 shipping={shipping}
                 hasMerch={hasMerch}
-                onBack={() => { setError(''); setStep(2) }}
+                onBack={() => { setError(''); setStep(s => s - 1) }}
                 onPay={handlePay}
                 paying={paying}
                 error={error}

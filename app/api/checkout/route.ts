@@ -27,12 +27,23 @@ export type ShippingAddress = {
   country:      string
 }
 
+type EventRegistrationPayload = {
+  eventId:               string
+  firstName:             string
+  lastName:              string
+  email:                 string
+  annoStudio:            string
+  motivation?:           string
+  questionsForPanelists?: string
+}
+
 export async function POST(req: NextRequest) {
-  const { items, customerName, customerEmail, shippingAddress } = await req.json() as {
-    items:            UnifiedLineItem[]
-    customerName:     string
-    customerEmail:    string
-    shippingAddress:  ShippingAddress | null
+  const { items, customerName, customerEmail, shippingAddress, eventRegistrations } = await req.json() as {
+    items:               UnifiedLineItem[]
+    customerName:        string
+    customerEmail:       string
+    shippingAddress:     ShippingAddress | null
+    eventRegistrations?: EventRegistrationPayload[]
   }
 
   if (!items?.length)   return NextResponse.json({ error: 'Cart is empty' },   { status: 400 })
@@ -85,7 +96,9 @@ export async function POST(req: NextRequest) {
           eventDate: i.eventDate ?? null, eventLocation: i.eventLocation ?? null,
         }))
       ).slice(0, 500),
-
+      eventRegistrations: eventRegistrations
+        ? JSON.stringify(eventRegistrations).slice(0, 500)
+        : '',
     },
   })
 

@@ -316,8 +316,29 @@ export async function POST(req: NextRequest) {
         } catch (e) { console.error('Failed to record unified merch:', e) }
       }
 
-      // Register ticket purchases
-      if (ticketItems.length > 0) {
+      // Register event attendees — use full registration data when available
+      const rawEventRegs = meta.eventRegistrations
+      if (rawEventRegs) {
+        try {
+          const regs = JSON.parse(rawEventRegs) as Array<{
+            eventId: string; firstName: string; lastName: string; email: string
+            annoStudio: string; motivation?: string; questionsForPanelists?: string
+          }>
+          await Promise.allSettled(regs.map(r =>
+            supabaseAdmin.from('event_registrations').insert({
+              event_id:                r.eventId,
+              nome:                    r.firstName,
+              cognome:                 r.lastName,
+              email:                   r.email,
+              telefono:                null,
+              anno_di_studio:          r.annoStudio,
+              motivazione:             r.motivation             ?? null,
+              questions_for_panelists: r.questionsForPanelists ?? null,
+            })
+          ))
+        } catch (e) { console.error('Failed to register event attendees (unified):', e) }
+      } else if (ticketItems.length > 0) {
+        // Legacy fallback — no registration data in metadata
         try {
           await Promise.allSettled(ticketItems.map(ticket =>
             supabaseAdmin.from('event_registrations').insert({
