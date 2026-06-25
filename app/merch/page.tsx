@@ -66,7 +66,7 @@ export default async function MerchPage({
       {/* Hero */}
       <section className="relative min-h-[60vh] flex items-center justify-center text-white overflow-hidden">
         <Image
-          src="/images/loggia.jpeg"
+          src="/loggia.jpeg"
           alt=""
           fill
           className="object-cover"
@@ -75,14 +75,11 @@ export default async function MerchPage({
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 text-center px-6 py-20">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1a4a3a] mb-5">
-            Alata Investment Club
-          </p>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold leading-none mb-6">
+          <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-none mb-6">
             WEAR THE CLUB
           </h1>
           <div className="w-10 h-px bg-white/30 mx-auto mb-6" />
-          <p className="text-lg text-white/70 max-w-xl mx-auto leading-relaxed">
+          <p className="text-lg text-white max-w-xl mx-auto leading-relaxed">
             Selected pieces for members and enthusiasts.
           </p>
         </div>
