@@ -14,7 +14,7 @@ export default function MerchCartBar() {
           className="relative flex items-center justify-center w-9 h-9 hover:opacity-70 transition-opacity"
           aria-label="Open cart"
         >
-          <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
