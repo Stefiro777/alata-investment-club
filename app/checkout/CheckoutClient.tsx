@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useCart, type CartItem } from '@/app/components/CartContext'
-import type { CheckoutLineItem, ShippingAddress } from '@/app/api/merch/checkout/route'
+import type { ShippingAddress } from '@/app/api/merch/checkout/route'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -64,15 +64,15 @@ const EU_COUNTRIES = [
 
 const INPUT_CLS = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1a4a3a] bg-white'
 const LABEL_CLS = 'block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1'
+const SECTION_CLS = 'text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2'
 
 // ── Stepper ────────────────────────────────────────────────────────────────────
 
-function Stepper({ step }: { step: Step }) {
-  const steps = [
-    { n: 1, label: 'Order' },
-    { n: 2, label: 'Shipping' },
-    { n: 3, label: 'Payment' },
-  ]
+function Stepper({ step, hasMerch }: { step: Step; hasMerch: boolean }) {
+  const steps = hasMerch
+    ? [{ n: 1, label: 'Order' }, { n: 2, label: 'Shipping' }, { n: 3, label: 'Payment' }]
+    : [{ n: 1, label: 'Order' }, { n: 2, label: 'Contact' }, { n: 3, label: 'Payment' }]
+
   return (
     <div className="flex items-center justify-center mb-10">
       {steps.map((s, i) => (
@@ -109,49 +109,33 @@ function Stepper({ step }: { step: Step }) {
 // ── Step 1: Order Summary + Upsell ────────────────────────────────────────────
 
 function StepOrder({
-  cartItems,
-  upsells,
-  selected,
-  onToggleUpsell,
-  totalCents,
-  onContinue,
+  cartItems, upsells, selected, onToggleUpsell, totalCents, onContinue,
 }: {
-  cartItems:       CartItem[]
-  upsells:         UpsellItem[]
-  selected:        Set<string>
-  onToggleUpsell:  (item: UpsellItem) => void
-  totalCents:      number
-  onContinue:      () => void
+  cartItems:      CartItem[]
+  upsells:        UpsellItem[]
+  selected:       Set<string>
+  onToggleUpsell: (item: UpsellItem) => void
+  totalCents:     number
+  onContinue:     () => void
 }) {
   const tickets = cartItems.filter(i => i.type === 'ticket')
   const merch   = cartItems.filter(i => !i.type || i.type === 'merch')
-  const hasBoth = tickets.length > 0 && merch.length > 0
+  const career  = cartItems.filter(i => i.type === 'career')
+  const typeCount = [tickets.length > 0, merch.length > 0, career.length > 0].filter(Boolean).length
+  const hasMixed = typeCount > 1
 
-  function renderCartItem(item: CartItem) {
-    const isTicket = item.type === 'ticket'
+  function renderMerchItem(item: CartItem) {
     return (
       <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
-        {isTicket ? (
-          <div className="w-20 h-20 flex-shrink-0 bg-[#1a4a3a]/10 flex items-center justify-center">
-            <svg className="w-7 h-7 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+        {item.variant?.image ? (
+          <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 overflow-hidden">
+            <Image src={item.variant.image} alt={item.name} fill className="object-cover" />
           </div>
-        ) : (
-          item.variant?.image ? (
-            <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 overflow-hidden">
-              <Image src={item.variant.image} alt={item.name} fill className="object-cover" />
-            </div>
-          ) : <div className="w-20 h-20 flex-shrink-0 bg-gray-100" />
-        )}
+        ) : <div className="w-20 h-20 flex-shrink-0 bg-gray-100" />}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-black">{item.name}</p>
           <p className="text-xs text-gray-500 mt-0.5">
-            {isTicket
-              ? [item.eventDate ? fmtDate(item.eventDate) : null, item.eventLocation].filter(Boolean).join(' · ')
-              : [item.variant?.color, item.size, item.textVariant].filter(Boolean).join(' · ')
-            }
+            {[item.variant?.color, item.size, item.textVariant].filter(Boolean).join(' · ')}
           </p>
           <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity}</p>
         </div>
@@ -162,24 +146,73 @@ function StepOrder({
     )
   }
 
+  function renderTicketItem(item: CartItem) {
+    return (
+      <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
+        <div className="w-20 h-20 flex-shrink-0 bg-[#1a4a3a]/10 flex items-center justify-center">
+          <svg className="w-7 h-7 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-black">{item.name}</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {[item.eventDate ? fmtDate(item.eventDate) : null, item.eventLocation].filter(Boolean).join(' · ')}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">Qty: 1</p>
+        </div>
+        <p className="text-sm font-semibold text-black flex-shrink-0">{fmtEur(item.priceCents)}</p>
+      </div>
+    )
+  }
+
+  function renderCareerItem(item: CartItem) {
+    return (
+      <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
+        <div className="w-20 h-20 flex-shrink-0 bg-[#1a4a3a]/10 flex items-center justify-center">
+          <svg className="w-7 h-7 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-black">{item.name}</p>
+          <p className="text-xs text-gray-500 mt-0.5">Career Service</p>
+          <p className="text-xs text-gray-500 mt-0.5">Qty: 1</p>
+        </div>
+        <p className="text-sm font-semibold text-black flex-shrink-0">{fmtEur(item.priceCents)}</p>
+      </div>
+    )
+  }
+
   return (
     <div>
       <h2 className="font-serif text-2xl font-bold text-black mb-6">Your Order</h2>
 
-      {/* Cart items */}
       <div className="space-y-3 mb-8">
-        {hasBoth && tickets.length > 0 && (
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Tickets</p>
+        {tickets.length > 0 && (
+          <>
+            {hasMixed && <p className={SECTION_CLS}>Tickets</p>}
+            {tickets.map(renderTicketItem)}
+          </>
         )}
-        {tickets.map(renderCartItem)}
-        {hasBoth && merch.length > 0 && (
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 pt-2">Merch</p>
+        {merch.length > 0 && (
+          <>
+            {hasMixed && <p className={`${SECTION_CLS} pt-2`}>Merch</p>}
+            {merch.map(renderMerchItem)}
+          </>
         )}
-        {merch.map(renderCartItem)}
+        {career.length > 0 && (
+          <>
+            {hasMixed && <p className={`${SECTION_CLS} pt-2`}>Services</p>}
+            {career.map(renderCareerItem)}
+          </>
+        )}
       </div>
 
-      {/* Upsell */}
-      {upsells.length > 0 && (
+      {/* Upsell — only when cart has merch */}
+      {merch.length > 0 && upsells.length > 0 && (
         <div className="mb-8">
           <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-gray-400 mb-4">
             You might also like
@@ -188,8 +221,7 @@ function StepOrder({
             {upsells.map(u => {
               const isSelected = selected.has(u.id)
               return (
-                <div
-                  key={u.id}
+                <div key={u.id}
                   className={`flex items-center gap-4 border p-3 transition-colors ${
                     isSelected ? 'border-[#1a4a3a] bg-[#f4f9f7]' : 'border-gray-200 bg-white'
                   }`}
@@ -207,9 +239,7 @@ function StepOrder({
                   )}
                   <div className="flex-1 min-w-0">
                     {u.label && (
-                      <p className="text-[9px] font-semibold uppercase tracking-widest text-[#1a4a3a] mb-0.5">
-                        {u.label}
-                      </p>
+                      <p className="text-[9px] font-semibold uppercase tracking-widest text-[#1a4a3a] mb-0.5">{u.label}</p>
                     )}
                     <p className="text-sm font-semibold text-black truncate">{u.name}</p>
                     {u.eventDate && (
@@ -236,7 +266,6 @@ function StepOrder({
         </div>
       )}
 
-      {/* Total */}
       <div className="border-t border-gray-200 pt-4 mb-6">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Total</p>
@@ -248,20 +277,16 @@ function StepOrder({
         onClick={onContinue}
         className="w-full py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors"
       >
-        Continue to Shipping →
+        Continue →
       </button>
     </div>
   )
 }
 
-// ── Step 2: Shipping ───────────────────────────────────────────────────────────
+// ── Step 2a: Shipping (merch present) ─────────────────────────────────────────
 
 function StepShipping({
-  shipping,
-  onChange,
-  onBack,
-  onContinue,
-  error,
+  shipping, onChange, onBack, onContinue, error,
 }: {
   shipping:   ShippingAddress
   onChange:   (field: keyof ShippingAddress, val: string) => void
@@ -270,10 +295,7 @@ function StepShipping({
   error:      string
 }) {
   function field(key: keyof ShippingAddress, label: string, opts?: {
-    required?: boolean
-    type?: string
-    placeholder?: string
-    colSpan?: boolean
+    required?: boolean; type?: string; placeholder?: string; colSpan?: boolean
   }) {
     return (
       <div className={opts?.colSpan ? 'sm:col-span-2' : ''}>
@@ -301,18 +323,14 @@ function StepShipping({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {field('firstName', 'First Name')}
         {field('lastName',  'Last Name')}
-        {field('email',     'Email', { type: 'email', colSpan: false })}
+        {field('email',     'Email', { type: 'email' })}
         {field('addressLine1', 'Address', { colSpan: true })}
         {field('addressLine2', 'Apartment, suite, etc.', { required: false, colSpan: true, placeholder: 'Optional' })}
         {field('city',       'City')}
         {field('postalCode', 'Postal Code')}
         <div>
           <label className={LABEL_CLS}>Country *</label>
-          <select
-            value={shipping.country}
-            onChange={e => onChange('country', e.target.value)}
-            className={INPUT_CLS}
-          >
+          <select value={shipping.country} onChange={e => onChange('country', e.target.value)} className={INPUT_CLS}>
             {EU_COUNTRIES.map(c => (
               <option key={c.code} value={c.code}>{c.label}</option>
             ))}
@@ -321,16 +339,62 @@ function StepShipping({
       </div>
 
       <div className="flex gap-3">
-        <button
-          onClick={onBack}
-          className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors"
-        >
+        <button onClick={onBack}
+          className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors">
           ← Back
         </button>
-        <button
-          onClick={onContinue}
-          className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors"
-        >
+        <button onClick={onContinue}
+          className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
+          Proceed to Payment →
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Step 2b: Contact (no merch — only name + email needed) ────────────────────
+
+type ContactInfo = { firstName: string; lastName: string; email: string }
+
+function StepContact({
+  contact, onChange, onBack, onContinue, error,
+}: {
+  contact:    ContactInfo
+  onChange:   (field: keyof ContactInfo, val: string) => void
+  onBack:     () => void
+  onContinue: () => void
+  error:      string
+}) {
+  return (
+    <div>
+      <h2 className="font-serif text-2xl font-bold text-black mb-6">Contact Details</h2>
+
+      {error && (
+        <p className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2 mb-4">{error}</p>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label className={LABEL_CLS}>First Name *</label>
+          <input value={contact.firstName} onChange={e => onChange('firstName', e.target.value)} className={INPUT_CLS} />
+        </div>
+        <div>
+          <label className={LABEL_CLS}>Last Name *</label>
+          <input value={contact.lastName} onChange={e => onChange('lastName', e.target.value)} className={INPUT_CLS} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={LABEL_CLS}>Email *</label>
+          <input type="email" value={contact.email} onChange={e => onChange('email', e.target.value)} className={INPUT_CLS} />
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <button onClick={onBack}
+          className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors">
+          ← Back
+        </button>
+        <button onClick={onContinue}
+          className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
           Proceed to Payment →
         </button>
       </div>
@@ -341,15 +405,11 @@ function StepShipping({
 // ── Step 3: Payment ────────────────────────────────────────────────────────────
 
 function StepPayment({
-  totalCents,
-  shipping,
-  onBack,
-  onPay,
-  paying,
-  error,
+  totalCents, shipping, hasMerch, onBack, onPay, paying, error,
 }: {
   totalCents: number
   shipping:   ShippingAddress
+  hasMerch:   boolean
   onBack:     () => void
   onPay:      () => void
   paying:     boolean
@@ -359,17 +419,16 @@ function StepPayment({
     <div>
       <h2 className="font-serif text-2xl font-bold text-black mb-6">Payment</h2>
 
-      {/* Summary */}
       <div className="border border-gray-200 p-4 mb-6 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">
-          Order Summary
-        </p>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Shipping to</span>
-          <span className="text-black font-medium">
-            {shipping.firstName} {shipping.lastName}, {shipping.city}, {shipping.country}
-          </span>
-        </div>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Order Summary</p>
+        {hasMerch && (
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Shipping to</span>
+            <span className="text-black font-medium">
+              {shipping.firstName} {shipping.lastName}, {shipping.city}, {shipping.country}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between text-sm border-t border-gray-100 pt-2 mt-2">
           <span className="font-semibold uppercase tracking-widest text-[10px] text-gray-500">Total</span>
           <span className="text-black font-bold">{fmtEur(totalCents)}</span>
@@ -385,18 +444,12 @@ function StepPayment({
       </p>
 
       <div className="flex gap-3">
-        <button
-          onClick={onBack}
-          disabled={paying}
-          className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-40"
-        >
+        <button onClick={onBack} disabled={paying}
+          className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-40">
           ← Back
         </button>
-        <button
-          onClick={onPay}
-          disabled={paying}
-          className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60"
-        >
+        <button onClick={onPay} disabled={paying}
+          className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
           {paying ? 'Redirecting…' : `Pay ${fmtEur(totalCents)} →`}
         </button>
       </div>
@@ -410,6 +463,10 @@ export default function CheckoutClient() {
   const router = useRouter()
   const { items: cartItems, totalCents: cartTotal, clearCart } = useCart()
 
+  const hasMerch  = cartItems.some(i => !i.type || i.type === 'merch')
+  const hasTicket = cartItems.some(i => i.type === 'ticket')
+  const hasCareer = cartItems.some(i => i.type === 'career')
+
   const [step,     setStep]     = useState<Step>(1)
   const [upsells,  setUpsells]  = useState<UpsellItem[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -417,28 +474,25 @@ export default function CheckoutClient() {
   const [error,    setError]    = useState('')
 
   const [shipping, setShipping] = useState<ShippingAddress>({
-    firstName:    '',
-    lastName:     '',
-    email:        '',
-    addressLine1: '',
-    addressLine2: '',
-    city:         '',
-    postalCode:   '',
-    country:      'IT',
+    firstName: '', lastName: '', email: '',
+    addressLine1: '', addressLine2: '', city: '', postalCode: '', country: 'IT',
   })
+
+  const [contact, setContact] = useState({ firstName: '', lastName: '', email: '' })
 
   // Redirect if cart is empty
   useEffect(() => {
     if (cartItems.length === 0) router.replace('/merch')
   }, [cartItems, router])
 
-  // Fetch upsell items
+  // Fetch upsell items (only relevant for merch)
   useEffect(() => {
+    if (!hasMerch) return
     fetch('/api/merch/upsell')
       .then(r => r.json())
       .then(d => setUpsells(d.items ?? []))
       .catch(() => {})
-  }, [])
+  }, [hasMerch])
 
   function toggleUpsell(item: UpsellItem) {
     setSelected(prev => {
@@ -449,7 +503,6 @@ export default function CheckoutClient() {
   }
 
   const selectedUpsells = upsells.filter(u => selected.has(u.id))
-
   const totalCents = cartTotal + selectedUpsells.reduce((s, u) => s + (u.price_cents ?? 0), 0)
 
   function validateShipping(): string {
@@ -463,21 +516,44 @@ export default function CheckoutClient() {
     return ''
   }
 
-  function handleShippingContinue() {
-    const err = validateShipping()
+  function validateContact(): string {
+    if (!contact.firstName.trim()) return 'First name is required.'
+    if (!contact.lastName.trim())  return 'Last name is required.'
+    if (!contact.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email))
+      return 'A valid email is required.'
+    return ''
+  }
+
+  function handleStep2Continue() {
+    const err = hasMerch ? validateShipping() : validateContact()
     if (err) { setError(err); return }
     setError('')
     setStep(3)
+  }
+
+  // Derive customer name and email depending on which step 2 form was used
+  function getCustomerInfo() {
+    if (hasMerch) {
+      return {
+        name:  `${shipping.firstName} ${shipping.lastName}`.trim(),
+        email: shipping.email,
+      }
+    }
+    return {
+      name:  `${contact.firstName} ${contact.lastName}`.trim(),
+      email: contact.email,
+    }
   }
 
   async function handlePay() {
     setPaying(true)
     setError('')
     try {
-      // Build line items: merch first, then tickets, then upsells
-      const lineItems: CheckoutLineItem[] = [
+      const { name: customerName, email: customerEmail } = getCustomerInfo()
+
+      const lineItems = [
         ...cartItems.filter(i => !i.type || i.type === 'merch').map(item => ({
-          type:         'product' as const,
+          type:         'merch' as const,
           referenceId:  item.productId ?? item.cartKey,
           name:         item.name,
           priceCents:   item.priceCents,
@@ -486,15 +562,23 @@ export default function CheckoutClient() {
           quantity:     item.quantity,
         })),
         ...cartItems.filter(i => i.type === 'ticket').map(item => ({
-          type:        'event' as const,
+          type:        'ticket' as const,
           referenceId: item.eventId ?? item.cartKey,
           name:        item.name,
           priceCents:  item.priceCents,
           quantity:    item.quantity,
           eventDate:   item.eventDate,
+          eventLocation: item.eventLocation ?? undefined,
+        })),
+        ...cartItems.filter(i => i.type === 'career').map(item => ({
+          type:        'career' as const,
+          referenceId: item.serviceSlug ?? item.cartKey,
+          name:        item.name,
+          priceCents:  item.priceCents,
+          quantity:    item.quantity,
         })),
         ...selectedUpsells.map(u => ({
-          type:        u.type,
+          type:        'merch' as const,
           referenceId: u.referenceId,
           name:        u.name,
           priceCents:  u.price_cents ?? 0,
@@ -502,14 +586,14 @@ export default function CheckoutClient() {
         })),
       ]
 
-      const res = await fetch('/api/merch/checkout', {
+      const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: lineItems,
-          customerName:    `${shipping.firstName} ${shipping.lastName}`.trim(),
-          customerEmail:   shipping.email,
-          shippingAddress: shipping,
+          customerName,
+          customerEmail,
+          shippingAddress: hasMerch ? shipping : null,
         }),
       })
       const data = await res.json()
@@ -528,12 +612,19 @@ export default function CheckoutClient() {
 
   if (cartItems.length === 0) return null
 
+  // Determine back link label
+  const backLabel = hasCareer && !hasMerch && !hasTicket ? '← Back to Career Service'
+    : hasTicket && !hasMerch && !hasCareer ? '← Back to Events'
+    : '← Back to Shop'
+  const backHref = hasCareer && !hasMerch && !hasTicket ? '/career-service'
+    : hasTicket && !hasMerch && !hasCareer ? '/events'
+    : '/merch'
+
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-      {/* Minimal header */}
       <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <a href="/merch" className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline">
-          ← Back to Shop
+        <a href={backHref} className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline">
+          {backLabel}
         </a>
         <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
           Alata Investment Club
@@ -541,7 +632,7 @@ export default function CheckoutClient() {
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-10">
-        <Stepper step={step} />
+        <Stepper step={step} hasMerch={hasMerch} />
 
         {step === 1 && (
           <StepOrder
@@ -553,12 +644,21 @@ export default function CheckoutClient() {
             onContinue={() => { setError(''); setStep(2) }}
           />
         )}
-        {step === 2 && (
+        {step === 2 && hasMerch && (
           <StepShipping
             shipping={shipping}
             onChange={(f, v) => setShipping(prev => ({ ...prev, [f]: v }))}
             onBack={() => { setError(''); setStep(1) }}
-            onContinue={handleShippingContinue}
+            onContinue={handleStep2Continue}
+            error={error}
+          />
+        )}
+        {step === 2 && !hasMerch && (
+          <StepContact
+            contact={contact}
+            onChange={(f, v) => setContact(prev => ({ ...prev, [f]: v }))}
+            onBack={() => { setError(''); setStep(1) }}
+            onContinue={handleStep2Continue}
             error={error}
           />
         )}
@@ -566,6 +666,7 @@ export default function CheckoutClient() {
           <StepPayment
             totalCents={totalCents}
             shipping={shipping}
+            hasMerch={hasMerch}
             onBack={() => { setError(''); setStep(2) }}
             onPay={handlePay}
             paying={paying}

@@ -257,6 +257,161 @@ export async function POST(req: NextRequest) {
         })
         if (orderErr) console.error('Failed to insert merch_order:', orderErr.message)
       } catch (e) { console.error('Failed to insert merch_order (exception):', e) }
+    } else if (session.metadata?.type === 'unified') {
+      const meta = session.metadata ?? {}
+      const custEmail = meta.customerEmail || session.customer_details?.email || ''
+      const custName  = meta.customerName  || session.customer_details?.name  || ''
+      const nameParts = custName.trim().split(' ')
+      const firstName = nameParts[0] ?? ''
+      const lastName  = nameParts.slice(1).join(' ') || ''
+
+      let merchItems: Array<{ referenceId: string; name: string; priceCents: number; quantity: number; variantColor?: string | null; size?: string | null }> = []
+      let ticketItems: Array<{ referenceId: string; name: string; eventDate?: string | null; eventLocation?: string | null }> = []
+      let careerItems: Array<{ referenceId: string; name: string; priceCents: number }> = []
+      try { merchItems  = JSON.parse(meta.merchItems  || '[]') } catch { /* skip */ }
+      try { ticketItems = JSON.parse(meta.ticketItems || '[]') } catch { /* skip */ }
+      try { careerItems = JSON.parse(meta.careerItems || '[]') } catch { /* skip */ }
+
+      // Record merch items
+      if (merchItems.length > 0) {
+        try {
+          const amountCents = session.amount_total ?? 0
+          const net = amountCents / 100
+
+          let categoryId: string | null = null
+          const { data: cat } = await supabaseAdmin
+            .from('budget_categories').select('id').eq('name', 'Merch').maybeSingle()
+          if (cat) { categoryId = cat.id } else {
+            const { data: nc } = await supabaseAdmin
+              .from('budget_categories').insert({ name: 'Merch', type: 'revenue' }).select('id').single()
+            categoryId = nc?.id ?? null
+          }
+          await supabaseAdmin.from('transactions').insert({
+            type: 'revenue', date: new Date().toISOString().slice(0, 10), amount: net,
+            description: `Vendita merch: ${(meta.product_names ?? '').slice(0, 200)}`,
+            category_id: categoryId, note: `Stripe Session: ${session.id}`, receipt_url: null,
+          })
+          if (custEmail) {
+            await supabaseAdmin.from('crm_customers').insert({
+              name: custName || custEmail, email: custEmail, type: 'merch',
+              reference: (meta.product_names ?? '').slice(0, 255), amount: net,
+              purchased_at: new Date().toISOString(),
+            }).then(() => {})
+          }
+          const main = merchItems[0]
+          let shippingAddress: unknown = null
+          try { shippingAddress = meta.shippingAddress ? JSON.parse(meta.shippingAddress) : null } catch { /* skip */ }
+          await supabaseAdmin.from('merch_orders').insert({
+            stripe_session_id: session.id,
+            product_id:        main.referenceId || null,
+            product_name:      main.name || 'Merch',
+            variant_color:     main.variantColor || null,
+            size:              main.size         || null,
+            quantity:          main.quantity,
+            price_cents:       session.amount_total,
+            upsell_items:      null,
+            customer_name:     custName  || null,
+            customer_email:    custEmail || null,
+            shipping_address:  shippingAddress,
+            status:            'paid',
+          }).then(() => {})
+        } catch (e) { console.error('Failed to record unified merch:', e) }
+      }
+
+      // Register ticket purchases
+      if (ticketItems.length > 0) {
+        try {
+          await Promise.allSettled(ticketItems.map(ticket =>
+            supabaseAdmin.from('event_registrations').insert({
+              event_id:               ticket.referenceId,
+              nome:                   firstName,
+              cognome:                lastName,
+              email:                  custEmail,
+              telefono:               null,
+              anno_di_studio:         'N/A',
+              motivazione:            'Paid ticket via checkout',
+              questions_for_panelists: null,
+            })
+          ))
+        } catch (e) { console.error('Failed to register tickets (unified):', e) }
+      }
+
+      // Record career service purchases
+      if (careerItems.length > 0) {
+        try {
+          let categoryId: string | null = null
+          const { data: cat } = await supabaseAdmin
+            .from('budget_categories').select('id').eq('name', 'Career Service').eq('type', 'revenue').maybeSingle()
+          if (cat) { categoryId = cat.id } else {
+            const { data: nc } = await supabaseAdmin
+              .from('budget_categories').insert({ name: 'Career Service', type: 'revenue' }).select('id').single()
+            categoryId = nc?.id ?? null
+          }
+          const net = (session.amount_total ?? 0) / 100
+          for (const item of careerItems) {
+            await supabaseAdmin.from('transactions').insert({
+              type: 'revenue', date: new Date().toISOString().slice(0, 10),
+              amount: item.priceCents / 100,
+              description: item.name,
+              category_id: categoryId,
+              note: `Career Service via checkout | Stripe Session: ${session.id}`,
+              receipt_url: null,
+            }).then(() => {})
+          }
+          if (custEmail) {
+            await supabaseAdmin.from('crm_customers').insert({
+              name: custName || custEmail, email: custEmail, type: 'career_service',
+              reference: careerItems.map(i => i.name).join(', ').slice(0, 255),
+              amount: net, purchased_at: new Date().toISOString(),
+            }).then(() => {})
+          }
+        } catch (e) { console.error('Failed to record career items (unified):', e) }
+      }
+
+      // Send confirmation email
+      try {
+        await resend.emails.send({
+          from: FROM,
+          to: custEmail,
+          subject: 'Order Confirmed — Alata Investment Club',
+          html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f9f9f9;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#fff;border:1px solid #e5e5e5;">
+        <tr>
+          <td style="background:#1a4a3a;padding:24px 32px;">
+            <p style="margin:0;font-size:11px;color:#a8c5b8;letter-spacing:2px;text-transform:uppercase;">Alata Investment Club</p>
+            <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">Order Confirmed</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#1a1a1a;line-height:1.6;">
+              Thank you, ${firstName || custName}. Your order has been received.
+            </p>
+            <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.6;">
+              ${meta.product_names ?? ''}
+            </p>
+            <p style="margin:0;font-size:14px;color:#555;">The Alata Investment Club Team</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px;background:#f4f7f4;border-top:1px solid #e5e5e5;">
+            <p style="margin:0;font-size:11px;color:#888;">Alata Investment Club &bull; alatainvestmentclub.com</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+        })
+      } catch (e) { console.error('Failed to send unified confirmation email:', e) }
+
     } else if (session.metadata?.type === 'membership') {
       const userId   = session.metadata.user_id
       const memberId = session.metadata.member_id

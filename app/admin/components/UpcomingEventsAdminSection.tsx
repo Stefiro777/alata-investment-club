@@ -24,6 +24,8 @@ type FormState = {
   action_type: 'form' | 'link' | ''
   action_link: string
   registration_field: 'motivation' | 'panelists'
+  ticket_price_eur: string
+  location: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -34,6 +36,8 @@ const EMPTY_FORM: FormState = {
   action_type: '',
   action_link: '',
   registration_field: 'motivation',
+  ticket_price_eur: '',
+  location: '',
 }
 
 function EnvelopeIcon() {
@@ -306,6 +310,10 @@ function EventFormModal({
     setError(null)
 
     const supabase = createClient()
+    const ticketPriceCents = form.ticket_price_eur
+      ? Math.round(parseFloat(form.ticket_price_eur) * 100)
+      : null
+
     const payload = {
       date: form.date,
       title: form.title.trim(),
@@ -314,6 +322,8 @@ function EventFormModal({
       action_type: (form.action_type || null) as 'form' | 'link' | null,
       action_link: form.action_type === 'link' ? (form.action_link.trim() || null) : null,
       registration_field: form.registration_field,
+      ticket_price_cents: ticketPriceCents && ticketPriceCents > 0 ? ticketPriceCents : null,
+      location: form.location.trim() || null,
     }
 
     if (initial.id) {
@@ -411,6 +421,34 @@ function EventFormModal({
                   {opt === 'motivation' ? 'Motivation' : 'Questions for Panelists'}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">
+                Ticket Price (€)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.ticket_price_eur}
+                onChange={e => set('ticket_price_eur', e.target.value)}
+                placeholder="0.00 = free"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">
+                Location
+              </label>
+              <input
+                value={form.location}
+                onChange={e => set('location', e.target.value)}
+                placeholder="e.g. Aula Magna, Online"
+                className={inputClass}
+              />
             </div>
           </div>
 
@@ -587,6 +625,8 @@ export default function UpcomingEventsAdminSection({
       action_type: ev.action_type ?? '',
       action_link: ev.action_link ?? '',
       registration_field: ev.registration_field ?? 'motivation',
+      ticket_price_eur: ev.ticket_price_cents ? (ev.ticket_price_cents / 100).toFixed(2) : '',
+      location: ev.location ?? '',
     })
   }
 

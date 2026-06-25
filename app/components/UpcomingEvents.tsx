@@ -54,6 +54,7 @@ function UpcomingEventRow({
   onOpenModal: (event: UpcomingEvent) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [added, setAdded] = useState(false)
   const { month, day } = formatDate(event.date)
   const { addItem } = useCart()
   const isPaidTicket = event.status === 'open' && event.ticket_price_cents && event.ticket_price_cents > 0
@@ -69,6 +70,8 @@ function UpcomingEventRow({
       eventDate: event.date,
       eventLocation: event.location ?? null,
     })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 2000)
   }
 
   return (
@@ -115,9 +118,13 @@ function UpcomingEventRow({
           {isPaidTicket ? (
             <button
               onClick={handleAddTicket}
-              className="inline-block border border-black bg-white text-black text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 hover:bg-black hover:text-white transition-colors"
+              className={`inline-block border text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors ${
+                added
+                  ? 'border-[#1a4a3a] bg-[#1a4a3a] text-white'
+                  : 'border-black bg-white text-black hover:bg-black hover:text-white'
+              }`}
             >
-              Add ticket to cart
+              {added ? 'Added ✓' : 'Add ticket to cart'}
             </button>
           ) : event.status === 'open' ? (
             event.action_type === 'link' && event.action_link ? (

@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import BookingCart, { type CartItem } from '../components/career/BookingCart'
+import { useCart } from '@/app/components/CartContext'
 
 // Initialise once at module level — guard against missing key at runtime
 const stripeKey     = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
@@ -789,57 +790,88 @@ function BookingOverlay({
   )
 }
 
-// ── ServiceSubCard (interactive — replaces static anchor) ─────────────────────
+// ── ServiceSubCard (interactive — adds service to unified cart) ───────────────
+
+type ServiceInfoBasic = { id: string; name: string; price_cents: number }
 
 function ServiceSubCard({ number, title, description }: { number: string; title: string; description: string }) {
-  const [open, setOpen] = useState(false)
-  const close = useCallback(() => setOpen(false), [])
+  const { addItem, items } = useCart()
+  const [serviceInfo, setServiceInfo] = useState<ServiceInfoBasic | null>(null)
+  const [added, setAdded] = useState(false)
+
+  const cartKey = `career:${title.toLowerCase().replace(/\s+/g, '-')}`
+  const inCart = items.some(i => i.cartKey === cartKey)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('career_services')
+      .select('id, name, price_cents')
+      .ilike('name', `%${title.split(' ')[0]}%`)
+      .eq('active', true)
+      .limit(1)
+      .then(({ data }) => { if (data?.length) setServiceInfo(data[0] as ServiceInfoBasic) })
+  }, [title])
+
+  function handleAddToCart() {
+    if (!serviceInfo || inCart) return
+    addItem({
+      cartKey,
+      type: 'career',
+      name: title,
+      priceCents: serviceInfo.price_cents,
+      serviceSlug: serviceInfo.id,
+    })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 2000)
+  }
+
+  const btnLabel = inCart ? 'In cart' : added ? 'Added ✓' : 'Book Now'
+  const btnStyle = inCart
+    ? 'bg-[#1a4a3a] text-white border-[#1a4a3a] cursor-default'
+    : added
+      ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
+      : 'border-forest text-forest hover:bg-forest hover:text-white'
 
   return (
-    <>
-      {/* Card — pixel-identical to original */}
-      <div
-        className="relative overflow-hidden p-6 sm:p-8 flex flex-col h-full"
-        style={{ background: '#ffffff', borderTop: '2px solid #1a4a3a' }}
+    <div
+      className="relative overflow-hidden p-6 sm:p-8 flex flex-col h-full"
+      style={{ background: '#ffffff', borderTop: '2px solid #1a4a3a' }}
+    >
+      <span
+        className="absolute -bottom-4 -right-2 font-serif font-bold leading-none select-none pointer-events-none"
+        style={{ fontSize: '7rem', color: '#1a4a3a', opacity: 0.05 }}
+        aria-hidden="true"
       >
-        <span
-          className="absolute -bottom-4 -right-2 font-serif font-bold leading-none select-none pointer-events-none"
-          style={{ fontSize: '7rem', color: '#1a4a3a', opacity: 0.05 }}
-          aria-hidden="true"
+        {number}
+      </span>
+
+      <div className="mb-4 relative">
+        <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: '#1a4a3a', opacity: 0.6 }}>{number}</p>
+        <h3 className="font-serif text-xl font-medium text-ink-900">{title}</h3>
+        <div className="w-6 h-px mt-3" style={{ background: '#1a4a3a' }} />
+      </div>
+
+      <p className="text-ink-500 text-sm leading-relaxed flex-1 relative">{description}</p>
+
+      <div className="mt-auto pt-6 flex items-center gap-3">
+        <button
+          onClick={handleAddToCart}
+          disabled={!serviceInfo || inCart}
+          className={`inline-flex items-center gap-2 border text-sm font-medium tracking-wide py-2 px-5 transition-colors disabled:opacity-40 ${btnStyle}`}
         >
-          {number}
-        </span>
-
-        <div className="mb-4 relative">
-          <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: '#1a4a3a', opacity: 0.6 }}>{number}</p>
-          <h3 className="font-serif text-xl font-medium text-ink-900">{title}</h3>
-          <div className="w-6 h-px mt-3" style={{ background: '#1a4a3a' }} />
-        </div>
-
-        <p className="text-ink-500 text-sm leading-relaxed flex-1 relative">{description}</p>
-
-        <div className="mt-auto pt-6">
-          {/* Button looks identical to original <a>; onClick replaces href */}
-          <button
-            onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-2 border border-forest text-forest hover:bg-forest hover:text-white text-sm font-medium tracking-wide py-2 px-5 relative"
-            style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1), color 0.2s ease' }}
-          >
-            Book Now
+          {btnLabel}
+          {!inCart && !added && (
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </button>
-        </div>
+          )}
+        </button>
+        {serviceInfo && (
+          <span className="text-sm text-ink-500">{formatEuros(serviceInfo.price_cents)}</span>
+        )}
       </div>
-
-      {/* Overlay (mounted outside the card to avoid stacking-context issues) */}
-      {open && (
-        <Elements stripe={stripePromise}>
-          <BookingOverlay serviceTitle={title} onClose={close} />
-        </Elements>
-      )}
-    </>
+    </div>
   )
 }
 
