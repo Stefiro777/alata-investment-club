@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useCart, type CartItem } from '@/app/components/CartContext'
 import type { ShippingAddress } from '@/app/api/merch/checkout/route'
 
@@ -612,7 +613,6 @@ export default function CheckoutClient() {
 
   if (cartItems.length === 0) return null
 
-  // Determine back link label
   const backLabel = hasCareer && !hasMerch && !hasTicket ? '← Back to Career Service'
     : hasTicket && !hasMerch && !hasCareer ? '← Back to Events'
     : '← Back to Shop'
@@ -621,58 +621,85 @@ export default function CheckoutClient() {
     : '/merch'
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-      <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <a href={backHref} className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline">
-          {backLabel}
-        </a>
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-          Alata Investment Club
-        </p>
+    <div className="min-h-screen flex" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+      {/* Left — branding panel (desktop only, mirrors /login) */}
+      <div className="hidden md:block md:w-1/2 relative">
+        <Image
+          src="/capitolino.jpg"
+          alt="Capitolino"
+          fill
+          className="object-cover grayscale"
+          priority
+        />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div style={{ position: 'relative', zIndex: 1 }}
+          className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
+          <p className="font-serif italic text-3xl lg:text-4xl leading-snug mb-5">
+            Great investments start with great people.
+          </p>
+          <p className="text-xs tracking-widest uppercase text-white/60">
+            Alata Investment Club — Brescia
+          </p>
+        </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        <Stepper step={step} hasMerch={hasMerch} />
+      {/* Right — checkout panel */}
+      <div className="w-full md:w-1/2 flex flex-col bg-white">
+        <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <Link href={backHref} className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline">
+            {backLabel}
+          </Link>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Alata Investment Club
+          </p>
+        </div>
 
-        {step === 1 && (
-          <StepOrder
-            cartItems={cartItems}
-            upsells={upsells}
-            selected={selected}
-            onToggleUpsell={toggleUpsell}
-            totalCents={totalCents}
-            onContinue={() => { setError(''); setStep(2) }}
-          />
-        )}
-        {step === 2 && hasMerch && (
-          <StepShipping
-            shipping={shipping}
-            onChange={(f, v) => setShipping(prev => ({ ...prev, [f]: v }))}
-            onBack={() => { setError(''); setStep(1) }}
-            onContinue={handleStep2Continue}
-            error={error}
-          />
-        )}
-        {step === 2 && !hasMerch && (
-          <StepContact
-            contact={contact}
-            onChange={(f, v) => setContact(prev => ({ ...prev, [f]: v }))}
-            onBack={() => { setError(''); setStep(1) }}
-            onContinue={handleStep2Continue}
-            error={error}
-          />
-        )}
-        {step === 3 && (
-          <StepPayment
-            totalCents={totalCents}
-            shipping={shipping}
-            hasMerch={hasMerch}
-            onBack={() => { setError(''); setStep(2) }}
-            onPay={handlePay}
-            paying={paying}
-            error={error}
-          />
-        )}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-lg mx-auto px-6 py-10">
+            <Stepper step={step} hasMerch={hasMerch} />
+
+            {step === 1 && (
+              <StepOrder
+                cartItems={cartItems}
+                upsells={upsells}
+                selected={selected}
+                onToggleUpsell={toggleUpsell}
+                totalCents={totalCents}
+                onContinue={() => { setError(''); setStep(2) }}
+              />
+            )}
+            {step === 2 && hasMerch && (
+              <StepShipping
+                shipping={shipping}
+                onChange={(f, v) => setShipping(prev => ({ ...prev, [f]: v }))}
+                onBack={() => { setError(''); setStep(1) }}
+                onContinue={handleStep2Continue}
+                error={error}
+              />
+            )}
+            {step === 2 && !hasMerch && (
+              <StepContact
+                contact={contact}
+                onChange={(f, v) => setContact(prev => ({ ...prev, [f]: v }))}
+                onBack={() => { setError(''); setStep(1) }}
+                onContinue={handleStep2Continue}
+                error={error}
+              />
+            )}
+            {step === 3 && (
+              <StepPayment
+                totalCents={totalCents}
+                shipping={shipping}
+                hasMerch={hasMerch}
+                onBack={() => { setError(''); setStep(2) }}
+                onPay={handlePay}
+                paying={paying}
+                error={error}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
