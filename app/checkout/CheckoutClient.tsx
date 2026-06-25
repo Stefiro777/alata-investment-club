@@ -121,9 +121,7 @@ function StepOrder({
 }) {
   const tickets = cartItems.filter(i => i.type === 'ticket')
   const merch   = cartItems.filter(i => !i.type || i.type === 'merch')
-  const career  = cartItems.filter(i => i.type === 'career')
-  const typeCount = [tickets.length > 0, merch.length > 0, career.length > 0].filter(Boolean).length
-  const hasMixed = typeCount > 1
+  const hasMixed = tickets.length > 0 && merch.length > 0
 
   function renderMerchItem(item: CartItem) {
     return (
@@ -168,24 +166,7 @@ function StepOrder({
     )
   }
 
-  function renderCareerItem(item: CartItem) {
-    return (
-      <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
-        <div className="w-20 h-20 flex-shrink-0 bg-[#1a4a3a]/10 flex items-center justify-center">
-          <svg className="w-7 h-7 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-black">{item.name}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Career Service</p>
-          <p className="text-xs text-gray-500 mt-0.5">Qty: 1</p>
-        </div>
-        <p className="text-sm font-semibold text-black flex-shrink-0">{fmtEur(item.priceCents)}</p>
-      </div>
-    )
-  }
+
 
   return (
     <div>
@@ -204,12 +185,7 @@ function StepOrder({
             {merch.map(renderMerchItem)}
           </>
         )}
-        {career.length > 0 && (
-          <>
-            {hasMixed && <p className={`${SECTION_CLS} pt-2`}>Services</p>}
-            {career.map(renderCareerItem)}
-          </>
-        )}
+
       </div>
 
       {/* Upsell — only when cart has merch */}
@@ -466,7 +442,6 @@ export default function CheckoutClient() {
 
   const hasMerch  = cartItems.some(i => !i.type || i.type === 'merch')
   const hasTicket = cartItems.some(i => i.type === 'ticket')
-  const hasCareer = cartItems.some(i => i.type === 'career')
 
   const [step,     setStep]     = useState<Step>(1)
   const [upsells,  setUpsells]  = useState<UpsellItem[]>([])
@@ -571,13 +546,6 @@ export default function CheckoutClient() {
           eventDate:   item.eventDate,
           eventLocation: item.eventLocation ?? undefined,
         })),
-        ...cartItems.filter(i => i.type === 'career').map(item => ({
-          type:        'career' as const,
-          referenceId: item.serviceSlug ?? item.cartKey,
-          name:        item.name,
-          priceCents:  item.priceCents,
-          quantity:    item.quantity,
-        })),
         ...selectedUpsells.map(u => ({
           type:        'merch' as const,
           referenceId: u.referenceId,
@@ -613,12 +581,8 @@ export default function CheckoutClient() {
 
   if (cartItems.length === 0) return null
 
-  const backLabel = hasCareer && !hasMerch && !hasTicket ? '← Back to Career Service'
-    : hasTicket && !hasMerch && !hasCareer ? '← Back to Events'
-    : '← Back to Shop'
-  const backHref = hasCareer && !hasMerch && !hasTicket ? '/career-service'
-    : hasTicket && !hasMerch && !hasCareer ? '/events'
-    : '/merch'
+  const backLabel = hasTicket && !hasMerch ? '← Back to Events' : '← Back to Shop'
+  const backHref  = hasTicket && !hasMerch ? '/events' : '/merch'
 
   return (
     <div className="min-h-screen flex" style={{ fontFamily: 'Inter, sans-serif' }}>

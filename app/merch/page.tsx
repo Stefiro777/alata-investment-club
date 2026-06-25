@@ -65,7 +65,7 @@ export default async function MerchPage({
       )}
 
       {/* Hero */}
-      <section className="relative min-h-[60vh] flex items-center justify-center text-white overflow-hidden">
+      <section className="relative min-h-[500px] lg:min-h-[610px] flex items-center justify-center text-white overflow-hidden">
         <Image
           src="/loggia.jpeg"
           alt=""

@@ -5,7 +5,7 @@ const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alatainvestmentclub.com'
 
 export type UnifiedLineItem = {
-  type:          'merch' | 'ticket' | 'career'
+  type:          'merch' | 'ticket'
   referenceId:   string
   name:          string
   priceCents:    number
@@ -40,7 +40,6 @@ export async function POST(req: NextRequest) {
 
   const merchItems  = items.filter(i => i.type === 'merch')
   const ticketItems = items.filter(i => i.type === 'ticket')
-  const careerItems = items.filter(i => i.type === 'career')
 
   const productNames = items
     .map(i => {
@@ -86,9 +85,7 @@ export async function POST(req: NextRequest) {
           eventDate: i.eventDate ?? null, eventLocation: i.eventLocation ?? null,
         }))
       ).slice(0, 500),
-      careerItems: JSON.stringify(
-        careerItems.map(i => ({ referenceId: i.referenceId, name: i.name, priceCents: i.priceCents }))
-      ).slice(0, 500),
+
     },
   })
 

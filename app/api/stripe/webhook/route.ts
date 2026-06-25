@@ -267,10 +267,8 @@ export async function POST(req: NextRequest) {
 
       let merchItems: Array<{ referenceId: string; name: string; priceCents: number; quantity: number; variantColor?: string | null; size?: string | null }> = []
       let ticketItems: Array<{ referenceId: string; name: string; eventDate?: string | null; eventLocation?: string | null }> = []
-      let careerItems: Array<{ referenceId: string; name: string; priceCents: number }> = []
       try { merchItems  = JSON.parse(meta.merchItems  || '[]') } catch { /* skip */ }
       try { ticketItems = JSON.parse(meta.ticketItems || '[]') } catch { /* skip */ }
-      try { careerItems = JSON.parse(meta.careerItems || '[]') } catch { /* skip */ }
 
       // Record merch items
       if (merchItems.length > 0) {
@@ -334,38 +332,6 @@ export async function POST(req: NextRequest) {
             })
           ))
         } catch (e) { console.error('Failed to register tickets (unified):', e) }
-      }
-
-      // Record career service purchases
-      if (careerItems.length > 0) {
-        try {
-          let categoryId: string | null = null
-          const { data: cat } = await supabaseAdmin
-            .from('budget_categories').select('id').eq('name', 'Career Service').eq('type', 'revenue').maybeSingle()
-          if (cat) { categoryId = cat.id } else {
-            const { data: nc } = await supabaseAdmin
-              .from('budget_categories').insert({ name: 'Career Service', type: 'revenue' }).select('id').single()
-            categoryId = nc?.id ?? null
-          }
-          const net = (session.amount_total ?? 0) / 100
-          for (const item of careerItems) {
-            await supabaseAdmin.from('transactions').insert({
-              type: 'revenue', date: new Date().toISOString().slice(0, 10),
-              amount: item.priceCents / 100,
-              description: item.name,
-              category_id: categoryId,
-              note: `Career Service via checkout | Stripe Session: ${session.id}`,
-              receipt_url: null,
-            }).then(() => {})
-          }
-          if (custEmail) {
-            await supabaseAdmin.from('crm_customers').insert({
-              name: custName || custEmail, email: custEmail, type: 'career_service',
-              reference: careerItems.map(i => i.name).join(', ').slice(0, 255),
-              amount: net, purchased_at: new Date().toISOString(),
-            }).then(() => {})
-          }
-        } catch (e) { console.error('Failed to record career items (unified):', e) }
       }
 
       // Send confirmation email
