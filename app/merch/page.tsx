@@ -73,7 +73,7 @@ export default async function MerchPage({
           style={{ objectPosition: 'center 50%' }}
           priority
         />
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-[#1a4a3a]/60" />
         <div className="relative z-10 text-center px-6 py-20">
           <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-none mb-6">
             WEAR THE CLUB
