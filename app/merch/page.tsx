@@ -70,12 +70,11 @@ export default async function MerchPage({
           src="/loggia.jpeg"
           alt=""
           fill
-          className="object-cover"
-          style={{ objectPosition: 'center 50%' }}
+          style={{ objectFit: 'cover', objectPosition: 'center 50%', filter: 'grayscale(100%)', zIndex: 0 }}
           priority
         />
-        <div className="absolute inset-0 bg-[#1a4a3a]/60" />
-        <div className="relative z-10 text-center px-6 py-20">
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.72)', zIndex: 1 }} />
+        <div style={{ position: 'relative', zIndex: 2 }} className="text-center px-6 py-20">
           <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-none mb-6">
             WEAR THE CLUB
           </h1>
