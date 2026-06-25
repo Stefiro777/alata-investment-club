@@ -10,7 +10,7 @@ import CookieBanner from './components/CookieBanner'
 import CookiePolicy from './components/CookiePolicy'
 import AnalyticsWrapper from './components/AnalyticsWrapper'
 import { CartProvider } from './components/CartContext'
-import NavCartButton from './components/NavCartButton'
+
 import Script from 'next/script'
 
 const cormorant = Cormorant_Garamond({
@@ -150,9 +150,6 @@ export default async function RootLayout({
                   )
                 )}
               </div>
-
-                    {/* Cart icon — only when cart has items */}
-              <NavCartButton />
 
               {/* Mobile menu */}
               <MobileMenu links={allNavLinks} />

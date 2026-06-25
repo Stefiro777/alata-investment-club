@@ -1,7 +1,6 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
-import MerchCartBar from './MerchCartBar'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -84,9 +83,6 @@ export default async function MerchPage({
           </p>
         </div>
       </section>
-
-      {/* Sticky shop bar with cart icon */}
-      <MerchCartBar />
 
       {/* Product grid */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 sm:py-20">
