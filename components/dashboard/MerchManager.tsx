@@ -421,10 +421,9 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
 // ── AddProductModal ───────────────────────────────────────────────────────────
 
 function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefresh: () => void }) {
-  const [name,        setName]        = useState('')
-  const [slug,        setSlug]        = useState('')
-  const [slugTouched, setSlugTouched] = useState(false)
-  const [desc,        setDesc]        = useState('')
+  const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
+  const [desc, setDesc] = useState('')
   const [priceEur,    setPriceEur]    = useState('')
   const [sizes,       setSizes]       = useState<string[]>(['XS', 'S', 'M', 'L', 'XL'])
   const [saving,      setSaving]      = useState(false)
@@ -432,13 +431,13 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
 
   function handleNameChange(v: string) {
     setName(v)
-    if (!slugTouched) setSlug(slugify(v))
+    setSlug(slugify(v))
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setErr('')
-    if (!name.trim() || !slug.trim()) { setErr('Name and slug are required.'); return }
+    if (!name.trim()) { setErr('Name is required.'); return }
     setSaving(true)
     const res = await authedPost('/api/admin/merch/products', {
       name: name.trim(), slug: slug.trim(),
@@ -469,18 +468,11 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
             <p className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2">{err}</p>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LABEL_CLS}>Name *</label>
-              <input value={name} onChange={e => handleNameChange(e.target.value)}
-                required className={INPUT_CLS} />
-            </div>
-            <div>
-              <label className={LABEL_CLS}>Slug *</label>
-              <input value={slug}
-                onChange={e => { setSlugTouched(true); setSlug(e.target.value) }}
-                required className={`${INPUT_CLS} font-mono`} />
-            </div>
+          <div>
+            <label className={LABEL_CLS}>Name *</label>
+            <input value={name} onChange={e => handleNameChange(e.target.value)}
+              placeholder="e.g. Alata Hoodie"
+              required className={INPUT_CLS} />
           </div>
 
           <div>
@@ -492,6 +484,7 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
           <div>
             <label className={LABEL_CLS}>Description</label>
             <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2}
+              placeholder="Describe the product, materials, fit..."
               className={`${INPUT_CLS} resize-none`} />
           </div>
 
