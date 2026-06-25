@@ -74,6 +74,8 @@ export type UpcomingEvent = {
   registration_field: 'motivation' | 'panelists' | null
   display_order: number | null
   created_at: string
+  ticket_price_cents?: number | null  // if set and > 0, event has a paid ticket
+  location?: string | null
 }
 
 export type EventRegistration = {

@@ -10,6 +10,7 @@ import CookieBanner from './components/CookieBanner'
 import CookiePolicy from './components/CookiePolicy'
 import AnalyticsWrapper from './components/AnalyticsWrapper'
 import { CartProvider } from './components/CartContext'
+import NavCartButton from './components/NavCartButton'
 import Script from 'next/script'
 
 const cormorant = Cormorant_Garamond({
@@ -94,6 +95,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col">
+        <CartProvider>
         {/* Navbar */}
         <header className="bg-forest shadow-md sticky top-0 z-[100]">
           <nav className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -149,6 +151,9 @@ export default async function RootLayout({
                 )}
               </div>
 
+                    {/* Cart icon — only when cart has items */}
+              <NavCartButton />
+
               {/* Mobile menu */}
               <MobileMenu links={allNavLinks} />
             </div>
@@ -156,9 +161,7 @@ export default async function RootLayout({
         </header>
 
         {/* Main */}
-        <CartProvider>
-          <main className="flex-1">{children}</main>
-        </CartProvider>
+        <main className="flex-1">{children}</main>
         <AnalyticsWrapper />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-1DKFFPXFT6"
@@ -249,6 +252,7 @@ export default async function RootLayout({
             </div>
           </div>
         </footer>
+        </CartProvider>
       </body>
     </html>
   )

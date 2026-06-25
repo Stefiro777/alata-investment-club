@@ -123,32 +123,59 @@ function StepOrder({
   totalCents:      number
   onContinue:      () => void
 }) {
+  const tickets = cartItems.filter(i => i.type === 'ticket')
+  const merch   = cartItems.filter(i => !i.type || i.type === 'merch')
+  const hasBoth = tickets.length > 0 && merch.length > 0
+
+  function renderCartItem(item: CartItem) {
+    const isTicket = item.type === 'ticket'
+    return (
+      <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
+        {isTicket ? (
+          <div className="w-20 h-20 flex-shrink-0 bg-[#1a4a3a]/10 flex items-center justify-center">
+            <svg className="w-7 h-7 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        ) : (
+          item.variant?.image ? (
+            <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 overflow-hidden">
+              <Image src={item.variant.image} alt={item.name} fill className="object-cover" />
+            </div>
+          ) : <div className="w-20 h-20 flex-shrink-0 bg-gray-100" />
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-black">{item.name}</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {isTicket
+              ? [item.eventDate ? fmtDate(item.eventDate) : null, item.eventLocation].filter(Boolean).join(' · ')
+              : [item.variant?.color, item.size, item.textVariant].filter(Boolean).join(' · ')
+            }
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity}</p>
+        </div>
+        <p className="text-sm font-semibold text-black flex-shrink-0">
+          {fmtEur(item.priceCents * item.quantity)}
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div>
       <h2 className="font-serif text-2xl font-bold text-black mb-6">Your Order</h2>
 
       {/* Cart items */}
       <div className="space-y-3 mb-8">
-        {cartItems.map(item => (
-          <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
-            {item.variant.image && (
-              <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 overflow-hidden">
-                <Image src={item.variant.image} alt={item.name} fill className="object-cover" />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-black">{item.name}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {item.variant.color} · {item.size}
-                {item.textVariant ? ` · ${item.textVariant}` : ''}
-              </p>
-              <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity}</p>
-            </div>
-            <p className="text-sm font-semibold text-black flex-shrink-0">
-              {fmtEur(item.priceCents * item.quantity)}
-            </p>
-          </div>
-        ))}
+        {hasBoth && tickets.length > 0 && (
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Tickets</p>
+        )}
+        {tickets.map(renderCartItem)}
+        {hasBoth && merch.length > 0 && (
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 pt-2">Merch</p>
+        )}
+        {merch.map(renderCartItem)}
       </div>
 
       {/* Upsell */}
@@ -447,16 +474,24 @@ export default function CheckoutClient() {
     setPaying(true)
     setError('')
     try {
-      // Build line items: main cart items first, then upsells
+      // Build line items: merch first, then tickets, then upsells
       const lineItems: CheckoutLineItem[] = [
-        ...cartItems.map(item => ({
-          type:        'product' as const,
-          referenceId: item.productId,
+        ...cartItems.filter(i => !i.type || i.type === 'merch').map(item => ({
+          type:         'product' as const,
+          referenceId:  item.productId ?? item.cartKey,
+          name:         item.name,
+          priceCents:   item.priceCents,
+          variantColor: item.variant?.color,
+          size:         item.size,
+          quantity:     item.quantity,
+        })),
+        ...cartItems.filter(i => i.type === 'ticket').map(item => ({
+          type:        'event' as const,
+          referenceId: item.eventId ?? item.cartKey,
           name:        item.name,
           priceCents:  item.priceCents,
-          variantColor: item.variant.color,
-          size:        item.size,
           quantity:    item.quantity,
+          eventDate:   item.eventDate,
         })),
         ...selectedUpsells.map(u => ({
           type:        u.type,

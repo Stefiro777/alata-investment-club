@@ -208,6 +208,31 @@ export async function POST(req: NextRequest) {
         }
       } catch (e) { console.error('Failed to record merch transaction:', e) }
 
+      // Register paid ticket purchases in event_registrations
+      try {
+        const meta = session.metadata ?? {}
+        if (meta.ticketItems) {
+          const tickets = JSON.parse(meta.ticketItems) as Array<{ referenceId: string; name: string; eventDate: string | null }>
+          const custName  = meta.customerName  || session.customer_details?.name  || ''
+          const custEmail = meta.customerEmail || session.customer_details?.email || ''
+          const nameParts = custName.trim().split(' ')
+          const firstName = nameParts[0] ?? ''
+          const lastName  = nameParts.slice(1).join(' ') || ''
+          await Promise.allSettled(tickets.map(ticket =>
+            supabaseAdmin.from('event_registrations').insert({
+              event_id:               ticket.referenceId,
+              nome:                   firstName,
+              cognome:                lastName,
+              email:                  custEmail,
+              telefono:               null,
+              anno_di_studio:         'N/A',
+              motivazione:            'Paid ticket via checkout',
+              questions_for_panelists: null,
+            })
+          ))
+        }
+      } catch (e) { console.error('Failed to register ticket purchases:', e) }
+
       // Record order in merch_orders
       try {
         const meta = session.metadata ?? {}

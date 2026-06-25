@@ -66,6 +66,7 @@ export type CheckoutLineItem = {
   variantColor?: string
   size?:        string
   quantity:     number
+  eventDate?:   string
 }
 
 export type ShippingAddress = {
@@ -91,8 +92,10 @@ export async function POST(req: NextRequest) {
   if (!customerEmail)      return NextResponse.json({ error: 'Email required' },          { status: 400 })
   if (!shippingAddress)    return NextResponse.json({ error: 'Shipping address required' }, { status: 400 })
 
-  const main   = items[0]
-  const upsell = items.slice(1)
+  const merchItems  = items.filter(i => i.type === 'product')
+  const ticketItems = items.filter(i => i.type === 'event')
+  const upsellItems = items.filter(i => i.type !== 'product' && i.type !== 'event')
+  const main = merchItems[0] ?? items[0]  // fallback to first item if no merch
 
   const productNames = items
     .map(i => `${i.name}${i.variantColor ? ` (${i.variantColor}` : ''}${i.size ? `/${i.size})` : i.variantColor ? ')' : ''}`)
@@ -122,7 +125,10 @@ export async function POST(req: NextRequest) {
       mainProductName:  main.name,
       variantColor:     main.variantColor ?? '',
       size:             main.size ?? '',
-      upsellItems:      JSON.stringify(upsell).slice(0, 500),
+      upsellItems:      JSON.stringify(upsellItems).slice(0, 500),
+      ticketItems:      JSON.stringify(ticketItems.map(t => ({
+        referenceId: t.referenceId, name: t.name, eventDate: t.eventDate ?? null,
+      }))).slice(0, 500),
       customerName:     customerName.slice(0, 200),
       customerEmail:    customerEmail.slice(0, 200),
       shippingAddress:  JSON.stringify(shippingAddress).slice(0, 500),

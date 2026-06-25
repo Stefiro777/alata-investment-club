@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent } from '@/lib/types'
 import EventRegistrationModal from './EventRegistrationModal'
+import { useCart } from '@/app/components/CartContext'
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + 'T00:00:00')
@@ -54,6 +55,21 @@ function UpcomingEventRow({
 }) {
   const [open, setOpen] = useState(false)
   const { month, day } = formatDate(event.date)
+  const { addItem } = useCart()
+  const isPaidTicket = event.status === 'open' && event.ticket_price_cents && event.ticket_price_cents > 0
+
+  function handleAddTicket() {
+    if (!event.ticket_price_cents) return
+    addItem({
+      type: 'ticket',
+      cartKey: `ticket:${event.id}`,
+      name: event.title,
+      priceCents: event.ticket_price_cents,
+      eventId: event.id,
+      eventDate: event.date,
+      eventLocation: event.location ?? null,
+    })
+  }
 
   return (
     <div>
@@ -95,15 +111,17 @@ function UpcomingEventRow({
         </div>
 
         {/* Action — always visible */}
-        <div className="flex-shrink-0 flex items-start pt-1">
-          {event.status === 'open' ? (
+        <div className="flex-shrink-0 flex items-start pt-1 gap-2 flex-col sm:flex-row">
+          {isPaidTicket ? (
+            <button
+              onClick={handleAddTicket}
+              className="inline-block border border-black bg-white text-black text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 hover:bg-black hover:text-white transition-colors"
+            >
+              Add ticket to cart
+            </button>
+          ) : event.status === 'open' ? (
             event.action_type === 'link' && event.action_link ? (
-              <a
-                href={event.action_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={BADGE_CLASS}
-              >
+              <a href={event.action_link} target="_blank" rel="noopener noreferrer" className={BADGE_CLASS}>
                 Register Now
               </a>
             ) : event.action_type === 'form' ? (
