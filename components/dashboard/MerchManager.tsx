@@ -6,25 +6,12 @@ import Image from 'next/image'
 
 const supabase = createClient()
 
-// ── Auth helpers (shared) ─────────────────────────────────────────────────────
+// ── Auth helpers ──────────────────────────────────────────────────────────────
 
 async function getToken() {
   const { data: { session } } = await supabase.auth.getSession()
   return session?.access_token ?? ''
 }
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type Variant = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number }
-type TextVar = { id: string; option: string; sort_order: number }
-type Product = {
-  id: string; slug: string; name: string; price_cents: number; description: string | null
-  sizes: string[] | null; details: Record<string, string> | null; visible: boolean; created_at: string
-  product_variants: Variant[]
-  product_text_variants: TextVar[]
-}
-
-function fmtEur(cents: number) { return `€${(cents / 100).toFixed(2).replace('.', ',')}` }
 
 async function authedFetch(method: string, path: string, body?: unknown) {
   const token = await getToken()
@@ -41,6 +28,51 @@ async function authedPatch(path: string, body: unknown)  { return authedFetch('P
 async function authedDelete(path: string)                { return authedFetch('DELETE', path) }
 async function authedGet(path: string)                   { return authedFetch('GET',    path) }
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type Variant  = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number }
+type TextVar  = { id: string; option: string; sort_order: number }
+type Product  = {
+  id: string; slug: string; name: string; price_cents: number; description: string | null
+  sizes: string[] | null; details: Record<string, string> | null; visible: boolean; created_at: string
+  product_variants: Variant[]
+  product_text_variants: TextVar[]
+}
+
+const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+
+function fmtEur(cents: number) { return `€${(cents / 100).toFixed(2).replace('.', ',')}` }
+function slugify(s: string)    { return s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') }
+
+const INPUT_CLS = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1a4a3a] bg-white'
+const LABEL_CLS = 'block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1'
+
+// ── SizeToggle ────────────────────────────────────────────────────────────────
+
+function SizeToggle({ sizes, onChange }: { sizes: string[]; onChange: (s: string[]) => void }) {
+  function toggle(s: string) {
+    onChange(sizes.includes(s) ? sizes.filter(x => x !== s) : [...sizes, s])
+  }
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {ALL_SIZES.map(s => (
+        <button
+          key={s}
+          type="button"
+          onClick={() => toggle(s)}
+          className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-widest border transition-colors ${
+            sizes.includes(s)
+              ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
+              : 'bg-white text-gray-600 border-gray-300 hover:border-black'
+          }`}
+        >
+          {s}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ── VisibilityToggle ──────────────────────────────────────────────────────────
 
 function VisibilityToggle() {
@@ -48,47 +80,44 @@ function VisibilityToggle() {
   const [saving,  setSaving]  = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      fetch('/api/admin/merch/visibility', {
-        headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
-      })
+    getToken().then(token =>
+      fetch('/api/admin/merch/visibility', { headers: { Authorization: `Bearer ${token}` } })
         .then(r => r.json())
         .then(d => { if (typeof d.visible === 'boolean') setVisible(d.visible) })
-    })
+    )
   }, [])
 
   async function toggle() {
     if (visible === null) return
     setSaving(true)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin/merch/visibility', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ visible: !visible }),
-      }).then(r => r.json())
-      if (res.ok) setVisible(v => !v)
-    } finally {
-      setSaving(false)
-    }
+    const token = await getToken()
+    const res = await fetch('/api/admin/merch/visibility', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ visible: !visible }),
+    }).then(r => r.json())
+    if (res.ok) setVisible(v => !v)
+    setSaving(false)
   }
 
   return (
-    <div className="flex items-center gap-4 p-4 border border-gray-200 mb-6">
+    <div className="flex items-center gap-4 p-4 border border-black mb-6">
       <div>
-        <p className="text-sm font-semibold text-gray-900">Visibilità pagina Merch</p>
-        <p className="text-xs text-gray-500">
-          {visible === null ? '...' : visible ? 'La pagina /merch è pubblica' : 'Mostra schermata "Coming Soon"'}
+        <p className="text-sm font-semibold text-black">Merch page visibility</p>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {visible === null ? '…' : visible ? '/merch is public' : '/merch is hidden'}
         </p>
       </div>
       <button
         onClick={toggle}
         disabled={saving || visible === null}
-        className={`ml-auto px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-colors ${
-          visible ? 'bg-[#1a4a3a] text-white hover:bg-[#123a2d]' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        } disabled:opacity-50`}
+        className={`ml-auto px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-colors disabled:opacity-50 ${
+          visible
+            ? 'bg-[#1a4a3a] text-white hover:bg-[#143d30]'
+            : 'bg-black text-white hover:bg-gray-800'
+        }`}
       >
-        {visible ? 'Pubblica' : 'Nascosta'}
+        {saving ? '…' : visible ? 'Published' : 'Hidden'}
       </button>
     </div>
   )
@@ -101,17 +130,29 @@ function VariantEditor({ productId, variants, onRefresh }: {
   variants: Variant[]
   onRefresh: () => void
 }) {
-  const [color,    setColor]    = useState('')
-  const [colorHex, setColorHex] = useState('#000000')
-  const [adding,   setAdding]   = useState(false)
-  const [uploading, setUploading] = useState<string | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [color,           setColor]          = useState('')
+  const [colorHex,        setColorHex]       = useState('#000000')
+  const [adding,          setAdding]         = useState(false)
+  const [uploading,       setUploading]      = useState<string | null>(null)
   const [activeVariantId, setActiveVariantId] = useState<string | null>(null)
+  const [confirmDelete,   setConfirmDelete]  = useState<string | null>(null)
+  // Local image state keyed by variantId for immediate UI updates without full reload
+  const [localImages, setLocalImages] = useState<Record<string, string[]>>(
+    () => Object.fromEntries(variants.map(v => [v.id, v.images ?? []]))
+  )
+
+  // Sync local state when parent re-fetches variants
+  useEffect(() => {
+    setLocalImages(Object.fromEntries(variants.map(v => [v.id, v.images ?? []])))
+  }, [variants])
 
   async function addVariant() {
-    if (!color) return
+    if (!color.trim()) return
     setAdding(true)
-    await authedPost('/api/admin/merch/variants', { product_id: productId, color, color_hex: colorHex })
+    await authedPost('/api/admin/merch/variants', {
+      product_id: productId, color: color.trim(), color_hex: colorHex,
+      images: [], sort_order: variants.length,
+    })
     setColor(''); setColorHex('#000000')
     setAdding(false)
     onRefresh()
@@ -119,265 +160,359 @@ function VariantEditor({ productId, variants, onRefresh }: {
 
   async function deleteVariant(id: string) {
     await authedDelete(`/api/admin/merch/variants?id=${id}`)
+    setConfirmDelete(null)
     onRefresh()
   }
 
   async function uploadImage(variantId: string, file: File) {
-    const { data: { session } } = await supabase.auth.getSession()
+    const current = localImages[variantId] ?? []
+    if (current.length >= 5) return
+    const token = await getToken()
     const form = new FormData()
     form.append('image', file)
     setUploading(variantId)
     const res = await fetch('/api/admin/merch/upload', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${session?.access_token}` },
+      headers: { Authorization: `Bearer ${token}` },
       body: form,
     }).then(r => r.json())
     if (res.url) {
-      const variant = variants.find(v => v.id === variantId)
-      const newImages = [...(variant?.images ?? []), res.url]
-      await authedPatch('/api/admin/merch/variants', { id: variantId, images: newImages })
-      onRefresh()
+      const updated = [...current, res.url]
+      setLocalImages(prev => ({ ...prev, [variantId]: updated }))
+      await authedPatch('/api/admin/merch/variants', { id: variantId, images: updated })
     }
     setUploading(null)
   }
 
-  async function removeImage(variant: Variant, imgUrl: string) {
-    const newImages = (variant.images ?? []).filter(i => i !== imgUrl)
-    await authedPatch('/api/admin/merch/variants', { id: variant.id, images: newImages })
-    onRefresh()
+  async function removeImage(variantId: string, imgUrl: string) {
+    const updated = (localImages[variantId] ?? []).filter(i => i !== imgUrl)
+    setLocalImages(prev => ({ ...prev, [variantId]: updated }))
+    await authedPatch('/api/admin/merch/variants', { id: variantId, images: updated })
   }
 
   return (
-    <div className="mt-4">
-      <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Varianti colore</p>
-      <div className="space-y-3">
-        {variants.map(v => (
-          <div key={v.id} className="border border-gray-100 p-3">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="w-5 h-5 border border-gray-300" style={{ backgroundColor: v.color_hex ?? '#ccc' }} />
-              <span className="text-sm font-semibold text-gray-900">{v.color}</span>
-              <button onClick={() => setActiveVariantId(activeVariantId === v.id ? null : v.id)}
-                className="text-xs text-[#1a4a3a] underline ml-auto">
-                {activeVariantId === v.id ? 'Chiudi' : 'Immagini'}
+    <div className="mt-5 pt-5 border-t border-gray-100">
+      <p className={`${LABEL_CLS} mb-3`}>Color Variants</p>
+
+      <div className="space-y-2">
+        {variants.map(v => {
+          const imgs = localImages[v.id] ?? []
+          return (
+          <div key={v.id} className="border border-gray-200">
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              <span className="w-5 h-5 border border-gray-300 flex-shrink-0"
+                    style={{ backgroundColor: v.color_hex ?? '#ccc' }} />
+              <span className="text-sm font-medium text-black flex-1">{v.color}</span>
+              <span className="text-[10px] text-gray-400">{imgs.length}/5</span>
+              <button
+                onClick={() => setActiveVariantId(activeVariantId === v.id ? null : v.id)}
+                className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline"
+              >
+                {activeVariantId === v.id ? 'Close' : 'Images'}
               </button>
-              <button onClick={() => deleteVariant(v.id)}
-                className="text-xs text-red-500 hover:text-red-700">Elimina</button>
+              <button
+                onClick={() => setConfirmDelete(v.id)}
+                className="text-[10px] font-semibold uppercase tracking-widest text-red-500 hover:text-red-700"
+              >
+                Remove
+              </button>
             </div>
+
+            {confirmDelete === v.id && (
+              <div className="px-3 py-2 bg-red-50 border-t border-red-200 flex items-center gap-3">
+                <span className="text-xs text-red-700 flex-1">Remove "{v.color}"?</span>
+                <button onClick={() => deleteVariant(v.id)}
+                  className="text-xs font-semibold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 px-3 py-1">
+                  Confirm
+                </button>
+                <button onClick={() => setConfirmDelete(null)} className="text-xs text-gray-500 hover:text-gray-800">
+                  Cancel
+                </button>
+              </div>
+            )}
+
             {activeVariantId === v.id && (
-              <div>
-                <div className="flex gap-2 flex-wrap mb-2">
-                  {(v.images ?? []).map((img, i) => (
-                    <div key={i} className="relative w-16 h-16 bg-gray-100">
-                      <Image src={img} alt="" fill className="object-cover" />
-                      <button onClick={() => removeImage(v, img)}
-                        className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 text-xs flex items-center justify-center">×</button>
+              <div className="px-3 pb-4 border-t border-gray-100 pt-3">
+                <div className="flex gap-2 flex-wrap mb-3">
+                  {imgs.map((img, i) => (
+                    <div key={img} className="relative w-20 h-20 bg-gray-100 group flex-shrink-0">
+                      <Image src={img} alt="" fill className="object-cover" sizes="80px" />
+                      {i === 0 && (
+                        <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[9px] text-center py-0.5 uppercase tracking-wide pointer-events-none">
+                          Main
+                        </span>
+                      )}
+                      <button
+                        onClick={() => removeImage(v.id, img)}
+                        className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-600 text-white text-xs font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity leading-none"
+                        title="Remove image"
+                      >
+                        ×
+                      </button>
                     </div>
                   ))}
+                  {imgs.length === 0 && (
+                    <p className="text-xs text-gray-400 italic self-center">No images yet.</p>
+                  )}
                 </div>
-                <label className="text-xs text-[#1a4a3a] cursor-pointer underline">
-                  {uploading === v.id ? 'Caricamento...' : '+ Aggiungi immagine'}
-                  <input type="file" className="hidden" accept="image/*"
-                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(v.id, f); e.target.value = '' }}
-                    disabled={uploading === v.id} />
-                </label>
+                {imgs.length < 5 && (
+                  <label className={`inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest cursor-pointer hover:underline ${
+                    uploading === v.id ? 'text-gray-400 pointer-events-none' : 'text-[#1a4a3a]'
+                  }`}>
+                    {uploading === v.id ? 'Uploading…' : '+ Add image'}
+                    <input type="file" accept="image/*" className="hidden"
+                      disabled={uploading === v.id}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(v.id, f); e.target.value = '' }} />
+                  </label>
+                )}
+                {imgs.length >= 5 && (
+                  <p className="text-[10px] text-gray-400 italic">Maximum 5 images reached.</p>
+                )}
               </div>
             )}
           </div>
-        ))}
+          )
+        })}
       </div>
-      {/* Add variant */}
+
       <div className="flex gap-2 mt-3 items-center">
-        <input value={color} onChange={e => setColor(e.target.value)}
-          placeholder="Nome colore" className="flex-1 text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-[#1a4a3a]" />
+        <input
+          value={color} onChange={e => setColor(e.target.value)}
+          placeholder="Colour name"
+          className="flex-1 text-sm border border-black px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1a4a3a]"
+        />
         <input type="color" value={colorHex} onChange={e => setColorHex(e.target.value)}
-          className="w-10 h-10 border border-gray-300 cursor-pointer p-0.5" />
-        <button onClick={addVariant} disabled={!color || adding}
-          className="px-4 py-2 bg-[#1a4a3a] text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 hover:bg-[#123a2d] transition-colors">
-          {adding ? '...' : 'Aggiungi'}
+          title="Pick colour"
+          className="w-10 h-10 border border-black cursor-pointer p-0.5 flex-shrink-0" />
+        <button onClick={addVariant} disabled={!color.trim() || adding}
+          className="px-4 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+          {adding ? '…' : 'Add'}
         </button>
       </div>
     </div>
   )
 }
 
-// ── ProductCard ───────────────────────────────────────────────────────────────
+// ── ProductRow ────────────────────────────────────────────────────────────────
 
-function ProductCard({ product, onRefresh }: { product: Product; onRefresh: () => void }) {
-  const [expanded, setExpanded] = useState(false)
-  const [editing,  setEditing]  = useState(false)
-  const [name,     setName]     = useState(product.name)
-  const [priceCts, setPriceCts] = useState(String(product.price_cents))
-  const [visible,  setVisible]  = useState(product.visible)
-  const [saving,   setSaving]   = useState(false)
-  const [deleting, setDeleting] = useState(false)
+function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () => void }) {
+  const [open,       setOpen]       = useState(false)
+  const [name,       setName]       = useState(product.name)
+  const [desc,       setDesc]       = useState(product.description ?? '')
+  const [priceEur,   setPriceEur]   = useState((product.price_cents / 100).toFixed(2))
+  const [sizes,      setSizes]      = useState<string[]>(product.sizes ?? [])
+  const [visible,    setVisible]    = useState(product.visible)
+  const [saving,     setSaving]     = useState(false)
+  const [confirmDel, setConfirmDel] = useState(false)
+  const [deleting,   setDeleting]   = useState(false)
 
   async function save() {
     setSaving(true)
     await authedPatch('/api/admin/merch/products', {
-      id: product.id, name, price_cents: parseInt(priceCts, 10), visible,
+      id: product.id, name: name.trim(), description: desc.trim() || null,
+      price_cents: Math.round(parseFloat(priceEur || '0') * 100),
+      sizes: sizes.length ? sizes : null, visible,
     })
     setSaving(false)
-    setEditing(false)
     onRefresh()
   }
 
   async function del() {
-    if (!confirm(`Eliminare "${product.name}"?`)) return
     setDeleting(true)
     await authedDelete(`/api/admin/merch/products?id=${product.id}`)
     onRefresh()
   }
 
+  const firstImg = product.product_variants[0]?.images?.[0] ?? null
+
   return (
-    <div className="border border-gray-200 p-4">
-      <div className="flex items-start gap-3">
-        {/* First image */}
-        <div className="w-16 h-16 bg-gray-100 flex-shrink-0 overflow-hidden relative">
-          {(() => {
-            const img = product.product_variants[0]?.images?.[0]
-            return img ? <Image src={img} alt={product.name} fill className="object-cover" /> : null
-          })()}
+    <div className="border border-gray-200">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+      >
+        <div className="w-12 h-12 bg-gray-100 flex-shrink-0 relative overflow-hidden">
+          {firstImg && <Image src={firstImg} alt="" fill className="object-cover" />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${product.visible ? 'bg-green-500' : 'bg-gray-300'}`} />
-            <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
-            <p className="text-sm text-gray-500 ml-auto">{fmtEur(product.price_cents)}</p>
-          </div>
-          <p className="text-xs text-gray-400 mt-0.5">/{product.slug}</p>
+          <p className="text-sm font-semibold text-black truncate">{product.name}</p>
+          <p className="text-[10px] text-gray-400 truncate">/{product.slug}</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setExpanded(e => !e)}
-            className="text-xs text-[#1a4a3a] underline">{expanded ? 'Chiudi' : 'Espandi'}</button>
-          <button onClick={() => setEditing(e => !e)}
-            className="text-xs text-gray-500 underline">Modifica</button>
-          <button onClick={del} disabled={deleting}
-            className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50">Elimina</button>
-        </div>
-      </div>
+        <span className="text-sm text-gray-700 flex-shrink-0 hidden sm:block">
+          {fmtEur(product.price_cents)}
+        </span>
+        <span className={`text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 flex-shrink-0 ${
+          product.visible ? 'bg-[#1a4a3a] text-white' : 'bg-gray-200 text-gray-500'
+        }`}>
+          {product.visible ? 'Active' : 'Hidden'}
+        </span>
+        <svg
+          className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
 
-      {editing && (
-        <div className="mt-4 grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
-          <div className="col-span-2 sm:col-span-1">
-            <label className="text-xs text-gray-500 uppercase tracking-wide">Nome</label>
-            <input value={name} onChange={e => setName(e.target.value)}
-              className="w-full mt-1 text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-[#1a4a3a]" />
+      {open && (
+        <div className="border-t border-gray-100 px-4 py-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={LABEL_CLS}>Name</label>
+              <input value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Price (€)</label>
+              <input type="number" min="0" step="0.01" value={priceEur}
+                onChange={e => setPriceEur(e.target.value)} className={INPUT_CLS} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={LABEL_CLS}>Description</label>
+              <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2}
+                className={`${INPUT_CLS} resize-none`} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={LABEL_CLS}>Sizes</label>
+              <SizeToggle sizes={sizes} onChange={setSizes} />
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setVisible(v => !v)}
+                className={`relative w-10 h-5 transition-colors flex-shrink-0 ${visible ? 'bg-[#1a4a3a]' : 'bg-gray-300'}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 bg-white transition-all ${visible ? 'left-5' : 'left-0.5'}`} />
+              </button>
+              <span className="text-sm text-gray-700">{visible ? 'Visible on /merch' : 'Hidden'}</span>
+            </div>
           </div>
-          <div>
-            <label className="text-xs text-gray-500 uppercase tracking-wide">Prezzo (centesimi)</label>
-            <input type="number" value={priceCts} onChange={e => setPriceCts(e.target.value)}
-              className="w-full mt-1 text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-[#1a4a3a]" />
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id={`vis-${product.id}`} checked={visible} onChange={e => setVisible(e.target.checked)} className="w-4 h-4" />
-            <label htmlFor={`vis-${product.id}`} className="text-sm text-gray-700">Visibile</label>
-          </div>
-          <div className="col-span-2 flex gap-2">
+
+          <div className="flex items-center gap-3 mt-5 pt-4 border-t border-gray-100">
             <button onClick={save} disabled={saving}
-              className="px-4 py-2 bg-[#1a4a3a] text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 hover:bg-[#123a2d] transition-colors">
-              {saving ? 'Salvo...' : 'Salva'}
+              className="px-5 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+              {saving ? 'Saving…' : 'Save changes'}
             </button>
-            <button onClick={() => setEditing(false)}
-              className="px-4 py-2 border border-gray-300 text-xs font-semibold uppercase tracking-widest text-gray-600 hover:bg-gray-50">
-              Annulla
-            </button>
+            {confirmDel ? (
+              <>
+                <span className="text-xs text-red-600">Delete "{product.name}"?</span>
+                <button onClick={del} disabled={deleting}
+                  className="px-4 py-2 bg-red-600 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-red-700 disabled:opacity-40">
+                  {deleting ? '…' : 'Confirm'}
+                </button>
+                <button onClick={() => setConfirmDel(false)} className="text-xs text-gray-500 hover:text-gray-800">
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setConfirmDel(true)}
+                className="ml-auto text-[10px] font-semibold uppercase tracking-widest text-red-500 hover:text-red-700">
+                Delete product
+              </button>
+            )}
           </div>
-        </div>
-      )}
 
-      {expanded && (
-        <div className="mt-4 border-t border-gray-100 pt-4">
-          <VariantEditor
-            productId={product.id}
-            variants={product.product_variants}
-            onRefresh={onRefresh}
-          />
+          <VariantEditor productId={product.id} variants={product.product_variants} onRefresh={onRefresh} />
         </div>
       )}
     </div>
   )
 }
 
-// ── AddProductForm ────────────────────────────────────────────────────────────
+// ── AddProductModal ───────────────────────────────────────────────────────────
 
-function AddProductForm({ onRefresh }: { onRefresh: () => void }) {
-  const [open,    setOpen]    = useState(false)
-  const [name,    setName]    = useState('')
-  const [slug,    setSlug]    = useState('')
-  const [price,   setPrice]   = useState('')
-  const [desc,    setDesc]    = useState('')
-  const [sizes,   setSizes]   = useState('XS,S,M,L,XL')
-  const [saving,  setSaving]  = useState(false)
-  const [err,     setErr]     = useState('')
+function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefresh: () => void }) {
+  const [name,        setName]        = useState('')
+  const [slug,        setSlug]        = useState('')
+  const [slugTouched, setSlugTouched] = useState(false)
+  const [desc,        setDesc]        = useState('')
+  const [priceEur,    setPriceEur]    = useState('')
+  const [sizes,       setSizes]       = useState<string[]>(['XS', 'S', 'M', 'L', 'XL'])
+  const [saving,      setSaving]      = useState(false)
+  const [err,         setErr]         = useState('')
+
+  function handleNameChange(v: string) {
+    setName(v)
+    if (!slugTouched) setSlug(slugify(v))
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setErr('')
-    if (!name || !slug) { setErr('Nome e slug obbligatori'); return }
+    if (!name.trim() || !slug.trim()) { setErr('Name and slug are required.'); return }
     setSaving(true)
     const res = await authedPost('/api/admin/merch/products', {
-      name, slug,
-      price_cents: parseInt(price || '0', 10),
-      description: desc || null,
-      sizes: sizes ? sizes.split(',').map(s => s.trim()).filter(Boolean) : null,
+      name: name.trim(), slug: slug.trim(),
+      price_cents: Math.round(parseFloat(priceEur || '0') * 100),
+      description: desc.trim() || null,
+      sizes: sizes.length ? sizes : null,
       visible: true,
     })
     setSaving(false)
     if (res.error) { setErr(res.error); return }
-    setName(''); setSlug(''); setPrice(''); setDesc(''); setSizes('XS,S,M,L,XL')
-    setOpen(false)
     onRefresh()
+    onClose()
   }
 
-  if (!open) return (
-    <button onClick={() => setOpen(true)}
-      className="w-full py-3 border-2 border-dashed border-gray-300 text-sm text-gray-500 hover:border-[#1a4a3a] hover:text-[#1a4a3a] transition-colors uppercase tracking-widest font-semibold">
-      + Nuovo prodotto
-    </button>
-  )
-
   return (
-    <form onSubmit={submit} className="border-2 border-[#1a4a3a] p-4 space-y-3">
-      <p className="text-sm font-semibold text-gray-900 uppercase tracking-widest">Nuovo prodotto</p>
-      {err && <p className="text-xs text-red-600">{err}</p>}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2 sm:col-span-1">
-          <label className="text-xs text-gray-500 uppercase tracking-wide">Nome *</label>
-          <input value={name} onChange={e => { setName(e.target.value); setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')) }}
-            className="w-full mt-1 text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-[#1a4a3a]" required />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="bg-white w-full max-w-lg">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <p className="text-sm font-semibold uppercase tracking-widest text-black">New Product</p>
+          <button onClick={onClose} className="text-gray-400 hover:text-black text-xl leading-none">×</button>
         </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wide">Slug *</label>
-          <input value={slug} onChange={e => setSlug(e.target.value)}
-            className="w-full mt-1 text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-[#1a4a3a]" required />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wide">Prezzo (centesimi)</label>
-          <input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="2500 = €25,00"
-            className="w-full mt-1 text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-[#1a4a3a]" />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wide">Taglie (virgola)</label>
-          <input value={sizes} onChange={e => setSizes(e.target.value)} placeholder="XS,S,M,L,XL"
-            className="w-full mt-1 text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-[#1a4a3a]" />
-        </div>
-        <div className="col-span-2">
-          <label className="text-xs text-gray-500 uppercase tracking-wide">Descrizione</label>
-          <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2}
-            className="w-full mt-1 text-sm border border-gray-300 px-3 py-2 focus:outline-none focus:border-[#1a4a3a] resize-none" />
-        </div>
+
+        <form onSubmit={submit} className="px-6 py-5 space-y-4">
+          {err && (
+            <p className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2">{err}</p>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={LABEL_CLS}>Name *</label>
+              <input value={name} onChange={e => handleNameChange(e.target.value)}
+                required className={INPUT_CLS} />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Slug *</label>
+              <input value={slug}
+                onChange={e => { setSlugTouched(true); setSlug(e.target.value) }}
+                required className={`${INPUT_CLS} font-mono`} />
+            </div>
+          </div>
+
+          <div>
+            <label className={LABEL_CLS}>Price (€)</label>
+            <input type="number" min="0" step="0.01" placeholder="25.00"
+              value={priceEur} onChange={e => setPriceEur(e.target.value)} className={INPUT_CLS} />
+          </div>
+
+          <div>
+            <label className={LABEL_CLS}>Description</label>
+            <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2}
+              className={`${INPUT_CLS} resize-none`} />
+          </div>
+
+          <div>
+            <label className={LABEL_CLS}>Sizes</label>
+            <SizeToggle sizes={sizes} onChange={setSizes} />
+          </div>
+
+          <div className="flex gap-3 pt-2 border-t border-gray-100">
+            <button type="submit" disabled={saving}
+              className="px-6 py-2.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+              {saving ? 'Creating…' : 'Create product'}
+            </button>
+            <button type="button" onClick={onClose}
+              className="px-4 py-2.5 border border-black text-[10px] font-semibold uppercase tracking-widest text-black hover:bg-gray-50">
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
-      <div className="flex gap-2">
-        <button type="submit" disabled={saving}
-          className="px-6 py-2 bg-[#1a4a3a] text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 hover:bg-[#123a2d] transition-colors">
-          {saving ? 'Salvo...' : 'Crea prodotto'}
-        </button>
-        <button type="button" onClick={() => setOpen(false)}
-          className="px-4 py-2 border border-gray-300 text-xs text-gray-600 hover:bg-gray-50 uppercase tracking-widest font-semibold">
-          Annulla
-        </button>
-      </div>
-    </form>
+    </div>
   )
 }
 
@@ -465,7 +600,7 @@ function UpsellSection() {
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between text-left"
       >
-        <p className="text-sm font-semibold text-gray-900 font-['Inter']">Upsell Suggestions</p>
+        <p className="text-sm font-semibold text-black">Upsell Suggestions</p>
         <svg
           className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -476,7 +611,7 @@ function UpsellSection() {
 
       {open && (
         <div className="mt-4">
-          <p className="text-xs text-gray-500 mb-3 font-['Inter']">
+          <p className="text-xs text-gray-500 mb-3">
             Up to 3 active items shown to customers at checkout, ordered by priority.
           </p>
 
@@ -497,24 +632,20 @@ function UpsellSection() {
                     {item.type}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{item.resolvedName}</p>
+                    <p className="text-sm font-semibold text-black truncate">{item.resolvedName}</p>
                     {item.label && <p className="text-xs text-gray-500 truncate">"{item.label}"</p>}
                     <p className="text-[10px] text-gray-400">Priority: {item.priority}</p>
                   </div>
-                  <button
-                    onClick={() => toggleActive(item)}
+                  <button onClick={() => toggleActive(item)}
                     className={`text-[9px] font-semibold uppercase tracking-widest px-3 py-1.5 border transition-colors flex-shrink-0 ${
                       item.active
-                        ? 'bg-[#1a4a3a] text-white border-[#1a4a3a] hover:bg-[#123a2d]'
+                        ? 'bg-[#1a4a3a] text-white border-[#1a4a3a] hover:bg-[#143d30]'
                         : 'bg-white text-gray-500 border-gray-300 hover:border-gray-500'
-                    }`}
-                  >
+                    }`}>
                     {item.active ? 'Active' : 'Inactive'}
                   </button>
-                  <button
-                    onClick={() => deleteItem(item.id)}
-                    className="text-[10px] font-semibold uppercase tracking-widest text-red-500 hover:text-red-700 flex-shrink-0"
-                  >
+                  <button onClick={() => deleteItem(item.id)}
+                    className="text-[10px] font-semibold uppercase tracking-widest text-red-500 hover:text-red-700 flex-shrink-0">
                     Delete
                   </button>
                 </div>
@@ -523,76 +654,49 @@ function UpsellSection() {
           )}
 
           {!showAdd ? (
-            <button
-              onClick={() => setShowAdd(true)}
-              className="w-full py-2.5 border border-dashed border-gray-300 text-xs text-gray-500 hover:border-[#1a4a3a] hover:text-[#1a4a3a] transition-colors uppercase tracking-widest font-semibold"
-            >
+            <button onClick={() => setShowAdd(true)}
+              className="w-full py-2.5 border border-dashed border-gray-300 text-xs text-gray-500 hover:border-[#1a4a3a] hover:text-[#1a4a3a] transition-colors uppercase tracking-widest font-semibold">
               + Add Upsell Item
             </button>
           ) : (
             <form onSubmit={submitAdd} className="border border-[#1a4a3a] p-3 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-900">New Upsell Item</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-black">New Upsell Item</p>
               {addErr && <p className="text-xs text-red-600">{addErr}</p>}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Type</label>
-                  <select
-                    value={addType}
+                  <label className={LABEL_CLS}>Type</label>
+                  <select value={addType}
                     onChange={e => { setAddType(e.target.value as 'product' | 'event'); setAddRef('') }}
-                    className="w-full text-sm border border-gray-300 px-2 py-1.5 focus:outline-none focus:border-[#1a4a3a]"
-                  >
+                    className={INPUT_CLS}>
                     <option value="product">Product</option>
                     <option value="event">Event</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">
-                    {addType === 'product' ? 'Product' : 'Event'} *
-                  </label>
-                  <select
-                    value={addRef}
-                    onChange={e => setAddRef(e.target.value)}
-                    className="w-full text-sm border border-gray-300 px-2 py-1.5 focus:outline-none focus:border-[#1a4a3a]"
-                    required
-                  >
+                  <label className={LABEL_CLS}>{addType === 'product' ? 'Product' : 'Event'} *</label>
+                  <select value={addRef} onChange={e => setAddRef(e.target.value)} required className={INPUT_CLS}>
                     <option value="">Select…</option>
-                    {dropdownItems.map(d => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
+                    {dropdownItems.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Label (optional)</label>
-                  <input
-                    value={addLabel}
-                    onChange={e => setAddLabel(e.target.value)}
-                    placeholder="e.g. Don't miss this"
-                    className="w-full text-sm border border-gray-300 px-2 py-1.5 focus:outline-none focus:border-[#1a4a3a]"
-                  />
+                  <label className={LABEL_CLS}>Label (optional)</label>
+                  <input value={addLabel} onChange={e => setAddLabel(e.target.value)}
+                    placeholder="e.g. Don't miss this" className={INPUT_CLS} />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Priority</label>
-                  <input
-                    type="number"
-                    value={addPriority}
-                    onChange={e => setAddPriority(e.target.value)}
-                    className="w-full text-sm border border-gray-300 px-2 py-1.5 focus:outline-none focus:border-[#1a4a3a]"
-                  />
+                  <label className={LABEL_CLS}>Priority</label>
+                  <input type="number" value={addPriority} onChange={e => setAddPriority(e.target.value)}
+                    className={INPUT_CLS} />
                 </div>
               </div>
               <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={addSaving}
-                  className="px-4 py-2 bg-[#1a4a3a] text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 hover:bg-[#123a2d] transition-colors"
-                >
+                <button type="submit" disabled={addSaving}
+                  className="px-4 py-2 bg-[#1a4a3a] text-white text-xs font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
                   {addSaving ? '…' : 'Add Item'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowAdd(false); setAddErr('') }}
-                  className="px-3 py-2 border border-gray-300 text-xs text-gray-600 hover:bg-gray-50 uppercase tracking-widest font-semibold"
-                >
+                <button type="button" onClick={() => { setShowAdd(false); setAddErr('') }}
+                  className="px-3 py-2 border border-black text-xs text-black hover:bg-gray-50 uppercase tracking-widest font-semibold">
                   Cancel
                 </button>
               </div>
@@ -609,6 +713,7 @@ function UpsellSection() {
 export default function MerchManager() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading,  setLoading]  = useState(true)
+  const [showAdd,  setShowAdd]  = useState(false)
 
   async function load() {
     setLoading(true)
@@ -621,26 +726,39 @@ export default function MerchManager() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="font-serif text-2xl font-bold text-gray-900">Gestione Merch</h2>
-        <p className="text-xs text-gray-500 mt-1 font-['Inter']">Prodotti, varianti colore e immagini</p>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h2 className="font-serif text-2xl font-bold text-black">Merch Management</h2>
+          <p className="text-xs text-gray-500 mt-1">Products, color variants and images</p>
+        </div>
+        <button
+          onClick={() => setShowAdd(true)}
+          className="px-4 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors flex-shrink-0"
+        >
+          + Add Product
+        </button>
       </div>
 
       <VisibilityToggle />
 
-      <div className="space-y-3 mb-4">
+      <div className="space-y-2 mb-4">
         {loading ? (
-          <p className="text-sm text-gray-400">Caricamento...</p>
+          <p className="text-sm text-gray-400">Loading…</p>
         ) : products.length === 0 ? (
-          <p className="text-sm text-gray-400">Nessun prodotto ancora.</p>
+          <div className="py-12 text-center border border-dashed border-gray-200">
+            <p className="text-sm text-gray-400">No products yet.</p>
+          </div>
         ) : (
-          products.map(p => <ProductCard key={p.id} product={p} onRefresh={load} />)
+          products.map(p => <ProductRow key={p.id} product={p} onRefresh={load} />)
         )}
       </div>
 
-      <AddProductForm onRefresh={load} />
-
       <UpsellSection />
+
+      {showAdd && (
+        <AddProductModal onClose={() => setShowAdd(false)} onRefresh={load} />
+      )}
     </div>
   )
 }
