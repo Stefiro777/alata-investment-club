@@ -197,8 +197,8 @@ export async function POST(req: NextRequest) {
         })
 
         // CRM: record customer
-        const custEmail = session.customer_details?.email ?? session.metadata.email ?? ''
-        const custName  = session.customer_details?.name  ?? session.metadata.name  ?? ''
+        const custEmail = session.customer_details?.email ?? session.metadata.customerEmail ?? session.metadata.email ?? ''
+        const custName  = session.customer_details?.name  ?? session.metadata.customerName  ?? session.metadata.name  ?? ''
         if (custEmail) {
           await supabaseAdmin.from('crm_customers').insert({
             name: custName || custEmail, email: custEmail, type: 'merch',
@@ -207,6 +207,31 @@ export async function POST(req: NextRequest) {
           }).then(() => {})
         }
       } catch (e) { console.error('Failed to record merch transaction:', e) }
+
+      // Record order in merch_orders
+      try {
+        const meta = session.metadata ?? {}
+        let shippingAddress: unknown = null
+        let upsellItems: unknown = null
+        try { shippingAddress = meta.shippingAddress ? JSON.parse(meta.shippingAddress) : null } catch { /* ignore */ }
+        try { upsellItems     = meta.upsellItems     ? JSON.parse(meta.upsellItems)     : null } catch { /* ignore */ }
+
+        const { error: orderErr } = await supabaseAdmin.from('merch_orders').insert({
+          stripe_session_id: session.id,
+          product_id:        meta.mainProductId   || null,
+          product_name:      meta.mainProductName || 'Merch',
+          variant_color:     meta.variantColor    || null,
+          size:              meta.size            || null,
+          quantity:          1,
+          price_cents:       session.amount_total,
+          upsell_items:      upsellItems,
+          customer_name:     meta.customerName || session.customer_details?.name  || null,
+          customer_email:    meta.customerEmail || session.customer_details?.email || null,
+          shipping_address:  shippingAddress,
+          status:            'paid',
+        })
+        if (orderErr) console.error('Failed to insert merch_order:', orderErr.message)
+      } catch (e) { console.error('Failed to insert merch_order (exception):', e) }
     } else if (session.metadata?.type === 'membership') {
       const userId   = session.metadata.user_id
       const memberId = session.metadata.member_id

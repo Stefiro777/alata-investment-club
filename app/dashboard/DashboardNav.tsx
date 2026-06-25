@@ -119,6 +119,12 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
             Resources
           </Link>
 
+          {isBoD && (
+            <Link href="/dashboard/media/merch" className={`${linkClass('/dashboard/media/merch')} whitespace-nowrap flex-shrink-0`}>
+              Merch
+            </Link>
+          )}
+
           {canScan && (
             <Link href="/dashboard/scanner" className={`${linkClass('/dashboard/scanner')} whitespace-nowrap flex-shrink-0`}>
               Scanner

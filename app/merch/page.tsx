@@ -31,12 +31,15 @@ export default async function MerchPage({
   if (!setting || setting.value !== 'true') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400 mb-4">Alata Investment Club</p>
-        <h1 className="font-['Cormorant_Garamond',serif] text-5xl md:text-7xl font-bold text-white leading-none mb-6">
-          COMING<br />SOON
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1a4a3a] mb-4">
+          Alata Investment Club
+        </p>
+        <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-none mb-6">
+          COMING SOON
         </h1>
-        <p className="text-sm text-gray-500 max-w-sm">
-          Il nostro merch è in arrivo. Resta sintonizzato.
+        <div className="w-10 h-px bg-white/30 mx-auto mb-6" />
+        <p className="text-base text-white/60 max-w-sm">
+          Our merch is on its way. Stay tuned.
         </p>
       </div>
     )
@@ -52,35 +55,47 @@ export default async function MerchPage({
   const items = (products ?? []) as Product[]
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="bg-white" style={{ fontFamily: 'Inter, sans-serif' }}>
       {/* Success banner */}
       {sp.checkout === 'success' && (
         <div className="bg-[#1a4a3a] text-white text-center py-3 text-sm font-semibold tracking-wide">
-          Ordine completato! Riceverai una conferma via email.
+          Order confirmed — a receipt has been sent to your email.
         </div>
       )}
 
       {/* Hero */}
-      <div className="bg-black text-white py-24 px-6 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400 mb-4">
-          Alata Investment Club
-        </p>
-        <h1 className="font-['Cormorant_Garamond',serif] text-6xl md:text-8xl font-bold leading-none">
-          WEAR THE CLUB
-        </h1>
-        <p className="text-sm text-gray-400 mt-6 max-w-md mx-auto">
-          Prodotti selezionati per i membri e appassionati del club.
-        </p>
-      </div>
-
-      {/* Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        {items.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm py-24">
-            Nessun prodotto disponibile al momento.
+      <section className="relative min-h-[60vh] flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="/images/loggia.jpeg"
+          alt=""
+          fill
+          className="object-cover"
+          style={{ objectPosition: 'center 50%' }}
+          priority
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 text-center px-6 py-20">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1a4a3a] mb-5">
+            Alata Investment Club
           </p>
+          <h1 className="font-serif text-5xl md:text-7xl font-bold leading-none mb-6">
+            WEAR THE CLUB
+          </h1>
+          <div className="w-10 h-px bg-white/30 mx-auto mb-6" />
+          <p className="text-lg text-white/70 max-w-xl mx-auto leading-relaxed">
+            Selected pieces for members and enthusiasts.
+          </p>
+        </div>
+      </section>
+
+      {/* Product grid */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 sm:py-20">
+        {items.length === 0 ? (
+          <div className="py-24 text-center">
+            <p className="text-sm text-gray-400 uppercase tracking-widest">No products available yet.</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
             {items.map(product => {
               const variants = [...(product.product_variants ?? [])].sort((a, b) => a.sort_order - b.sort_order)
               const firstImg = variants[0]?.images?.[0] ?? null
@@ -108,11 +123,11 @@ export default async function MerchPage({
 
                   {/* Color swatches */}
                   {variants.length > 0 && (
-                    <div className="flex gap-1.5 mb-2">
+                    <div className="flex gap-1.5 mb-3">
                       {variants.slice(0, 6).map(v => (
                         <span
                           key={v.id}
-                          className="w-4 h-4 border border-gray-300"
+                          className="w-4 h-4 border border-gray-200"
                           style={{ backgroundColor: v.color_hex ?? '#ccc' }}
                           title={v.color}
                         />
@@ -121,13 +136,13 @@ export default async function MerchPage({
                   )}
 
                   {/* Info */}
-                  <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-widest group-hover:text-[#1a4a3a] transition-colors">
+                  <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-900 group-hover:text-[#1a4a3a] transition-colors">
                     {product.name}
                   </h2>
-                  <p className="text-sm text-gray-500 mt-0.5">{fmtEur(product.price_cents)}</p>
+                  <p className="text-sm text-gray-500 mt-1">{fmtEur(product.price_cents)}</p>
 
-                  <span className="mt-3 inline-block text-[11px] font-semibold uppercase tracking-[0.2em] text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1 group-hover:bg-[#1a4a3a] group-hover:text-white transition-colors">
-                    SCOPRI
+                  <span className="mt-4 inline-block text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1.5 group-hover:bg-[#1a4a3a] group-hover:text-white transition-colors">
+                    View
                   </span>
                 </Link>
               )

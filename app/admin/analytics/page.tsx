@@ -16,6 +16,11 @@ type Partner  = { id: string; name: string; type: string; created_at: string }
 type Transaction    = { id: string; type: 'revenue' | 'cost' | 'rimborso'; amount: number; category_id: string | null }
 type BudgetCategory = { id: string; name: string }
 type JobOffer       = { id: string; type: string }
+type MerchOrder     = {
+  id: string; product_name: string; variant_color: string | null; size: string | null
+  quantity: number; price_cents: number | null; customer_name: string | null
+  customer_email: string | null; status: string; created_at: string
+}
 
 type QuarterSnapshot = {
   id: string
@@ -811,6 +816,7 @@ function SponsorsTab() {
 function FinanceTab() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories]     = useState<BudgetCategory[]>([])
+  const [merchOrders, setMerchOrders]   = useState<MerchOrder[]>([])
   const [loading, setLoading]           = useState(true)
   const [mounted, setMounted]           = useState(false)
 
@@ -819,9 +825,14 @@ function FinanceTab() {
     Promise.all([
       db.from('transactions').select('id, type, amount, category_id'),
       db.from('budget_categories').select('id, name'),
-    ]).then(([txRes, catRes]) => {
-      setTransactions((txRes.data ?? []) as Transaction[])
-      setCategories((catRes.data ?? []) as BudgetCategory[])
+      db.from('merch_orders')
+        .select('id, product_name, variant_color, size, quantity, price_cents, customer_name, customer_email, status, created_at')
+        .eq('status', 'paid')
+        .order('created_at', { ascending: false }),
+    ]).then(([txRes, catRes, ordersRes]) => {
+      setTransactions((txRes.data     ?? []) as Transaction[])
+      setCategories((catRes.data      ?? []) as BudgetCategory[])
+      setMerchOrders((ordersRes.data  ?? []) as MerchOrder[])
       setLoading(false)
       setTimeout(() => setMounted(true), 60)
     })
@@ -845,6 +856,30 @@ function FinanceTab() {
 
     return { income, expenses, balance, byCategory }
   }, [transactions, categories])
+
+  // ── Merch KPIs ──────────────────────────────────────────────────────────────
+  const { merchRevenue, merchCount, merchAvg, topProducts, recentOrders } = useMemo(() => {
+    const paid = merchOrders // already filtered by status='paid' in the query
+    const merchRevenue = paid.reduce((s, o) => s + (o.price_cents ?? 0), 0) / 100
+    const merchCount   = paid.length
+    const merchAvg     = merchCount > 0 ? merchRevenue / merchCount : 0
+
+    // Group by product_name
+    const prodMap: Record<string, { name: string; orders: number; revenue: number }> = {}
+    for (const o of paid) {
+      const key = o.product_name
+      if (!prodMap[key]) prodMap[key] = { name: key, orders: 0, revenue: 0 }
+      prodMap[key].orders  += 1
+      prodMap[key].revenue += (o.price_cents ?? 0) / 100
+    }
+    const topProducts = Object.values(prodMap)
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 10)
+
+    const recentOrders = paid.slice(0, 10)
+
+    return { merchRevenue, merchCount, merchAvg, topProducts, recentOrders }
+  }, [merchOrders])
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
@@ -900,6 +935,94 @@ function FinanceTab() {
               )
             })}
           </div>
+        </div>
+      )}
+
+      {/* ── Merch Performance ─────────────────────────────────────────────────── */}
+      <div className="h-px bg-black/10 my-10" />
+
+      <p className={`${labelCls} mb-6`}>Merch Performance</p>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-3 gap-3 mb-8">
+        <KpiCard label="Merch Revenue"      value={fmtEuros(merchRevenue)} />
+        <KpiCard label="Orders"             value={merchCount} />
+        <KpiCard label="Avg. Order Value"   value={fmtEuros(merchAvg)} />
+      </div>
+
+      {/* Top Products */}
+      {topProducts.length > 0 && (
+        <div className="mb-8 border border-black overflow-hidden">
+          <p className={`${labelCls} px-4 pt-4 pb-3`}>Best Selling Products</p>
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-black text-white">
+                <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Product</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Orders</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Revenue</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">% of Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topProducts.map((p, i) => (
+                <tr key={p.name} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-4 py-2.5 font-medium text-black border-t border-black/5">{p.name}</td>
+                  <td className="px-4 py-2.5 text-right text-gray-700 border-t border-black/5">{p.orders}</td>
+                  <td className="px-4 py-2.5 text-right text-gray-700 border-t border-black/5">{fmtEuros(p.revenue)}</td>
+                  <td className="px-4 py-2.5 text-right text-gray-700 border-t border-black/5">
+                    {merchRevenue > 0 ? `${((p.revenue / merchRevenue) * 100).toFixed(1)}%` : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Recent Orders */}
+      {recentOrders.length > 0 && (
+        <div className="border border-black overflow-hidden">
+          <p className={`${labelCls} px-4 pt-4 pb-3`}>Recent Orders</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse min-w-[640px]">
+              <thead>
+                <tr className="bg-black text-white">
+                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Date</th>
+                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Customer</th>
+                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Product</th>
+                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Colour</th>
+                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Size</th>
+                  <th className="text-right px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((o, i) => {
+                  const d = new Date(o.created_at)
+                  const date = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
+                  return (
+                    <tr key={o.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-4 py-2.5 text-gray-600 border-t border-black/5 whitespace-nowrap">{date}</td>
+                      <td className="px-4 py-2.5 text-black font-medium border-t border-black/5 max-w-[140px] truncate">
+                        {o.customer_name ?? o.customer_email ?? '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-gray-700 border-t border-black/5 max-w-[160px] truncate">{o.product_name}</td>
+                      <td className="px-4 py-2.5 text-gray-600 border-t border-black/5">{o.variant_color ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-gray-600 border-t border-black/5">{o.size ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-right font-semibold text-black border-t border-black/5 whitespace-nowrap">
+                        {o.price_cents != null ? fmtEuros(o.price_cents / 100) : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {merchOrders.length === 0 && (
+        <div className="py-10 text-center border border-dashed border-gray-200">
+          <p className="text-xs text-gray-400 uppercase tracking-widest">No merch orders yet.</p>
         </div>
       )}
     </div>

@@ -163,9 +163,8 @@ function CartDrawer({
 // ── CartProvider ──────────────────────────────────────────────────────────────
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items,       setItems]       = useState<CartItem[]>([])
-  const [drawerOpen,  setDrawerOpen]  = useState(false)
-  const [checking,    setChecking]    = useState(false)
+  const [items,      setItems]      = useState<CartItem[]>([])
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
     setItems(prev => {
@@ -192,30 +191,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalCents = items.reduce((s, i) => s + i.priceCents * i.quantity, 0)
   const count      = items.reduce((s, i) => s + i.quantity, 0)
 
-  async function handleCheckout() {
-    if (checking || items.length === 0) return
-    setChecking(true)
-    try {
-      const res = await fetch('/api/merch/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: items.map(i => ({
-          name:       i.name,
-          priceCents: i.priceCents,
-          quantity:   i.quantity,
-          productId:  i.productId,
-          variant:    i.variant.color,
-          size:       i.size,
-        })) }),
-      })
-      const data = await res.json()
-      if (data.url) {
-        clearCart()
-        window.location.href = data.url
-      }
-    } finally {
-      setChecking(false)
-    }
+  function handleCheckout() {
+    if (items.length === 0) return
+    window.location.href = '/checkout'
   }
 
   return (
