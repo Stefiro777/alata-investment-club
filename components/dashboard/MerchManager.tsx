@@ -420,34 +420,104 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
 
 // ── AddProductModal ───────────────────────────────────────────────────────────
 
+type DraftVariant = {
+  id: string          // local-only key (not a DB id yet)
+  color: string
+  colorHex: string
+  images: string[]    // URLs already uploaded, to be linked after product creation
+  uploading: boolean
+}
+
 function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefresh: () => void }) {
-  const [name, setName] = useState('')
-  const [slug, setSlug] = useState('')
-  const [desc, setDesc] = useState('')
-  const [priceEur,    setPriceEur]    = useState('')
-  const [sizes,       setSizes]       = useState<string[]>(['XS', 'S', 'M', 'L', 'XL'])
-  const [saving,      setSaving]      = useState(false)
-  const [err,         setErr]         = useState('')
+  const [name,     setName]     = useState('')
+  const [slug,     setSlug]     = useState('')
+  const [desc,     setDesc]     = useState('')
+  const [priceEur, setPriceEur] = useState('')
+  const [sizes,    setSizes]    = useState<string[]>(['XS', 'S', 'M', 'L', 'XL'])
+  const [saving,   setSaving]   = useState(false)
+  const [err,      setErr]      = useState('')
+
+  // Draft variants — local state, not saved until "Create product"
+  const [draftVariants,    setDraftVariants]    = useState<DraftVariant[]>([])
+  const [newColor,         setNewColor]         = useState('')
+  const [newColorHex,      setNewColorHex]      = useState('#000000')
+  const [addingVariant,    setAddingVariant]     = useState(false)
 
   function handleNameChange(v: string) {
     setName(v)
     setSlug(slugify(v))
   }
 
+  function addDraftVariant() {
+    if (!newColor.trim()) return
+    setDraftVariants(prev => [
+      ...prev,
+      { id: crypto.randomUUID(), color: newColor.trim(), colorHex: newColorHex, images: [], uploading: false },
+    ])
+    setNewColor(''); setNewColorHex('#000000')
+    setAddingVariant(false)
+  }
+
+  function removeDraftVariant(id: string) {
+    setDraftVariants(prev => prev.filter(v => v.id !== id))
+  }
+
+  async function uploadDraftImage(variantId: string, file: File) {
+    setDraftVariants(prev => prev.map(v => v.id === variantId ? { ...v, uploading: true } : v))
+    const token = await getToken()
+    const form = new FormData()
+    form.append('image', file)
+    const res = await fetch('/api/admin/merch/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    }).then(r => r.json())
+    setDraftVariants(prev => prev.map(v =>
+      v.id === variantId
+        ? { ...v, uploading: false, images: res.url && v.images.length < 5 ? [...v.images, res.url] : v.images }
+        : v
+    ))
+  }
+
+  function removeDraftImage(variantId: string, imgUrl: string) {
+    setDraftVariants(prev => prev.map(v =>
+      v.id === variantId ? { ...v, images: v.images.filter(i => i !== imgUrl) } : v
+    ))
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setErr('')
     if (!name.trim()) { setErr('Name is required.'); return }
+    if (draftVariants.length === 0) { setErr('Add at least one colour variant.'); return }
     setSaving(true)
-    const res = await authedPost('/api/admin/merch/products', {
+
+    // 1. Create product
+    const productRes = await authedPost('/api/admin/merch/products', {
       name: name.trim(), slug: slug.trim(),
       price_cents: Math.round(parseFloat(priceEur || '0') * 100),
       description: desc.trim() || null,
       sizes: sizes.length ? sizes : null,
       visible: true,
     })
+    if (productRes.error) { setErr(productRes.error); setSaving(false); return }
+
+    const productId: string = productRes.product?.id ?? productRes.id
+    if (!productId) { setErr('Product created but no ID returned.'); setSaving(false); return }
+
+    // 2. Create each variant and attach its uploaded images
+    await Promise.all(draftVariants.map(async (v, idx) => {
+      const variantRes = await authedPost('/api/admin/merch/variants', {
+        product_id: productId, color: v.color, color_hex: v.colorHex,
+        images: v.images, sort_order: idx,
+      })
+      // If the API didn't accept images in POST, patch them in
+      if (v.images.length > 0 && variantRes.id && !variantRes.images?.length) {
+        await authedPatch('/api/admin/merch/variants', { id: variantRes.id, images: v.images })
+      }
+    }))
+
     setSaving(false)
-    if (res.error) { setErr(res.error); return }
     onRefresh()
     onClose()
   }
@@ -457,13 +527,13 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white w-full max-w-lg">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+      <div className="bg-white w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <p className="text-sm font-semibold uppercase tracking-widest text-black">New Product</p>
           <button onClick={onClose} className="text-gray-400 hover:text-black text-xl leading-none">×</button>
         </div>
 
-        <form onSubmit={submit} className="px-6 py-5 space-y-4">
+        <form onSubmit={submit} className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
           {err && (
             <p className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2">{err}</p>
           )}
@@ -471,8 +541,7 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
           <div>
             <label className={LABEL_CLS}>Name *</label>
             <input value={name} onChange={e => handleNameChange(e.target.value)}
-              placeholder="e.g. Alata Hoodie"
-              required className={INPUT_CLS} />
+              placeholder="e.g. Alata Hoodie" required className={INPUT_CLS} />
           </div>
 
           <div>
@@ -491,6 +560,82 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
           <div>
             <label className={LABEL_CLS}>Sizes</label>
             <SizeToggle sizes={sizes} onChange={setSizes} />
+          </div>
+
+          {/* ── Color Variants ── */}
+          <div className="pt-2 border-t border-gray-100">
+            <p className={`${LABEL_CLS} mb-3`}>Color Variants *</p>
+
+            {draftVariants.length > 0 && (
+              <div className="space-y-3 mb-3">
+                {draftVariants.map(v => (
+                  <div key={v.id} className="border border-gray-200 p-3">
+                    {/* Variant header */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-4 h-4 border border-gray-300 flex-shrink-0"
+                            style={{ backgroundColor: v.colorHex }} />
+                      <span className="text-xs font-semibold text-black flex-1">{v.color}</span>
+                      <span className="text-[10px] text-gray-400">{v.images.length}/5</span>
+                      <button type="button" onClick={() => removeDraftVariant(v.id)}
+                        className="text-[10px] font-semibold uppercase tracking-widest text-red-500 hover:text-red-700">
+                        Remove
+                      </button>
+                    </div>
+                    {/* Thumbnails */}
+                    <div className="flex gap-2 flex-wrap">
+                      {v.images.map((img, i) => (
+                        <div key={img} className="relative w-12 h-12 bg-gray-100 group flex-shrink-0">
+                          <Image src={img} alt="" fill className="object-cover" sizes="48px" />
+                          {i === 0 && (
+                            <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] text-center py-px pointer-events-none">
+                              Main
+                            </span>
+                          )}
+                          <button type="button" onClick={() => removeDraftImage(v.id, img)}
+                            className="absolute top-0 right-0 w-4 h-4 bg-red-600 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity leading-none">
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {v.images.length < 5 && (
+                        <label className={`w-12 h-12 border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-[#1a4a3a] transition-colors flex-shrink-0 ${v.uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <span className="text-lg text-gray-400 leading-none">{v.uploading ? '…' : '+'}</span>
+                          <input type="file" accept="image/*" className="hidden"
+                            disabled={v.uploading}
+                            onChange={e => { const f = e.target.files?.[0]; if (f) uploadDraftImage(v.id, f); e.target.value = '' }} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add variant row */}
+            {addingVariant ? (
+              <div className="flex gap-2 items-center">
+                <input value={newColor} onChange={e => setNewColor(e.target.value)}
+                  placeholder="Colour name"
+                  className="flex-1 text-sm border border-black px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1a4a3a]"
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addDraftVariant() } }}
+                  autoFocus />
+                <input type="color" value={newColorHex} onChange={e => setNewColorHex(e.target.value)}
+                  className="w-10 h-10 border border-black cursor-pointer p-0.5 flex-shrink-0" />
+                <button type="button" onClick={addDraftVariant} disabled={!newColor.trim()}
+                  className="px-3 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] disabled:opacity-40 flex-shrink-0">
+                  Add
+                </button>
+                <button type="button" onClick={() => { setAddingVariant(false); setNewColor(''); setNewColorHex('#000000') }}
+                  className="text-[10px] text-gray-400 hover:text-gray-700 flex-shrink-0">
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setAddingVariant(true)}
+                className="w-full py-2.5 border border-dashed border-gray-300 text-[10px] font-semibold uppercase tracking-widest text-gray-500 hover:border-[#1a4a3a] hover:text-[#1a4a3a] transition-colors">
+                + Add colour variant
+              </button>
+            )}
           </div>
 
           <div className="flex gap-3 pt-2 border-t border-gray-100">
