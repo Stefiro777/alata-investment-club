@@ -912,6 +912,18 @@ export default function CheckoutClient() {
           throw new Error(d.error ?? 'Registration failed')
         }
       }
+      const tickets = cartItems.filter(i => i.type === 'ticket')
+      if (eventRegs[0]?.email) {
+        await fetch('/api/send-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerEmail: eventRegs[0].email,
+            customerName:  `${eventRegs[0].firstName} ${eventRegs[0].lastName}`.trim(),
+            items: tickets.map(t => ({ name: t.name, type: 'ticket', price: 0 })),
+          }),
+        }).catch(() => {})
+      }
       completing.current = true
       clearCart()
       router.push('/checkout/success')
