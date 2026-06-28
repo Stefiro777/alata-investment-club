@@ -950,6 +950,32 @@ export default function CheckoutClient() {
           console.error('email error:', e)
         }
       }
+      const freemerch = cartItems.filter(i => !i.type || i.type === 'merch')
+      if (freemerch.length > 0 && shipping.email) {
+        try {
+          await fetch('/api/send-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type:          'order',
+              customerEmail: shipping.email,
+              customerName:  `${shipping.firstName} ${shipping.lastName}`.trim(),
+              items: freemerch.map(i => ({
+                name:         i.name,
+                variantColor: i.variant?.color ?? null,
+                size:         i.size ?? null,
+                quantity:     i.quantity ?? 1,
+                priceCents:   0,
+              })),
+              totalCents:      0,
+              shippingCents:   0,
+              shippingAddress: shipping,
+            }),
+          })
+        } catch (e) {
+          console.error('order email error:', e)
+        }
+      }
       completing.current = true
       clearCart()
       router.push('/checkout/success')
