@@ -587,21 +587,23 @@ function StepRegistration({
 
 function StepPayment({
   subtotalCents, shippingCents, discountCents, discountLabel, discountCode,
-  shipping, hasMerch, onBack, onPay, paying, error,
+  shipping, hasMerch, onBack, onPay, onFreeComplete, paying, error,
 }: {
-  subtotalCents: number
-  shippingCents: number
-  discountCents: number
-  discountLabel: string
-  discountCode:  string
-  shipping:      ShippingAddress
-  hasMerch:      boolean
-  onBack:        () => void
-  onPay:         () => void
-  paying:        boolean
-  error:         string
+  subtotalCents:  number
+  shippingCents:  number
+  discountCents:  number
+  discountLabel:  string
+  discountCode:   string
+  shipping:       ShippingAddress
+  hasMerch:       boolean
+  onBack:         () => void
+  onPay:          () => void
+  onFreeComplete: () => void
+  paying:         boolean
+  error:          string
 }) {
-  const totalCents = subtotalCents + shippingCents - discountCents
+  const totalCents  = subtotalCents + shippingCents - discountCents
+  const isFreeOrder = totalCents === 0
 
   return (
     <div>
@@ -651,19 +653,28 @@ function StepPayment({
         <p className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2 mb-4">{error}</p>
       )}
 
-      <p className="text-xs text-gray-500 mb-4">
-        You will be redirected to Stripe&apos;s secure checkout to complete your payment.
-      </p>
+      {!isFreeOrder && (
+        <p className="text-xs text-gray-500 mb-4">
+          You will be redirected to Stripe&apos;s secure checkout to complete your payment.
+        </p>
+      )}
 
       <div className="flex gap-3">
         <button onClick={onBack} disabled={paying}
           className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-40">
           ← Back
         </button>
-        <button onClick={onPay} disabled={paying}
-          className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
-          {paying ? 'Redirecting…' : `Pay ${fmtEur(totalCents)} →`}
-        </button>
+        {isFreeOrder ? (
+          <button onClick={onFreeComplete} disabled={paying}
+            className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
+            {paying ? 'Processing…' : 'Complete Registration →'}
+          </button>
+        ) : (
+          <button onClick={onPay} disabled={paying}
+            className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
+            {paying ? 'Redirecting…' : `Pay ${fmtEur(totalCents)} →`}
+          </button>
+        )}
       </div>
     </div>
   )
@@ -875,6 +886,37 @@ export default function CheckoutClient() {
     return { name: '', email: '' }
   }
 
+  async function handleFreeComplete() {
+    setPaying(true)
+    setError('')
+    try {
+      for (const r of eventRegs) {
+        const res = await fetch('/api/event-registrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId:               r.eventId,
+            firstName:             r.firstName,
+            lastName:              r.lastName,
+            email:                 r.email,
+            annoStudio:            r.annoStudio,
+            motivation:            r.motivation || undefined,
+            questionsForPanelists: r.questionsForPanelists || undefined,
+          }),
+        })
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}))
+          throw new Error(d.error ?? 'Registration failed')
+        }
+      }
+      clearCart()
+      router.replace('/checkout/success')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
+      setPaying(false)
+    }
+  }
+
   async function handlePay() {
     setPaying(true)
     setError('')
@@ -1051,6 +1093,7 @@ export default function CheckoutClient() {
                 hasMerch={hasMerch}
                 onBack={() => { setError(''); setStep(s => s - 1) }}
                 onPay={handlePay}
+                onFreeComplete={handleFreeComplete}
                 paying={paying}
                 error={error}
               />

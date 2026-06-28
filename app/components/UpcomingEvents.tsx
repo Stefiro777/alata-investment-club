@@ -15,6 +15,10 @@ function formatDate(dateStr: string) {
   }
 }
 
+function fmtEur(cents: number) {
+  return `€${(cents / 100).toFixed(2).replace('.', ',')}`
+}
+
 const BADGE_CLASS = "inline-block bg-forest text-white border border-white/20 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1"
 
 // Reads ?register= and auto-opens the modal. Must be wrapped in <Suspense>.
@@ -57,17 +61,18 @@ function UpcomingEventRow({
   const [added, setAdded] = useState(false)
   const { month, day } = formatDate(event.date)
   const { addItem } = useCart()
-  const isPaidTicket = event.status === 'open' && event.ticket_price_cents && event.ticket_price_cents > 0
+  const hasTicket    = event.status === 'open' && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
+  const isPaidTicket = hasTicket && (event.ticket_price_cents ?? 0) > 0
+  const isFreeTicket = hasTicket && event.ticket_price_cents === 0
 
   function handleAddTicket() {
-    if (!event.ticket_price_cents) return
     addItem({
-      type: 'ticket',
-      cartKey: `ticket:${event.id}`,
-      name: event.title,
-      priceCents: event.ticket_price_cents,
-      eventId: event.id,
-      eventDate: event.date,
+      type:          'ticket',
+      cartKey:       `ticket:${event.id}`,
+      name:          event.title,
+      priceCents:    event.ticket_price_cents ?? 0,
+      eventId:       event.id,
+      eventDate:     event.date,
       eventLocation: event.location ?? null,
     })
     setAdded(true)
@@ -115,7 +120,7 @@ function UpcomingEventRow({
 
         {/* Action — always visible */}
         <div className="flex-shrink-0 flex items-start pt-1 gap-2 flex-col sm:flex-row">
-          {isPaidTicket ? (
+          {(isPaidTicket || isFreeTicket) ? (
             <button
               onClick={handleAddTicket}
               className={`inline-block border text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors ${
@@ -124,7 +129,11 @@ function UpcomingEventRow({
                   : 'border-[#1a4a3a] bg-[#1a4a3a] text-white hover:bg-[#143d30]'
               }`}
             >
-              {added ? 'Added ✓' : 'Add ticket to cart'}
+              {added
+                ? 'Added ✓'
+                : isFreeTicket
+                  ? 'Add ticket — Free'
+                  : `Add ticket — ${fmtEur(event.ticket_price_cents ?? 0)}`}
             </button>
           ) : event.status === 'open' ? (
             event.action_type === 'link' && event.action_link ? (
