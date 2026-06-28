@@ -34,7 +34,8 @@ export async function PATCH(req: NextRequest) {
 
   const { error } = await supabaseAdmin
     .from('shipping_rates')
-    .upsert({ zone, price_cents }, { onConflict: 'zone' })
+    .update({ price_cents, updated_at: new Date().toISOString() })
+    .eq('zone', zone)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
