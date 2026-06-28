@@ -121,7 +121,7 @@ function UpcomingEventRow({
               className={`inline-block border text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors ${
                 added
                   ? 'border-[#1a4a3a] bg-[#1a4a3a] text-white'
-                  : 'border-black bg-white text-black hover:bg-black hover:text-white'
+                  : 'border-[#1a4a3a] bg-[#1a4a3a] text-white hover:bg-[#143d30]'
               }`}
             >
               {added ? 'Added ✓' : 'Add ticket to cart'}
