@@ -259,8 +259,11 @@ export async function POST(req: NextRequest) {
       } catch (e) { console.error('Failed to insert merch_order (exception):', e) }
     } else if (session.metadata?.type === 'unified') {
       const meta = session.metadata ?? {}
+      console.log('unified webhook received, meta:', JSON.stringify(meta))
       const custEmail = meta.customerEmail || session.customer_details?.email || ''
       const custName  = meta.customerName  || session.customer_details?.name  || ''
+      console.log('custEmail:', custEmail)
+      console.log('custName:', custName)
       const nameParts = custName.trim().split(' ')
       const firstName = nameParts[0] ?? ''
       const lastName  = nameParts.slice(1).join(' ') || ''
@@ -363,6 +366,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send confirmation email
+      console.log('about to send email to:', custEmail)
       try {
         await resend.emails.send({
           from: 'Alata Investment Club <noreply@alatainvestmentclub.com>',
@@ -404,7 +408,10 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`,
         })
-      } catch (e) { console.error('Failed to send unified confirmation email:', e) }
+      } catch (e) {
+        console.error('Failed to send unified confirmation email:', e)
+        console.error('custEmail was:', custEmail)
+      }
 
     } else if (session.metadata?.type === 'membership') {
       const userId   = session.metadata.user_id

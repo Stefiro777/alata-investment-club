@@ -66,6 +66,7 @@ function UpcomingEventRow({
   const isFreeTicket = hasTicket && event.ticket_price_cents === 0
 
   function handleAddTicket() {
+    console.log('addItem called with:', { type: 'ticket', priceCents: event.ticket_price_cents, eventId: event.id })
     addItem({
       type:          'ticket',
       cartKey:       `ticket:${event.id}`,
@@ -75,6 +76,7 @@ function UpcomingEventRow({
       eventDate:     event.date,
       eventLocation: event.location ?? null,
     })
+    console.log('cart after add:', cartItems)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }

@@ -237,6 +237,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items])
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
+    console.log('addItem received:', item)
+    console.log('existing cart:', items)
     const full: CartItem = { type: 'merch', ...item, quantity: 1 }
     setItems(prev => {
       const existing = prev.find(i => i.cartKey === full.cartKey)
