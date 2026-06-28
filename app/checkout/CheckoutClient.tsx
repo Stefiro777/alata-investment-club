@@ -688,6 +688,11 @@ export default function CheckoutClient() {
   const completing = useRef(false)
 
   const hasMerch  = cartItems.some(i => !i.type || i.type === 'merch')
+
+  const [step,     setStep]     = useState(1)
+  const [upsells,  setUpsells]  = useState<UpsellItem[]>([])
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
   const selectedUpsellTickets = upsells.filter(u => selected.has(u.id) && u.type === 'event')
   const hasTicket = cartItems.some(i => i.type === 'ticket') || selectedUpsellTickets.length > 0
 
@@ -698,10 +703,6 @@ export default function CheckoutClient() {
     s.push({ key: 'payment', label: 'Payment' })
     return s
   }, [hasMerch, hasTicket])
-
-  const [step,     setStep]     = useState(1)
-  const [upsells,  setUpsells]  = useState<UpsellItem[]>([])
-  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [paying,   setPaying]   = useState(false)
   const [error,    setError]    = useState('')
 
