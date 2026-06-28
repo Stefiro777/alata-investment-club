@@ -366,49 +366,122 @@ export async function POST(req: NextRequest) {
       }
 
       // Send confirmation emails — order for merch, registration for tickets
-      const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alatainvestmentclub.com'
+      const MAIL_FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
       if (custEmail) {
         if (merchItems.length > 0) {
-          let shippingAddr: Record<string, string> | null = null
+          let shippingAddr: { firstName: string; lastName: string; addressLine1: string; addressLine2?: string; city: string; postalCode: string; country: string } | null = null
           try { shippingAddr = meta.shippingAddress ? JSON.parse(meta.shippingAddress) : null } catch { /* skip */ }
+          const shippingCentsNum = Number(meta.shippingCents ?? 0)
+          const totalCents = session.amount_total ?? 0
+          const fn = custName.trim().split(' ')[0] || custName
+
+          const itemRows = merchItems.map(i => {
+            const desc = [i.name, i.variantColor, i.size].filter(Boolean).join(' / ')
+            return `<tr>
+              <td style="padding:10px 12px;font-size:14px;color:#1a1a1a;border-bottom:1px solid #e5e5e5;">${desc}${i.quantity > 1 ? ` ×${i.quantity}` : ''}</td>
+              <td style="padding:10px 12px;font-size:14px;color:#1a1a1a;text-align:right;border-bottom:1px solid #e5e5e5;white-space:nowrap;">€${((i.priceCents * i.quantity) / 100).toFixed(2).replace('.', ',')}</td>
+            </tr>`
+          }).join('')
+          const shippingRow = shippingCentsNum > 0 ? `<tr>
+              <td style="padding:10px 12px;font-size:14px;color:#555;border-bottom:1px solid #e5e5e5;">Shipping</td>
+              <td style="padding:10px 12px;font-size:14px;color:#555;text-align:right;border-bottom:1px solid #e5e5e5;">€${(shippingCentsNum / 100).toFixed(2).replace('.', ',')}</td>
+            </tr>` : ''
+          const totalRow = `<tr>
+              <td style="padding:12px;font-size:14px;font-weight:700;color:#1a1a1a;">Total</td>
+              <td style="padding:12px;font-size:14px;font-weight:700;color:#1a4a3a;text-align:right;">€${(totalCents / 100).toFixed(2).replace('.', ',')}</td>
+            </tr>`
+          const addressBlock = shippingAddr ? `
+            <p style="margin:16px 0 6px;font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px;">Shipping address</p>
+            <p style="margin:0;font-size:14px;color:#1a1a1a;line-height:1.6;">
+              ${shippingAddr.firstName} ${shippingAddr.lastName}<br/>
+              ${shippingAddr.addressLine1}${shippingAddr.addressLine2 ? ', ' + shippingAddr.addressLine2 : ''}<br/>
+              ${shippingAddr.postalCode} ${shippingAddr.city}, ${shippingAddr.country}
+            </p>` : ''
+
           try {
-            await fetch(`${BASE}/api/send-confirmation`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type:          'order',
-                customerEmail: custEmail,
-                customerName:  custName,
-                items: merchItems.map(i => ({
-                  name:         i.name,
-                  variantColor: i.variantColor ?? null,
-                  size:         i.size ?? null,
-                  quantity:     i.quantity,
-                  priceCents:   i.priceCents,
-                })),
-                totalCents:      session.amount_total ?? 0,
-                shippingCents:   Number(meta.shippingCents ?? 0),
-                shippingAddress: shippingAddr,
-              }),
+            await resend.emails.send({
+              from:    MAIL_FROM,
+              to:      custEmail,
+              subject: 'Order Confirmed — Alata Investment Club',
+              html: `<!DOCTYPE html><html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f9f9f9;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;overflow:hidden;">
+        <tr><td style="background:#1a4a3a;padding:24px 32px;">
+          <p style="margin:0;font-size:11px;color:#a8c5b8;letter-spacing:2px;text-transform:uppercase;">Alata Investment Club</p>
+          <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">Order Confirmed</h1>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          <p style="margin:0 0 20px;font-size:15px;color:#1a1a1a;line-height:1.6;">Hi ${fn}, thank you for your order!</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e5e5;margin-bottom:20px;">
+            <tr>
+              <td style="padding:10px 12px;background:#f4f7f4;font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px;">Item</td>
+              <td style="padding:10px 12px;background:#f4f7f4;font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px;text-align:right;">Price</td>
+            </tr>
+            ${itemRows}${shippingRow}${totalRow}
+          </table>
+          ${addressBlock}
+          <p style="margin:20px 0 0;font-size:14px;color:#555;line-height:1.6;">
+            We will contact you with shipping details shortly.<br/>The Alata Investment Club Team
+          </p>
+        </td></tr>
+        <tr><td style="padding:16px 32px;background:#f4f7f4;border-top:1px solid #e5e5e5;">
+          <p style="margin:0;font-size:11px;color:#888;">Alata Investment Club &bull; alatainvestmentclub.com</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
             })
           } catch (e) { console.error('Failed to send order confirmation email:', e) }
         }
 
         if (ticketItems.length > 0) {
+          const fn = custName.trim().split(' ')[0] || custName
+          const fmtD = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+          const eventRows = ticketItems.map(t => `
+            <tr><td style="padding:12px 16px;border-bottom:1px solid #e5e5e5;">
+              <p style="margin:0;font-size:15px;font-weight:700;color:#1a1a1a;">${t.name}</p>
+              ${t.eventDate ? `<p style="margin:4px 0 0;font-size:13px;color:#555;">${fmtD(t.eventDate)}</p>` : ''}
+              ${t.eventLocation ? `<p style="margin:2px 0 0;font-size:13px;color:#555;">${t.eventLocation}</p>` : ''}
+            </td></tr>`).join('')
+          const subject = ticketItems.length === 1
+            ? `Registration Confirmed — ${ticketItems[0].name}`
+            : 'Registration Confirmed — Alata Investment Club'
+
           try {
-            await fetch(`${BASE}/api/send-confirmation`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type:          'registration',
-                customerEmail: custEmail,
-                customerName:  custName,
-                events: ticketItems.map(t => ({
-                  name:      t.name,
-                  eventDate: t.eventDate ?? null,
-                  location:  t.eventLocation ?? null,
-                })),
-              }),
+            await resend.emails.send({
+              from:    MAIL_FROM,
+              to:      custEmail,
+              subject,
+              html: `<!DOCTYPE html><html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f9f9f9;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;overflow:hidden;">
+        <tr><td style="background:#1a4a3a;padding:24px 32px;">
+          <p style="margin:0;font-size:11px;color:#a8c5b8;letter-spacing:2px;text-transform:uppercase;">Alata Investment Club</p>
+          <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">Registration Confirmed</h1>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          <p style="margin:0 0 20px;font-size:15px;color:#1a1a1a;line-height:1.6;">Hi ${fn}, your registration is confirmed!</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e5e5;margin-bottom:20px;">
+            ${eventRows}
+          </table>
+          <p style="margin:0;font-size:14px;color:#555;line-height:1.6;">
+            We will send you all the details shortly. See you soon!<br/>The Alata Investment Club Team
+          </p>
+        </td></tr>
+        <tr><td style="padding:16px 32px;background:#f4f7f4;border-top:1px solid #e5e5e5;">
+          <p style="margin:0;font-size:11px;color:#888;">Alata Investment Club &bull; alatainvestmentclub.com</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
             })
           } catch (e) { console.error('Failed to send registration confirmation email:', e) }
         }
