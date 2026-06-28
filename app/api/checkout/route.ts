@@ -37,6 +37,36 @@ type EventRegistrationPayload = {
   questionsForPanelists?: string
 }
 
+function safeJson(obj: unknown): string {
+  const str = JSON.stringify(obj)
+  if (str.length <= 500) return str
+  if (Array.isArray(obj)) {
+    return JSON.stringify((obj as unknown[]).map((item: unknown) => {
+      const i = item as Record<string, unknown>
+      return {
+        type:        i.type,
+        referenceId: i.referenceId ?? i.eventId ?? i.productId,
+        name:        (i.name as string)?.slice(0, 50),
+        priceCents:  i.priceCents,
+        eventId:     i.eventId,
+      }
+    }))
+  }
+  return str.slice(0, 500)
+}
+
+function safeEventRegs(regs: EventRegistrationPayload[]): string {
+  return JSON.stringify(regs.map(r => ({
+    eventId:               r.eventId,
+    firstName:             r.firstName?.slice(0, 50),
+    lastName:              r.lastName?.slice(0, 50),
+    email:                 r.email,
+    annoStudio:            r.annoStudio,
+    motivation:            r.motivation?.slice(0, 100),
+    questionsForPanelists: r.questionsForPanelists?.slice(0, 100),
+  })))
+}
+
 export async function POST(req: NextRequest) {
   const {
     items, customerName, customerEmail, shippingAddress, eventRegistrations,
@@ -56,6 +86,16 @@ export async function POST(req: NextRequest) {
   if (!items?.length)   return NextResponse.json({ error: 'Cart is empty' },   { status: 400 })
   if (!customerEmail)   return NextResponse.json({ error: 'Email required' },   { status: 400 })
 
+  const actualShippingCents = shippingCents ?? 0
+  const actualDiscountCents = discountCents ?? 0
+
+  // FIX 4 — short-circuit for fully free orders
+  const itemsTotal = items.reduce((sum, i) => sum + (i.priceCents * (i.quantity ?? 1)), 0)
+  const grandTotal = itemsTotal + actualShippingCents - actualDiscountCents
+  if (grandTotal === 0) {
+    return NextResponse.json({ free: true })
+  }
+
   const merchItems  = items.filter(i => i.type === 'merch')
   const ticketItems = items.filter(i => i.type === 'ticket')
 
@@ -68,22 +108,23 @@ export async function POST(req: NextRequest) {
     })
     .join(', ')
 
-  // Build Stripe line items
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map(i => ({
-    price_data: {
-      currency: 'eur',
-      product_data: {
-        name: i.type === 'merch' && i.variantColor
-          ? `${i.name} — ${i.variantColor}${i.size ? ` / ${i.size}` : ''}`
-          : i.name,
+  // FIX 1 — exclude free items from Stripe line items
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items
+    .filter(i => i.priceCents > 0)
+    .map(i => ({
+      price_data: {
+        currency: 'eur',
+        product_data: {
+          name: i.type === 'merch' && i.variantColor
+            ? `${i.name} — ${i.variantColor}${i.size ? ` / ${i.size}` : ''}`
+            : i.name,
+        },
+        unit_amount: i.priceCents,
       },
-      unit_amount: i.priceCents,
-    },
-    quantity: i.quantity,
-  }))
+      quantity: i.quantity ?? 1,
+    }))
 
   // Add shipping as a line item
-  const actualShippingCents = shippingCents ?? 0
   if (actualShippingCents > 0) {
     lineItems.push({
       price_data: {
@@ -96,7 +137,6 @@ export async function POST(req: NextRequest) {
   }
 
   // Create Stripe coupon for discount
-  const actualDiscountCents = discountCents ?? 0
   let couponId: string | undefined
   if (actualDiscountCents > 0 && discountCode) {
     try {
@@ -128,21 +168,16 @@ export async function POST(req: NextRequest) {
       shippingCents:  String(actualShippingCents),
       discountCode:   discountCode ?? '',
       discountCents:  String(actualDiscountCents),
-      merchItems: JSON.stringify(
-        merchItems.map(i => ({
-          referenceId: i.referenceId, name: i.name, priceCents: i.priceCents,
-          quantity: i.quantity, variantColor: i.variantColor ?? null, size: i.size ?? null,
-        }))
-      ).slice(0, 500),
-      ticketItems: JSON.stringify(
-        ticketItems.map(i => ({
-          referenceId: i.referenceId, name: i.name,
-          eventDate: i.eventDate ?? null, eventLocation: i.eventLocation ?? null,
-        }))
-      ).slice(0, 500),
-      eventRegistrations: eventRegistrations
-        ? JSON.stringify(eventRegistrations).slice(0, 500)
-        : '',
+      // FIX 2 — safe serialization to avoid truncated JSON
+      merchItems:         safeJson(merchItems.map(i => ({
+        referenceId: i.referenceId, name: i.name, priceCents: i.priceCents,
+        quantity: i.quantity, variantColor: i.variantColor ?? null, size: i.size ?? null,
+      }))),
+      ticketItems:        safeJson(ticketItems.map(i => ({
+        referenceId: i.referenceId, name: i.name,
+        eventDate: i.eventDate ?? null, eventLocation: i.eventLocation ?? null,
+      }))),
+      eventRegistrations: eventRegistrations ? safeEventRegs(eventRegistrations) : '',
     },
   }
 
@@ -150,6 +185,12 @@ export async function POST(req: NextRequest) {
     sessionParams.discounts = [{ coupon: couponId }]
   }
 
-  const session = await stripe.checkout.sessions.create(sessionParams)
-  return NextResponse.json({ url: session.url })
+  // FIX 3 — wrap session creation in try/catch
+  try {
+    const session = await stripe.checkout.sessions.create(sessionParams)
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    console.error('Stripe session creation failed:', err)
+    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
+  }
 }

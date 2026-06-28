@@ -997,6 +997,10 @@ export default function CheckoutClient() {
         }),
       })
       const data = await res.json()
+      if (data.free) {
+        await handleFreeComplete()
+        return
+      }
       if (data.url) {
         clearCart()
         window.location.href = data.url
