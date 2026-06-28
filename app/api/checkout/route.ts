@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const supabaseAdmin = createSupabaseAdmin(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alatainvestmentclub.com'
 
 export type UnifiedLineItem = {
@@ -93,6 +98,36 @@ export async function POST(req: NextRequest) {
   const itemsTotal = items.reduce((sum, i) => sum + (i.priceCents * (i.quantity ?? 1)), 0)
   const grandTotal = itemsTotal + actualShippingCents - actualDiscountCents
   if (grandTotal === 0) {
+    const freeMerch = items.filter(i => i.type === 'merch' || !i.type)
+    if (freeMerch.length > 0 && customerEmail) {
+      try {
+        await supabaseAdmin.from('crm_customers').upsert({
+          name:         customerName,
+          email:        customerEmail,
+          type:         'merch',
+          reference:    freeMerch.map(i => i.name).join(', ').slice(0, 255),
+          amount:       0,
+          purchased_at: new Date().toISOString(),
+        }, { onConflict: 'email' })
+        for (const item of freeMerch) {
+          await supabaseAdmin.from('merch_orders').insert({
+            stripe_session_id: `free_${Date.now()}`,
+            product_id:        item.referenceId ?? null,
+            product_name:      item.name,
+            variant_color:     item.variantColor ?? null,
+            size:              item.size ?? null,
+            quantity:          item.quantity ?? 1,
+            price_cents:       0,
+            customer_name:     customerName,
+            customer_email:    customerEmail,
+            shipping_address:  shippingAddress ?? null,
+            status:            'paid',
+          })
+        }
+      } catch (e) {
+        console.error('Failed to record free merch order:', e)
+      }
+    }
     return NextResponse.json({ free: true })
   }
 
