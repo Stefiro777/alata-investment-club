@@ -355,6 +355,13 @@ export async function POST(req: NextRequest) {
         } catch (e) { console.error('Failed to register tickets (unified):', e) }
       }
 
+      // Increment discount code uses_count
+      if (meta.discountCode && meta.discountCents && Number(meta.discountCents) > 0) {
+        try {
+          await supabaseAdmin.rpc('increment_discount_uses', { p_code: meta.discountCode })
+        } catch (e) { console.error('Failed to increment discount uses:', e) }
+      }
+
       // Send confirmation email
       try {
         await resend.emails.send({

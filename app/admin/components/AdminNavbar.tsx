@@ -12,6 +12,7 @@ const NAV = [
   { label: 'CRM',         href: '/admin/crm'         },
   { label: 'Analytics',   href: '/admin/analytics'   },
   { label: 'Membership',  href: '/admin/membership'  },
+  { label: 'Merch',       href: '/admin/merch'       },
 ] as const
 
 export default function AdminNavbar({ userEmail: _ }: { userEmail: string }) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -36,6 +36,8 @@ type EventRegEntry = {
   questionsForPanelists: string
 }
 
+type ShippingRate = { zone: string; price_cents: number }
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function fmtEur(cents: number) {
@@ -48,7 +50,19 @@ function fmtDate(iso: string) {
   })
 }
 
-const EU_COUNTRIES = [
+const EU_ZONE_CODES = new Set([
+  'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR',
+  'DE','GR','HU','IE','LV','LT','LU','MT','NL','PL',
+  'PT','RO','SK','SI','ES','SE',
+])
+
+function getZone(country: string): 'IT' | 'EU' | 'WORLD' {
+  if (country === 'IT') return 'IT'
+  if (EU_ZONE_CODES.has(country)) return 'EU'
+  return 'WORLD'
+}
+
+const ALL_COUNTRIES = [
   { code: 'IT', label: 'Italy' },
   { code: 'AT', label: 'Austria' },
   { code: 'BE', label: 'Belgium' },
@@ -75,6 +89,29 @@ const EU_COUNTRIES = [
   { code: 'SI', label: 'Slovenia' },
   { code: 'ES', label: 'Spain' },
   { code: 'SE', label: 'Sweden' },
+  // World
+  { code: 'GB', label: 'United Kingdom' },
+  { code: 'CH', label: 'Switzerland' },
+  { code: 'NO', label: 'Norway' },
+  { code: 'IS', label: 'Iceland' },
+  { code: 'US', label: 'United States' },
+  { code: 'CA', label: 'Canada' },
+  { code: 'AU', label: 'Australia' },
+  { code: 'NZ', label: 'New Zealand' },
+  { code: 'JP', label: 'Japan' },
+  { code: 'KR', label: 'South Korea' },
+  { code: 'CN', label: 'China' },
+  { code: 'SG', label: 'Singapore' },
+  { code: 'AE', label: 'United Arab Emirates' },
+  { code: 'BR', label: 'Brazil' },
+  { code: 'MX', label: 'Mexico' },
+  { code: 'AR', label: 'Argentina' },
+  { code: 'ZA', label: 'South Africa' },
+  { code: 'IN', label: 'India' },
+  { code: 'IL', label: 'Israel' },
+  { code: 'TR', label: 'Turkey' },
+  { code: 'RU', label: 'Russia' },
+  { code: 'UA', label: 'Ukraine' },
 ]
 
 const ANNO_OPTIONS = [
@@ -129,17 +166,29 @@ function Stepper({ step, stepDefs }: { step: number; stepDefs: StepDef[] }) {
   )
 }
 
-// ── Step 1: Order Summary + Upsell ────────────────────────────────────────────
+// ── Step 1: Order Summary + Upsell + Discount ─────────────────────────────────
 
 function StepOrder({
-  cartItems, upsells, selected, onToggleUpsell, totalCents, onContinue,
+  cartItems, upsells, selected, onToggleUpsell,
+  subtotalCents, discountCode, discountCents, discountLabel, discountError, discountApplying,
+  onDiscountCodeChange, onApplyDiscount, onRemoveDiscount,
+  hasMerch, onContinue,
 }: {
-  cartItems:      CartItem[]
-  upsells:        UpsellItem[]
-  selected:       Set<string>
-  onToggleUpsell: (item: UpsellItem) => void
-  totalCents:     number
-  onContinue:     () => void
+  cartItems:            CartItem[]
+  upsells:              UpsellItem[]
+  selected:             Set<string>
+  onToggleUpsell:       (item: UpsellItem) => void
+  subtotalCents:        number
+  discountCode:         string
+  discountCents:        number
+  discountLabel:        string
+  discountError:        string
+  discountApplying:     boolean
+  onDiscountCodeChange: (v: string) => void
+  onApplyDiscount:      () => void
+  onRemoveDiscount:     () => void
+  hasMerch:             boolean
+  onContinue:           () => void
 }) {
   const tickets  = cartItems.filter(i => i.type === 'ticket')
   const merch    = cartItems.filter(i => !i.type || i.type === 'merch')
@@ -188,6 +237,8 @@ function StepOrder({
     )
   }
 
+  const isDiscountApplied = discountCents > 0
+
   return (
     <div>
       <h2 className="font-serif text-2xl font-bold text-black mb-6">Your Order</h2>
@@ -207,7 +258,7 @@ function StepOrder({
         )}
       </div>
 
-      {/* Upsell — only when cart has merch */}
+      {/* Upsell */}
       {merch.length > 0 && upsells.length > 0 && (
         <div className="mb-8">
           <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-gray-400 mb-4">
@@ -262,10 +313,70 @@ function StepOrder({
         </div>
       )}
 
-      <div className="border-t border-gray-200 pt-4 mb-6">
+      {/* Discount code */}
+      <div className="mb-6">
+        <p className={SECTION_CLS}>Discount Code</p>
+        {isDiscountApplied ? (
+          <div className="flex items-center justify-between border border-[#1a4a3a] bg-[#f4f9f7] px-3 py-2">
+            <div>
+              <span className="text-xs font-semibold text-[#1a4a3a] uppercase tracking-widest">{discountCode}</span>
+              <span className="text-xs text-gray-600 ml-2">— {discountLabel} (−{fmtEur(discountCents)})</span>
+            </div>
+            <button onClick={onRemoveDiscount}
+              className="text-gray-400 hover:text-red-400 transition-colors ml-3 flex-shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="flex gap-2">
+              <input
+                value={discountCode}
+                onChange={e => onDiscountCodeChange(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === 'Enter' && onApplyDiscount()}
+                placeholder="Enter code"
+                className={`${INPUT_CLS} flex-1 uppercase tracking-widest`}
+              />
+              <button
+                onClick={onApplyDiscount}
+                disabled={discountApplying || !discountCode.trim()}
+                className="px-4 py-2 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-40"
+              >
+                {discountApplying ? '…' : 'Apply'}
+              </button>
+            </div>
+            {discountError && (
+              <p className="text-xs text-red-600 mt-1">{discountError}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Totals */}
+      <div className="border-t border-gray-200 pt-4 mb-6 space-y-1.5">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Total</p>
-          <p className="text-xl font-bold text-black">{fmtEur(totalCents)}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Subtotal</p>
+          <p className="text-sm font-semibold text-black">{fmtEur(subtotalCents)}</p>
+        </div>
+        {isDiscountApplied && (
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a]">Discount</p>
+            <p className="text-sm font-semibold text-[#1a4a3a]">−{fmtEur(discountCents)}</p>
+          </div>
+        )}
+        {hasMerch && (
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Shipping</p>
+            <p className="text-xs text-gray-400">calculated at next step</p>
+          </div>
+        )}
+        <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+            {hasMerch ? 'Estimated Total' : 'Total'}
+          </p>
+          <p className="text-xl font-bold text-black">{fmtEur(subtotalCents - discountCents)}</p>
         </div>
       </div>
 
@@ -282,14 +393,18 @@ function StepOrder({
 // ── Step: Shipping ─────────────────────────────────────────────────────────────
 
 function StepShipping({
-  shipping, onChange, onBack, onContinue, error,
+  shipping, onChange, onBack, onContinue, error, shippingRates, shippingCents,
 }: {
-  shipping:   ShippingAddress
-  onChange:   (field: keyof ShippingAddress, val: string) => void
-  onBack:     () => void
-  onContinue: () => void
-  error:      string
+  shipping:      ShippingAddress
+  onChange:      (field: keyof ShippingAddress, val: string) => void
+  onBack:        () => void
+  onContinue:    () => void
+  error:         string
+  shippingRates: ShippingRate[]
+  shippingCents: number
 }) {
+  const zone = getZone(shipping.country)
+
   function field(key: keyof ShippingAddress, label: string, opts?: {
     required?: boolean; type?: string; placeholder?: string; colSpan?: boolean
   }) {
@@ -327,12 +442,27 @@ function StepShipping({
         <div>
           <label className={LABEL_CLS}>Country *</label>
           <select value={shipping.country} onChange={e => onChange('country', e.target.value)} className={INPUT_CLS}>
-            {EU_COUNTRIES.map(c => (
+            {ALL_COUNTRIES.map(c => (
               <option key={c.code} value={c.code}>{c.label}</option>
             ))}
           </select>
         </div>
       </div>
+
+      {/* Live shipping cost */}
+      {shippingRates.length > 0 && (
+        <div className="border border-gray-200 p-3 mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Shipping</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {zone === 'IT' ? 'Italy' : zone === 'EU' ? 'European Union' : 'International'}
+            </p>
+          </div>
+          <p className="text-sm font-semibold text-black">
+            {shippingCents === 0 ? 'Free' : fmtEur(shippingCents)}
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <button onClick={onBack}
@@ -456,30 +586,61 @@ function StepRegistration({
 // ── Step: Payment ──────────────────────────────────────────────────────────────
 
 function StepPayment({
-  totalCents, shipping, hasMerch, onBack, onPay, paying, error,
+  subtotalCents, shippingCents, discountCents, discountLabel, discountCode,
+  shipping, hasMerch, onBack, onPay, paying, error,
 }: {
-  totalCents: number
-  shipping:   ShippingAddress
-  hasMerch:   boolean
-  onBack:     () => void
-  onPay:      () => void
-  paying:     boolean
-  error:      string
+  subtotalCents: number
+  shippingCents: number
+  discountCents: number
+  discountLabel: string
+  discountCode:  string
+  shipping:      ShippingAddress
+  hasMerch:      boolean
+  onBack:        () => void
+  onPay:         () => void
+  paying:        boolean
+  error:         string
 }) {
+  const totalCents = subtotalCents + shippingCents - discountCents
+
   return (
     <div>
       <h2 className="font-serif text-2xl font-bold text-black mb-6">Payment</h2>
 
       <div className="border border-gray-200 p-4 mb-6 space-y-2">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Order Summary</p>
+
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Subtotal</span>
+          <span className="text-black font-medium">{fmtEur(subtotalCents)}</span>
+        </div>
+
         {hasMerch && (
+          <>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Shipping</span>
+              <span className="text-black font-medium">
+                {shippingCents === 0 ? 'Free' : fmtEur(shippingCents)}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Destination</span>
+              <span className="text-black font-medium text-right">
+                {shipping.firstName} {shipping.lastName}, {shipping.city}, {shipping.country}
+              </span>
+            </div>
+          </>
+        )}
+
+        {discountCents > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Shipping to</span>
-            <span className="text-black font-medium">
-              {shipping.firstName} {shipping.lastName}, {shipping.city}, {shipping.country}
+            <span className="text-[#1a4a3a] font-medium">
+              Discount ({discountCode} — {discountLabel})
             </span>
+            <span className="text-[#1a4a3a] font-medium">−{fmtEur(discountCents)}</span>
           </div>
         )}
+
         <div className="flex justify-between text-sm border-t border-gray-100 pt-2 mt-2">
           <span className="font-semibold uppercase tracking-widest text-[10px] text-gray-500">Total</span>
           <span className="text-black font-bold">{fmtEur(totalCents)}</span>
@@ -491,7 +652,7 @@ function StepPayment({
       )}
 
       <p className="text-xs text-gray-500 mb-4">
-        You will be redirected to Stripe's secure checkout to complete your payment.
+        You will be redirected to Stripe&apos;s secure checkout to complete your payment.
       </p>
 
       <div className="flex gap-3">
@@ -517,11 +678,10 @@ export default function CheckoutClient() {
   const hasMerch  = cartItems.some(i => !i.type || i.type === 'merch')
   const hasTicket = cartItems.some(i => i.type === 'ticket')
 
-  // Dynamic step list based on cart contents
   const stepDefs = useMemo<StepDef[]>(() => {
     const s: StepDef[] = [{ key: 'order', label: 'Order' }]
-    if (hasMerch)  s.push({ key: 'shipping',     label: 'Shipping'     })
-    if (hasTicket) s.push({ key: 'registration',  label: 'Registration' })
+    if (hasMerch)  s.push({ key: 'shipping',    label: 'Shipping'     })
+    if (hasTicket) s.push({ key: 'registration', label: 'Registration' })
     s.push({ key: 'payment', label: 'Payment' })
     return s
   }, [hasMerch, hasTicket])
@@ -532,19 +692,24 @@ export default function CheckoutClient() {
   const [paying,   setPaying]   = useState(false)
   const [error,    setError]    = useState('')
 
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([])
   const [shipping, setShipping] = useState<ShippingAddress>({
     firstName: '', lastName: '', email: '',
     addressLine1: '', addressLine2: '', city: '', postalCode: '', country: 'IT',
   })
 
+  const [discountCode,     setDiscountCode]     = useState('')
+  const [discountCents,    setDiscountCents]    = useState(0)
+  const [discountLabel,    setDiscountLabel]    = useState('')
+  const [discountError,    setDiscountError]    = useState('')
+  const [discountApplying, setDiscountApplying] = useState(false)
+
   const [eventRegs, setEventRegs] = useState<EventRegEntry[]>([])
 
-  // Redirect if cart is empty
   useEffect(() => {
     if (cartItems.length === 0) router.replace('/merch')
   }, [cartItems, router])
 
-  // Fetch upsell items (only relevant for merch)
   useEffect(() => {
     if (!hasMerch) return
     fetch('/api/merch/upsell')
@@ -553,11 +718,17 @@ export default function CheckoutClient() {
       .catch(() => {})
   }, [hasMerch])
 
-  // Init event registration entries + fetch registration_field per event
+  useEffect(() => {
+    if (!hasMerch) return
+    fetch('/api/shipping-rates')
+      .then(r => r.json())
+      .then(d => setShippingRates(d.rates ?? []))
+      .catch(() => {})
+  }, [hasMerch])
+
   useEffect(() => {
     if (!hasTicket) return
     const tickets = cartItems.filter(i => i.type === 'ticket')
-
     setEventRegs(tickets.map(t => ({
       eventId:               t.eventId ?? t.cartKey,
       eventName:             t.name,
@@ -569,10 +740,8 @@ export default function CheckoutClient() {
       motivation:            '',
       questionsForPanelists: '',
     })))
-
     const ids = tickets.map(t => t.eventId).filter(Boolean) as string[]
     if (ids.length === 0) return
-
     createClient()
       .from('upcoming_events')
       .select('id, registration_field')
@@ -600,9 +769,45 @@ export default function CheckoutClient() {
   }
 
   const selectedUpsells = upsells.filter(u => selected.has(u.id))
-  const totalCents = cartTotal + selectedUpsells.reduce((s, u) => s + (u.price_cents ?? 0), 0)
+  const subtotalCents   = cartTotal + selectedUpsells.reduce((s, u) => s + (u.price_cents ?? 0), 0)
 
-  // ── Validation ──────────────────────────────────────────────────────────────
+  const shippingZone  = getZone(shipping.country)
+  const shippingCents = useMemo(() => {
+    if (!hasMerch || shippingRates.length === 0) return 0
+    const rate = shippingRates.find(r => r.zone === shippingZone)
+    return rate?.price_cents ?? 0
+  }, [hasMerch, shippingRates, shippingZone])
+
+  const handleApplyDiscount = useCallback(async () => {
+    if (!discountCode.trim() || discountApplying) return
+    setDiscountApplying(true)
+    setDiscountError('')
+    try {
+      const res  = await fetch('/api/discount-codes/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: discountCode.trim(), subtotalCents }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setDiscountCents(data.discountCents)
+        setDiscountLabel(data.description)
+      } else {
+        setDiscountError(data.error ?? 'Invalid code')
+      }
+    } catch {
+      setDiscountError('Could not validate code. Please try again.')
+    } finally {
+      setDiscountApplying(false)
+    }
+  }, [discountCode, discountApplying, subtotalCents])
+
+  function handleRemoveDiscount() {
+    setDiscountCode('')
+    setDiscountCents(0)
+    setDiscountLabel('')
+    setDiscountError('')
+  }
 
   function validateShipping(): string {
     if (!shipping.firstName.trim()) return 'First name is required.'
@@ -630,15 +835,12 @@ export default function CheckoutClient() {
     return ''
   }
 
-  // ── Step navigation ─────────────────────────────────────────────────────────
-
   const currentKey = stepDefs[step - 1]?.key
 
   function handleShippingContinue() {
     const err = validateShipping()
     if (err) { setError(err); return }
     setError('')
-    // Pre-fill registration entries with shipping contact info
     if (hasTicket) {
       setEventRegs(prev => prev.map(r => ({
         ...r,
@@ -657,8 +859,6 @@ export default function CheckoutClient() {
     setStep(s => s + 1)
   }
 
-  // ── Customer info derivation ─────────────────────────────────────────────────
-
   function getCustomerInfo() {
     if (hasMerch) {
       return {
@@ -674,8 +874,6 @@ export default function CheckoutClient() {
     }
     return { name: '', email: '' }
   }
-
-  // ── Pay ──────────────────────────────────────────────────────────────────────
 
   async function handlePay() {
     setPaying(true)
@@ -727,10 +925,14 @@ export default function CheckoutClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: lineItems,
+          items:            lineItems,
           customerName,
           customerEmail,
-          shippingAddress: hasMerch ? shipping : null,
+          shippingAddress:  hasMerch ? shipping : null,
+          shippingZone:     hasMerch ? shippingZone : null,
+          shippingCents:    hasMerch ? shippingCents : 0,
+          discountCode:     discountCents > 0 ? discountCode : null,
+          discountCents:    discountCents > 0 ? discountCents : 0,
           eventRegistrations,
         }),
       })
@@ -798,7 +1000,16 @@ export default function CheckoutClient() {
                 upsells={upsells}
                 selected={selected}
                 onToggleUpsell={toggleUpsell}
-                totalCents={totalCents}
+                subtotalCents={subtotalCents}
+                discountCode={discountCode}
+                discountCents={discountCents}
+                discountLabel={discountLabel}
+                discountError={discountError}
+                discountApplying={discountApplying}
+                onDiscountCodeChange={setDiscountCode}
+                onApplyDiscount={handleApplyDiscount}
+                onRemoveDiscount={handleRemoveDiscount}
+                hasMerch={hasMerch}
                 onContinue={() => { setError(''); setStep(2) }}
               />
             )}
@@ -810,6 +1021,8 @@ export default function CheckoutClient() {
                 onBack={() => { setError(''); setStep(s => s - 1) }}
                 onContinue={handleShippingContinue}
                 error={error}
+                shippingRates={shippingRates}
+                shippingCents={shippingCents}
               />
             )}
 
@@ -829,7 +1042,11 @@ export default function CheckoutClient() {
 
             {currentKey === 'payment' && (
               <StepPayment
-                totalCents={totalCents}
+                subtotalCents={subtotalCents}
+                shippingCents={hasMerch ? shippingCents : 0}
+                discountCents={discountCents}
+                discountLabel={discountLabel}
+                discountCode={discountCode}
                 shipping={shipping}
                 hasMerch={hasMerch}
                 onBack={() => { setError(''); setStep(s => s - 1) }}
