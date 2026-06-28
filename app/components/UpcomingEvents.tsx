@@ -76,7 +76,6 @@ function UpcomingEventRow({
       eventDate:     event.date,
       eventLocation: event.location ?? null,
     })
-    console.log('cart after add:', cartItems)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
