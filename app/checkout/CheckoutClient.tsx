@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -685,6 +685,7 @@ function StepPayment({
 export default function CheckoutClient() {
   const router = useRouter()
   const { items: cartItems, totalCents: cartTotal, clearCart } = useCart()
+  const completing = useRef(false)
 
   const hasMerch  = cartItems.some(i => !i.type || i.type === 'merch')
   const hasTicket = cartItems.some(i => i.type === 'ticket')
@@ -718,7 +719,7 @@ export default function CheckoutClient() {
   const [eventRegs, setEventRegs] = useState<EventRegEntry[]>([])
 
   useEffect(() => {
-    if (cartItems.length === 0) router.replace('/merch')
+    if (cartItems.length === 0 && !completing.current) router.replace('/merch')
   }, [cartItems, router])
 
   useEffect(() => {
@@ -909,8 +910,9 @@ export default function CheckoutClient() {
           throw new Error(d.error ?? 'Registration failed')
         }
       }
+      completing.current = true
       clearCart()
-      router.replace('/checkout/success')
+      router.push('/checkout/success')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
       setPaying(false)
