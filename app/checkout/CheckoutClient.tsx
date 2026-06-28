@@ -742,20 +742,35 @@ export default function CheckoutClient() {
 
   useEffect(() => {
     if (!hasTicket) return
-    const tickets = cartItems.filter(i => i.type === 'ticket')
-    setEventRegs(tickets.map(t => ({
+
+    const cartEntries = cartItems.filter(i => i.type === 'ticket').map(t => ({
       eventId:               t.eventId ?? t.cartKey,
       eventName:             t.name,
-      registrationField:     null,
-      firstName:             '',
-      lastName:              '',
-      email:                 '',
-      annoStudio:            '',
-      motivation:            '',
-      questionsForPanelists: '',
-    })))
-    const ids = tickets.map(t => t.eventId).filter(Boolean) as string[]
+      registrationField:     null as 'motivation' | 'panelists' | null,
+      firstName: '', lastName: '', email: '', annoStudio: '',
+      motivation: '', questionsForPanelists: '',
+    }))
+
+    const upsellEntries = upsells
+      .filter(u => selected.has(u.id) && u.type === 'event')
+      .map(u => ({
+        eventId:               u.referenceId,
+        eventName:             u.name,
+        registrationField:     null as 'motivation' | 'panelists' | null,
+        firstName: '', lastName: '', email: '', annoStudio: '',
+        motivation: '', questionsForPanelists: '',
+      }))
+
+    const allEntries = [
+      ...cartEntries,
+      ...upsellEntries.filter(u => !cartEntries.some(c => c.eventId === u.eventId)),
+    ]
+
+    setEventRegs(allEntries)
+
+    const ids = allEntries.map(e => e.eventId).filter(Boolean) as string[]
     if (ids.length === 0) return
+
     createClient()
       .from('upcoming_events')
       .select('id, registration_field')
@@ -772,7 +787,7 @@ export default function CheckoutClient() {
         })))
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasTicket])
+  }, [hasTicket, selected, upsells])
 
   function toggleUpsell(item: UpsellItem) {
     setSelected(prev => {
@@ -912,19 +927,30 @@ export default function CheckoutClient() {
           throw new Error(d.error ?? 'Registration failed')
         }
       }
-      const tickets = cartItems.filter(i => i.type === 'ticket')
-      console.log('sending confirmation email to:', eventRegs[0]?.email)
+      const cartTickets = cartItems.filter(i => i.type === 'ticket')
+      const upsellTicketItems = upsells
+        .filter(u => selected.has(u.id) && u.type === 'event')
+        .map(u => ({ name: u.name, type: 'ticket' as const, price: 0 }))
+      const allTicketItems = [
+        ...cartTickets.map(t => ({ name: t.name, type: 'ticket' as const, price: 0 })),
+        ...upsellTicketItems,
+      ]
+
       if (eventRegs[0]?.email) {
-        const emailRes = await fetch('/api/send-confirmation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            customerEmail: eventRegs[0].email,
-            customerName:  `${eventRegs[0].firstName} ${eventRegs[0].lastName}`.trim(),
-            items: tickets.map(t => ({ name: t.name, type: 'ticket', price: 0 })),
-          }),
-        }).catch((err) => { console.error('fetch error:', err); return null })
-        console.log('email response:', emailRes?.status, await emailRes?.text().catch(() => '(no body)'))
+        try {
+          const emailRes = await fetch('/api/send-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customerEmail: eventRegs[0].email,
+              customerName:  `${eventRegs[0].firstName} ${eventRegs[0].lastName}`.trim(),
+              items: allTicketItems,
+            }),
+          })
+          console.log('email response:', emailRes.status)
+        } catch (e) {
+          console.error('email error:', e)
+        }
       }
       completing.current = true
       clearCart()
