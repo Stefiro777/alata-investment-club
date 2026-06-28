@@ -896,13 +896,13 @@ export default function CheckoutClient() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            eventId:               r.eventId,
-            firstName:             r.firstName,
-            lastName:              r.lastName,
-            email:                 r.email,
-            annoStudio:            r.annoStudio,
-            motivation:            r.motivation || undefined,
-            questionsForPanelists: r.questionsForPanelists || undefined,
+            event_id:               r.eventId,
+            nome:                   r.firstName,
+            cognome:                r.lastName,
+            email:                  r.email,
+            anno_di_studio:         r.annoStudio,
+            motivazione:            r.motivation || undefined,
+            questions_for_panelists: r.questionsForPanelists || undefined,
           }),
         })
         if (!res.ok) {

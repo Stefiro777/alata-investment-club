@@ -365,7 +365,7 @@ export async function POST(req: NextRequest) {
       // Send confirmation email
       try {
         await resend.emails.send({
-          from: FROM,
+          from: 'Alata Investment Club <noreply@alatainvestmentclub.com>',
           to: custEmail,
           subject: 'Order Confirmed — Alata Investment Club',
           html: `<!DOCTYPE html>
