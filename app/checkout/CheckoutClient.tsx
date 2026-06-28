@@ -913,8 +913,9 @@ export default function CheckoutClient() {
         }
       }
       const tickets = cartItems.filter(i => i.type === 'ticket')
+      console.log('sending confirmation email to:', eventRegs[0]?.email)
       if (eventRegs[0]?.email) {
-        await fetch('/api/send-confirmation', {
+        const emailRes = await fetch('/api/send-confirmation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -922,7 +923,8 @@ export default function CheckoutClient() {
             customerName:  `${eventRegs[0].firstName} ${eventRegs[0].lastName}`.trim(),
             items: tickets.map(t => ({ name: t.name, type: 'ticket', price: 0 })),
           }),
-        }).catch(() => {})
+        }).catch((err) => { console.error('fetch error:', err); return null })
+        console.log('email response:', emailRes?.status, await emailRes?.text().catch(() => '(no body)'))
       }
       completing.current = true
       clearCart()
