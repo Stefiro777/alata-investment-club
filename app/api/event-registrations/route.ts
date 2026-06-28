@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       questions_for_panelists,
     } = await req.json()
 
-    if (!event_id || !nome || !cognome || !email || !anno_di_studio || (!motivazione && !questions_for_panelists)) {
+    if (!event_id || !nome || !cognome || !email || !anno_di_studio) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 

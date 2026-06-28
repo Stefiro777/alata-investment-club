@@ -688,7 +688,8 @@ export default function CheckoutClient() {
   const completing = useRef(false)
 
   const hasMerch  = cartItems.some(i => !i.type || i.type === 'merch')
-  const hasTicket = cartItems.some(i => i.type === 'ticket')
+  const selectedUpsellTickets = upsells.filter(u => selected.has(u.id) && u.type === 'event')
+  const hasTicket = cartItems.some(i => i.type === 'ticket') || selectedUpsellTickets.length > 0
 
   const stepDefs = useMemo<StepDef[]>(() => {
     const s: StepDef[] = [{ key: 'order', label: 'Order' }]
@@ -945,10 +946,12 @@ export default function CheckoutClient() {
           eventLocation: item.eventLocation ?? undefined,
         })),
         ...selectedUpsells.map(u => ({
-          type:        'merch' as const,
+          type:        u.type === 'event' ? 'ticket' as const : 'merch' as const,
           referenceId: u.referenceId,
           name:        u.name,
           priceCents:  u.price_cents ?? 0,
+          eventId:     u.type === 'event' ? u.referenceId : undefined,
+          eventDate:   u.type === 'event' ? u.eventDate   : undefined,
           quantity:    1,
         })),
       ]
