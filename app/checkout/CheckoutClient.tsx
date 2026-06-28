@@ -927,24 +927,22 @@ export default function CheckoutClient() {
           throw new Error(d.error ?? 'Registration failed')
         }
       }
-      const cartTickets = cartItems.filter(i => i.type === 'ticket')
-      const upsellTicketItems = upsells
-        .filter(u => selected.has(u.id) && u.type === 'event')
-        .map(u => ({ name: u.name, type: 'ticket' as const, price: 0 }))
-      const allTicketItems = [
-        ...cartTickets.map(t => ({ name: t.name, type: 'ticket' as const, price: 0 })),
-        ...upsellTicketItems,
-      ]
-
       if (eventRegs[0]?.email) {
         try {
           const emailRes = await fetch('/api/send-confirmation', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              type:          'registration',
               customerEmail: eventRegs[0].email,
               customerName:  `${eventRegs[0].firstName} ${eventRegs[0].lastName}`.trim(),
-              items: allTicketItems,
+              events: eventRegs.map(r => ({
+                name:      r.eventName,
+                eventDate: cartItems.find(t => t.eventId === r.eventId)?.eventDate
+                  ?? upsells.find(u => u.referenceId === r.eventId)?.eventDate
+                  ?? null,
+                location: cartItems.find(t => t.eventId === r.eventId)?.eventLocation ?? null,
+              })),
             }),
           })
           console.log('email response:', emailRes.status)

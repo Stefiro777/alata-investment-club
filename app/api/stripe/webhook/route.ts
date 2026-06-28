@@ -365,52 +365,53 @@ export async function POST(req: NextRequest) {
         } catch (e) { console.error('Failed to increment discount uses:', e) }
       }
 
-      // Send confirmation email
-      console.log('about to send email to:', custEmail)
-      try {
-        await resend.emails.send({
-          from: 'Alata Investment Club <noreply@alatainvestmentclub.com>',
-          to: custEmail,
-          subject: 'Order Confirmed — Alata Investment Club',
-          html: `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f9f9f9;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0"
-             style="background:#fff;border:1px solid #e5e5e5;">
-        <tr>
-          <td style="background:#1a4a3a;padding:24px 32px;">
-            <p style="margin:0;font-size:11px;color:#a8c5b8;letter-spacing:2px;text-transform:uppercase;">Alata Investment Club</p>
-            <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">Order Confirmed</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px;">
-            <p style="margin:0 0 16px;font-size:15px;color:#1a1a1a;line-height:1.6;">
-              Thank you, ${firstName || custName}. Your order has been received.
-            </p>
-            <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.6;">
-              ${meta.product_names ?? ''}
-            </p>
-            <p style="margin:0;font-size:14px;color:#555;">The Alata Investment Club Team</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:16px 32px;background:#f4f7f4;border-top:1px solid #e5e5e5;">
-            <p style="margin:0;font-size:11px;color:#888;">Alata Investment Club &bull; alatainvestmentclub.com</p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
-        })
-      } catch (e) {
-        console.error('Failed to send unified confirmation email:', e)
-        console.error('custEmail was:', custEmail)
+      // Send confirmation emails — order for merch, registration for tickets
+      const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alatainvestmentclub.com'
+      if (custEmail) {
+        if (merchItems.length > 0) {
+          let shippingAddr: Record<string, string> | null = null
+          try { shippingAddr = meta.shippingAddress ? JSON.parse(meta.shippingAddress) : null } catch { /* skip */ }
+          try {
+            await fetch(`${BASE}/api/send-confirmation`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type:          'order',
+                customerEmail: custEmail,
+                customerName:  custName,
+                items: merchItems.map(i => ({
+                  name:         i.name,
+                  variantColor: i.variantColor ?? null,
+                  size:         i.size ?? null,
+                  quantity:     i.quantity,
+                  priceCents:   i.priceCents,
+                })),
+                totalCents:      session.amount_total ?? 0,
+                shippingCents:   Number(meta.shippingCents ?? 0),
+                shippingAddress: shippingAddr,
+              }),
+            })
+          } catch (e) { console.error('Failed to send order confirmation email:', e) }
+        }
+
+        if (ticketItems.length > 0) {
+          try {
+            await fetch(`${BASE}/api/send-confirmation`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type:          'registration',
+                customerEmail: custEmail,
+                customerName:  custName,
+                events: ticketItems.map(t => ({
+                  name:      t.name,
+                  eventDate: t.eventDate ?? null,
+                  location:  t.eventLocation ?? null,
+                })),
+              }),
+            })
+          } catch (e) { console.error('Failed to send registration confirmation email:', e) }
+        }
       }
 
     } else if (session.metadata?.type === 'membership') {
