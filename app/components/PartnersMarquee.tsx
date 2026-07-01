@@ -64,7 +64,22 @@ export default function PartnersMarquee({
           to   { transform: translateX(-50%); }
         }
         .partners-track {
-          animation: partners-scroll 30s linear infinite;
+          animation: partners-scroll 45s linear infinite;
+        }
+        .partners-viewport:hover .partners-track {
+          animation-play-state: paused;
+        }
+        .partners-viewport {
+          -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+          mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+        .partner-logo-item {
+          opacity: 0.8;
+          transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22,1,0.36,1);
+        }
+        .partner-logo-item:hover {
+          opacity: 1;
+          transform: translateY(-2px);
         }
       `}</style>
       <Reveal direction="up" className="flex flex-col items-center mb-8">
@@ -75,7 +90,7 @@ export default function PartnersMarquee({
         <div className="w-[60px] h-[3px] bg-forest mt-3" />
       </Reveal>
       <Reveal direction="up" delay={200}>
-        <div className="overflow-hidden">
+        <div className="partners-viewport overflow-hidden">
           <div className="partners-track flex items-center w-max">
             {resolved.length > 0
               ? [...resolved, ...resolved, ...resolved, ...resolved].map((p, i) => (

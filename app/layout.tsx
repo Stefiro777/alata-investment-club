@@ -101,19 +101,19 @@ export default async function RootLayout({
           <nav className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Logo + nome */}
-              <Link href="/" className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-3 shrink-0">
                 <img
                   src="/white.png"
                   alt="Alata"
                   className="h-8 w-8 object-contain"
                 />
-                <span className="font-serif font-bold text-white text-lg leading-tight whitespace-nowrap">
+                <span className="font-serif font-bold text-white text-lg leading-tight whitespace-nowrap md:hidden lg:inline">
                   Alata Investment Club
                 </span>
               </Link>
 
               {/* Desktop nav */}
-              <div className="hidden md:flex items-center gap-8">
+              <div className="hidden md:flex items-center gap-5 lg:gap-7">
                 {allNavLinks.map((link) =>
                   link.subLinks ? (
                     <div key={link.href} className="relative group">
@@ -141,7 +141,7 @@ export default async function RootLayout({
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-fast ${
+                      className={`whitespace-nowrap text-white/80 hover:text-white text-sm tracking-wide transition-colors duration-fast ${
                         link.label === 'Career Service' ? 'font-bold' : 'font-medium'
                       }`}
                     >

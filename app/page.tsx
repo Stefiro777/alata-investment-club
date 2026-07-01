@@ -6,6 +6,7 @@ import StatsSection from './components/StatsSection'
 import NewsCard, { type NewsItem } from './components/NewsCard'
 import PartnersMarquee from './components/PartnersMarquee'
 import Reveal from './components/Reveal'
+import Parallax from './components/Parallax'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,68 +57,125 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero — background image + overlay */}
-      <section className="relative overflow-hidden min-h-[600px] lg:min-h-[710px] text-white">
-        {/* Background photo */}
-        <Image
-          src="/loggia.jpg"
-          fill
-          alt="Loggia"
-          style={{ objectFit: 'cover', filter: 'grayscale(100%)', zIndex: 0 }}
-          priority
-        />
-        {/* Green overlay */}
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.72)', zIndex: 1 }} />
-        {/* Content */}
-        <div className="py-24 sm:py-36" style={{ position: 'relative', zIndex: 2 }}>
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex flex-col items-center gap-12 text-center">
-              {/* Right (DOM first → desktop right via row-reverse) — text */}
-              <div className="flex-1 min-w-0">
-                {/* Titolo: entra dal basso */}
-                <h1 className="animate-hero-title font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-2">
-                  Alata<br />
-                  <em className="italic font-semibold">Investment Club</em>
-                </h1>
-                {/* Sottotitolo: delay 200ms */}
-                <p
-                  className="font-serif italic text-base text-white opacity-70 mt-1 tracking-widest mb-8"
-                  style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.2s both' }}
-                >
-                  Est. 2023
-                </p>
-                {/* CTA (linea): delay 400ms */}
-                <div
-                  className="w-16 h-px bg-white/30"
-                  style={{ animation: 'heroFadeIn 0.8s ease 0.4s both' }}
-                />
-              </div>
+      {/* Hero — cinematic photo, ken burns + parallax */}
+      <section className="relative overflow-hidden min-h-[620px] lg:min-h-[calc(100svh-64px)] text-white flex items-center">
+        {/* Background photo — parallax wrapper bleeds past the edges */}
+        <Parallax>
+          <Image
+            src="/redesign/loggia-hd.jpg"
+            fill
+            alt=""
+            className="object-cover grayscale animate-ken-burns"
+            preload
+          />
+        </Parallax>
+        {/* Green overlay + vignette */}
+        <div className="absolute inset-0" style={{ background: 'rgba(26, 74, 58, 0.72)' }} />
+        <div className="absolute inset-0 hero-vignette" />
 
+        {/* Content */}
+        <div className="relative z-10 w-full py-28 sm:py-36">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="flex flex-col items-center text-center">
+              <p
+                className="text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/60 mb-6"
+                style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.05s both' }}
+              >
+                University of Brescia · Finance Society
+              </p>
+              <h1 className="animate-hero-title font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-3">
+                Alata<br />
+                <em className="italic font-semibold">Investment Club</em>
+              </h1>
+              <p
+                className="font-serif italic text-base text-white opacity-70 mt-1 tracking-widest"
+                style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.25s both' }}
+              >
+                Est. 2023
+              </p>
+              <div
+                className="w-16 h-px bg-white/30 mt-8 mb-10"
+                style={{ animation: 'heroFadeIn 0.8s ease 0.45s both' }}
+              />
+              <div
+                className="flex flex-col sm:flex-row items-center gap-4"
+                style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.55s both' }}
+              >
+                <Link
+                  href="/join-us"
+                  className="inline-block bg-white text-forest text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white/90 transition-colors duration-fast"
+                >
+                  Join the Club
+                </Link>
+                <Link
+                  href="/reports"
+                  className="inline-block border border-white/40 text-white text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white hover:text-forest hover:border-white transition-colors duration-base"
+                >
+                  Our Research
+                </Link>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Bottom strip — coordinates + scroll cue */}
+        <div
+          className="absolute bottom-0 inset-x-0 z-10 pb-6"
+          style={{ animation: 'heroFadeIn 1s ease 1s both' }}
+        >
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-end justify-between">
+            <p className="hidden sm:block text-[10px] tracking-[0.3em] uppercase text-white/40">
+              Brescia · Italy
+            </p>
+            <div className="flex flex-col items-center gap-3 mx-auto sm:mx-0">
+              <span className="text-[10px] tracking-[0.3em] uppercase text-white/40">Scroll</span>
+              <div className="scroll-cue" />
+            </div>
+            <p className="hidden sm:block text-[10px] tracking-[0.3em] uppercase text-white/40">
+              Est. MMXXIII
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Description — white band */}
-      <section className="bg-white py-16 sm:py-20 border-b border-line">
+      {/* Who We Are — editorial split with photo */}
+      <section className="bg-white py-24 sm:py-32 border-b border-line overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <Reveal direction="up">
-            <div className="flex flex-col md:flex-row items-center gap-12">
-              <div className="flex-1">
-                <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-6">Who We Are</h2>
-                <p className="text-ink-500 text-base sm:text-lg leading-relaxed">
-                  Alata is an Investment Club of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
-                </p>
+          <div className="grid md:grid-cols-12 gap-14 lg:gap-20 items-center">
+            <Reveal direction="right" className="md:col-span-7">
+              <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-4">The Club</p>
+              <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-5">Who We Are</h2>
+              <div className="w-10 h-0.5 bg-forest mb-8" />
+              <p className="text-ink-500 text-base sm:text-lg leading-relaxed mb-10">
+                Alata is an Investment Club of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
+              </p>
+              <Link
+                href="/team"
+                className="inline-flex items-center gap-2 text-forest text-xs font-semibold tracking-[0.2em] uppercase group"
+              >
+                <span className="underline-grow">Meet the Team</span>
+                <svg className="w-3.5 h-3.5 transition-transform duration-base group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </Reveal>
+            <Reveal direction="left" delay={150} className="md:col-span-5">
+              <div className="frame-double">
+                <div className="relative w-full aspect-[4/5] overflow-hidden bg-paper-stone">
+                  <Image
+                    src="/redesign/evento-cortile.png"
+                    alt="Alata members at a club reception"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                  />
+                </div>
               </div>
-              <div className="flex-shrink-0 flex justify-center">
-                <img
-                  src="/white-black.png"
-                  alt="Alata"
-                  className="w-64 border-2 border-[#1a4a3a]"
-                />
-              </div>
-            </div>
-          </Reveal>
+              <p className="mt-6 text-[11px] tracking-[0.22em] uppercase text-ink-400">
+                Life at Alata — members&rsquo; reception
+              </p>
+            </Reveal>
+          </div>
         </div>
       </section>
 
@@ -126,10 +184,11 @@ export default async function HomePage() {
         <StatsSection />
       </Reveal>
 
-      {/* About — Vision + Mission */}
-      <div className="bg-white grid md:grid-cols-2 divide-y md:divide-y-0">
-        {/* Vision: entra da sinistra */}
-        <Reveal direction="left" className="px-8 lg:px-14 py-20 sm:py-24">
+      {/* About — Vision + Mission, contrast split */}
+      <div className="grid md:grid-cols-2">
+        {/* Vision — white panel */}
+        <Reveal direction="left" className="bg-white px-8 lg:px-14 py-20 sm:py-28 border-b md:border-b-0 border-line">
+          <p className="font-serif text-2xl text-ink-300 mb-8">01</p>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-3">
             Our Vision
           </h2>
@@ -138,13 +197,14 @@ export default async function HomePage() {
             A community where ambition meets opportunity, regardless of where you start.
           </p>
         </Reveal>
-        {/* Mission: entra da destra */}
-        <Reveal direction="right" className="px-8 lg:px-14 py-20 sm:py-24 relative before:hidden md:before:block before:absolute before:left-0 before:top-10 before:bottom-10 before:w-px before:bg-black/10">
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-3">
+        {/* Mission — forest panel */}
+        <Reveal direction="right" className="bg-forest px-8 lg:px-14 py-20 sm:py-28 text-white">
+          <p className="font-serif text-2xl text-white/30 mb-8">02</p>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold leading-[1.08] mb-3">
             Our Mission
           </h2>
-          <div className="w-10 h-0.5 bg-forest mb-5" />
-          <p className="text-ink-500 text-base sm:text-lg leading-relaxed">
+          <div className="w-10 h-0.5 bg-white/40 mb-5" />
+          <p className="text-white/70 text-base sm:text-lg leading-relaxed">
             Alata was born from a simple idea: the best conversations about finance happen between people who are genuinely curious. We bring together the most ambitious students at UniBS to share knowledge, challenge each other, and grow, inside and outside the classroom.
           </p>
         </Reveal>
@@ -161,13 +221,15 @@ export default async function HomePage() {
           </Reveal>
           <div className="grid md:grid-cols-3 gap-6 items-stretch">
             {[
-              { label: 'Community', body: 'More than a club, a network built on trust. The relationships you build here last well beyond your degree.' },
-              { label: 'Drive', body: "We attract people who don't wait to be told what to do. Taking initiative isn't a buzzword here, it's the entry requirement." },
-              { label: 'Ambition', body: "We think big about what a university club can be. And we're building accordingly." },
-            ].map(({ label, body }, i) => (
+              { numeral: 'I', label: 'Community', body: 'More than a club, a network built on trust. The relationships you build here last well beyond your degree.' },
+              { numeral: 'II', label: 'Drive', body: "We attract people who don't wait to be told what to do. Taking initiative isn't a buzzword here, it's the entry requirement." },
+              { numeral: 'III', label: 'Ambition', body: "We think big about what a university club can be. And we're building accordingly." },
+            ].map(({ numeral, label, body }, i) => (
               <Reveal key={label} direction="up" delay={i * 150} className="h-full">
-                <div className="bg-forest p-8 h-full">
+                <div className="value-card bg-forest p-8 h-full">
+                  <span className="value-numeral font-serif" aria-hidden="true">{numeral}</span>
                   <h3 className="font-serif text-2xl font-bold text-white mb-3">{label}</h3>
+                  <div className="value-line mb-4" />
                   <p className="text-white/65 text-sm leading-relaxed">{body}</p>
                 </div>
               </Reveal>
@@ -239,7 +301,7 @@ export default async function HomePage() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-4 group"
                 >
-                  <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                  <div className="contact-icon-box w-12 h-12 border border-white/20 flex items-center justify-center flex-shrink-0">
                     <InstagramIcon />
                   </div>
                   <div>
@@ -258,7 +320,7 @@ export default async function HomePage() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-4 group"
                 >
-                  <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                  <div className="contact-icon-box w-12 h-12 border border-white/20 flex items-center justify-center flex-shrink-0">
                     <LinkedInIcon />
                   </div>
                   <div>
@@ -275,7 +337,7 @@ export default async function HomePage() {
                   href="mailto:info@alatainvestmentclub.com"
                   className="flex items-center gap-4 group"
                 >
-                  <div className="w-12 h-12 border border-white/20 flex items-center justify-center group-hover:border-white/60 transition-colors flex-shrink-0">
+                  <div className="contact-icon-box w-12 h-12 border border-white/20 flex items-center justify-center flex-shrink-0">
                     <MailIcon />
                   </div>
                   <div>

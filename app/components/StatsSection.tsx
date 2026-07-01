@@ -9,6 +9,8 @@ const stats = [
   { value: 800, label: 'LinkedIn followers' },
 ]
 
+const STAGGER = 220 // ms between each stat starting
+
 function useCountUp(target: number, duration: number, active: boolean) {
   const [count, setCount] = useState(0)
 
@@ -19,8 +21,9 @@ function useCountUp(target: number, duration: number, active: boolean) {
     function step(now: number) {
       const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.floor(eased * target))
+      // easeOutExpo — fast start, long elegant settle
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
+      setCount(Math.round(eased * target))
       if (progress < 1) requestAnimationFrame(step)
     }
 
@@ -41,29 +44,46 @@ function StatItem({
   active: boolean
   index: number
 }) {
-  const count = useCountUp(value, 900, active)
-  const done = count === value
-
-  const [visible, setVisible] = useState(false)
+  // Each stat reveals AND starts counting on its own beat
+  const [started, setStarted] = useState(false)
   useEffect(() => {
     if (!active) return
-    const t = setTimeout(() => setVisible(true), index * 120)
+    const t = setTimeout(() => setStarted(true), index * STAGGER)
     return () => clearTimeout(t)
   }, [active, index])
+
+  const count = useCountUp(value, 1800, started)
+  const done = count === value
 
   return (
     <div
       className="flex flex-col items-center gap-4 text-center"
       style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(20px)',
-        transition: 'opacity 0.6s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1)',
+        opacity: started ? 1 : 0,
+        transform: started ? 'translateY(0)' : 'translateY(24px)',
+        transition: 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)',
       }}
     >
       <span className="font-serif text-6xl font-semibold text-white leading-none tabular-nums">
-        {count}{done ? '+' : ''}
+        {count}
+        <span
+          className="inline-block"
+          style={{
+            opacity: done ? 1 : 0,
+            transform: done ? 'translateX(0)' : 'translateX(-4px)',
+            transition: 'opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)',
+          }}
+        >
+          +
+        </span>
       </span>
-      <div className="w-8 h-px bg-white opacity-30" />
+      <div
+        className="h-px bg-white/30"
+        style={{
+          width: started ? 32 : 0,
+          transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1) 0.4s',
+        }}
+      />
       <span className="text-xs tracking-widest uppercase text-white/70">
         {label}
       </span>
@@ -87,13 +107,21 @@ export default function StatsSection() {
   }, [])
 
   return (
-    <section className="bg-forest py-20">
+    <section className="bg-forest py-20 overflow-hidden">
       <div ref={ref} className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4">
+        {/* Hairline that draws itself before the numbers appear */}
+        <div
+          className="h-px bg-white/20 mb-14 origin-left"
+          style={{
+            transform: active ? 'scaleX(1)' : 'scaleX(0)',
+            transition: 'transform 1.2s cubic-bezier(0.22,1,0.36,1)',
+          }}
+        />
+        <div className="grid grid-cols-2 gap-y-12 lg:grid-cols-4 lg:gap-y-0">
           {stats.map(({ value, label }, i) => (
             <div
               key={label}
-              className={`px-8 py-4 ${i > 0 ? 'border-l border-white/20' : ''}`}
+              className={`px-8 py-4 ${i > 0 ? 'lg:border-l lg:border-white/20' : ''} ${i % 2 === 1 ? 'border-l border-white/20 lg:border-l' : ''}`}
             >
               <StatItem value={value} label={label} active={active} index={i} />
             </div>
