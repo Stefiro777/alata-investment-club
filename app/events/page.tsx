@@ -5,6 +5,8 @@ import EventsGrid from './EventsGrid'
 import EventsReviewsWrapper from './EventsReviewsWrapper'
 import UpcomingEvents from '@/app/components/UpcomingEvents'
 import FeaturedGallery from '@/app/components/FeaturedGallery'
+import LifeAtAlata from '@/app/components/LifeAtAlata'
+import Parallax from '@/app/components/Parallax'
 import type { FeaturedGalleryItem } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -28,8 +30,11 @@ export default async function EventsPage() {
     <div>
       {/* Hero */}
       <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
-        <Image src="/duomo.jpg" alt="" fill className="object-cover grayscale" style={{ objectPosition: 'center 50%' }} priority />
+        <Parallax>
+          <Image src="/duomo.jpg" alt="" fill className="object-cover grayscale animate-ken-burns" style={{ objectPosition: 'center 50%' }} preload />
+        </Parallax>
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div className="absolute inset-0 hero-vignette" />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">News &amp; Events</p>
@@ -65,6 +70,9 @@ export default async function EventsPage() {
           )}
         </div>
       </section>
+
+      {/* Life at Alata — real photos and clips from club events */}
+      <LifeAtAlata />
 
       {/* Featured Events Gallery */}
       <FeaturedGallery
