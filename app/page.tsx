@@ -7,6 +7,7 @@ import NewsCard, { type NewsItem } from './components/NewsCard'
 import PartnersMarquee from './components/PartnersMarquee'
 import Reveal from './components/Reveal'
 import Parallax from './components/Parallax'
+import HeroVideo from './components/HeroVideo'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,6 +68,11 @@ export default async function HomePage() {
             alt=""
             className="object-cover grayscale animate-ken-burns"
             preload
+          />
+          {/* Ambient cinemagraph (desktop only) fades in above the photo */}
+          <HeroVideo
+            src="/redesign/hero-loggia.mp4"
+            className="absolute inset-0 w-full h-full object-cover grayscale"
           />
         </Parallax>
         {/* Green overlay + vignette */}
