@@ -4,6 +4,7 @@ import Image from 'next/image'
 import ReportsCarousel from '../components/ReportsCarousel'
 import FeaturedReports from '../components/FeaturedReports'
 import Reveal from '../components/Reveal'
+import Parallax from '../components/Parallax'
 import type { FeaturedReport } from '@/lib/types'
 
 export const metadata: Metadata = {
@@ -31,8 +32,11 @@ export default async function ReportsPage() {
     <div>
       {/* Hero */}
       <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
-        <Image src="/castello.jpg" alt="" fill className="object-cover grayscale" style={{ objectPosition: 'center 60%' }} priority />
+        <Parallax>
+          <Image src="/castello.jpg" alt="" fill className="object-cover grayscale animate-ken-burns" style={{ objectPosition: 'center 60%' }} preload />
+        </Parallax>
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div className="absolute inset-0 hero-vignette" />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Our Reports</p>

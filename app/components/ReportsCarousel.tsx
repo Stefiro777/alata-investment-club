@@ -75,7 +75,10 @@ function ReportCard({ item }: { item: Contenuto }) {
   const preview = getPreview(item.descrizione ?? item.titolo)
 
   return (
-    <article className="flex flex-col bg-paper border border-line hover:border-black/25 hover:shadow-md transition-all duration-fast p-6 h-full">
+    <article
+      className="member-card-simple flex flex-col bg-paper border border-line p-6 h-full"
+      style={{ borderTop: '2px solid #1a4a3a' }}
+    >
       {item.data_pubblicazione && (
         <span className="text-ink-500 text-xs tracking-widest uppercase mb-3">
           {formatDate(item.data_pubblicazione)}

@@ -46,18 +46,23 @@ function LoginForm() {
     <div className="flex min-h-screen">
       {/* Left — image panel */}
       <div
-        className="hidden md:block md:w-1/2 relative"
-        style={{ animation: 'heroFadeIn 0.9s ease both' }}
+        className="hidden md:block md:w-1/2 relative overflow-hidden"
+        style={{ animation: 'panelSlideRight 0.9s cubic-bezier(0.22,1,0.36,1) both' }}
       >
         <Image
-          src="/capitolino.jpg"
-          alt="Capitolino"
+          src="/redesign/capitolino-hd.jpg"
+          alt="Capitolium of Brescia"
           fill
-          className="object-cover grayscale"
-          priority
+          className="object-cover grayscale animate-ken-burns"
+          preload
         />
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div className="absolute inset-0 hero-vignette" />
         <div style={{ position: 'relative', zIndex: 1 }} className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
+          <div
+            className="w-10 h-px bg-white/40 mb-8"
+            style={{ animation: 'heroFadeIn 0.8s ease 0.25s both' }}
+          />
           <p
             className="font-serif italic text-3xl lg:text-4xl leading-snug mb-5"
             style={{ animation: 'heroFadeUp 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s both' }}
@@ -70,6 +75,10 @@ function LoginForm() {
           >
             Alata Investment Club — Brescia
           </p>
+          <div
+            className="w-10 h-px bg-white/40 mt-8"
+            style={{ animation: 'heroFadeIn 0.8s ease 0.6s both' }}
+          />
         </div>
       </div>
 
