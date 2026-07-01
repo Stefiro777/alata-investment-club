@@ -62,7 +62,7 @@ export default function ProductClient({ product }: { product: Product }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
 
           {/* Gallery */}
-          <div className="flex gap-3">
+          <div className="flex gap-3" style={{ animation: 'panelSlideRight 0.7s cubic-bezier(0.22,1,0.36,1) both' }}>
             {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex flex-col gap-2 w-16">
@@ -70,7 +70,7 @@ export default function ProductClient({ product }: { product: Product }) {
                   <button
                     key={i}
                     onClick={() => setMainImg(i)}
-                    className={`relative aspect-square w-16 overflow-hidden border-2 transition-colors ${i === mainImg ? 'border-[#1a4a3a]' : 'border-transparent'}`}
+                    className={`relative aspect-square w-16 overflow-hidden border-2 transition-colors ${i === mainImg ? 'border-[#1a4a3a]' : 'border-transparent hover:border-[#1a4a3a]/40'}`}
                   >
                     <Image src={img} alt="" fill className="object-cover" />
                   </button>
@@ -81,11 +81,12 @@ export default function ProductClient({ product }: { product: Product }) {
             <div className="flex-1 relative aspect-[3/4] bg-gray-100 overflow-hidden">
               {images[mainImg] ? (
                 <Image
+                  key={`${selectedVariant?.id ?? 'v'}-${mainImg}`}
                   src={images[mainImg]}
                   alt={product.name}
                   fill
-                  className="object-cover"
-                  priority
+                  className="object-cover animate-card-enter"
+                  preload
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -96,12 +97,13 @@ export default function ProductClient({ product }: { product: Product }) {
           </div>
 
           {/* Info / selectors */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6" style={{ animation: 'heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.15s both' }}>
             <div>
-              <h1 className="font-['Cormorant_Garamond',serif] text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 leading-tight">
                 {product.name}
               </h1>
-              <p className="text-2xl font-semibold text-gray-900 mt-2">{fmtEur(product.price_cents)}</p>
+              <div className="w-8 h-px bg-forest mt-4 mb-3" />
+              <p className="font-serif text-2xl text-gray-900">{fmtEur(product.price_cents)}</p>
             </div>
 
             {product.description && (

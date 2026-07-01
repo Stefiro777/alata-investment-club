@@ -1,6 +1,8 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
+import Parallax from '@/app/components/Parallax'
+import Reveal from '@/app/components/Reveal'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,20 +67,35 @@ export default async function MerchPage({
 
       {/* Hero */}
       <section className="relative min-h-[500px] lg:min-h-[610px] flex items-center justify-center text-white overflow-hidden">
-        <Image
-          src="/loggia.jpeg"
-          alt=""
-          fill
-          style={{ objectFit: 'cover', objectPosition: 'center 50%', filter: 'grayscale(100%)', zIndex: 0 }}
-          priority
-        />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.72)', zIndex: 1 }} />
+        <Parallax>
+          <Image
+            src="/redesign/teatro-hd.jpg"
+            alt=""
+            fill
+            className="object-cover grayscale animate-ken-burns"
+            style={{ objectPosition: 'center 60%' }}
+            preload
+          />
+        </Parallax>
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.78)', zIndex: 1 }} />
+        <div className="absolute inset-0 hero-vignette" style={{ zIndex: 1 }} />
         <div style={{ position: 'relative', zIndex: 2 }} className="text-center px-6 py-20">
-          <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-none mb-6">
-            WEAR THE CLUB
+          <p
+            className="animate-hero-line text-xs tracking-[0.35em] uppercase text-white/60 mb-6"
+          >
+            Official Merchandise
+          </p>
+          <h1 className="animate-hero-title font-serif text-6xl md:text-8xl font-semibold text-white leading-[1.02] mb-6">
+            Wear <em className="italic">the Club</em>
           </h1>
-          <div className="w-10 h-px bg-white/30 mx-auto mb-6" />
-          <p className="text-lg text-white max-w-xl mx-auto leading-relaxed">
+          <div
+            className="w-10 h-px bg-white/30 mx-auto mb-6"
+            style={{ animation: 'heroFadeIn 0.8s ease 0.45s both' }}
+          />
+          <p
+            className="text-base text-white/80 max-w-xl mx-auto leading-relaxed"
+            style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.5s both' }}
+          >
             Selected pieces for members and enthusiasts.
           </p>
         </div>
@@ -92,55 +109,64 @@ export default async function MerchPage({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-            {items.map(product => {
+            {items.map((product, i) => {
               const variants = [...(product.product_variants ?? [])].sort((a, b) => a.sort_order - b.sort_order)
               const firstImg = variants[0]?.images?.[0] ?? null
               return (
-                <Link
-                  key={product.id}
-                  href={`/merch/${product.slug}`}
-                  className="group block"
-                >
-                  {/* Image */}
-                  <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden mb-4">
-                    {firstImg ? (
-                      <Image
-                        src={firstImg}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-gray-300 text-xs uppercase tracking-widest">No image</span>
+                <Reveal key={product.id} direction="up" delay={(i % 3) * 120}>
+                  <Link
+                    href={`/merch/${product.slug}`}
+                    className="group block"
+                  >
+                    {/* Image */}
+                    <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden mb-4 border border-transparent group-hover:border-[#1a4a3a] transition-colors duration-base">
+                      {firstImg ? (
+                        <Image
+                          src={firstImg}
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-[1.04] transition-transform duration-700"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-gray-300 text-xs uppercase tracking-widest">No image</span>
+                        </div>
+                      )}
+                      {/* Subtle green veil on hover */}
+                      <div className="absolute inset-0 bg-forest/0 group-hover:bg-forest/5 transition-colors duration-base pointer-events-none" />
+                    </div>
+
+                    {/* Color swatches */}
+                    {variants.length > 0 && (
+                      <div className="flex gap-1.5 mb-3">
+                        {variants.slice(0, 6).map(v => (
+                          <span
+                            key={v.id}
+                            className="w-4 h-4 border border-gray-200"
+                            style={{ backgroundColor: v.color_hex ?? '#ccc' }}
+                            title={v.color}
+                          />
+                        ))}
                       </div>
                     )}
-                  </div>
 
-                  {/* Color swatches */}
-                  {variants.length > 0 && (
-                    <div className="flex gap-1.5 mb-3">
-                      {variants.slice(0, 6).map(v => (
-                        <span
-                          key={v.id}
-                          className="w-4 h-4 border border-gray-200"
-                          style={{ backgroundColor: v.color_hex ?? '#ccc' }}
-                          title={v.color}
-                        />
-                      ))}
+                    {/* Info */}
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-900 group-hover:text-[#1a4a3a] transition-colors">
+                        {product.name}
+                      </h2>
+                      <p className="font-serif text-lg text-gray-900 leading-none">{fmtEur(product.price_cents)}</p>
                     </div>
-                  )}
 
-                  {/* Info */}
-                  <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-900 group-hover:text-[#1a4a3a] transition-colors">
-                    {product.name}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">{fmtEur(product.price_cents)}</p>
-
-                  <span className="mt-4 inline-block text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1.5 group-hover:bg-[#1a4a3a] group-hover:text-white transition-colors">
-                    View
-                  </span>
-                </Link>
+                    <span className="mt-4 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1.5 group-hover:bg-[#1a4a3a] group-hover:text-white transition-colors">
+                      View
+                      <svg className="w-3 h-3 transition-transform duration-base group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </span>
+                  </Link>
+                </Reveal>
               )
             })}
           </div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import AlumniGrid from './AlumniGrid'
 import AlumniReviewsWrapper from './AlumniReviewsWrapper'
 import Reveal from '@/app/components/Reveal'
+import Parallax from '@/app/components/Parallax'
 import type { Alumni } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -61,15 +62,18 @@ export default async function AlumniPage() {
     <div>
       {/* Hero */}
       <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
-        <Image
-          src="/universita.jpg"
-          alt=""
-          fill
-          className="object-cover grayscale"
-          style={{ objectPosition: 'center 20%' }}
-          priority
-        />
+        <Parallax>
+          <Image
+            src="/universita.jpg"
+            alt=""
+            fill
+            className="object-cover grayscale animate-ken-burns"
+            style={{ objectPosition: 'center 20%' }}
+            preload
+          />
+        </Parallax>
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div className="absolute inset-0 hero-vignette" />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">
@@ -112,7 +116,14 @@ export default async function AlumniPage() {
               to   { transform: translateX(-50%); }
             }
             .alumni-companies-track {
-              animation: alumni-companies-scroll 30s linear infinite;
+              animation: alumni-companies-scroll 45s linear infinite;
+            }
+            .alumni-companies-viewport:hover .alumni-companies-track {
+              animation-play-state: paused;
+            }
+            .alumni-companies-viewport {
+              -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+              mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             }
           `}</style>
 
@@ -125,7 +136,7 @@ export default async function AlumniPage() {
           </Reveal>
 
           <Reveal direction="up" delay={200}>
-          <div className="overflow-hidden">
+          <div className="alumni-companies-viewport overflow-hidden">
             <div className="alumni-companies-track flex items-center w-max">
               {marqueeItems.map((company, i) => (
                 <div key={i} className="mx-12 h-16 flex items-center">
