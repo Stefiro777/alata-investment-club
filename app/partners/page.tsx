@@ -54,12 +54,12 @@ function PartnersGrid({
 
 function PartnerCard({ partner }: { partner: Partner }) {
   return (
-    <div className="bg-white border border-line-faint p-8 hover-lift h-full flex flex-col">
+    <div className="group bg-white border border-line-faint p-8 hover-lift h-full flex flex-col">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={partner.logo_url}
         alt={partner.name}
-        className="h-12 w-auto object-contain mb-6 self-start"
+        className="h-12 w-auto object-contain mb-6 self-start grayscale group-hover:grayscale-0 transition-[filter] duration-base"
       />
       <div className="w-8 h-px bg-forest mb-4" />
       <h3 className="font-serif text-lg font-bold text-ink-900 mb-3">{partner.name}</h3>
@@ -72,12 +72,12 @@ function PartnerCard({ partner }: { partner: Partner }) {
 
 function SponsorCard({ partner, documents }: { partner: Partner; documents: PartnerDocument[] }) {
   return (
-    <div className="bg-white border border-line-faint p-8 hover-lift h-full flex flex-col">
+    <div className="group bg-white border border-line-faint p-8 hover-lift h-full flex flex-col">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={partner.logo_url}
         alt={partner.name}
-        className="h-12 w-auto object-contain mb-6 self-start"
+        className="h-12 w-auto object-contain mb-6 self-start grayscale group-hover:grayscale-0 transition-[filter] duration-base"
       />
       <div className="w-8 h-px bg-forest mb-4" />
       <h3 className="font-serif text-lg font-bold text-ink-900 mb-3">{partner.name}</h3>
@@ -126,29 +126,43 @@ export default async function PartnersPage() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
-        <Image
-          src="/teatro.jpg"
-          fill
-          alt="Teatro"
-          className="object-cover grayscale"
-          style={{ objectPosition: 'center 70%' }}
-          priority
-        />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
-        <div className="relative z-10 w-full py-20 sm:py-28">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      {/* Hero — split screen: forest panel + Brescia Due towers */}
+      <section className="relative grid lg:grid-cols-2 text-white overflow-hidden">
+        {/* Left — content */}
+        <div className="bg-forest flex items-center py-20 sm:py-28 lg:min-h-[640px]">
+          <div className="w-full max-w-2xl lg:ml-auto px-6 lg:pl-8 lg:pr-16">
             <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Partnerships</p>
             <h1 className="animate-hero-title font-serif text-5xl sm:text-6xl font-bold mb-6">
               Partner with Alata
             </h1>
             <div className="animate-hero-line w-12 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-base max-w-2xl leading-relaxed"
+            <p className="text-white/70 text-base max-w-xl leading-relaxed mb-10"
               style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
               Build your brand where the next generation of finance professionals starts.
             </p>
+            <a
+              href="mailto:info@alatainvestmentclub.com"
+              className="inline-block border border-white/40 text-white text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white hover:text-forest hover:border-white transition-colors duration-base"
+              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.6s both' }}
+            >
+              Start a Conversation
+            </a>
           </div>
+        </div>
+        {/* Right — towers photo */}
+        <div className="relative min-h-[340px] lg:min-h-0" style={{ animation: 'heroFadeIn 1.1s ease 0.2s both' }}>
+          <Image
+            src="/redesign/brescia-due-hd.jpg"
+            fill
+            alt="Brescia Due towers at dusk"
+            className="object-cover grayscale"
+            style={{ objectPosition: 'center 35%' }}
+            preload
+          />
+          <div className="absolute inset-0" style={{ background: 'rgba(26,74,58,0.45)' }} />
+          <p className="absolute bottom-5 right-6 text-[10px] tracking-[0.3em] uppercase text-white/60">
+            Brescia Due · Business District
+          </p>
         </div>
       </section>
 
@@ -176,7 +190,13 @@ export default async function PartnersPage() {
               },
             ].map(({ title, body }, i) => (
               <Reveal key={title} direction="up" delay={i * 120} className="h-full">
-                <div className="bg-white border border-line-faint p-8 hover-lift h-full">
+                <div className="relative bg-white border border-line-faint p-8 hover-lift h-full overflow-hidden">
+                  <span
+                    className="absolute -right-2 -bottom-8 font-serif text-[7rem] leading-none text-forest/[0.06] select-none pointer-events-none"
+                    aria-hidden="true"
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
                   <div className="w-8 h-px bg-forest mb-6" />
                   <h3 className="font-serif text-xl font-bold text-ink-900 mb-3">{title}</h3>
                   <p className="text-sm text-ink-500 leading-relaxed">{body}</p>
