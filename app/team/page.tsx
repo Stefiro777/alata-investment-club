@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import Reveal from '../components/Reveal'
+import Parallax from '../components/Parallax'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,27 +27,41 @@ function initials(name: string) {
 
 function MemberCard({ member }: { member: TeamMember }) {
   return (
-    <div className="member-card-simple bg-white overflow-hidden flex flex-col" style={{ border: '1px solid #1a4a3a' }}>
-      {/* Photo section — centered with double green ring */}
-      <div className="flex justify-center items-center py-5 bg-paper-stone" style={{ minHeight: '160px' }}>
-        <div className="relative w-32 h-32 rounded-full overflow-hidden bg-[#e0e0e0] ring-2 ring-[#1a4a3a] ring-offset-2 ring-offset-[#f5f5f5]">
-          {member.photo_url ? (
-            <Image src={member.photo_url} alt={member.name} fill className="member-photo object-cover object-top" />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="font-serif text-2xl text-forest">{initials(member.name)}</span>
-            </div>
-          )}
-        </div>
+    <div className="group member-card-simple bg-white overflow-hidden flex flex-col" style={{ border: '1px solid #1a4a3a' }}>
+      {/* Portrait — full-bleed, sharp corners */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-paper-stone">
+        {member.photo_url ? (
+          <Image
+            src={member.photo_url}
+            alt={member.name}
+            fill
+            sizes="(max-width: 640px) 50vw, 300px"
+            className="member-photo object-cover object-top transition-transform duration-slow group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-serif text-4xl text-forest/60">{initials(member.name)}</span>
+          </div>
+        )}
+        {/* Subtle green veil on hover */}
+        <div className="absolute inset-0 bg-forest/0 group-hover:bg-forest/10 transition-colors duration-base pointer-events-none" />
       </div>
-      {/* Info bar — always visible */}
-      <div className="p-4 bg-forest flex-grow">
+      {/* Info bar */}
+      <div className="relative p-4 bg-forest flex-grow">
+        {/* Hairline that grows on hover */}
+        <div className="absolute top-0 left-0 h-px bg-white/40 w-0 group-hover:w-full transition-[width] duration-slow" />
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-serif text-lg font-bold text-white">{member.name}</h3>
+          <h3 className="font-serif text-lg font-bold text-white leading-tight">{member.name}</h3>
           {member.linkedin_url && (
-            <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="shrink-0 opacity-100 hover:opacity-70 transition-opacity">
+            <a
+              href={member.linkedin_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${member.name} on LinkedIn`}
+              className="shrink-0 opacity-60 group-hover:opacity-100 hover:!opacity-70 transition-opacity duration-base"
+            >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="20" height="20" rx="3" fill="white"/>
+                <rect width="20" height="20" fill="white"/>
                 <path d="M5.5 8H7.5V14.5H5.5V8ZM6.5 7C5.84 7 5.5 6.56 5.5 6C5.5 5.44 5.85 5 6.51 5C7.17 5 7.5 5.44 7.5 6C7.5 6.56 7.16 7 6.5 7ZM14.5 14.5H12.5V11C12.5 10.17 12.19 9.62 11.47 9.62C10.92 9.62 10.6 10 10.44 10.36C10.38 10.51 10.37 10.72 10.37 10.93V14.5H8.37V8H10.37V8.89C10.66 8.43 11.18 7.78 12.37 7.78C13.85 7.78 14.5 8.78 14.5 10.35V14.5Z" fill="#1a4a3a"/>
               </svg>
             </a>
@@ -79,8 +94,11 @@ export default async function TeamPage() {
     <div>
       {/* Hero */}
       <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
-        <Image src="/universita.jpg" alt="" fill className="object-cover grayscale" style={{ objectPosition: 'center 20%' }} priority />
+        <Parallax>
+          <Image src="/universita.jpg" alt="" fill className="object-cover grayscale animate-ken-burns" style={{ objectPosition: 'center 20%' }} preload />
+        </Parallax>
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div className="absolute inset-0 hero-vignette" />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Our Team</p>
