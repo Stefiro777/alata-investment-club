@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import Reveal from '../components/Reveal'
+import Parallax from '../components/Parallax'
 import { createClient } from '@/lib/supabase'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js'
@@ -798,7 +799,7 @@ function ServiceSubCard({ number, title, description }: { number: string; title:
   return (
     <>
       <div
-        className="relative overflow-hidden p-6 sm:p-8 flex flex-col h-full"
+        className="member-card-simple relative overflow-hidden p-6 sm:p-8 flex flex-col h-full"
         style={{ background: '#ffffff', borderTop: '2px solid #1a4a3a' }}
       >
         <span
@@ -849,8 +850,11 @@ export default function CareerServiceClient() {
     <div>
       {/* Hero */}
       <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
-        <Image src="/vittoria.jpeg" alt="" fill className="object-cover object-top grayscale" priority />
+        <Parallax>
+          <Image src="/vittoria.jpeg" alt="" fill className="object-cover object-top grayscale animate-ken-burns" preload />
+        </Parallax>
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div className="absolute inset-0 hero-vignette" />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Professional support</p>
