@@ -1,12 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+function forbidden() {
+  return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+}
+
 export async function GET(req: NextRequest) {
+  if (!(await requireTeamAccess('career'))) return forbidden()
   try {
     const serviceId = req.nextUrl.searchParams.get('service_id')
     if (!serviceId) return NextResponse.json({ error: 'Missing service_id' }, { status: 400 })
@@ -23,6 +29,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await requireTeamAccess('career'))) return forbidden()
   try {
     const body = await req.json()
     const { data, error } = await supabaseAdmin
@@ -37,6 +44,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!(await requireTeamAccess('career'))) return forbidden()
   try {
     const { id } = await req.json() as { id: string }
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })

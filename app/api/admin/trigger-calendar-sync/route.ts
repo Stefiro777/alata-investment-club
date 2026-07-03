@@ -38,8 +38,12 @@ export async function POST(request: NextRequest) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alatainvestmentclub.com';
     const syncResponse = await fetch(
-      `${baseUrl}/api/sync-notion-calendar?secret=${process.env.CRON_SECRET}`,
-      { method: 'GET', cache: 'no-store' }
+      `${baseUrl}/api/sync-notion-calendar`,
+      {
+        method: 'GET',
+        cache: 'no-store',
+        headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      }
     );
 
     const result = await syncResponse.json();

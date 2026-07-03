@@ -1,12 +1,36 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Best-effort per-instance rate limit for the public QR check-in flow, where
+// the registration id is the only secret: caps brute-force attempts per IP.
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX = 30
+const rateBuckets = new Map<string, { count: number; resetAt: number }>()
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now()
+  const bucket = rateBuckets.get(ip)
+  if (!bucket || now > bucket.resetAt) {
+    if (rateBuckets.size > 10_000) rateBuckets.clear()
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return false
+  }
+  bucket.count += 1
+  return bucket.count > RATE_LIMIT_MAX
+}
+
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (rateLimited(ip)) {
+    return NextResponse.json({ valid: false, reason: 'rate_limited' }, { status: 429 })
+  }
+
   const token = req.nextUrl.searchParams.get('token')
   if (!token) return NextResponse.json({ valid: false, reason: 'missing_token' })
 
@@ -49,6 +73,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  // Same access as the scanner UI: BoD/Management plus events/media teams.
+  if (!(await requireTeamAccess('events', 'media'))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   let body: { id?: string; checked_in?: boolean }
   try {
     body = await req.json()

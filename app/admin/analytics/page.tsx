@@ -13,8 +13,6 @@ type Member   = { role: string; created_at: string }
 type Event    = { id: string; date: string }
 type Booking  = { id: string; status: string; is_member_free: boolean; slot_date: string; created_at: string }
 type Partner  = { id: string; name: string; type: string; created_at: string }
-type Transaction    = { id: string; type: 'revenue' | 'cost' | 'rimborso'; amount: number; category_id: string | null }
-type BudgetCategory = { id: string; name: string }
 type JobOffer       = { id: string; type: string }
 type MerchOrder     = {
   id: string; product_name: string; variant_color: string | null; size: string | null
@@ -705,13 +703,11 @@ function SponsorsTab() {
     const db = createClient()
     Promise.all([
       db.from('partners').select('id, name, type, created_at').order('created_at', { ascending: false }),
-      db.from('transactions')
-        .select('id, type, amount, date, description, budget_categories!inner(name)')
-        .ilike('budget_categories.name', '%sponsor%')
-        .order('date', { ascending: false }),
+      // Financial data goes through the privileged server route, not client-side reads.
+      fetch('/api/admin/analytics/internal?section=sponsors').then(r => r.ok ? r.json() : { transactions: [] }),
     ]).then(([pRes, txRes]) => {
       setPartners((pRes.data ?? []) as Partner[])
-      setSponsorTxs((txRes.data ?? []) as unknown as SponsorTransaction[])
+      setSponsorTxs((txRes.transactions ?? []) as SponsorTransaction[])
       setLoading(false)
     })
   }, [])
@@ -813,49 +809,33 @@ function SponsorsTab() {
 
 // ── Finance Tab ────────────────────────────────────────────────────────────────
 
+type FinanceData = {
+  income: number
+  expenses: number
+  balance: number
+  byCategory: { name: string; amount: number }[]
+  hasTransactions: boolean
+  merchOrders: MerchOrder[]
+}
+
 function FinanceTab() {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [categories, setCategories]     = useState<BudgetCategory[]>([])
-  const [merchOrders, setMerchOrders]   = useState<MerchOrder[]>([])
-  const [loading, setLoading]           = useState(true)
-  const [mounted, setMounted]           = useState(false)
+  const [finance, setFinance]  = useState<FinanceData | null>(null)
+  const [loading, setLoading]  = useState(true)
+  const [mounted, setMounted]  = useState(false)
 
   useEffect(() => {
-    const db = createClient()
-    Promise.all([
-      db.from('transactions').select('id, type, amount, category_id'),
-      db.from('budget_categories').select('id, name'),
-      db.from('merch_orders')
-        .select('id, product_name, variant_color, size, quantity, price_cents, customer_name, customer_email, status, created_at')
-        .eq('status', 'paid')
-        .order('created_at', { ascending: false }),
-    ]).then(([txRes, catRes, ordersRes]) => {
-      setTransactions((txRes.data     ?? []) as Transaction[])
-      setCategories((catRes.data      ?? []) as BudgetCategory[])
-      setMerchOrders((ordersRes.data  ?? []) as MerchOrder[])
-      setLoading(false)
-      setTimeout(() => setMounted(true), 60)
-    })
+    // Financial data goes through the privileged server route, not client-side reads.
+    fetch('/api/admin/analytics/internal?section=finance')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: FinanceData | null) => {
+        setFinance(data)
+        setLoading(false)
+        setTimeout(() => setMounted(true), 60)
+      })
   }, [])
 
-  const { income, expenses, balance, byCategory } = useMemo(() => {
-    const income   = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
-    const expenses = transactions.filter(t => t.type === 'cost').reduce((s, t) => s + t.amount, 0)
-    const refunds  = transactions.filter(t => t.type === 'rimborso').reduce((s, t) => s + t.amount, 0)
-    const balance  = income - expenses + refunds
-
-    const catMap: Record<string, { name: string; amount: number }> = {}
-    for (const tx of transactions) {
-      const key  = tx.category_id ?? '__none__'
-      const name = categories.find(c => c.id === tx.category_id)?.name ?? 'Uncategorised'
-      if (!catMap[key]) catMap[key] = { name, amount: 0 }
-      if (tx.type === 'revenue' || tx.type === 'rimborso') catMap[key].amount += tx.amount
-      if (tx.type === 'cost') catMap[key].amount -= tx.amount
-    }
-    const byCategory = Object.values(catMap).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
-
-    return { income, expenses, balance, byCategory }
-  }, [transactions, categories])
+  const merchOrders = useMemo(() => finance?.merchOrders ?? [], [finance])
+  const { income = 0, expenses = 0, balance = 0, byCategory = [] } = finance ?? {}
 
   // ── Merch KPIs ──────────────────────────────────────────────────────────────
   const { merchRevenue, merchCount, merchAvg, topProducts, recentOrders } = useMemo(() => {
@@ -883,7 +863,7 @@ function FinanceTab() {
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
-  if (transactions.length === 0) {
+  if (!finance?.hasTransactions) {
     return (
       <div className="py-16 text-center border border-dashed border-gray-200">
         <p className="text-sm font-semibold text-gray-600 mb-1">No transactions recorded yet.</p>

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,9 +21,78 @@ async function checkAuth() {
   return user
 }
 
-export async function GET() {
+type TransactionRow = {
+  id: string
+  type: 'revenue' | 'cost' | 'rimborso'
+  amount: number
+  category_id: string | null
+}
+
+// Financial aggregates for the Sponsors tab of /admin/analytics.
+async function sponsorsSection() {
+  const { data } = await supabaseAdmin
+    .from('transactions')
+    .select('id, type, amount, date, description, budget_categories!inner(name)')
+    .ilike('budget_categories.name', '%sponsor%')
+    .order('date', { ascending: false })
+  const transactions = (data ?? []).map(t => ({
+    id: t.id,
+    type: t.type as 'revenue' | 'cost' | 'rimborso',
+    amount: t.amount as number,
+    date: (t.date as string | null) ?? null,
+    description: (t.description as string | null) ?? null,
+  }))
+  const revenue = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
+  const costs   = transactions.filter(t => t.type === 'cost').reduce((s, t) => s + t.amount, 0)
+  return NextResponse.json({ transactions, revenue, costs })
+}
+
+// Financial aggregates for the Finance tab of /admin/analytics.
+async function financeSection() {
+  const [txRes, catRes, ordersRes] = await Promise.all([
+    supabaseAdmin.from('transactions').select('id, type, amount, category_id'),
+    supabaseAdmin.from('budget_categories').select('id, name'),
+    supabaseAdmin.from('merch_orders')
+      .select('id, product_name, variant_color, size, quantity, price_cents, customer_name, customer_email, status, created_at')
+      .eq('status', 'paid')
+      .order('created_at', { ascending: false }),
+  ])
+  const transactions = (txRes.data ?? []) as TransactionRow[]
+  const categories   = (catRes.data ?? []) as { id: string; name: string }[]
+  const merchOrders  = ordersRes.data ?? []
+
+  const income   = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
+  const expenses = transactions.filter(t => t.type === 'cost').reduce((s, t) => s + t.amount, 0)
+  const refunds  = transactions.filter(t => t.type === 'rimborso').reduce((s, t) => s + t.amount, 0)
+  const balance  = income - expenses + refunds
+
+  const catMap: Record<string, { name: string; amount: number }> = {}
+  for (const tx of transactions) {
+    const key  = tx.category_id ?? '__none__'
+    const name = categories.find(c => c.id === tx.category_id)?.name ?? 'Uncategorised'
+    if (!catMap[key]) catMap[key] = { name, amount: 0 }
+    if (tx.type === 'revenue' || tx.type === 'rimborso') catMap[key].amount += tx.amount
+    if (tx.type === 'cost') catMap[key].amount -= tx.amount
+  }
+  const byCategory = Object.values(catMap).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
+
+  return NextResponse.json({
+    income,
+    expenses,
+    balance,
+    byCategory,
+    hasTransactions: transactions.length > 0,
+    merchOrders,
+  })
+}
+
+export async function GET(req: NextRequest) {
   const user = await checkAuth()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const section = req.nextUrl.searchParams.get('section')
+  if (section === 'sponsors') return sponsorsSection()
+  if (section === 'finance')  return financeSection()
 
   const [
     { count: total_members },

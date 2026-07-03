@@ -10,20 +10,11 @@ export async function POST(req: NextRequest) {
     if (!UUID_REGEX.test(partnerId)) return NextResponse.json({ error: 'invalid partnerId' }, { status: 400 })
 
     const serviceClient = createServiceClient()
-    const { data, error: fetchError } = await serviceClient
-      .from('partners')
-      .select('click_count')
-      .eq('id', partnerId)
-      .single()
 
-    if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
+    // Atomic increment via RPC — avoids the read-then-write race.
+    const { error } = await serviceClient.rpc('increment_partner_click', { p_partner_id: partnerId })
 
-    const { error: updateError } = await serviceClient
-      .from('partners')
-      .update({ click_count: (data.click_count ?? 0) + 1 })
-      .eq('id', partnerId)
-
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ ok: true })
   } catch (err: unknown) {

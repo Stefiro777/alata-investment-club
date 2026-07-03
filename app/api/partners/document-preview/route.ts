@@ -15,17 +15,8 @@ export async function POST(req: NextRequest) {
 
     const supabase = serviceClient()
 
-    // Fetch current count then increment (no RPC needed)
-    const { data: doc } = await supabase
-      .from('partner_documents')
-      .select('preview_count')
-      .eq('id', documentId)
-      .single()
-
-    const { error } = await supabase
-      .from('partner_documents')
-      .update({ preview_count: (doc?.preview_count ?? 0) + 1 })
-      .eq('id', documentId)
+    // Atomic increment via RPC — avoids the read-then-write race.
+    const { error } = await supabase.rpc('increment_preview_count', { p_document_id: documentId })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })

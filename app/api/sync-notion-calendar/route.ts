@@ -63,11 +63,9 @@ async function fetchAllNotionEvents() {
 }
 
 export async function GET(request: NextRequest) {
+  // Secret accepted only via Authorization header — querystrings end up in logs.
   const authHeader = request.headers.get('authorization');
-  const isVercelCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-  const isManualAdmin = request.nextUrl.searchParams.get('secret') === process.env.CRON_SECRET;
-
-  if (!isVercelCron && !isManualAdmin) {
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

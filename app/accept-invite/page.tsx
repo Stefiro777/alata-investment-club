@@ -21,11 +21,6 @@ function AcceptInviteForm() {
   useEffect(() => {
     const supabase = createClient()
 
-    // Debug
-    console.log('URL:', window.location.href)
-    console.log('Hash:', window.location.hash)
-    console.log('Search:', window.location.search)
-
     // Parse hash fragment manually (not accessible via useSearchParams)
     const hash = window.location.hash.substring(1)
     const hashParams = new URLSearchParams(hash)
@@ -34,10 +29,6 @@ function AcceptInviteForm() {
     const access_token = hashParams.get('access_token')
     const refresh_token = hashParams.get('refresh_token') ?? ''
     const type = searchParams.get('type') ?? hashParams.get('type') ?? 'invite'
-
-    console.log('token_hash:', token_hash)
-    console.log('access_token:', access_token ? 'present' : 'absent')
-    console.log('type:', type)
 
     if (token_hash) {
       // New Supabase format: ?token_hash=...&type=invite
@@ -71,7 +62,6 @@ function AcceptInviteForm() {
       }, 3000)
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        console.log('onAuthStateChange event:', event)
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           clearTimeout(timeout)
           setSessionReady(true)
