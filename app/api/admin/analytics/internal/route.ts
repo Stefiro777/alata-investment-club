@@ -1,25 +1,14 @@
-import { createClient } from '@/lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function checkAuth() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-  if (user.email === 'finullistefano@gmail.com') return user
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email!)
-    .maybeSingle()
-  if (member?.role !== 'bod' && member?.role !== 'director') return null
-  return user
-}
+// Shared privileged-access check (bod/director)
+const checkAuth = requirePrivilegedAccess
 
 type TransactionRow = {
   id: string

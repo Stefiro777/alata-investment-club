@@ -1,6 +1,7 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,20 +12,10 @@ const supabase = createSupabaseAdmin(
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
 
-async function isAdmin(token: string | null) {
-  if (!token) return false
-  const { data: { user } } = await supabase.auth.getUser(token)
-  if (!user) return false
-  if (user.email === 'finullistefano@gmail.com') return true
-  const { data: m } = await supabase.from('club_members').select('role').eq('email', user.email ?? '').maybeSingle()
-  return m?.role === 'bod' || m?.role === 'director'
-}
-function tok(req: NextRequest) { return req.headers.get('authorization')?.replace('Bearer ', '') ?? null }
-
 function delay(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await requirePrivilegedAccess())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { ids, subject, body } = await req.json()
   if (!ids?.length || !subject || !body) return NextResponse.json({ error: 'ids, subject, body required' }, { status: 400 })

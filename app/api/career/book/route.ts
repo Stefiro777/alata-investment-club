@@ -296,6 +296,10 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (insertErr || !booking) {
+        // Raised by the career_bookings_enforce_capacity DB trigger
+        if (insertErr?.message.includes('slot_full')) {
+          return NextResponse.json({ error: 'Slot is fully booked' }, { status: 409 })
+        }
         return NextResponse.json({ error: insertErr?.message ?? 'Insert failed' }, { status: 500 })
       }
 
@@ -354,6 +358,10 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (insertErr || !booking) {
+      // Raised by the career_bookings_enforce_capacity DB trigger
+      if (insertErr?.message.includes('slot_full')) {
+        return NextResponse.json({ error: 'Slot is fully booked' }, { status: 409 })
+      }
       return NextResponse.json({ error: insertErr?.message ?? 'Insert failed' }, { status: 500 })
     }
 

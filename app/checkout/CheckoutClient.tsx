@@ -904,87 +904,6 @@ export default function CheckoutClient() {
     return { name: '', email: '' }
   }
 
-  async function handleFreeComplete() {
-    setPaying(true)
-    setError('')
-    try {
-      for (const r of eventRegs) {
-        const res = await fetch('/api/event-registrations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            event_id:               r.eventId,
-            nome:                   r.firstName,
-            cognome:                r.lastName,
-            email:                  r.email,
-            anno_di_studio:         r.annoStudio,
-            motivazione:            r.motivation || undefined,
-            questions_for_panelists: r.questionsForPanelists || undefined,
-          }),
-        })
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}))
-          throw new Error(d.error ?? 'Registration failed')
-        }
-      }
-      if (eventRegs[0]?.email) {
-        try {
-          const emailRes = await fetch('/api/send-confirmation', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type:          'registration',
-              customerEmail: eventRegs[0].email,
-              customerName:  `${eventRegs[0].firstName} ${eventRegs[0].lastName}`.trim(),
-              events: eventRegs.map(r => ({
-                name:      r.eventName,
-                eventDate: cartItems.find(t => t.eventId === r.eventId)?.eventDate
-                  ?? upsells.find(u => u.referenceId === r.eventId)?.eventDate
-                  ?? null,
-                location: cartItems.find(t => t.eventId === r.eventId)?.eventLocation ?? null,
-              })),
-            }),
-          })
-          console.log('email response:', emailRes.status)
-        } catch (e) {
-          console.error('email error:', e)
-        }
-      }
-      const freemerch = cartItems.filter(i => !i.type || i.type === 'merch')
-      if (freemerch.length > 0 && shipping.email) {
-        try {
-          await fetch('/api/send-confirmation', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type:          'order',
-              customerEmail: shipping.email,
-              customerName:  `${shipping.firstName} ${shipping.lastName}`.trim(),
-              items: freemerch.map(i => ({
-                name:         i.name,
-                variantColor: i.variant?.color ?? null,
-                size:         i.size ?? null,
-                quantity:     i.quantity ?? 1,
-                priceCents:   0,
-              })),
-              totalCents:      0,
-              shippingCents:   0,
-              shippingAddress: shipping,
-            }),
-          })
-        } catch (e) {
-          console.error('order email error:', e)
-        }
-      }
-      completing.current = true
-      clearCart()
-      router.push('/checkout/success')
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
-      setPaying(false)
-    }
-  }
-
   async function handlePay() {
     setPaying(true)
     setError('')
@@ -1050,7 +969,11 @@ export default function CheckoutClient() {
       })
       const data = await res.json()
       if (data.free) {
-        await handleFreeComplete()
+        // Registrations, order records and emails are handled server-side
+        // by /api/checkout for free orders.
+        completing.current = true
+        clearCart()
+        router.push('/checkout/success')
         return
       }
       if (data.url) {
@@ -1167,7 +1090,7 @@ export default function CheckoutClient() {
                 hasMerch={hasMerch}
                 onBack={() => { setError(''); setStep(s => s - 1) }}
                 onPay={handlePay}
-                onFreeComplete={handleFreeComplete}
+                onFreeComplete={handlePay}
                 paying={paying}
                 error={error}
               />

@@ -1,31 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
+import { requireTeamAccess } from '@/lib/auth'
 
 function authError() {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 }
 
-async function verifyAdmin(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) return false
-  const supabase = createServiceClient()
-  const { data: { user }, error } = await supabase.auth.getUser(token)
-  if (error || !user) return false
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, teams')
-    .eq('id', user.id)
-    .single()
-  if (!profile) return false
-  const isAdmin =
-    profile.role === 'bod' ||
-    profile.role === 'director' ||
-    (profile.teams ?? []).includes('career')
-  return isAdmin
-}
+// Privileged roles (bod/director) or career team, resolved via club_members
+// (the legacy `profiles` table is no longer consulted).
+const verifyAdmin = async () => !!(await requireTeamAccess('career'))
 
 export async function POST(req: NextRequest) {
-  if (!(await verifyAdmin(req))) return authError()
+  if (!(await verifyAdmin())) return authError()
   const body = await req.json()
   const { type, reference_id, label, description, sort_order } = body
   if (!type || !reference_id || !label) {
@@ -42,7 +28,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!(await verifyAdmin(req))) return authError()
+  if (!(await verifyAdmin())) return authError()
   const body = await req.json()
   const { id, ...fields } = body
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
@@ -58,7 +44,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!(await verifyAdmin(req))) return authError()
+  if (!(await verifyAdmin())) return authError()
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })

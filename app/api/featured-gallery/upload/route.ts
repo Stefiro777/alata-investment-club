@@ -1,41 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createServiceClient } from '@/lib/supabase-server'
-import { cookies } from 'next/headers'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_BUCKETS = ['event-gallery', 'partner-gallery', 'venue-photos', 'featured-reports']
 
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {},
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email)
-    .single()
-  if (!member || !['bod', 'director'].includes(member.role)) {
+  if (!(await requirePrivilegedAccess())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

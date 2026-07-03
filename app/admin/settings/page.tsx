@@ -1,26 +1,14 @@
 import { createClient } from '@/lib/supabase-server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import AdminNavbar from '../components/AdminNavbar'
 import SettingsClient from './SettingsClient'
-
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 export default async function AdminSettingsPage() {
+  const member = await requirePrivilegedAccess()
+  if (!member) redirect('/dashboard')
+
   const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/dashboard')
-
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email!)
-    .maybeSingle()
-  if (member?.role !== 'bod' && member?.role !== 'director') redirect('/dashboard')
 
   const [
     { data: appSettings },
@@ -44,7 +32,7 @@ export default async function AdminSettingsPage() {
 
   return (
     <>
-      <AdminNavbar userEmail={user.email ?? ''} />
+      <AdminNavbar userEmail={member.email ?? ''} />
       <main className="bg-[#f9f9f9] min-h-screen">
         <SettingsClient
           applicationsOpen={appSettings?.value === 'true'}

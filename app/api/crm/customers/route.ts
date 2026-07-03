@@ -1,5 +1,6 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,18 +9,11 @@ const supabase = createSupabaseAdmin(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function isAdmin(token: string | null) {
-  if (!token) return false
-  const { data: { user } } = await supabase.auth.getUser(token)
-  if (!user) return false
-  if (user.email === 'finullistefano@gmail.com') return true
-  const { data: m } = await supabase.from('club_members').select('role').eq('email', user.email ?? '').maybeSingle()
-  return m?.role === 'bod' || m?.role === 'director'
-}
-function tok(req: NextRequest) { return req.headers.get('authorization')?.replace('Bearer ', '') ?? null }
+// Shared privileged-access check (bod/director)
+const isAdmin = async () => !!(await requirePrivilegedAccess())
 
 export async function GET(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const url = new URL(req.url)
   const type = url.searchParams.get('type')
@@ -35,7 +29,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const body = await req.json()
   const { name, email, phone, type, reference, amount, purchased_at, notes } = body
   if (!name || !email || !type) return NextResponse.json({ error: 'name, email, type required' }, { status: 400 })

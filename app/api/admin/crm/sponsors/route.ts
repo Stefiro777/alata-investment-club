@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 // Requires these columns on the `partners` table (add via migration if missing):
 //   agreement_start text | null
@@ -23,23 +23,12 @@ const supabaseAdmin = createAdminClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function requireAdmin(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-  if (user.email === 'finullistefano@gmail.com') return user
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email!)
-    .maybeSingle()
-  if (member?.role === 'bod' || member?.role === 'director') return user
-  return null
-}
+// Shared privileged-access check (bod/director)
+const requireAdmin = requirePrivilegedAccess
 
 // GET — fetch all partners with their people contacts
-export async function GET(req: NextRequest) {
-  const user = await requireAdmin(req)
+export async function GET() {
+  const user = await requireAdmin()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data: partners, error } = await supabaseAdmin
@@ -70,7 +59,7 @@ export async function GET(req: NextRequest) {
 
 // POST — create a new partner/sponsor
 export async function POST(req: NextRequest) {
-  const user = await requireAdmin(req)
+  const user = await requireAdmin()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let body: Record<string, unknown>
@@ -99,7 +88,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH — update an existing partner/sponsor by id
 export async function PATCH(req: NextRequest) {
-  const user = await requireAdmin(req)
+  const user = await requireAdmin()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let body: Record<string, unknown>
@@ -128,7 +117,7 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE — delete a partner/sponsor by id
 export async function DELETE(req: NextRequest) {
-  const user = await requireAdmin(req)
+  const user = await requireAdmin()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)

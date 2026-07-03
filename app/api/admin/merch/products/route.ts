@@ -1,29 +1,19 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function isAdmin(token: string | null) {
-  if (!token) return false
-  const { data: { user } } = await supabase.auth.getUser(token)
-  if (!user) return false
-  const { data: m } = await supabase.from('club_members').select('role, teams').eq('email', user.email ?? '').maybeSingle()
-  return m?.role === 'bod' || m?.role === 'director' ||
-    (Array.isArray(m?.teams) && (m.teams as string[]).includes('media')) ||
-    (user.email ?? null) === 'finullistefano@gmail.com'
-}
-
-function tok(req: NextRequest) {
-  return req.headers.get('authorization')?.replace('Bearer ', '') ?? null
-}
+// Merch admin: privileged roles (bod/director) or media team
+const isAdmin = async () => !!(await requireTeamAccess('media'))
 
 // ── GET all products (admin) ──────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export async function GET() {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { data, error } = await supabase
     .from('products')
     .select(`id, slug, name, price_cents, description, sizes, details, visible, created_at,
@@ -37,7 +27,7 @@ export async function GET(req: NextRequest) {
 // ── POST create product ───────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const body = await req.json()
   const { name, slug, price_cents, description, sizes, details, visible } = body
   if (!name || !slug) return NextResponse.json({ error: 'name and slug required' }, { status: 400 })
@@ -51,7 +41,7 @@ export async function POST(req: NextRequest) {
 // ── PATCH update product ──────────────────────────────────────────────────────
 
 export async function PATCH(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { id, ...fields } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
   const { data, error } = await supabase.from('products').update(fields).eq('id', id).select().single()
@@ -62,7 +52,7 @@ export async function PATCH(req: NextRequest) {
 // ── DELETE product ────────────────────────────────────────────────────────────
 
 export async function DELETE(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })

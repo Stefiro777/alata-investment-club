@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import QRCode from 'qrcode'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -78,19 +78,8 @@ async function buildQrHtml(nome: string, eventTitle: string, registrationId: str
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  if (user.email !== 'finullistefano@gmail.com') {
-    const { data: member } = await supabaseAdmin
-      .from('club_members')
-      .select('role')
-      .eq('email', user.email!)
-      .maybeSingle()
-    if (member?.role !== 'bod' && member?.role !== 'director') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  if (!(await requirePrivilegedAccess())) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   let body: { registration_ids?: string[] }

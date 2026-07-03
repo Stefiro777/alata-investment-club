@@ -1,25 +1,17 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function isAdmin(token: string | null) {
-  if (!token) return false
-  const { data: { user } } = await supabase.auth.getUser(token)
-  if (!user) return false
-  const { data: m } = await supabase
-    .from('club_members').select('role').eq('email', user.email ?? '').maybeSingle()
-  return m?.role === 'bod' || m?.role === 'director' || user.email === 'finullistefano@gmail.com'
-}
-function tok(req: NextRequest) {
-  return req.headers.get('authorization')?.replace('Bearer ', '') ?? null
-}
+// Shared privileged-access check (bod/director)
+const isAdmin = async () => !!(await requirePrivilegedAccess())
 
-export async function GET(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export async function GET() {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data: items, error } = await supabase
     .from('merch_upsell_items')
@@ -64,7 +56,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { type, reference_id, label, priority } = await req.json()
   if (!type || !reference_id) return NextResponse.json({ error: 'type and reference_id required' }, { status: 400 })
   const { data, error } = await supabase
@@ -76,7 +68,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { id, ...fields } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
   const { data, error } = await supabase
@@ -86,7 +78,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!(await isAdmin(tok(req)))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const id = new URL(req.url).searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
   const { error } = await supabase.from('merch_upsell_items').delete().eq('id', id)

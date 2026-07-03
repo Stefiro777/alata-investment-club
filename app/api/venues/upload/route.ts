@@ -1,25 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase-server'
+import { createServiceClient } from '@/lib/supabase-server'
+import { requireTeamAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: member } = await supabase
-    .from('club_members')
-    .select('role, teams')
-    .eq('email', user.email!)
-    .maybeSingle()
-
-  const hasAccess = member?.role === 'bod' ||
-    member?.role === 'director' ||
-    (member?.teams && member.teams.includes('events'))
-
-  if (!hasAccess) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await requireTeamAccess('events'))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const formData = await request.formData()
   const file = formData.get('file')

@@ -1,7 +1,7 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase-server'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -76,18 +76,8 @@ function buildInviteEmail(inviteLink: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify caller is authenticated
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    // Verify caller has admin access
-    if (user.email !== 'finullistefano@gmail.com') {
-      const { data: member } = await supabase
-        .from('club_members').select('role').eq('email', user.email!).maybeSingle()
-      if (member?.role !== 'bod' && member?.role !== 'director') {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-      }
+    if (!(await requirePrivilegedAccess())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const { email } = await req.json()
