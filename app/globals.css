@@ -125,6 +125,22 @@
   animation: heroFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0s both;
 }
 
+/* Title reveal: each line rises out from behind a mask */
+@keyframes heroMaskUp {
+  from { transform: translateY(115%); }
+  to   { transform: translateY(0); }
+}
+.hero-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.04em; /* room for serif descenders while masked */
+}
+.hero-mask-inner {
+  display: inline-block;
+  will-change: transform;
+  animation: heroMaskUp 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Subtle float for logo */
 @keyframes logoFloat {
   0%, 100% { transform: translateY(0px); }
@@ -220,6 +236,23 @@ html {
 /* ─── Partner logos ──────────────────────────────────────────────── */
 .partner-logo-item {
   transition: opacity 0.3s ease;
+}
+
+/* ─── Career service cards: lift + top rule that draws across ─────── */
+.service-card {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 48px rgba(26, 74, 58, 0.14);
+}
+.service-card-rule {
+  width: 40px;
+  transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.service-card:hover .service-card-rule {
+  width: 100%;
 }
 
 /* ─── Redesign: cinematic hero ───────────────────────────────────── */

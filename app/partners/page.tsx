@@ -160,9 +160,6 @@ export default async function PartnersPage() {
             preload
           />
           <div className="absolute inset-0" style={{ background: 'rgba(26,74,58,0.45)' }} />
-          <p className="absolute bottom-5 right-6 text-[10px] tracking-[0.3em] uppercase text-white/60">
-            Brescia Due · Business District
-          </p>
         </div>
       </section>
 

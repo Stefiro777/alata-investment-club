@@ -798,33 +798,34 @@ function ServiceSubCard({ number, title, description }: { number: string; title:
 
   return (
     <>
-      <div
-        className="member-card-simple relative overflow-hidden p-6 sm:p-8 flex flex-col h-full"
-        style={{ background: '#ffffff', borderTop: '2px solid #1a4a3a' }}
-      >
+      <div className="service-card group relative overflow-hidden bg-white border border-line-faint p-7 sm:p-9 flex flex-col h-full">
+        {/* top accent line — a short segment that draws across on hover */}
+        <span className="service-card-rule absolute top-0 left-0 h-[2px] bg-forest" aria-hidden="true" />
+
+        {/* watermark numeral */}
         <span
-          className="absolute -bottom-4 -right-2 font-serif font-bold leading-none select-none pointer-events-none"
-          style={{ fontSize: '7rem', color: '#1a4a3a', opacity: 0.05 }}
+          className="absolute -bottom-6 -right-2 font-serif font-bold leading-none select-none pointer-events-none text-forest/[0.05] transition-transform duration-500 group-hover:-translate-y-1"
+          style={{ fontSize: '7rem' }}
           aria-hidden="true"
         >
           {number}
         </span>
 
-        <div className="mb-4 relative">
-          <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: '#1a4a3a', opacity: 0.6 }}>{number}</p>
-          <h3 className="font-serif text-xl font-medium text-ink-900">{title}</h3>
-          <div className="w-6 h-px mt-3" style={{ background: '#1a4a3a' }} />
+        <div className="mb-5 relative">
+          <p className="text-xs tracking-[0.25em] uppercase text-ink-400 mb-3">{number}</p>
+          <h3 className="font-serif text-2xl font-medium text-ink-900 leading-snug">{title}</h3>
+          <div className="w-8 h-px mt-4 bg-forest transition-[width] duration-500 group-hover:w-16" />
         </div>
 
         <p className="text-ink-500 text-sm leading-relaxed flex-1 relative">{description}</p>
 
-        <div className="mt-auto pt-6">
+        <div className="mt-auto pt-8">
           <button
             onClick={() => setOverlayOpen(true)}
-            className="inline-flex items-center gap-2 border border-forest text-forest text-sm font-medium tracking-wide py-2 px-5 transition-colors hover:bg-forest hover:text-white"
+            className="inline-flex items-center gap-2 text-forest text-xs font-semibold tracking-[0.18em] uppercase"
           >
-            Book Now
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="underline-grow">Book Now</span>
+            <svg className="w-3.5 h-3.5 transition-transform duration-base group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </button>
