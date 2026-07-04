@@ -3,7 +3,9 @@
 import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { motion, useReducedMotion } from 'framer-motion'
 import Parallax from '../Parallax'
+import { EASE } from '../motion/Motion'
 
 /**
  * About/home hero — cinematic still with layered depth.
@@ -11,6 +13,30 @@ import Parallax from '../Parallax'
  * cursor (and the background keeps its slow scroll parallax + ken burns).
  * No ambient video: the motion carries it. Reduced-motion users get a clean still.
  */
+/** Sequenced hero entrance: blur + rise, one element per beat. */
+function HeroBeat({
+  children,
+  delay,
+  className,
+}: {
+  children: React.ReactNode
+  delay: number
+  className?: string
+}) {
+  const reduced = useReducedMotion()
+  if (reduced) return <div className={className}>{children}</div>
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0, y: 28, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ duration: 0.9, delay, ease: EASE }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
 export default function AboutHero() {
   const sectionRef = useRef<HTMLElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
@@ -85,20 +111,15 @@ export default function AboutHero() {
                 <span className="hero-mask-inner italic" style={{ animationDelay: '0.32s' }}>Investment Club</span>
               </span>
             </h1>
-            <p
-              className="font-serif italic text-base text-white opacity-70 mt-1 tracking-widest"
-              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.6s both' }}
-            >
-              Est. 2023
-            </p>
-            <div
-              className="w-16 h-px bg-white/30 mt-8 mb-10"
-              style={{ animation: 'heroFadeIn 0.8s ease 0.8s both' }}
-            />
-            <div
-              className="flex flex-col sm:flex-row items-center gap-4"
-              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.9s both' }}
-            >
+            <HeroBeat delay={0.5}>
+              <p className="font-serif italic text-base text-white opacity-70 mt-1 tracking-widest">
+                Est. 2023
+              </p>
+            </HeroBeat>
+            <HeroBeat delay={0.65}>
+              <div className="w-16 h-px bg-white/30 mt-8 mb-10" />
+            </HeroBeat>
+            <HeroBeat delay={0.8} className="flex flex-col sm:flex-row items-center gap-4">
               <Link
                 href="/join-us"
                 className="inline-block bg-white text-forest text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white/90 transition-colors duration-fast"
@@ -111,7 +132,7 @@ export default function AboutHero() {
               >
                 Our Research
               </Link>
-            </div>
+            </HeroBeat>
           </div>
         </div>
       </div>

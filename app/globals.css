@@ -102,10 +102,10 @@
   animation: cardEnter 0.25s ease-out both;
 }
 
-/* Hero entrance */
+/* Hero entrance — blur settles away as the element rises */
 @keyframes heroFadeUp {
-  from { opacity: 0; transform: translateY(48px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(48px); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0px); }
 }
 
 @keyframes heroFadeIn {

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import StatsSection from './components/StatsSection'
 import NewsCard, { type NewsItem } from './components/NewsCard'
 import PartnersMarquee from './components/PartnersMarquee'
-import Reveal from './components/Reveal'
+import { MotionReveal, MotionLine, MotionWipe } from './components/motion/Motion'
 import AboutHero from './components/about/AboutHero'
 import TiltCard from './components/about/TiltCard'
 import Signature3D from './components/about/Signature3D'
@@ -66,52 +66,68 @@ export default async function HomePage() {
       <section className="bg-white py-24 sm:py-32 border-b border-line overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid md:grid-cols-12 gap-14 lg:gap-20 items-center">
-            <Reveal direction="right" className="md:col-span-7">
-              <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-4">The Club</p>
-              <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-5">Who We Are</h2>
-              <div className="w-10 h-0.5 bg-forest mb-8" />
-              <p className="text-ink-500 text-base sm:text-lg leading-relaxed mb-10">
-                Alata is an Investment Club of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
-              </p>
-              <Link
-                href="/team"
-                className="inline-flex items-center gap-2 text-forest text-xs font-semibold tracking-[0.2em] uppercase group"
-              >
-                <span className="underline-grow">Meet the Team</span>
-                <svg className="w-3.5 h-3.5 transition-transform duration-base group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </Reveal>
-            <Reveal direction="left" delay={150} className="md:col-span-5">
-              <div className="frame-double">
-                <div className="relative w-full aspect-[4/5] overflow-hidden bg-paper-stone">
-                  <Image
-                    src="/redesign/evento-cortile.png"
-                    alt="Alata members at a club reception"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 40vw"
-                  />
+            <div className="md:col-span-7">
+              <MotionReveal delay={0}>
+                <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-4">The Club</p>
+              </MotionReveal>
+              <MotionReveal delay={0.12}>
+                <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-5">Who We Are</h2>
+              </MotionReveal>
+              <MotionLine delay={0.24} duration={0.8} className="w-10 h-0.5 bg-forest mb-8" />
+              <MotionReveal delay={0.3}>
+                <p className="text-ink-500 text-base sm:text-lg leading-relaxed mb-10">
+                  Alata is an Investment Club of the University of Brescia, founded with the goal of promoting financial culture through a stimulating, meritocratic and collaborative environment. Our mission is twofold: on one hand, to encourage the personal and professional growth of the most motivated students; on the other, to develop concrete skills in key areas of finance, including financial statement analysis, equity research, M&amp;A transactions, and macroeconomic analysis. Within the association, members work in teams to produce reports, thematic insights, and market analyses, simulating professional dynamics and building skills valuable in the workplace.
+                </p>
+              </MotionReveal>
+              <MotionReveal delay={0.42}>
+                <Link
+                  href="/team"
+                  className="inline-flex items-center gap-2 text-forest text-xs font-semibold tracking-[0.2em] uppercase group"
+                >
+                  <span className="underline-grow">Meet the Team</span>
+                  <svg className="w-3.5 h-3.5 transition-transform duration-base group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </MotionReveal>
+            </div>
+            <div className="md:col-span-5">
+              <MotionWipe delay={0.2}>
+                <div className="frame-double">
+                  <div className="relative w-full aspect-[4/5] overflow-hidden bg-paper-stone">
+                    <Image
+                      src="/redesign/evento-cortile.png"
+                      alt="Alata members at a club reception"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 40vw"
+                    />
+                  </div>
                 </div>
-              </div>
-              <p className="mt-6 text-[11px] tracking-[0.22em] uppercase text-ink-400">
-                Life at Alata — members&rsquo; reception
-              </p>
-            </Reveal>
+              </MotionWipe>
+              <MotionReveal delay={0.55} y={12}>
+                <p className="mt-6 text-[11px] tracking-[0.22em] uppercase text-ink-400">
+                  Life at Alata — members&rsquo; reception
+                </p>
+              </MotionReveal>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <Reveal direction="up">
-        <StatsSection />
-      </Reveal>
+      <StatsSection />
 
-      {/* About — Vision + Mission, unified white panels split by a hairline */}
-      <div className="bg-white grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-line border-b border-line">
+      {/* About — Vision + Mission, unified white panels; the hairline draws itself */}
+      <div className="relative bg-white grid md:grid-cols-2 divide-y md:divide-y-0 divide-line border-b border-line">
+        {/* Center hairline — draws top→bottom on scroll (desktop only) */}
+        <MotionLine
+          orientation="vertical"
+          duration={1.3}
+          className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-line"
+        />
         {/* Vision */}
-        <Reveal direction="left" className="px-8 lg:px-14 py-20 sm:py-28">
+        <MotionReveal x={-24} y={0} className="px-8 lg:px-14 py-20 sm:py-28">
           <p className="font-serif text-2xl text-ink-300 mb-8">01</p>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-3">
             Our Vision
@@ -120,9 +136,9 @@ export default async function HomePage() {
           <p className="text-ink-500 text-base sm:text-lg leading-relaxed">
             A community where ambition meets opportunity, regardless of where you start.
           </p>
-        </Reveal>
+        </MotionReveal>
         {/* Mission */}
-        <Reveal direction="right" className="px-8 lg:px-14 py-20 sm:py-28">
+        <MotionReveal x={24} y={0} delay={0.2} className="px-8 lg:px-14 py-20 sm:py-28">
           <p className="font-serif text-2xl text-ink-300 mb-8">02</p>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-3">
             Our Mission
@@ -131,25 +147,25 @@ export default async function HomePage() {
           <p className="text-ink-500 text-base sm:text-lg leading-relaxed">
             Alata was born from a simple idea: the best conversations about finance happen between people who are genuinely curious. We bring together the most ambitious students at UniBS to share knowledge, challenge each other, and grow, inside and outside the classroom.
           </p>
-        </Reveal>
+        </MotionReveal>
       </div>
 
       {/* About — What We Value */}
       <section className="bg-gray-100 pt-10 sm:pt-12 pb-10 sm:pb-12">
         <div className="max-w-5xl mx-auto px-6 lg:px-8">
-          <Reveal direction="up">
+          <MotionReveal>
             <h2 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 leading-[1.08] mb-3">
               What We Value
             </h2>
-            <div className="w-10 h-0.5 bg-forest mb-10" />
-          </Reveal>
+          </MotionReveal>
+          <MotionLine delay={0.15} duration={0.8} className="w-10 h-0.5 bg-forest mb-10" />
           <div className="grid md:grid-cols-3 gap-6 items-stretch">
             {[
               { numeral: 'I', label: 'Community', body: 'More than a club, a network built on trust. The relationships you build here last well beyond your degree.' },
               { numeral: 'II', label: 'Drive', body: "We attract people who don't wait to be told what to do. Taking initiative isn't a buzzword here, it's the entry requirement." },
               { numeral: 'III', label: 'Ambition', body: "We think big about what a university club can be. And we're building accordingly." },
             ].map(({ numeral, label, body }, i) => (
-              <Reveal key={label} direction="up" delay={i * 150} className="h-full">
+              <MotionReveal key={label} delay={i * 0.15} className="h-full">
                 <TiltCard className="h-full">
                   <div className="value-card bg-forest p-8 h-full">
                     <span className="value-numeral font-serif" aria-hidden="true">{numeral}</span>
@@ -158,7 +174,7 @@ export default async function HomePage() {
                     <p className="text-white/65 text-sm leading-relaxed">{body}</p>
                   </div>
                 </TiltCard>
-              </Reveal>
+              </MotionReveal>
             ))}
           </div>
         </div>
@@ -170,7 +186,7 @@ export default async function HomePage() {
       {/* News & Events */}
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <Reveal direction="up" className="mb-12 border-b border-line pb-6 flex items-end justify-between gap-6">
+          <MotionReveal className="mb-12 border-b border-line pb-6 flex items-end justify-between gap-6">
             <div>
               <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-2">Latest</p>
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900">News &amp; Events</h2>
@@ -184,7 +200,7 @@ export default async function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
-          </Reveal>
+          </MotionReveal>
 
           {!eventi || eventi.length === 0 ? (
             <div className="py-20 text-center text-ink-500">
@@ -193,9 +209,9 @@ export default async function HomePage() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {eventi.map((item, i) => (
-                <Reveal key={item.id} direction="up" delay={i * 150} className="h-full">
+                <MotionReveal key={item.id} delay={i * 0.15} className="h-full">
                   <NewsCard item={item as NewsItem} />
-                </Reveal>
+                </MotionReveal>
               ))}
             </div>
           )}
@@ -210,7 +226,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             {/* Testo da destra */}
-            <Reveal direction="right">
+            <MotionReveal x={-24} y={0}>
               <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Get in touch</p>
               <h2 className="font-serif text-4xl sm:text-5xl font-bold leading-tight mb-6">
                 Contact Us
@@ -219,11 +235,11 @@ export default async function HomePage() {
               <p className="text-white/70 text-sm leading-relaxed">
                 Interested in joining, partnering, or simply learning more about what we do? Reach out through any of the channels below.
               </p>
-            </Reveal>
+            </MotionReveal>
 
-            {/* Link social: uno alla volta da sinistra con delay scalato */}
+            {/* Link social: uno alla volta con delay scalato */}
             <div className="flex flex-col gap-6">
-              <Reveal direction="left" delay={0}>
+              <MotionReveal x={24} y={0} delay={0}>
                 <a
                   href="https://www.instagram.com/alata_investmentclub"
                   target="_blank"
@@ -240,9 +256,9 @@ export default async function HomePage() {
                     </p>
                   </div>
                 </a>
-              </Reveal>
+              </MotionReveal>
 
-              <Reveal direction="left" delay={100}>
+              <MotionReveal x={24} y={0} delay={0.15}>
                 <a
                   href="https://www.linkedin.com/company/alatainvestmentclub/"
                   target="_blank"
@@ -259,9 +275,9 @@ export default async function HomePage() {
                     </p>
                   </div>
                 </a>
-              </Reveal>
+              </MotionReveal>
 
-              <Reveal direction="left" delay={200}>
+              <MotionReveal x={24} y={0} delay={0.3}>
                 <a
                   href="mailto:info@alatainvestmentclub.com"
                   className="flex items-center gap-4 group"
@@ -276,7 +292,7 @@ export default async function HomePage() {
                     </p>
                   </div>
                 </a>
-              </Reveal>
+              </MotionReveal>
             </div>
           </div>
         </div>

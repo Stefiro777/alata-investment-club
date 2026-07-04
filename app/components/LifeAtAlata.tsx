@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Reveal from './Reveal'
+import CrossfadeVideo from './CrossfadeVideo'
 
 type Tile = {
   kind: 'video' | 'photo'
@@ -24,40 +24,6 @@ const TILES: Tile[] = [
   { kind: 'video', src: '/redesign/palazzo-2.mp4', caption: 'Roundtables', span: 'md:col-span-4 md:row-span-1', sizes: '100vw' },
 ]
 
-/** Plays muted and loops only while visible in the viewport. */
-function InViewVideo({ src }: { src: string }) {
-  const ref = useRef<HTMLVideoElement>(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.play().catch(() => {})
-        } else {
-          el.pause()
-        }
-      },
-      { threshold: 0.35 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
-  return (
-    <video
-      ref={ref}
-      src={src}
-      muted
-      loop
-      playsInline
-      preload="metadata"
-      className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]"
-    />
-  )
-}
-
 export default function LifeAtAlata() {
   return (
     <section className="bg-white py-20 sm:py-28">
@@ -76,7 +42,10 @@ export default function LifeAtAlata() {
                 className={`group relative overflow-hidden bg-paper-stone border border-line ${tile.span}`}
               >
                 {tile.kind === 'video' ? (
-                  <InViewVideo src={tile.src} />
+                  <CrossfadeVideo
+                    src={tile.src}
+                    className="transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]"
+                  />
                 ) : (
                   <Image
                     src={tile.src}

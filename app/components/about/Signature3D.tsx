@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import Reveal from '../Reveal'
+import { motion } from 'framer-motion'
+import { MotionReveal, MotionLine, EASE } from '../motion/Motion'
 
 // Canvas is client-only (WebGL) and code-split so three.js never ships with the
 // initial bundle — it loads only when this section approaches the viewport.
@@ -51,12 +52,16 @@ export default function Signature3D() {
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-24 sm:py-28 grid lg:grid-cols-12 gap-10 items-center">
         {/* Copy */}
         <div className="lg:col-span-4 order-2 lg:order-1">
-          <Reveal direction="right">
+          <MotionReveal delay={0}>
             <p className="text-xs tracking-[0.3em] uppercase text-white/45 mb-5">The name</p>
+          </MotionReveal>
+          <MotionReveal delay={0.15}>
             <h2 className="font-serif text-4xl sm:text-5xl font-semibold leading-[1.08] mb-5">
               Alata
             </h2>
-            <div className="w-10 h-px bg-white/30 mb-6" />
+          </MotionReveal>
+          <MotionLine delay={0.3} duration={0.8} className="w-10 h-px bg-white/30 mb-6" />
+          <MotionReveal delay={0.4}>
             <p className="text-white/65 text-base leading-relaxed">
               The name honors the Winged Victory of Brescia, the Roman bronze statue unearthed
               in the city in 1826 and now among Italy&rsquo;s most celebrated ancient treasures,
@@ -64,14 +69,21 @@ export default function Signature3D() {
               symbol of Brescia itself — an image of ambition, achievement, and flight toward
               something greater. We took it as our own.
             </p>
-          </Reveal>
+          </MotionReveal>
         </div>
 
         {/* 3D stage */}
         <div ref={ref} className="lg:col-span-8 order-1 lg:order-2">
           <div className="relative w-full h-[380px] sm:h-[460px] lg:h-[520px]">
             {allow3D && inView ? (
-              <Signature3DCanvas />
+              <motion.div
+                className="absolute inset-0"
+                initial={{ opacity: 0, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, filter: 'blur(0px)' }}
+                transition={{ duration: 1.4, delay: 0.2, ease: EASE }}
+              >
+                <Signature3DCanvas />
+              </motion.div>
             ) : (
               // Reduced-motion / no-WebGL fallback: a quiet static mark.
               <div className="absolute inset-0 flex items-center justify-center">

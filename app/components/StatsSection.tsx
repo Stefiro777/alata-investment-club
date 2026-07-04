@@ -61,7 +61,8 @@ function StatItem({
       style={{
         opacity: started ? 1 : 0,
         transform: started ? 'translateY(0)' : 'translateY(24px)',
-        transition: 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)',
+        filter: started ? 'blur(0px)' : 'blur(8px)',
+        transition: 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1)',
       }}
     >
       <span className="font-serif text-6xl font-semibold text-white leading-none tabular-nums">

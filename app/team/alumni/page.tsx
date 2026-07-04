@@ -6,6 +6,7 @@ import AlumniGrid from './AlumniGrid'
 import AlumniReviewsWrapper from './AlumniReviewsWrapper'
 import Reveal from '@/app/components/Reveal'
 import Parallax from '@/app/components/Parallax'
+import { MotionReveal, MotionLine } from '@/app/components/motion/Motion'
 import type { Alumni } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -76,20 +77,25 @@ export default async function AlumniPage() {
         <div className="absolute inset-0 hero-vignette" />
         <div className="relative z-10 w-full py-20 sm:py-28">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">
-              <Link href="/team" className="hover:text-white/80 transition-colors">
-                Our Team
-              </Link>
-              {' / '}Alumni
-            </p>
-            <h1 className="animate-hero-title font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
-              Alumni
-            </h1>
-            <div className="animate-hero-line w-12 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-base max-w-2xl leading-relaxed"
-              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
-              Former members who shaped Alata Investment Club — now building their careers in finance.
-            </p>
+            <MotionReveal delay={0} y={20}>
+              <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">
+                <Link href="/team" className="hover:text-white/80 transition-colors">
+                  Our Team
+                </Link>
+                {' / '}Alumni
+              </p>
+            </MotionReveal>
+            <MotionReveal delay={0.15}>
+              <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">
+                Alumni
+              </h1>
+            </MotionReveal>
+            <MotionLine delay={0.35} duration={0.8} className="w-12 h-px bg-white/30 mb-6" />
+            <MotionReveal delay={0.45}>
+              <p className="text-white/70 text-base max-w-2xl leading-relaxed">
+                Former members who shaped Alata Investment Club — now building their careers in finance.
+              </p>
+            </MotionReveal>
           </div>
         </div>
       </section>

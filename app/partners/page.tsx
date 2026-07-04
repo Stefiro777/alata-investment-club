@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase-server'
 import Reveal from '@/app/components/Reveal'
+import { MotionReveal, MotionLine } from '@/app/components/motion/Motion'
 import FeaturedGallery from '@/app/components/FeaturedGallery'
 import type { FeaturedGalleryItem, Partner, PartnerDocument } from '@/lib/types'
 import SponsorDocumentList from './SponsorDocumentList'
@@ -131,26 +132,32 @@ export default async function PartnersPage() {
         {/* Left — content */}
         <div className="bg-forest flex items-center py-20 sm:py-28 lg:min-h-[640px]">
           <div className="w-full max-w-2xl lg:ml-auto px-6 lg:pl-8 lg:pr-16">
-            <p className="animate-hero-line text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Partnerships</p>
-            <h1 className="animate-hero-title font-serif text-5xl sm:text-6xl font-bold mb-6">
-              Partner with Alata
-            </h1>
-            <div className="animate-hero-line w-12 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-base max-w-xl leading-relaxed mb-10"
-              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both' }}>
-              Build your brand where the next generation of finance professionals starts.
-            </p>
-            <a
-              href="mailto:info@alatainvestmentclub.com"
-              className="inline-block border border-white/40 text-white text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white hover:text-forest hover:border-white transition-colors duration-base"
-              style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.6s both' }}
-            >
-              Start a Conversation
-            </a>
+            <MotionReveal delay={0} y={20}>
+              <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Partnerships</p>
+            </MotionReveal>
+            <MotionReveal delay={0.15}>
+              <h1 className="font-serif text-5xl sm:text-6xl font-bold mb-6">
+                Partner with Alata
+              </h1>
+            </MotionReveal>
+            <MotionLine delay={0.35} duration={0.8} className="w-12 h-px bg-white/30 mb-6" />
+            <MotionReveal delay={0.45}>
+              <p className="text-white/70 text-base max-w-xl leading-relaxed mb-10">
+                Build your brand where the next generation of finance professionals starts.
+              </p>
+            </MotionReveal>
+            <MotionReveal delay={0.6}>
+              <a
+                href="mailto:info@alatainvestmentclub.com"
+                className="inline-block border border-white/40 text-white text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white hover:text-forest hover:border-white transition-colors duration-base"
+              >
+                Start a Conversation
+              </a>
+            </MotionReveal>
           </div>
         </div>
         {/* Right — towers photo */}
-        <div className="relative min-h-[340px] lg:min-h-0" style={{ animation: 'heroFadeIn 1.1s ease 0.2s both' }}>
+        <MotionReveal delay={0.2} duration={1.1} y={0} blur={10} className="relative min-h-[340px] lg:min-h-0">
           <Image
             src="/redesign/brescia-due-hd.jpg"
             fill
@@ -160,7 +167,7 @@ export default async function PartnersPage() {
             preload
           />
           <div className="absolute inset-0" style={{ background: 'rgba(26,74,58,0.45)' }} />
-        </div>
+        </MotionReveal>
       </section>
 
       {/* Why Partner */}

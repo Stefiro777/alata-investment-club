@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Parallax from '@/app/components/Parallax'
 import Reveal from '@/app/components/Reveal'
+import { MotionReveal, MotionLine } from '@/app/components/motion/Motion'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -80,24 +81,24 @@ export default async function MerchPage({
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.78)', zIndex: 1 }} />
         <div className="absolute inset-0 hero-vignette" style={{ zIndex: 1 }} />
         <div style={{ position: 'relative', zIndex: 2 }} className="text-center px-6 py-20">
-          <p
-            className="animate-hero-line text-xs tracking-[0.35em] uppercase text-white/60 mb-6"
-          >
-            Official Merchandise
-          </p>
-          <h1 className="animate-hero-title font-serif text-6xl md:text-8xl font-semibold text-white leading-[1.02] mb-6">
-            Wear <em className="italic">the Club</em>
-          </h1>
-          <div
-            className="w-10 h-px bg-white/30 mx-auto mb-6"
-            style={{ animation: 'heroFadeIn 0.8s ease 0.45s both' }}
-          />
-          <p
-            className="text-base text-white/80 max-w-xl mx-auto leading-relaxed"
-            style={{ animation: 'heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.5s both' }}
-          >
-            Selected pieces for members and enthusiasts.
-          </p>
+          <MotionReveal delay={0} y={20}>
+            <p className="text-xs tracking-[0.35em] uppercase text-white/60 mb-6">
+              Official Merchandise
+            </p>
+          </MotionReveal>
+          <MotionReveal delay={0.15}>
+            <h1 className="font-serif text-6xl md:text-8xl font-semibold text-white leading-[1.02] mb-6">
+              Wear <em className="italic">the Club</em>
+            </h1>
+          </MotionReveal>
+          <MotionReveal delay={0.4} y={0} blur={6}>
+            <div className="w-10 h-px bg-white/30 mx-auto mb-6" />
+          </MotionReveal>
+          <MotionReveal delay={0.5}>
+            <p className="text-base text-white/80 max-w-xl mx-auto leading-relaxed">
+              Selected pieces for members and enthusiasts.
+            </p>
+          </MotionReveal>
         </div>
       </section>
 
