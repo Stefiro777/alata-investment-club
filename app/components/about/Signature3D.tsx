@@ -58,8 +58,11 @@ export default function Signature3D() {
             </h2>
             <div className="w-10 h-px bg-white/30 mb-6" />
             <p className="text-white/65 text-base leading-relaxed">
-              <span className="italic">Alata</span> — winged. A name for the ambition to rise:
-              to lift ideas, people and standards a little higher than where they started.
+              The name honors the Winged Victory of Brescia, the Roman bronze statue unearthed
+              in the city in 1826 and now among Italy&rsquo;s most celebrated ancient treasures,
+              housed at the Museo di Santa Giulia. For nearly two centuries it has stood as a
+              symbol of Brescia itself — an image of ambition, achievement, and flight toward
+              something greater. We took it as our own.
             </p>
           </Reveal>
         </div>
