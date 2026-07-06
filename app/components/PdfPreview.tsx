@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist'
 
 interface Props {
   pdfUrl: string
@@ -26,8 +27,8 @@ function PdfFallback({ title }: { title: string }) {
 export default function PdfPreview({ pdfUrl, title }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const pdfRef = useRef<any>(null)
-  const renderTaskRef = useRef<any>(null)
+  const pdfRef = useRef<PDFDocumentProxy | null>(null)
+  const renderTaskRef = useRef<RenderTask | null>(null)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
@@ -38,7 +39,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
   // Incremented each time a new PDF is ready to render; drives the render effect.
   const [pdfReady, setPdfReady] = useState(0)
 
-  const renderPage = useCallback(async (pdf: any, pageNum: number) => {
+  const renderPage = useCallback(async (pdf: PDFDocumentProxy, pageNum: number) => {
     const canvas = canvasRef.current
     if (!canvas) return
     // Cancel any in-flight render and wait for it to actually stop before
@@ -62,7 +63,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
       canvas.height = viewport.height
       setCanvasHeight(viewport.height)
       const ctx = canvas.getContext('2d')!
-      const task = page.render({ canvasContext: ctx, viewport })
+      const task = page.render({ canvas, canvasContext: ctx, viewport })
       renderTaskRef.current = task
       await task.promise
       renderTaskRef.current = null
