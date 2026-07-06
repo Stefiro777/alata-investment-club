@@ -66,8 +66,8 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
       renderTaskRef.current = task
       await task.promise
       renderTaskRef.current = null
-    } catch (err: any) {
-      if (err?.name !== 'RenderingCancelledException') {
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name !== 'RenderingCancelledException') {
         console.error('[PdfPreview] render error:', err)
       }
     }

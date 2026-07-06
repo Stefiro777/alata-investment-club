@@ -25,8 +25,8 @@ export default function SyncCalendarButton() {
         setResult(`Error: ${data.error}`);
         setIsError(true);
       }
-    } catch (err: any) {
-      setResult(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      setResult(`Error: ${err instanceof Error ? err.message : String(err)}`);
       setIsError(true);
     } finally {
       setLoading(false);

@@ -6,12 +6,10 @@ const supabase = createSupabaseAdmin(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const MONTHS_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
-                   'luglio','agosto','settembre','ottobre','novembre','dicembre']
-
 function fmtDate(iso: string) {
-  const d = new Date(iso)
-  return `${d.getDate()} ${MONTHS_IT[d.getMonth()]} ${d.getFullYear()}`
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
 }
 
 export default async function VerifyPage({ params }: { params: Promise<{ memberId: string }> }) {
@@ -34,10 +32,10 @@ export default async function VerifyPage({ params }: { params: Promise<{ memberI
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: '#ef4444', fontWeight: 700, margin: '0 0 12px' }}>Non valida</p>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a', margin: '0 0 12px' }}>Membership scaduta o non valida</h1>
+          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: '#ef4444', fontWeight: 700, margin: '0 0 12px' }}>Not valid</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a', margin: '0 0 12px' }}>Membership expired or invalid</h1>
           <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6, margin: 0 }}>
-            La tessera presentata non è attiva. Contatta Alata Investment Club per maggiori informazioni.
+            This membership card is not active. Please contact Alata Investment Club for more information.
           </p>
           <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #fecaca' }}>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Alata Investment Club · alatainvestmentclub.com</p>
@@ -54,7 +52,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ memberI
         <div style={{ background: '#1a4a3a', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <p style={{ margin: 0, fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Alata Investment Club</p>
-            <p style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 700, color: 'white', letterSpacing: 1 }}>Verifica Membership</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 700, color: 'white', letterSpacing: 1 }}>Membership Verification</p>
           </div>
           <Image src="/white-black.png" alt="Alata" width={40} height={40} style={{ objectFit: 'contain' }} />
         </div>
@@ -66,21 +64,21 @@ export default async function VerifyPage({ params }: { params: Promise<{ memberI
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#15803d', letterSpacing: 1, textTransform: 'uppercase' }}>Membership Attiva</p>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#15803d', letterSpacing: 1, textTransform: 'uppercase' }}>Active Membership</p>
         </div>
 
         {/* Member info */}
         <div style={{ padding: '28px 24px' }}>
-          <p style={{ margin: '0 0 4px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600 }}>Membro</p>
+          <p style={{ margin: '0 0 4px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600 }}>Member</p>
           <p style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 700, color: '#1a1a1a' }}>{data.full_name}</p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
-              <p style={{ margin: '0 0 4px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600 }}>Ruolo</p>
+              <p style={{ margin: '0 0 4px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600 }}>Role</p>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1a4a3a', textTransform: 'uppercase', letterSpacing: 1 }}>{data.role}</p>
             </div>
             <div>
-              <p style={{ margin: '0 0 4px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600 }}>Valida fino al</p>
+              <p style={{ margin: '0 0 4px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600 }}>Valid until</p>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>{fmtDate(data.membership_expires_at!)}</p>
             </div>
           </div>

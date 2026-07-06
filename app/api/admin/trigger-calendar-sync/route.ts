@@ -36,9 +36,9 @@ export async function POST() {
       deleted: result.deleted,
       total: result.total_in_notion,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

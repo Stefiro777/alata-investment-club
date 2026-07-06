@@ -113,7 +113,9 @@ export default async function HomePage() {
                 <img
                   src="/white-black.png"
                   alt="Alata"
-                  className="w-64 border-2 border-[#1a4a3a]"
+                  width={4228}
+                  height={4228}
+                  className="w-64 h-auto border-2 border-[#1a4a3a]"
                 />
               </div>
             </div>

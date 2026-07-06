@@ -10,7 +10,7 @@ const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
 
 function buildInviteEmail(inviteLink: string): string {
   return `<!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
@@ -24,16 +24,16 @@ function buildInviteEmail(inviteLink: string): string {
             <p style="margin:0 0 6px;font-size:11px;color:#7ecba3;letter-spacing:2px;
                       text-transform:uppercase;">Alata Investment Club</p>
             <h1 style="margin:0;font-size:20px;color:#ffffff;font-weight:700;
-                       letter-spacing:-0.3px;">Sei stato invitato</h1>
+                       letter-spacing:-0.3px;">You have been invited</h1>
           </td>
         </tr>
 
         <!-- Body -->
         <tr>
           <td style="padding:28px 24px 8px;font-size:14px;color:#374151;line-height:1.6;">
-            Hai ricevuto un invito per accedere alla piattaforma interna di
+            You have been invited to join the internal platform of
             <strong>Alata Investment Club</strong>.<br><br>
-            Clicca il pulsante qui sotto per impostare la tua password e attivare il tuo account.
+            Click the button below to set your password and activate your account.
           </td>
         </tr>
 
@@ -44,7 +44,7 @@ function buildInviteEmail(inviteLink: string): string {
                style="display:inline-block;background:#1a4a3a;color:#ffffff;
                       font-size:13px;font-weight:600;text-transform:uppercase;
                       letter-spacing:1px;padding:12px 32px;text-decoration:none;">
-              Attiva account →
+              Activate account →
             </a>
           </td>
         </tr>
@@ -62,7 +62,7 @@ function buildInviteEmail(inviteLink: string): string {
         <tr>
           <td style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;">
             <p style="margin:0;font-size:11px;color:#9ca3af;">
-              Notifica automatica · Alata Investment Club · alatainvestmentclub.com
+              Automated notification · Alata Investment Club · alatainvestmentclub.com
             </p>
           </td>
         </tr>
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message ?? String(err) }, { status: 500 })
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 })
   }
 }

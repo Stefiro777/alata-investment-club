@@ -7,7 +7,7 @@ import { TEAM_BADGE } from '../teamColors'
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const FILTER_OPTIONS = [
-  { key: 'all',       label: 'Tutti' },
+  { key: 'all',       label: 'All' },
   { key: 'events',    label: 'Events' },
   { key: 'media',     label: 'Media' },
   { key: 'career',    label: 'Career' },
@@ -20,11 +20,11 @@ const FILTER_OPTIONS = [
 
 type CalFilter = 'all' | 'events' | 'media' | 'career' | 'education' | 'academy' | 'syrto' | 'lab' | 'alumni' | 'posts'
 
-const WEEKDAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-const MONTHS_IT = [
-  'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre',
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -175,7 +175,7 @@ function MonthNav({
         </svg>
       </button>
       <h2 className="font-serif text-xl font-semibold text-ink-900 w-44 text-center">
-        {MONTHS_IT[month]} {year}
+        {MONTHS[month]} {year}
       </h2>
       <button
         type="button"
@@ -277,17 +277,17 @@ function PostPlanPopup({
         <div className="px-6 pb-5 border-t border-[#e5e7eb] pt-3">
           {confirming ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-ink-500 flex-1">Eliminare questo post?</span>
+              <span className="text-sm text-ink-500 flex-1">Delete this post?</span>
               <button type="button" onClick={() => { onDelete(plan.id); onClose() }} className="text-xs font-medium uppercase tracking-wide px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white transition-colors">
-                Sì, elimina
+                Yes, delete
               </button>
               <button type="button" onClick={() => setConfirming(false)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-ink-900 transition-colors">
-                Annulla
+                Cancel
               </button>
             </div>
           ) : (
             <button type="button" onClick={() => setConfirming(true)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-red-600 transition-colors">
-              Elimina post
+              Delete post
             </button>
           )}
         </div>
@@ -344,7 +344,7 @@ function TaskPopup({ task, onClose }: { task: CalTask; onClose: () => void }) {
               <p className="text-ink-900">{teamLabel(task.team)}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Scadenza</p>
+              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Due date</p>
               <p className="text-ink-900">{fmtDate(task.due_date)}</p>
             </div>
             <div>
@@ -352,7 +352,7 @@ function TaskPopup({ task, onClose }: { task: CalTask; onClose: () => void }) {
               <p className="text-ink-900">{statusLabel(task.status)}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Priorità</p>
+              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Priority</p>
               <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 ${priorityColor(task.priority)}`}>
                 {priorityLabel(task.priority)}
               </span>
@@ -442,7 +442,7 @@ function TasksTab() {
   const grid = useMemo(() => buildGrid(year, month), [year, month])
   const todayStr = toISODate(today)
 
-  if (loading) return <div className="py-16 text-sm text-ink-500">Caricamento...</div>
+  if (loading) return <div className="py-16 text-sm text-ink-500">Loading...</div>
 
   return (
     <div>
@@ -512,7 +512,7 @@ function TasksTab() {
       {/* Legend */}
       <div className="flex items-center gap-6 mt-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <span className="text-[10px] uppercase tracking-wide text-ink-400 font-medium">Priorità:</span>
+          <span className="text-[10px] uppercase tracking-wide text-ink-400 font-medium">Priority:</span>
           {[{ label: 'High', color: '#dc2626' }, { label: 'Medium', color: '#d97706' }, { label: 'Low', color: '#6b7280' }].map(l => (
             <span key={l.label} className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-600">
               <span style={{ backgroundColor: l.color, width: 8, height: 8, borderRadius: 0, display: 'inline-block', flexShrink: 0 }} />
@@ -607,17 +607,17 @@ function EventDetailModal({
           <div className="px-6 pb-5 border-t border-[#e5e7eb] pt-3">
             {confirming ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-ink-500 flex-1">Eliminare questo evento?</span>
+                <span className="text-sm text-ink-500 flex-1">Delete this event?</span>
                 <button type="button" onClick={handleDelete} disabled={deleting} className="text-xs font-medium uppercase tracking-wide px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-40">
-                  {deleting ? '…' : 'Sì, elimina'}
+                  {deleting ? '…' : 'Yes, delete'}
                 </button>
                 <button type="button" onClick={() => setConfirming(false)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-ink-900 transition-colors">
-                  Annulla
+                  Cancel
                 </button>
               </div>
             ) : (
               <button type="button" onClick={() => setConfirming(true)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-red-600 transition-colors">
-                Elimina evento
+                Delete event
               </button>
             )}
           </div>
@@ -650,7 +650,7 @@ function NewEventModal({
       body: JSON.stringify({ date, title: title.trim(), description: description.trim() || null, location: location.trim() || null, start_time: startTime || null, end_time: endTime || null }),
     })
     const json = await res.json()
-    if (!res.ok) { setError(json.error ?? 'Errore'); setSaving(false); return }
+    if (!res.ok) { setError(json.error ?? 'Error'); setSaving(false); return }
     onCreated(json.data as UpcomingEventItem)
     onClose()
   }
@@ -672,8 +672,8 @@ function NewEventModal({
             <input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Titolo *</label>
-            <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Titolo evento" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+            <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Title *</label>
+            <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Event title" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Descrizione</label>
@@ -696,9 +696,9 @@ function NewEventModal({
           {error && <p className="text-xs text-red-500">{error}</p>}
           <div className="flex items-center gap-4 pt-1">
             <button type="submit" disabled={saving || !date || !title.trim()} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40">
-              {saving ? 'Salvataggio…' : 'Crea evento'}
+              {saving ? 'Saving…' : 'Create event'}
             </button>
-            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Annulla</button>
+            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Cancel</button>
           </div>
         </form>
       </div>
@@ -767,7 +767,7 @@ function EventiTab() {
     return map
   }, [events])
 
-  if (loading) return <div className="py-16 text-sm text-ink-500">Caricamento...</div>
+  if (loading) return <div className="py-16 text-sm text-ink-500">Loading...</div>
 
   return (
     <div>
@@ -907,7 +907,7 @@ function PedDetailModal({
             </div>
             {post.assigned_to && (
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-ink-400 mb-0.5">Assegnato a</p>
+                <p className="text-[10px] uppercase tracking-widest text-ink-400 mb-0.5">Assigned to</p>
                 <p className="text-ink-900">{post.assigned_to}</p>
               </div>
             )}
@@ -996,7 +996,7 @@ function NewPedModal({
       }),
     })
     const json = await res.json()
-    if (!res.ok) { setError(json.error ?? 'Errore'); setSaving(false); return }
+    if (!res.ok) { setError(json.error ?? 'Error'); setSaving(false); return }
     onCreated(json.data as PedPost)
     onClose()
   }
@@ -1016,8 +1016,8 @@ function NewPedModal({
             <input required type="date" value={scheduledDate} onChange={e => setDate(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Titolo *</label>
-            <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Titolo" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+            <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Title *</label>
+            <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Piattaforma</label>
@@ -1050,7 +1050,7 @@ function NewPedModal({
             <textarea rows={3} value={description} onChange={e => setDesc(e.target.value)} placeholder="Descrizione (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a] resize-none" />
           </div>
           <div className="relative">
-            <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Assegnato A</label>
+            <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Assigned to</label>
             <input
               value={assignedTo}
               onChange={e => { setAssignedTo(e.target.value); setAcOpen(true) }}
@@ -1078,9 +1078,9 @@ function NewPedModal({
           {error && <p className="text-xs text-red-500">{error}</p>}
           <div className="flex items-center gap-4 pt-1">
             <button type="submit" disabled={saving || !scheduledDate || !title.trim()} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40">
-              {saving ? 'Salvataggio…' : 'Crea entry'}
+              {saving ? 'Saving…' : 'Create entry'}
             </button>
-            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Annulla</button>
+            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Cancel</button>
           </div>
         </form>
       </div>
@@ -1147,7 +1147,7 @@ function PedTab() {
     setDeleting(null)
   }
 
-  if (loading) return <div className="py-16 text-sm text-ink-500">Caricamento...</div>
+  if (loading) return <div className="py-16 text-sm text-ink-500">Loading...</div>
 
   return (
     <div>
@@ -1259,12 +1259,12 @@ function PedTab() {
         /* Lista view */
         <div>
           {posts.length === 0 ? (
-            <p className="text-sm text-ink-500 py-8">Nessuna entry nel piano editoriale.</p>
+            <p className="text-sm text-ink-500 py-8">No entries in the editorial plan.</p>
           ) : (
             <div className="border border-[#e5e7eb]">
               {/* Header row */}
               <div className="grid grid-cols-[120px_1fr_110px_110px_130px_110px_80px] border-b border-[#e5e7eb] bg-[#f9f9f9]">
-                {['Data', 'Titolo', 'Piattaforma', 'Tipo', 'Assegnato a', 'Status', ''].map(h => (
+                {['Date', 'Title', 'Platform', 'Type', 'Assigned to', 'Status', ''].map(h => (
                   <div key={h} className="px-3 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{h}</div>
                 ))}
               </div>
@@ -1302,13 +1302,13 @@ function PedTab() {
                       {confirmDel === p.id ? (
                         <div className="flex items-center gap-1">
                           <button type="button" onClick={() => handleDelete(p.id)} disabled={deleting === p.id} className="text-[10px] font-semibold text-red-600 hover:text-red-800 disabled:opacity-40">
-                            {deleting === p.id ? '…' : 'Sì'}
+                            {deleting === p.id ? '…' : 'Yes'}
                           </button>
                           <span className="text-ink-300">/</span>
                           <button type="button" onClick={() => setConfirmDel(null)} className="text-[10px] text-ink-400 hover:text-ink-700">No</button>
                         </div>
                       ) : (
-                        <button type="button" onClick={() => setConfirmDel(p.id)} className="p-1 text-ink-300 hover:text-red-500 transition-colors" title="Elimina">
+                        <button type="button" onClick={() => setConfirmDel(p.id)} className="p-1 text-ink-300 hover:text-red-500 transition-colors" title="Delete">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>

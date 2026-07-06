@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
@@ -107,7 +107,7 @@ function CustomSelect({
         className="w-full flex items-center justify-between px-3 py-2.5 border border-[#1a4a3a] bg-white text-sm text-gray-900 focus:outline-none"
       >
         <span className={selected ? 'text-gray-900' : 'text-ink-400'}>
-          {selected?.label ?? placeholder ?? 'Selezionaâ€¦'}
+          {selected?.label ?? placeholder ?? 'Select...'}
         </span>
         <svg className="w-4 h-4 text-[#1a4a3a] flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -191,11 +191,11 @@ function AddDocModal({
     if (!title.trim() || !category) return
 
     if ((category === 'Legal' || category === 'Delibere' || category === 'Contratti') && !fileUrl) {
-      setError('File obbligatorio per questa categoria.')
+      setError('A file is required for this category.')
       return
     }
     if (category === 'Delibere' && (!year || !quarter)) {
-      setError('Anno e trimestre obbligatori per Delibere.')
+      setError('Year and quarter are required for Delibere.')
       return
     }
 
@@ -232,7 +232,7 @@ function AddDocModal({
     >
       <div className="bg-white w-full max-w-xl max-h-[80vh] flex flex-col shadow-2xl">
         <div className="flex items-center justify-between px-8 py-6 border-b border-line flex-shrink-0">
-          <h3 className="font-serif text-xl font-bold text-ink-900">Aggiungi documento</h3>
+          <h3 className="font-serif text-xl font-bold text-ink-900">Add document</h3>
           <button onClick={onClose} className="text-ink-500 hover:text-ink-900 p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
@@ -245,7 +245,7 @@ function AddDocModal({
           {/* Category â€” preimpostata, non modificabile */}
           <div>
             <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">
-              Categoria
+              Category
             </label>
             <p className="text-sm font-semibold text-ink-900 uppercase tracking-wide">{category}</p>
           </div>
@@ -262,7 +262,7 @@ function AddDocModal({
                 disabled={uploading}
                 className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-4 py-2.5 transition-colors disabled:opacity-50 whitespace-nowrap"
               >
-                {uploading ? 'Uploadingâ€¦' : 'Scegli file'}
+                {uploading ? 'Uploadingâ€¦' : 'Choose file'}
               </button>
               {fileName && <span className="text-xs text-ink-500 truncate flex-1">{fileName}</span>}
               <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,image/*" className="hidden" onChange={handleFile} />
@@ -271,24 +271,24 @@ function AddDocModal({
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Titolo *</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Title *</label>
             <input
               required
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="Titolo documento"
+              placeholder="Document title"
               className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Descrizione</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Description</label>
             <textarea
               rows={2}
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Breve descrizioneâ€¦"
+              placeholder="Short description..."
               className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white resize-none"
             />
           </div>
@@ -297,7 +297,7 @@ function AddDocModal({
           {category === 'Delibere' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Anno *</label>
+                <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Year *</label>
                 <input
                   type="number"
                   required
@@ -310,11 +310,11 @@ function AddDocModal({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Trimestre *</label>
+                <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Quarter *</label>
                 <CustomSelect
                   value={quarter}
                   onChange={setQuarter}
-                  placeholder="Selezionaâ€¦"
+                  placeholder="Select..."
                   options={[
                     { value: '1', label: 'Q1' },
                     { value: '2', label: 'Q2' },
@@ -330,13 +330,13 @@ function AddDocModal({
 
           {category === 'Contratti' && (
             <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Cartella (opzionale)</label>
+              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1 font-['Inter']">Folder (optional)</label>
               <select
                 value={selectedFolder ?? ''}
                 onChange={e => setSelectedFolder(e.target.value || null)}
                 className="w-full border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black appearance-none"
               >
-                <option value="">Nessuna cartella</option>
+                <option value="">No folder</option>
                 {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </div>
@@ -350,10 +350,10 @@ function AddDocModal({
               disabled={saving || !category}
               className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50"
             >
-              {saving ? 'Savingâ€¦' : 'Aggiungi documento'}
+              {saving ? 'Savingâ€¦' : 'Add document'}
             </button>
             <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">
-              Annulla
+              Cancel
             </button>
           </div>
         </form>
@@ -375,7 +375,7 @@ function ExpandableDescription({ text }: { text: string }) {
         onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
         className="ml-1 text-[#1a4a3a] hover:underline font-['Inter'] font-medium"
       >
-        {expanded ? 'Meno' : 'Altro'}
+        {expanded ? 'Less' : 'More'}
       </button>
     </p>
   )
@@ -446,7 +446,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
             ))}
         </div>
         <p className="text-[10px] text-ink-400 mt-1">
-          {doc.uploaded_by} Â· {new Date(doc.created_at).toLocaleDateString('it-IT')}
+          {doc.uploaded_by} Â· {new Date(doc.created_at).toLocaleDateString('en-GB')}
         </p>
       </div>
 
@@ -467,7 +467,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
             rel="noopener noreferrer"
             className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
           >
-            Apri â†—
+            Open â†—
           </a>
         )}
         {showMoveOut && onMove && (
@@ -475,7 +475,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
             onClick={e => { e.stopPropagation(); onMove(doc.id, null) }}
             className="text-xs text-gray-400 hover:text-[#1a4a3a] font-['Inter'] uppercase tracking-widest border border-gray-300 px-2 py-1 hover:border-[#1a4a3a] transition-colors"
           >
-            Togli
+            Remove
           </button>
         )}
         {!showMoveOut && onMove && folders && folders.length > 0 && (
@@ -483,15 +483,15 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
             value=""
             onChange={e => { if (e.target.value) onMove(doc.id, e.target.value) }}
             className="text-xs border border-gray-300 px-2 py-1 font-['Inter'] bg-white text-gray-500 focus:outline-none appearance-none cursor-pointer"
-            title="Sposta in cartella"
+            title="Move to folder"
           >
-            <option value="">Sposta in...</option>
+            <option value="">Move to...</option>
             {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
         )}
         <button
           onClick={async () => {
-            if (!confirm(`Eliminare "${doc.title}"?`)) return
+            if (!confirm(`Delete "${doc.title}"?`)) return
             setDeleting(true)
             onDelete()
           }}
@@ -527,13 +527,13 @@ function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDo
             </svg>
           </span>
           <span className="font-['Inter'] font-semibold text-sm text-ink-900">{folder.name}</span>
-          <span className="text-xs text-ink-400 font-['Inter']">({docs.length} document{docs.length !== 1 ? 'i' : 'o'})</span>
+          <span className="text-xs text-ink-400 font-['Inter']">({docs.length} document{docs.length !== 1 ? 's' : ''})</span>
         </div>
         <div className="flex items-center gap-3">
           {confirmDelete ? (
             <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-              <span className="text-xs text-red-600 font-['Inter']">Eliminare la cartella?</span>
-              <button onClick={onDelete} className="text-xs text-red-600 font-semibold hover:underline font-['Inter']">SÃ¬</button>
+              <span className="text-xs text-red-600 font-['Inter']">Delete this folder?</span>
+              <button onClick={onDelete} className="text-xs text-red-600 font-semibold hover:underline font-['Inter']">Yes</button>
               <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-500 hover:underline font-['Inter']">No</button>
             </div>
           ) : (
@@ -541,7 +541,7 @@ function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDo
               onClick={e => { e.stopPropagation(); setConfirmDelete(true) }}
               className="text-xs text-gray-400 hover:text-red-500 font-['Inter'] uppercase tracking-widest"
             >
-              Elimina cartella
+              Delete folder
             </button>
           )}
           <svg
@@ -556,7 +556,7 @@ function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDo
       {open && (
         <div className="border-t border-[#1a4a3a]/20">
           {docs.length === 0 ? (
-            <p className="text-xs text-ink-400 font-['Inter'] px-6 py-4">Nessun documento in questa cartella.</p>
+            <p className="text-xs text-ink-400 font-['Inter'] px-6 py-4">No documents in this folder.</p>
           ) : (
             docs.map(doc => (
               <div key={doc.id} className="border-b border-gray-100 last:border-0">
@@ -681,7 +681,7 @@ function CategorySection({
         <div style={{ overflow: 'hidden' }}>
           {docs.length === 0 ? (
             <div className="bg-white border border-line-faint px-6 py-8 text-center text-sm text-ink-500 mb-4">
-              Nessun documento in questa categoria.
+              No documents in this category.
             </div>
           ) : category === 'Delibere' ? (
             <div className="bg-white border border-line-faint mb-4 px-6 pb-4">
@@ -721,15 +721,15 @@ function CategorySection({
                       value={newFolderName}
                       onChange={e => setNewFolderName(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && createFolder()}
-                      placeholder="Nome cartella..."
+                      placeholder="Folder name..."
                       className="border border-[#1a4a3a] px-2 py-1 text-xs font-['Inter'] focus:outline-none w-36"
                       autoFocus
                     />
                     <button onClick={createFolder} disabled={creatingFolder} className="text-xs text-[#1a4a3a] font-semibold hover:underline font-['Inter']">
-                      {creatingFolder ? '...' : 'Crea'}
+                      {creatingFolder ? '...' : 'Create'}
                     </button>
                     <button onClick={() => { setShowNewFolderInput(false); setNewFolderName('') }} className="text-xs text-gray-400 hover:text-black font-['Inter']">
-                      Annulla
+                      Cancel
                     </button>
                   </div>
                 ) : (
@@ -737,7 +737,7 @@ function CategorySection({
                     onClick={() => setShowNewFolderInput(true)}
                     className="text-xs text-[#1a4a3a] border border-dashed border-[#1a4a3a] px-3 py-1.5 hover:bg-[#1a4a3a] hover:text-white transition-colors font-['Inter']"
                   >
-                    + Nuova cartella
+                    + New folder
                   </button>
                 )}
               </div>
@@ -772,7 +772,7 @@ function CategorySection({
               })()}
 
               {docs.length === 0 && (
-                <div className="py-4 text-center text-sm text-ink-500">Nessun documento.</div>
+                <div className="py-4 text-center text-sm text-ink-500">No documents.</div>
               )}
             </div>
           ) : (
@@ -845,7 +845,7 @@ function AccountingUploadModal({
     >
       <div className="bg-white w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between px-8 py-6 border-b border-line">
-          <h3 className="font-serif text-xl font-bold text-ink-900">Carica documento</h3>
+          <h3 className="font-serif text-xl font-bold text-ink-900">Upload document</h3>
           <button onClick={onClose} className="text-ink-500 hover:text-ink-900 p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
@@ -864,7 +864,7 @@ function AccountingUploadModal({
                 disabled={uploading}
                 className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-4 py-2.5 transition-colors disabled:opacity-50 whitespace-nowrap"
               >
-                {uploading ? 'Uploadingâ€¦' : 'Scegli file'}
+                {uploading ? 'Uploadingâ€¦' : 'Choose file'}
               </button>
               {fileName && <span className="text-xs text-ink-500 truncate flex-1">{fileName}</span>}
               <input ref={fileRef} type="file" className="hidden" onChange={handleFile} />
@@ -873,12 +873,12 @@ function AccountingUploadModal({
 
           {/* Name */}
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Nome *</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Name *</label>
             <input
               required
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Nome documento"
+              placeholder="Document name"
               className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm bg-white"
             />
           </div>
@@ -894,7 +894,7 @@ function AccountingUploadModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Anno *</label>
+              <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Year *</label>
               <CustomSelect
                 value={year}
                 onChange={setYear}
@@ -911,9 +911,9 @@ function AccountingUploadModal({
               disabled={saving || !fileUrl}
               className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50"
             >
-              {saving ? 'Savingâ€¦' : 'Carica'}
+              {saving ? 'Savingâ€¦' : 'Upload'}
             </button>
-            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Annulla</button>
+            <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Cancel</button>
           </div>
         </form>
       </div>
@@ -952,7 +952,7 @@ function AccountingDocRow({
         type="button"
         onClick={() => window.open(doc.file_url, '_blank')}
         className={`flex-shrink-0 w-9 h-9 flex items-center justify-center border cursor-pointer hover:border-forest hover:text-forest transition-colors ${isPdf ? 'border-red-200 bg-red-50' : 'border-line bg-paper-stone'}`}
-        title="Apri documento"
+        title="Open document"
       >
         <span className="text-[9px] font-bold uppercase tracking-widest">{ext || 'doc'}</span>
       </button>
@@ -961,7 +961,7 @@ function AccountingDocRow({
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-ink-900 truncate">{doc.name}</p>
         <p className="text-[10px] text-ink-400 mt-0.5">
-          {new Date(doc.created_at).toLocaleDateString('it-IT')}
+          {new Date(doc.created_at).toLocaleDateString('en-GB')}
           {doc.created_by ? ` Â· ${doc.created_by}` : ''}
         </p>
       </div>
@@ -970,14 +970,14 @@ function AccountingDocRow({
       <div className="flex items-center gap-2 flex-shrink-0">
         {confirmDel ? (
           <>
-            <span className="text-xs text-ink-500">Eliminare?</span>
+            <span className="text-xs text-ink-500">Delete?</span>
             <button
               type="button"
               onClick={handleDelete}
               disabled={deleting}
               className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-40"
             >
-              {deleting ? 'â€¦' : 'SÃ¬'}
+              {deleting ? 'â€¦' : 'Yes'}
             </button>
             <button
               type="button"
@@ -992,7 +992,7 @@ function AccountingDocRow({
             type="button"
             onClick={() => setConfirmDel(true)}
             className="p-1.5 text-ink-300 hover:text-red-500 transition-colors"
-            title="Elimina"
+            title="Delete"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1085,7 +1085,7 @@ function ContabilitaSection({ userEmail }: { userEmail: string }) {
           onClick={() => setOpen(v => !v)}
           className="flex items-center gap-3 flex-1 text-left group"
         >
-          <h3 className="font-serif text-xl text-ink-900 group-hover:text-forest transition-colors">ContabilitÃ </h3>
+          <h3 className="font-serif text-xl text-ink-900 group-hover:text-forest transition-colors">Accounting</h3>
           <span className="text-xs text-ink-400">{docs.length}</span>
           <svg
             className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
@@ -1122,15 +1122,15 @@ function ContabilitaSection({ userEmail }: { userEmail: string }) {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
-                Apri cartella Drive â†’
+                Open Drive folder â†’
               </a>
             </div>
 
             {/* Quarter groups */}
             {loading ? (
-              <div className="px-6 py-6 text-sm text-ink-400">Caricamento...</div>
+              <div className="px-6 py-6 text-sm text-ink-400">Loading...</div>
             ) : groups.length === 0 ? (
-              <div className="px-6 py-8 text-center text-sm text-ink-500">Nessun documento ancora.</div>
+              <div className="px-6 py-8 text-center text-sm text-ink-500">No documents yet.</div>
             ) : (
               groups.map(g => (
                 <QuarterAccordion key={g.label} label={g.label} docs={g.docs} onDelete={handleDelete} />
