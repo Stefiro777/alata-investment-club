@@ -123,7 +123,7 @@ const ANNO_OPTIONS = [
   'Altro',
 ]
 
-const INPUT_CLS   = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1a4a3a] bg-white'
+const INPUT_CLS   = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-forest bg-white'
 const LABEL_CLS   = 'block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1'
 const SECTION_CLS = 'text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2'
 
@@ -139,9 +139,9 @@ function Stepper({ step, stepDefs }: { step: number; stepDefs: StepDef[] }) {
             <div className="flex flex-col items-center gap-1">
               <div className={`w-8 h-8 flex items-center justify-center text-xs font-bold border-2 transition-colors ${
                 step > n
-                  ? 'border-[#1a4a3a] bg-[#1a4a3a] text-white'
+                  ? 'border-forest bg-forest text-white'
                   : step === n
-                    ? 'border-[#1a4a3a] bg-white text-[#1a4a3a]'
+                    ? 'border-forest bg-white text-forest'
                     : 'border-gray-300 bg-white text-gray-400'
               }`}>
                 {step > n ? (
@@ -151,12 +151,12 @@ function Stepper({ step, stepDefs }: { step: number; stepDefs: StepDef[] }) {
                 ) : n}
               </div>
               <span className={`text-[9px] font-semibold uppercase tracking-widest ${
-                step >= n ? 'text-[#1a4a3a]' : 'text-gray-400'
+                step >= n ? 'text-forest' : 'text-gray-400'
               }`}>{s.label}</span>
             </div>
             {i < stepDefs.length - 1 && (
               <div className={`w-12 sm:w-20 h-px mx-2 mb-4 transition-colors ${
-                step > n ? 'bg-[#1a4a3a]' : 'bg-gray-200'
+                step > n ? 'bg-forest' : 'bg-gray-200'
               }`} />
             )}
           </div>
@@ -219,8 +219,8 @@ function StepOrder({
   function renderTicketItem(item: CartItem) {
     return (
       <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
-        <div className="w-20 h-20 flex-shrink-0 bg-[#1a4a3a]/10 flex items-center justify-center">
-          <svg className="w-7 h-7 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="w-20 h-20 flex-shrink-0 bg-forest/10 flex items-center justify-center">
+          <svg className="w-7 h-7 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -270,7 +270,7 @@ function StepOrder({
               return (
                 <div key={u.id}
                   className={`flex items-center gap-4 border p-3 transition-colors ${
-                    isSelected ? 'border-[#1a4a3a] bg-[#f4f9f7]' : 'border-gray-200 bg-white'
+                    isSelected ? 'border-forest bg-[#f4f9f7]' : 'border-gray-200 bg-white'
                   }`}
                 >
                   {u.image ? (
@@ -286,7 +286,7 @@ function StepOrder({
                   )}
                   <div className="flex-1 min-w-0">
                     {u.label && (
-                      <p className="text-[9px] font-semibold uppercase tracking-widest text-[#1a4a3a] mb-0.5">{u.label}</p>
+                      <p className="text-[9px] font-semibold uppercase tracking-widest text-forest mb-0.5">{u.label}</p>
                     )}
                     <p className="text-sm font-semibold text-black truncate">{u.name}</p>
                     {u.eventDate && (
@@ -300,7 +300,7 @@ function StepOrder({
                     onClick={() => onToggleUpsell(u)}
                     className={`flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest px-4 py-2 border transition-colors ${
                       isSelected
-                        ? 'bg-[#1a4a3a] text-white border-[#1a4a3a] hover:bg-[#143d30]'
+                        ? 'bg-forest text-white border-forest hover:bg-[#143d30]'
                         : 'bg-white text-black border-black hover:bg-gray-50'
                     }`}
                   >
@@ -317,9 +317,9 @@ function StepOrder({
       <div className="mb-6">
         <p className={SECTION_CLS}>Discount Code</p>
         {isDiscountApplied ? (
-          <div className="flex items-center justify-between border border-[#1a4a3a] bg-[#f4f9f7] px-3 py-2">
+          <div className="flex items-center justify-between border border-forest bg-[#f4f9f7] px-3 py-2">
             <div>
-              <span className="text-xs font-semibold text-[#1a4a3a] uppercase tracking-widest">{discountCode}</span>
+              <span className="text-xs font-semibold text-forest uppercase tracking-widest">{discountCode}</span>
               <span className="text-xs text-gray-600 ml-2">— {discountLabel} (−{fmtEur(discountCents)})</span>
             </div>
             <button onClick={onRemoveDiscount}
@@ -362,8 +362,8 @@ function StepOrder({
         </div>
         {isDiscountApplied && (
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a]">Discount</p>
-            <p className="text-sm font-semibold text-[#1a4a3a]">−{fmtEur(discountCents)}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-forest">Discount</p>
+            <p className="text-sm font-semibold text-forest">−{fmtEur(discountCents)}</p>
           </div>
         )}
         {hasMerch && (
@@ -382,7 +382,7 @@ function StepOrder({
 
       <button
         onClick={onContinue}
-        className="w-full py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors"
+        className="w-full py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors"
       >
         Continue →
       </button>
@@ -470,7 +470,7 @@ function StepShipping({
           ← Back
         </button>
         <button onClick={onContinue}
-          className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
+          className="flex-1 py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
           Continue →
         </button>
       </div>
@@ -501,7 +501,7 @@ function StepRegistration({
         {eventRegs.map(reg => (
           <div key={reg.eventId}>
             {eventRegs.length > 1 && (
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] mb-4 pb-2 border-b border-[#1a4a3a]/20">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-forest mb-4 pb-2 border-b border-forest/20">
                 {reg.eventName}
               </p>
             )}
@@ -575,7 +575,7 @@ function StepRegistration({
           ← Back
         </button>
         <button onClick={onContinue}
-          className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
+          className="flex-1 py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
           Continue →
         </button>
       </div>
@@ -636,10 +636,10 @@ function StepPayment({
 
         {discountCents > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-[#1a4a3a] font-medium">
+            <span className="text-forest font-medium">
               Discount ({discountCode} — {discountLabel})
             </span>
-            <span className="text-[#1a4a3a] font-medium">−{fmtEur(discountCents)}</span>
+            <span className="text-forest font-medium">−{fmtEur(discountCents)}</span>
           </div>
         )}
 
@@ -666,12 +666,12 @@ function StepPayment({
         </button>
         {isFreeOrder ? (
           <button onClick={onFreeComplete} disabled={paying}
-            className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
+            className="flex-1 py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
             {paying ? 'Processing…' : 'Complete Registration →'}
           </button>
         ) : (
           <button onClick={onPay} disabled={paying}
-            className="flex-1 py-3.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
+            className="flex-1 py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
             {paying ? 'Redirecting…' : `Pay ${fmtEur(totalCents)} →`}
           </button>
         )}
@@ -1021,7 +1021,7 @@ export default function CheckoutClient() {
       {/* Right — checkout panel */}
       <div className="w-full md:w-1/2 flex flex-col bg-white">
         <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <Link href={backHref} className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline">
+          <Link href={backHref} className="text-xs font-semibold uppercase tracking-widest text-forest hover:underline">
             {backLabel}
           </Link>
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">

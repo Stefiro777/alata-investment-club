@@ -11,13 +11,13 @@ function SuccessContent() {
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 text-center"
          style={{ fontFamily: 'Inter, sans-serif' }}>
       {/* Icon */}
-      <div className="w-16 h-16 border-2 border-[#1a4a3a] flex items-center justify-center mb-8">
-        <svg className="w-8 h-8 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-16 h-16 border-2 border-forest flex items-center justify-center mb-8">
+        <svg className="w-8 h-8 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       </div>
 
-      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#1a4a3a] mb-4">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-forest mb-4">
         Alata Investment Club
       </p>
 
@@ -36,7 +36,7 @@ function SuccessContent() {
 
       <Link
         href="/merch"
-        className="text-[10px] font-semibold uppercase tracking-widest px-8 py-3.5 bg-[#1a4a3a] text-white hover:bg-[#143d30] transition-colors"
+        className="text-[10px] font-semibold uppercase tracking-widest px-8 py-3.5 bg-forest text-white hover:bg-[#143d30] transition-colors"
       >
         Back to Shop
       </Link>

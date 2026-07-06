@@ -45,7 +45,7 @@ function HistoryToggle({ history }: { history: any[] }) {
       {open && (
         <div className="space-y-2 mt-3">
           {history.map(h => (
-            <div key={h.id} className="text-xs font-['Inter'] text-gray-600 border-l-2 border-[#1a4a3a] pl-3 py-1">
+            <div key={h.id} className="text-xs font-['Inter'] text-gray-600 border-l-2 border-forest pl-3 py-1">
               <span className="font-semibold text-black">{h.modified_by_name}</span>
               {' '}ha modificato <span className="font-semibold">{h.field_changed}</span>
               <br />
@@ -63,7 +63,7 @@ function HistoryToggle({ history }: { history: any[] }) {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TEAM_COLORS: Record<string, string> = {
-  events:    '#1a4a3a',
+  events:    'var(--forest)',
   career:    '#2563eb',
   academy:   '#7c3aed',
   education: '#7c3aed',
@@ -173,7 +173,7 @@ function statusLabel(s: string) {
 
 function statusPill(s: string) {
   if (s === 'in_progress') return 'bg-blue-50 text-blue-700'
-  if (s === 'done')        return 'bg-[#1a4a3a]/10 text-[#1a4a3a]'
+  if (s === 'done')        return 'bg-forest/10 text-forest'
   return 'bg-black/5 text-ink-500'
 }
 
@@ -270,7 +270,7 @@ function PriorityDropdown({
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false) }}
-              className="flex items-center w-full px-3 py-1.5 hover:bg-[#f5f5f5]"
+              className="flex items-center w-full px-3 py-1.5 hover:bg-paper-stone"
             >
               <span
                 className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 text-white"
@@ -314,8 +314,8 @@ function TaskCard({
         aria-label={done ? 'Segna come non completata' : 'Segna come completata'}
         className={`flex-shrink-0 self-start mt-1 w-4 h-4 border transition-colors disabled:cursor-wait ${
           done
-            ? 'bg-[#1a4a3a] border-[#1a4a3a]'
-            : 'bg-white border-ink-400 hover:border-[#1a4a3a]'
+            ? 'bg-forest border-forest'
+            : 'bg-white border-ink-400 hover:border-forest'
         }`}
       >
         {done && (
@@ -651,7 +651,7 @@ function TaskModal({
               <input
                 value={editTitle}
                 onChange={e => setEditTitle(e.target.value)}
-                className="text-xl font-['Cormorant_Garamond',serif] font-semibold text-ink-900 w-full border-b border-[#1a4a3a] focus:outline-none bg-transparent pb-1"
+                className="text-xl font-['Cormorant_Garamond',serif] font-semibold text-ink-900 w-full border-b border-forest focus:outline-none bg-transparent pb-1"
                 autoFocus
               />
             ) : (
@@ -676,7 +676,7 @@ function TaskModal({
                     value={task.status}
                     disabled={savingStatus}
                     onChange={e => handleStatusChange(e.target.value)}
-                    className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                    className="border border-forest px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
                   >
                     <option value="todo">To Do</option>
                     <option value="in_progress">In corso</option>
@@ -714,7 +714,7 @@ function TaskModal({
                   type="date"
                   value={editDueDate}
                   onChange={e => setEditDueDate(e.target.value)}
-                  className="border border-gray-300 px-2 py-1 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                  className="border border-gray-300 px-2 py-1 text-sm font-['Inter'] focus:outline-none focus:border-forest"
                 />
               ) : (
                 <p className={task.due_date && isOverdue(task.due_date) ? 'text-red-500 font-semibold' : 'text-ink-900'}>
@@ -731,7 +731,7 @@ function TaskModal({
                       value={task.category_id ?? ''}
                       disabled={savingCat}
                       onChange={e => handleCategoryChange(e.target.value)}
-                      className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                      className="border border-forest px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
                     >
                       <option value="">Nessuna</option>
                       {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -755,9 +755,9 @@ function TaskModal({
                     {editAssignees.map(uid => {
                       const m = availableMembers.find(x => x.user_id === uid)
                       return m ? (
-                        <span key={uid} className="text-xs border border-[#1a4a3a] px-2 py-0.5 text-[#1a4a3a] flex items-center gap-1">
+                        <span key={uid} className="text-xs border border-forest px-2 py-0.5 text-forest flex items-center gap-1">
                           {m.full_name}
-                          <button onClick={() => setEditAssignees(prev => prev.filter(id => id !== uid))} className="text-[#1a4a3a] hover:text-black">×</button>
+                          <button onClick={() => setEditAssignees(prev => prev.filter(id => id !== uid))} className="text-forest hover:text-black">×</button>
                         </span>
                       ) : null
                     })}
@@ -766,7 +766,7 @@ function TaskModal({
                     value={memberSearch}
                     onChange={e => setMemberSearch(e.target.value)}
                     placeholder="Cerca membro..."
-                    className="w-full border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a] mb-1"
+                    className="w-full border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-forest mb-1"
                   />
                   {memberSearch.length > 0 && (
                     <div className="border border-gray-200 max-h-32 overflow-y-auto">
@@ -776,7 +776,7 @@ function TaskModal({
                           <button
                             key={m.user_id}
                             onClick={() => { setEditAssignees(prev => [...prev, m.user_id]); setMemberSearch('') }}
-                            className="w-full text-left px-3 py-1.5 text-sm font-['Inter'] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+                            className="w-full text-left px-3 py-1.5 text-sm font-['Inter'] hover:bg-forest hover:text-white transition-colors"
                           >
                             {m.full_name}
                           </button>
@@ -809,7 +809,7 @@ function TaskModal({
                 value={editDescription}
                 onChange={e => setEditDescription(e.target.value)}
                 rows={3}
-                className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a] resize-none"
+                className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest resize-none"
                 placeholder="Descrizione..."
               />
             ) : (
@@ -884,8 +884,8 @@ function TaskModal({
                                 : 'text-sm px-2 py-0.5'
                             } ${
                               active
-                                ? 'bg-[#1a4a3a] border-[#1a4a3a] text-white'
-                                : 'bg-transparent border-line text-ink-500 hover:border-[#1a4a3a] hover:text-ink-900'
+                                ? 'bg-forest border-forest text-white'
+                                : 'bg-transparent border-line text-ink-500 hover:border-forest hover:text-ink-900'
                             }`}
                           >
                             <span>{reaction}</span>
@@ -914,7 +914,7 @@ function TaskModal({
                   type="button"
                   onClick={handleComment}
                   disabled={posting || !newComment.trim()}
-                  className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2 transition-colors disabled:opacity-40"
+                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2 transition-colors disabled:opacity-40"
                 >
                   {posting ? 'Invio…' : 'Commenta'}
                 </button>
@@ -939,7 +939,7 @@ function TaskModal({
                   <button
                     onClick={handleSaveEdit}
                     disabled={savingEdit}
-                    className="text-sm text-[#1a4a3a] font-semibold font-['Inter'] hover:underline disabled:opacity-50"
+                    className="text-sm text-forest font-semibold font-['Inter'] hover:underline disabled:opacity-50"
                   >
                     {savingEdit ? 'Salvataggio...' : 'Salva modifiche'}
                   </button>
@@ -947,7 +947,7 @@ function TaskModal({
               ) : (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="text-sm text-[#1a4a3a] font-['Inter'] hover:underline"
+                  className="text-sm text-forest font-['Inter'] hover:underline"
                 >
                   Modifica task
                 </button>
@@ -1152,7 +1152,7 @@ function CreateTaskModal({
                   <select
                     value={categoryId}
                     onChange={e => setCatId(e.target.value)}
-                    className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                    className="border border-forest px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
                   >
                     <option value="">Nessuna</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -1192,7 +1192,7 @@ function CreateTaskModal({
                 role="switch"
                 aria-checked={isEvent}
                 onClick={() => setIsEvent(v => !v)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isEvent ? 'bg-[#1a4a3a]' : 'bg-[#d1d5db]'}`}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-fast ease-in-out focus:outline-none ${isEvent ? 'bg-forest' : 'bg-[#d1d5db]'}`}
               >
                 <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${isEvent ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
@@ -1203,7 +1203,7 @@ function CreateTaskModal({
             <button
               type="submit"
               disabled={saving || !title.trim()}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40"
             >
               {saving ? 'Creazione…' : 'Crea task'}
             </button>
@@ -1377,7 +1377,7 @@ function GoalsSection({
             <button
               type="button"
               onClick={() => { setViewQ(current.q); setViewYear(current.year) }}
-              className="text-xs text-[#1a4a3a] hover:underline underline-offset-2 px-1.5 py-1"
+              className="text-xs text-forest hover:underline underline-offset-2 px-1.5 py-1"
             >
               Oggi
             </button>
@@ -1416,8 +1416,8 @@ function GoalsSection({
                   canEdit ? '' : 'cursor-default'
                 } ${
                   goal.completed
-                    ? 'bg-[#1a4a3a] border-[#1a4a3a]'
-                    : 'bg-white border-ink-400 hover:border-[#1a4a3a]'
+                    ? 'bg-forest border-forest'
+                    : 'bg-white border-ink-400 hover:border-forest'
                 }`}
               >
                 {goal.completed && (
@@ -1492,7 +1492,7 @@ function GoalsSection({
                 <button
                   type="submit"
                   disabled={adding || !newTitle.trim()}
-                  className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors disabled:opacity-40 whitespace-nowrap"
+                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors disabled:opacity-40 whitespace-nowrap"
                 >
                   {adding ? '…' : 'Aggiungi'}
                 </button>
@@ -1508,7 +1508,7 @@ function GoalsSection({
               <button
                 type="button"
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center gap-1.5 text-sm text-ink-400 hover:text-[#1a4a3a] transition-colors pt-1"
+                className="flex items-center gap-1.5 text-sm text-ink-400 hover:text-forest transition-colors pt-1"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1525,7 +1525,7 @@ function GoalsSection({
         <div className="mb-2">
           <div className="h-[6px] w-full bg-[#e5e7eb]">
             <div
-              className="h-full bg-[#1a4a3a] transition-all duration-500 ease-in-out"
+              className="h-full bg-forest transition-all duration-500 ease-in-out"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -1630,7 +1630,7 @@ function EventsContentTab() {
               className="pb-2 text-sm font-['Inter'] transition-colors"
               style={
                 subTab === t.key
-                  ? { borderBottom: '2px solid #1a4a3a', color: '#1a4a3a', fontWeight: 600 }
+                  ? { borderBottom: '2px solid #1a4a3a', color: 'var(--forest)', fontWeight: 600 }
                   : { borderBottom: '2px solid transparent', color: '#9ca3af' }
               }
             >
@@ -1838,7 +1838,7 @@ export default function TeamPage() {
           {canCreateTask && (
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
+              className="flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1868,7 +1868,7 @@ export default function TeamPage() {
               className="pb-2 text-sm font-['Inter'] transition-colors"
               style={
                 activeTab === tab.key
-                  ? { borderBottom: `2px solid #1a4a3a`, color: '#1a4a3a', fontWeight: 600 }
+                  ? { borderBottom: `2px solid #1a4a3a`, color: 'var(--forest)', fontWeight: 600 }
                   : { borderBottom: '2px solid transparent', color: '#6b7280' }
               }
             >
@@ -1911,8 +1911,8 @@ export default function TeamPage() {
               onClick={() => setPriorityFilter(f.key)}
               className={`text-xs font-medium uppercase tracking-wide px-4 py-1.5 border transition-colors ${
                 priorityFilter === f.key
-                  ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
-                  : 'bg-white text-ink-500 border-line hover:border-[#1a4a3a] hover:text-ink-900'
+                  ? 'bg-forest text-white border-forest'
+                  : 'bg-white text-ink-500 border-line hover:border-forest hover:text-ink-900'
               }`}
             >
               {f.label}

@@ -49,7 +49,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ memberI
     <div style={{ minHeight: '100vh', background: '#f0f8f4', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ background: 'white', maxWidth: 400, width: '100%', overflow: 'hidden', boxShadow: '0 4px 32px rgba(26,74,58,0.12)' }}>
         {/* Header band */}
-        <div style={{ background: '#1a4a3a', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'var(--forest)', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <p style={{ margin: 0, fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Alata Investment Club</p>
             <p style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 700, color: 'white', letterSpacing: 1 }}>Membership Verification</p>
@@ -75,7 +75,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ memberI
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
               <p style={{ margin: '0 0 4px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600 }}>Role</p>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1a4a3a', textTransform: 'uppercase', letterSpacing: 1 }}>{data.role}</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--forest)', textTransform: 'uppercase', letterSpacing: 1 }}>{data.role}</p>
             </div>
             <div>
               <p style={{ margin: '0 0 4px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600 }}>Valid until</p>

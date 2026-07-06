@@ -98,8 +98,8 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
               className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast"
               style={
                 selectedIndustry === null
-                  ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
-                  : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }
+                  ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' }
+                  : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }
               }
             >
               All
@@ -111,8 +111,8 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
                 className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast"
                 style={
                   selectedIndustry === ind
-                    ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
-                    : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }
+                    ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' }
+                    : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }
                 }
               >
                 {ind}

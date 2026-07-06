@@ -99,7 +99,7 @@ function statusLabel(status: string): string {
 
 function statusClass(status: string): string {
   if (status === 'in_progress' || status === 'in progress') {
-    return 'bg-[#1a4a3a]/10 text-[#1a4a3a]'
+    return 'bg-forest/10 text-forest'
   }
   return 'bg-ink-900/8 text-ink-500'
 }
@@ -114,7 +114,7 @@ function TaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
   return (
     <div
       onClick={onClick}
-      className="border border-line bg-white px-5 py-4 flex flex-col gap-2 cursor-pointer hover:bg-[#f5f5f5] transition-colors"
+      className="border border-line bg-white px-5 py-4 flex flex-col gap-2 cursor-pointer hover:bg-paper-stone transition-colors"
     >
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-semibold text-ink-900 leading-snug flex-1">{task.title}</p>
@@ -129,7 +129,7 @@ function TaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
           To Do
         </span>
       ) : task.team ? (
-        <span className="self-start text-xs font-medium uppercase tracking-wide px-2 py-0.5 bg-[#1a4a3a] text-white">
+        <span className="self-start text-xs font-medium uppercase tracking-wide px-2 py-0.5 bg-forest text-white">
           {TEAM_NAMES[task.team] ?? task.team}
         </span>
       ) : null}
@@ -303,7 +303,7 @@ export default function DashboardPage() {
           </p>
           <Link
             href="/dashboard/membership"
-            className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] underline"
+            className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest text-forest underline"
           >
             Rinnova →
           </Link>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
 
       {/* Banner scadenze */}
       {urgentCount > 0 && (
-        <div className="bg-[#1a4a3a] text-white px-5 py-3 text-sm font-medium">
+        <div className="bg-forest text-white px-5 py-3 text-sm font-medium">
           Hai {urgentCount} task in scadenza oggi o domani
         </div>
       )}

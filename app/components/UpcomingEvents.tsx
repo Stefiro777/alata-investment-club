@@ -110,7 +110,7 @@ function UpcomingEventRow({
           )}
 
           {/* Collapsible description */}
-          <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96' : 'max-h-0'}`}>
+          <div className={`overflow-hidden transition-all duration-fast ${open ? 'max-h-96' : 'max-h-0'}`}>
             {event.description && (
               <p className="text-white/70 text-sm mt-2 leading-relaxed max-w-xl" style={{ whiteSpace: 'pre-wrap' }}>
                 {event.description}
@@ -126,8 +126,8 @@ function UpcomingEventRow({
               onClick={handleAddTicket}
               className={`inline-block border text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors ${
                 added
-                  ? 'border-[#1a4a3a] bg-[#1a4a3a] text-white'
-                  : 'border-[#1a4a3a] bg-[#1a4a3a] text-white hover:bg-[#143d30]'
+                  ? 'border-forest bg-forest text-white'
+                  : 'border-forest bg-forest text-white hover:bg-[#143d30]'
               }`}
             >
               {added

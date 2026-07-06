@@ -38,8 +38,8 @@ function MembershipBadge({ expiresAt }: { expiresAt: string | null }) {
   }
 
   return (
-    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#1a4a3a]">
-      <span className="w-2 h-2 bg-[#1a4a3a] inline-block" />
+    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-forest">
+      <span className="w-2 h-2 bg-forest inline-block" />
       Membership attiva fino al {formatted}
     </p>
   )

@@ -325,7 +325,7 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-ink-900 truncate">{partner.name}</p>
-            <span className={`flex-shrink-0 text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 ${partner.type === 'partner' ? 'bg-[#1a4a3a]/10 text-forest' : 'bg-gray-100 text-gray-600'}`}>
+            <span className={`flex-shrink-0 text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 ${partner.type === 'partner' ? 'bg-forest/10 text-forest' : 'bg-gray-100 text-gray-600'}`}>
               {partner.type === 'partner' ? 'Partner' : 'Sponsor'}
             </span>
             <span className="flex-shrink-0 text-xs bg-gray-100 text-gray-600 px-2 py-0.5">{partner.click_count ?? 0} click</span>

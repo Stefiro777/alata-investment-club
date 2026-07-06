@@ -31,7 +31,7 @@ export default async function MerchPage({
   if (!setting || setting.value !== 'true') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1a4a3a] mb-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-forest mb-4">
           Alata Investment Club
         </p>
         <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-none mb-6">
@@ -58,7 +58,7 @@ export default async function MerchPage({
     <div className="bg-white" style={{ fontFamily: 'Inter, sans-serif' }}>
       {/* Success banner */}
       {sp.checkout === 'success' && (
-        <div className="bg-[#1a4a3a] text-white text-center py-3 text-sm font-semibold tracking-wide">
+        <div className="bg-forest text-white text-center py-3 text-sm font-semibold tracking-wide">
           Order confirmed — a receipt has been sent to your email.
         </div>
       )}
@@ -132,12 +132,12 @@ export default async function MerchPage({
                   )}
 
                   {/* Info */}
-                  <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-900 group-hover:text-[#1a4a3a] transition-colors">
+                  <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-900 group-hover:text-forest transition-colors">
                     {product.name}
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">{fmtEur(product.price_cents)}</p>
 
-                  <span className="mt-4 inline-block text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1.5 group-hover:bg-[#1a4a3a] group-hover:text-white transition-colors">
+                  <span className="mt-4 inline-block text-[10px] font-semibold uppercase tracking-[0.2em] text-forest border border-forest px-3 py-1.5 group-hover:bg-forest group-hover:text-white transition-colors">
                     View
                   </span>
                 </Link>

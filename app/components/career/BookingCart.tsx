@@ -97,7 +97,7 @@ export default function BookingCart({
             {isMember ? (
               <div>
                 <p className="text-sm line-through text-gray-300">{formatEuros(servicePrice)}</p>
-                <p className="text-xs font-semibold text-[#1a4a3a] uppercase tracking-widest">Member Free</p>
+                <p className="text-xs font-semibold text-forest uppercase tracking-widest">Member Free</p>
               </div>
             ) : (
               <p className="text-sm font-semibold text-gray-900">
@@ -146,8 +146,8 @@ export default function BookingCart({
                       className="flex-shrink-0 text-xs font-semibold uppercase tracking-widest px-4 py-2 border transition-colors"
                       style={{
                         background: isAdded ? '#1a4a3a' : 'transparent',
-                        color: isAdded ? '#fff' : '#1a4a3a',
-                        borderColor: '#1a4a3a',
+                        color: isAdded ? '#fff' : 'var(--forest)',
+                        borderColor: 'var(--forest)',
                       }}
                     >
                       {isAdded ? 'Rimosso ✓' : 'Aggiungi'}
@@ -184,7 +184,7 @@ export default function BookingCart({
       <button
         type="button"
         onClick={handleProceed}
-        className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors"
+        className="w-full bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors"
       >
         Procedi al Pagamento →
       </button>

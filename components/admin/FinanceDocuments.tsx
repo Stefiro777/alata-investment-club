@@ -100,19 +100,19 @@ function FolderSection({ folderKey, label }: { folderKey: FolderKey; label: stri
   }
 
   return (
-    <div className="border border-[#e5e5e5] mb-3">
+    <div className="border border-line mb-3">
       {/* Header */}
       <div
         className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-[#f9f9f9] transition-colors"
         onClick={handleToggle}
       >
         <div className="flex items-center gap-3">
-          <svg className="w-4 h-4 text-[#1a4a3a] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-forest flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
           <span className="font-['Inter'] font-semibold text-sm text-[#1a1a1a]">{label}</span>
           {!loading && open && (
-            <span className="text-xs text-[#9ca3af]">({files.length})</span>
+            <span className="text-xs text-ink-400">({files.length})</span>
           )}
         </div>
         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
@@ -120,7 +120,7 @@ function FolderSection({ folderKey, label }: { folderKey: FolderKey; label: stri
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="inline-flex items-center gap-1.5 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-50"
           >
             {uploading ? (
               <span>Uploading…</span>
@@ -135,7 +135,7 @@ function FolderSection({ folderKey, label }: { folderKey: FolderKey; label: stri
           </button>
           <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} />
           <svg
-            className="w-4 h-4 text-[#9ca3af] transition-transform duration-200 flex-shrink-0"
+            className="w-4 h-4 text-ink-400 transition-transform duration-200 flex-shrink-0"
             style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
@@ -146,38 +146,38 @@ function FolderSection({ folderKey, label }: { folderKey: FolderKey; label: stri
 
       {/* Body */}
       {open && (
-        <div className="border-t border-[#e5e5e5]">
+        <div className="border-t border-line">
           {error && (
             <p className="text-xs text-red-600 border-l-2 border-red-400 pl-3 py-2 mx-6 my-3">{error}</p>
           )}
           {loading ? (
-            <p className="text-xs text-[#9ca3af] px-6 py-5">Caricamento…</p>
+            <p className="text-xs text-ink-400 px-6 py-5">Caricamento…</p>
           ) : files.length === 0 ? (
-            <p className="text-xs text-[#9ca3af] px-6 py-5 text-center">Nessun file in questa cartella.</p>
+            <p className="text-xs text-ink-400 px-6 py-5 text-center">Nessun file in questa cartella.</p>
           ) : (
             <div>
               {/* Table header */}
-              <div className="grid grid-cols-[1fr_80px_110px_auto] gap-4 px-6 py-2 bg-[#f9f9f9] border-b border-[#e5e5e5]">
-                <span className="text-[10px] font-medium uppercase tracking-widest text-[#9ca3af]">Nome</span>
-                <span className="text-[10px] font-medium uppercase tracking-widest text-[#9ca3af]">Dimensione</span>
-                <span className="text-[10px] font-medium uppercase tracking-widest text-[#9ca3af]">Data</span>
-                <span className="text-[10px] font-medium uppercase tracking-widest text-[#9ca3af]">Azioni</span>
+              <div className="grid grid-cols-[1fr_80px_110px_auto] gap-4 px-6 py-2 bg-[#f9f9f9] border-b border-line">
+                <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Nome</span>
+                <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Dimensione</span>
+                <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Data</span>
+                <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Azioni</span>
               </div>
               {files.map(f => (
                 <div
                   key={f.path}
-                  className="grid grid-cols-[1fr_80px_110px_auto] gap-4 px-6 py-3 border-b border-[#e5e5e5] last:border-b-0 items-center hover:bg-[#fafafa] transition-colors"
+                  className="grid grid-cols-[1fr_80px_110px_auto] gap-4 px-6 py-3 border-b border-line last:border-b-0 items-center hover:bg-paper-cool transition-colors"
                 >
                   <span className="text-sm text-[#1a1a1a] truncate font-['Inter']">{f.name}</span>
-                  <span className="text-xs text-[#6b7280] font-['Inter']">{formatSize(f.size)}</span>
-                  <span className="text-xs text-[#6b7280] font-['Inter']">{formatDate(f.created_at)}</span>
+                  <span className="text-xs text-ink-500 font-['Inter']">{formatSize(f.size)}</span>
+                  <span className="text-xs text-ink-500 font-['Inter']">{formatDate(f.created_at)}</span>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <a
                       href={f.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       download={f.name}
-                      className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
+                      className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
                     >
                       Download
                     </a>
@@ -205,7 +205,7 @@ function FolderSection({ folderKey, label }: { folderKey: FolderKey; label: stri
 export default function FinanceDocuments() {
   return (
     <div>
-      <p className="text-xs text-[#6b7280] font-['Inter'] mb-6">
+      <p className="text-xs text-ink-500 font-['Inter'] mb-6">
         Documenti contabili interni — PDF, Excel, DOCX. Visibile solo agli admin.
       </p>
       {FOLDERS.map(f => (

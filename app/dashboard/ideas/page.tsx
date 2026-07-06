@@ -134,7 +134,7 @@ function CreateIdeaModal({
             <button
               type="submit"
               disabled={saving || !title.trim()}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40"
             >
               {saving ? 'Pubblicazione…' : 'Pubblica idea'}
             </button>
@@ -212,7 +212,7 @@ function IdeaCard({
             {idea.title}
           </h3>
           {idea.category && (
-            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-[#1a4a3a]/10 text-[#1a4a3a] flex-shrink-0">
+            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-forest/10 text-forest flex-shrink-0">
               {idea.category}
             </span>
           )}
@@ -228,7 +228,7 @@ function IdeaCard({
               <button
                 type="button"
                 onClick={() => setExpanded(v => !v)}
-                className="text-xs text-[#1a4a3a] hover:underline mt-1"
+                className="text-xs text-forest hover:underline mt-1"
               >
                 {expanded ? 'Mostra meno' : 'Leggi tutto'}
               </button>
@@ -253,8 +253,8 @@ function IdeaCard({
           disabled={voting}
           className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 border transition-colors disabled:opacity-50 ${
             hasVoted
-              ? 'bg-[#1a4a3a] border-[#1a4a3a] text-white'
-              : 'bg-white border-line text-ink-500 hover:border-[#1a4a3a] hover:text-[#1a4a3a]'
+              ? 'bg-forest border-forest text-white'
+              : 'bg-white border-line text-ink-500 hover:border-forest hover:text-forest'
           }`}
         >
           <span>👍</span>
@@ -404,12 +404,12 @@ export default function IdeasPage() {
       <div className="flex items-start justify-between gap-6 mb-8">
         <div>
           <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-3">Idee &amp; Progetti</h1>
-          <div className="w-8 h-px bg-[#1a4a3a]" />
+          <div className="w-8 h-px bg-forest" />
         </div>
         {userId && (
           <button
             onClick={() => setShowCreate(true)}
-            className="flex-shrink-0 flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
+            className="flex-shrink-0 flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

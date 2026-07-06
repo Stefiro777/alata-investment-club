@@ -32,7 +32,7 @@ const PLATFORM_COLORS: Record<string, string> = {
   LinkedIn:   '#0077B5',
   TikTok:     '#000000',
   YouTube:    '#FF0000',
-  Newsletter: '#1a4a3a',
+  Newsletter: 'var(--forest)',
 }
 
 const CONTENT_TYPES: Record<string, string[]> = {
@@ -167,7 +167,7 @@ function MonthNav({
       <button
         type="button"
         onClick={onPrev}
-        className="p-1.5 border border-[#e5e7eb] hover:border-[#1a4a3a] transition-colors"
+        className="p-1.5 border border-[#e5e7eb] hover:border-forest transition-colors"
         aria-label="Mese precedente"
       >
         <svg className="w-4 h-4 text-ink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +180,7 @@ function MonthNav({
       <button
         type="button"
         onClick={onNext}
-        className="p-1.5 border border-[#e5e7eb] hover:border-[#1a4a3a] transition-colors"
+        className="p-1.5 border border-[#e5e7eb] hover:border-forest transition-colors"
         aria-label="Mese successivo"
       >
         <svg className="w-4 h-4 text-ink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -450,7 +450,7 @@ function TasksTab() {
       <div className="flex items-center gap-2 flex-wrap mb-6">
         {FILTER_OPTIONS.map(o => (
           <button key={o.key} type="button" onClick={() => setFilter(o.key as CalFilter)}
-            className={`text-xs font-medium uppercase tracking-wide px-4 py-1.5 border transition-colors ${filter === o.key ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'bg-white text-ink-500 border-[#e5e7eb] hover:border-[#1a4a3a] hover:text-ink-900'}`}>
+            className={`text-xs font-medium uppercase tracking-wide px-4 py-1.5 border transition-colors ${filter === o.key ? 'bg-forest text-white border-forest' : 'bg-white text-ink-500 border-[#e5e7eb] hover:border-forest hover:text-ink-900'}`}>
             {o.label}
           </button>
         ))}
@@ -487,7 +487,7 @@ function TasksTab() {
             return (
               <div key={dateStr + i} className={['min-h-[96px] p-2 border-b border-r border-[#e5e7eb] flex flex-col gap-1', (i + 1) % 7 === 0 ? 'border-r-0' : '', isLastRow ? 'border-b-0' : ''].join(' ')}>
                 <div className="flex-shrink-0">
-                  <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-[#1a4a3a] text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
+                  <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-forest text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
                     {day.getDate()}
                   </span>
                 </div>
@@ -669,33 +669,33 @@ function NewEventModal({
         <form onSubmit={handleSubmit} className="px-7 py-5 space-y-4">
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Data *</label>
-            <input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+            <input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest" />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Title *</label>
-            <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Event title" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+            <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Event title" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest" />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Descrizione</label>
-            <textarea rows={3} value={description} onChange={e => setDesc(e.target.value)} placeholder="Descrizione (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a] resize-none" />
+            <textarea rows={3} value={description} onChange={e => setDesc(e.target.value)} placeholder="Descrizione (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest resize-none" />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Location</label>
-            <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Location (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+            <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Location (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Ora inizio</label>
-              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest" />
             </div>
             <div>
               <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Ora fine</label>
-              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest" />
             </div>
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
           <div className="flex items-center gap-4 pt-1">
-            <button type="submit" disabled={saving || !date || !title.trim()} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40">
+            <button type="submit" disabled={saving || !date || !title.trim()} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40">
               {saving ? 'Saving…' : 'Create event'}
             </button>
             <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Cancel</button>
@@ -773,7 +773,7 @@ function EventiTab() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
-        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors">
+        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
@@ -798,7 +798,7 @@ function EventiTab() {
             return (
               <div key={dateStr + i} className={['min-h-[96px] p-2 border-b border-r border-[#e5e7eb] flex flex-col gap-1', (i + 1) % 7 === 0 ? 'border-r-0' : '', isLastRow ? 'border-b-0' : ''].join(' ')}>
                 <div className="flex-shrink-0">
-                  <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-[#1a4a3a] text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
+                  <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-forest text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
                     {day.getDate()}
                   </span>
                 </div>
@@ -806,7 +806,7 @@ function EventiTab() {
                   {visible.map(ev => {
                     const isTask = ev._source === 'task'
                     const teamBadge = isTask && ev._team ? (TEAM_BADGE[ev._team] ?? null) : null
-                    const bg = isTask ? (teamBadge?.bg ?? '#d97706') : '#1a4a3a'
+                    const bg = isTask ? (teamBadge?.bg ?? '#d97706') : 'var(--forest)'
                     const rawLabel = ev.start_time ? `${ev.start_time} ${ev.title}` : ev.title
                     const label = rawLabel.length > 20 ? rawLabel.slice(0, 20) + '…' : rawLabel
                     return (
@@ -847,7 +847,7 @@ function EventiTab() {
                 {evs.map(ev => {
                   const isTask = ev._source === 'task'
                   const teamBadge = isTask && ev._team ? (TEAM_BADGE[ev._team] ?? null) : null
-                  const bg = isTask ? (teamBadge?.bg ?? '#d97706') : '#1a4a3a'
+                  const bg = isTask ? (teamBadge?.bg ?? '#d97706') : 'var(--forest)'
                   return (
                     <button key={ev.id} type="button" onClick={() => { setDayPopover(null); setSelectedEvent(ev) }}
                       className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5 flex items-center gap-1.5"
@@ -878,7 +878,7 @@ function EventiTab() {
 function PedDetailModal({
   post, onClose,
 }: { post: PedPost; onClose: () => void }) {
-  const platformColor = post.platform ? (PLATFORM_COLORS[post.platform] ?? '#1a4a3a') : '#1a4a3a'
+  const platformColor = post.platform ? (PLATFORM_COLORS[post.platform] ?? '#1a4a3a') : 'var(--forest)'
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="bg-white w-full max-w-sm shadow-2xl">
@@ -927,7 +927,7 @@ function PedDetailModal({
           {post.attachment_url && (
             <div>
               <p className="text-[10px] uppercase tracking-widest text-ink-400 mb-0.5">Allegato</p>
-              <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="text-[#1a4a3a] underline text-sm">Visualizza allegato</a>
+              <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="text-forest underline text-sm">Visualizza allegato</a>
             </div>
           )}
         </div>
@@ -1013,16 +1013,16 @@ function NewPedModal({
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-7 py-5 space-y-4">
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Data *</label>
-            <input required type="date" value={scheduledDate} onChange={e => setDate(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+            <input required type="date" value={scheduledDate} onChange={e => setDate(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest" />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Title *</label>
-            <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]" />
+            <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest" />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Piattaforma</label>
             <div className="relative">
-              <select value={platform} onChange={e => handlePlatformChange(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a] appearance-none">
+              <select value={platform} onChange={e => handlePlatformChange(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest appearance-none">
                 <option value="">Seleziona piattaforma</option>
                 {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
@@ -1035,7 +1035,7 @@ function NewPedModal({
             <div>
               <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Tipo Contenuto</label>
               <div className="relative">
-                <select value={contentType} onChange={e => setContentType(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a] appearance-none">
+                <select value={contentType} onChange={e => setContentType(e.target.value)} className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest appearance-none">
                   <option value="">Seleziona tipo</option>
                   {availableContentTypes.map(ct => <option key={ct} value={ct}>{ct}</option>)}
                 </select>
@@ -1047,7 +1047,7 @@ function NewPedModal({
           )}
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Descrizione</label>
-            <textarea rows={3} value={description} onChange={e => setDesc(e.target.value)} placeholder="Descrizione (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a] resize-none" />
+            <textarea rows={3} value={description} onChange={e => setDesc(e.target.value)} placeholder="Descrizione (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest resize-none" />
           </div>
           <div className="relative">
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Assigned to</label>
@@ -1057,27 +1057,27 @@ function NewPedModal({
               onFocus={() => setAcOpen(true)}
               onBlur={() => setTimeout(() => setAcOpen(false), 150)}
               placeholder="Nome (opzionale)"
-              className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]"
+              className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest"
             />
             {acOpen && acSuggestions.length > 0 && (
               <div className="absolute z-10 top-full left-0 right-0 bg-white border border-[#e5e7eb] shadow-md max-h-32 overflow-y-auto">
                 {acSuggestions.map(s => (
-                  <button key={s} type="button" onMouseDown={() => { setAssignedTo(s); setAcOpen(false) }} className="w-full text-left px-3 py-2 text-sm hover:bg-[#f5f5f5]">{s}</button>
+                  <button key={s} type="button" onMouseDown={() => { setAssignedTo(s); setAcOpen(false) }} className="w-full text-left px-3 py-2 text-sm hover:bg-paper-stone">{s}</button>
                 ))}
               </div>
             )}
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Note</label>
-            <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Note (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a4a3a] resize-none" />
+            <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Note (opzionale)" className="w-full border border-[#e5e7eb] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-forest resize-none" />
           </div>
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-ink-400 mb-1">Allegato</label>
-            <input type="file" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-sm text-ink-600 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-medium file:uppercase file:tracking-wide file:bg-[#1a4a3a] file:text-white hover:file:bg-[#123a2d]" />
+            <input type="file" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-sm text-ink-600 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-medium file:uppercase file:tracking-wide file:bg-forest file:text-white hover:file:bg-[#123a2d]" />
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
           <div className="flex items-center gap-4 pt-1">
-            <button type="submit" disabled={saving || !scheduledDate || !title.trim()} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40">
+            <button type="submit" disabled={saving || !scheduledDate || !title.trim()} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40">
               {saving ? 'Saving…' : 'Create entry'}
             </button>
             <button type="button" onClick={onClose} className="text-sm text-ink-500 hover:text-ink-900">Cancel</button>
@@ -1156,12 +1156,12 @@ function PedTab() {
         <div className="flex items-center gap-2">
           {(['calendar', 'list'] as const).map(v => (
             <button key={v} type="button" onClick={() => setView(v)}
-              className={`text-xs font-medium uppercase tracking-wide px-4 py-1.5 border transition-colors ${view === v ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'bg-white text-ink-500 border-[#e5e7eb] hover:border-[#1a4a3a] hover:text-ink-900'}`}>
+              className={`text-xs font-medium uppercase tracking-wide px-4 py-1.5 border transition-colors ${view === v ? 'bg-forest text-white border-forest' : 'bg-white text-ink-500 border-[#e5e7eb] hover:border-forest hover:text-ink-900'}`}>
               {v === 'calendar' ? 'Calendario' : 'Lista'}
             </button>
           ))}
         </div>
-        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors">
+        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
           Nuova entry
         </button>
@@ -1187,13 +1187,13 @@ function PedTab() {
                 return (
                   <div key={dateStr + i} className={['min-h-[96px] p-2 border-b border-r border-[#e5e7eb] flex flex-col gap-1', (i + 1) % 7 === 0 ? 'border-r-0' : '', isLastRow ? 'border-b-0' : ''].join(' ')}>
                     <div className="flex-shrink-0">
-                      <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-[#1a4a3a] text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
+                      <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-forest text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
                         {day.getDate()}
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5 flex-1">
                       {visible.map(p => {
-                        const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : '#1a4a3a'
+                        const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : 'var(--forest)'
                         const label = p.title.length > 20 ? p.title.slice(0, 20) + '…' : p.title
                         return (
                           <button key={p.id} type="button" onClick={e => { e.stopPropagation(); setSelectedPost(p) }}
@@ -1240,7 +1240,7 @@ function PedTab() {
                   </div>
                   <div className="px-4 py-3 flex flex-col gap-1 max-h-72 overflow-y-auto">
                     {ps.map(p => {
-                      const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : '#1a4a3a'
+                      const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : 'var(--forest)'
                       return (
                         <button key={p.id} type="button" onClick={() => { setDayPopover(null); setSelectedPost(p) }}
                           className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5"
@@ -1269,11 +1269,11 @@ function PedTab() {
                 ))}
               </div>
               {posts.map(p => {
-                const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : '#1a4a3a'
+                const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : 'var(--forest)'
                 return (
-                  <div key={p.id} className="grid grid-cols-[120px_1fr_110px_110px_130px_110px_80px] border-b border-[#e5e7eb] last:border-b-0 hover:bg-[#fafafa] items-center">
+                  <div key={p.id} className="grid grid-cols-[120px_1fr_110px_110px_130px_110px_80px] border-b border-[#e5e7eb] last:border-b-0 hover:bg-paper-cool items-center">
                     <div className="px-3 py-3 text-xs text-ink-600">{fmtDate(p.scheduled_date)}</div>
-                    <button type="button" onClick={() => setSelectedPost(p)} className="px-3 py-3 text-sm font-medium text-ink-900 text-left hover:text-[#1a4a3a] transition-colors truncate">
+                    <button type="button" onClick={() => setSelectedPost(p)} className="px-3 py-3 text-sm font-medium text-ink-900 text-left hover:text-forest transition-colors truncate">
                       {p.title}
                     </button>
                     <div className="px-3 py-3">
@@ -1289,7 +1289,7 @@ function PedTab() {
                           value={p.status}
                           disabled={updatingStatus === p.id}
                           onChange={e => handleStatusChange(p.id, e.target.value)}
-                          className="text-xs font-medium uppercase tracking-wide border border-[#e5e7eb] px-2 py-1 bg-white focus:outline-none focus:border-[#1a4a3a] appearance-none pr-5 disabled:opacity-50 w-full"
+                          className="text-xs font-medium uppercase tracking-wide border border-[#e5e7eb] px-2 py-1 bg-white focus:outline-none focus:border-forest appearance-none pr-5 disabled:opacity-50 w-full"
                         >
                           {PED_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
@@ -1352,7 +1352,7 @@ export default function CalendarPage() {
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
       <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-3">Calendario</h1>
-      <div className="w-8 h-px bg-[#1a4a3a] mb-8" />
+      <div className="w-8 h-px bg-forest mb-8" />
 
       {/* Tab bar */}
       <div className="border-b border-gray-200 mb-8">
@@ -1365,7 +1365,7 @@ export default function CalendarPage() {
               className="pb-2 text-sm font-['Inter'] transition-colors"
               style={
                 activeTab === tab.key
-                  ? { borderBottom: '2px solid #1a4a3a', color: '#1a4a3a', fontWeight: 600 }
+                  ? { borderBottom: '2px solid #1a4a3a', color: 'var(--forest)', fontWeight: 600 }
                   : { borderBottom: '2px solid transparent', color: '#6b7280' }
               }
             >

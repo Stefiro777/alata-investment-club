@@ -11,7 +11,7 @@ export const TEAM_COLORS: Record<string, string> = {
   education: '#b45309',
   media:     '#4b5320',
   syrto:     '#6b7280',
-  lab:       '#1a4a3a',
+  lab:       'var(--forest)',
   alumni:    '#6ca0dc',
 }
 
@@ -180,7 +180,7 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
                 style={hasOther ? { borderLeft: `3px solid ${otherColor}` } : undefined}
               >
                 <div className="flex justify-end mb-1">
-                  <span className={`text-xs font-['Inter'] w-6 h-6 flex items-center justify-center ${isToday ? 'bg-[#1a4a3a] text-white rounded-full' : 'text-gray-500'}`}>
+                  <span className={`text-xs font-['Inter'] w-6 h-6 flex items-center justify-center ${isToday ? 'bg-forest text-white rounded-full' : 'text-gray-500'}`}>
                     {date.getDate()}
                   </span>
                 </div>
@@ -223,7 +223,7 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
             return (
               <div key={i} className="text-center py-2 border-r border-gray-100">
                 <div className="text-xs text-gray-400 uppercase font-['Inter']">{WEEK_DAYS_SHORT[i]}</div>
-                <div className={`text-sm font-['Inter'] mx-auto w-6 h-6 flex items-center justify-center ${isToday ? 'bg-[#1a4a3a] text-white rounded-full' : 'text-gray-700'}`}>
+                <div className={`text-sm font-['Inter'] mx-auto w-6 h-6 flex items-center justify-center ${isToday ? 'bg-forest text-white rounded-full' : 'text-gray-700'}`}>
                   {d.getDate()}
                 </div>
               </div>
@@ -326,7 +326,7 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
             className="text-xs font-['Inter'] px-3 py-1 border transition-colors"
             style={
               teamFilter === null
-                ? { backgroundColor: '#1a4a3a', color: '#fff', borderColor: '#1a4a3a' }
+                ? { backgroundColor: 'var(--forest)', color: '#fff', borderColor: 'var(--forest)' }
                 : { backgroundColor: 'transparent', color: '#6b7280', borderColor: '#e5e7eb' }
             }
           >
@@ -359,7 +359,7 @@ export default function TeamCalendarSection({ slug, currentMember }: Props) {
               className="text-sm font-['Inter'] px-4 py-1.5 border transition-colors capitalize"
               style={
                 view === v
-                  ? { borderBottomColor: '#1a4a3a', borderBottomWidth: 2, color: '#1a4a3a', fontWeight: 600, borderTop: '1px solid #e5e7eb', borderLeft: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb' }
+                  ? { borderBottomColor: 'var(--forest)', borderBottomWidth: 2, color: 'var(--forest)', fontWeight: 600, borderTop: '1px solid #e5e7eb', borderLeft: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb' }
                   : { border: '1px solid #e5e7eb', color: '#6b7280' }
               }
             >

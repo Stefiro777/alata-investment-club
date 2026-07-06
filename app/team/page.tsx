@@ -29,7 +29,7 @@ function MemberCard({ member }: { member: TeamMember }) {
     <div className="member-card-simple bg-white overflow-hidden flex flex-col" style={{ border: '1px solid #1a4a3a' }}>
       {/* Photo section — centered with double green ring */}
       <div className="flex justify-center items-center py-5 bg-paper-stone" style={{ minHeight: '160px' }}>
-        <div className="relative w-32 h-32 rounded-full overflow-hidden bg-[#e0e0e0] ring-2 ring-[#1a4a3a] ring-offset-2 ring-offset-[#f5f5f5]">
+        <div className="relative w-32 h-32 rounded-full overflow-hidden bg-[#e0e0e0] ring-2 ring-forest ring-offset-2 ring-offset-[#f5f5f5]">
           {member.photo_url ? (
             <Image src={member.photo_url} alt={member.name} fill className="member-photo object-cover object-top" />
           ) : (

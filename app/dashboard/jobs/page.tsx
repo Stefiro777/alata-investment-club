@@ -141,13 +141,13 @@ function JobModal({
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Titolo *</label>
             <input required value={title} onChange={e => setTitle(e.target.value)}
               placeholder="Es. Junior Analyst"
-              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-[#1a4a3a] text-sm" />
+              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-forest text-sm" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Azienda *</label>
             <input required value={company} onChange={e => setCompany(e.target.value)}
               placeholder="Es. Goldman Sachs"
-              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-[#1a4a3a] text-sm" />
+              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-forest text-sm" />
           </div>
 
           {/* Apply mode toggle — only for official offers */}
@@ -158,14 +158,14 @@ function JobModal({
                 <button
                   type="button"
                   onClick={() => setApplyMode('link')}
-                  className={`flex-1 px-3 py-2.5 text-sm transition-colors ${applyMode === 'link' ? 'bg-[#1a4a3a] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`flex-1 px-3 py-2.5 text-sm transition-colors ${applyMode === 'link' ? 'bg-forest text-white' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
                   Link esterno
                 </button>
                 <button
                   type="button"
                   onClick={() => setApplyMode('form')}
-                  className={`flex-1 px-3 py-2.5 text-sm border-l border-gray-200 transition-colors ${applyMode === 'form' ? 'bg-[#1a4a3a] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`flex-1 px-3 py-2.5 text-sm border-l border-gray-200 transition-colors ${applyMode === 'form' ? 'bg-forest text-white' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
                   Form interno
                 </button>
@@ -182,13 +182,13 @@ function JobModal({
               value={link}
               onChange={e => setLink(e.target.value)}
               placeholder="https://…"
-              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-[#1a4a3a] text-sm" />
+              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-forest text-sm" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Descrizione</label>
             <textarea rows={4} value={description} onChange={e => setDesc(e.target.value)}
               placeholder="Dettagli aggiuntivi sull'offerta…"
-              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-[#1a4a3a] text-sm resize-none" />
+              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-forest text-sm resize-none" />
           </div>
           {error && <p className="text-red-600 text-sm border-l-2 border-red-400 pl-3">{error}</p>}
         </form>
@@ -198,7 +198,7 @@ function JobModal({
             Annulla
           </button>
           <button onClick={handleSubmit as unknown as React.MouseEventHandler} disabled={saving}
-            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-sm font-medium px-5 py-2 transition-colors disabled:opacity-50">
+            className="bg-forest hover:bg-forest-deep text-white text-sm font-medium px-5 py-2 transition-colors disabled:opacity-50">
             {saving ? '…' : isEdit ? 'Salva' : 'Aggiungi'}
           </button>
         </div>
@@ -285,7 +285,7 @@ export function JobApplicationModal({
     setSubmitting(false)
   }
 
-  const inputCls = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a] rounded-none'
+  const inputCls = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:border-forest rounded-none'
   const labelCls = 'block text-xs font-semibold uppercase tracking-widest text-black mb-1'
 
   return (
@@ -293,7 +293,7 @@ export function JobApplicationModal({
       className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto border-t-4 border-[#1a4a3a] relative">
+      <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto border-t-4 border-forest relative">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -305,7 +305,7 @@ export function JobApplicationModal({
 
         {success ? (
           <div className="px-8 py-16 flex flex-col items-center justify-center text-center">
-            <div className="w-14 h-14 rounded-full bg-[#1a4a3a] flex items-center justify-center mb-5">
+            <div className="w-14 h-14 rounded-full bg-forest flex items-center justify-center mb-5">
               <span className="text-white text-2xl font-bold">✓</span>
             </div>
             <p className="font-serif text-xl font-bold text-gray-900">Candidatura inviata con successo.</p>
@@ -366,7 +366,7 @@ export function JobApplicationModal({
               <div>
                 <label className={labelCls}>CV *</label>
                 <div
-                  className="w-full border border-black px-3 py-2 text-sm cursor-pointer hover:border-[#1a4a3a] transition-colors flex items-center gap-2"
+                  className="w-full border border-black px-3 py-2 text-sm cursor-pointer hover:border-forest transition-colors flex items-center gap-2"
                   onClick={() => fileRef.current?.click()}
                 >
                   <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -393,7 +393,7 @@ export function JobApplicationModal({
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-[#1a4a3a] text-white py-3 text-sm font-semibold uppercase tracking-widest hover:bg-black transition-colors rounded-none mt-6 disabled:opacity-50"
+                className="w-full bg-forest text-white py-3 text-sm font-semibold uppercase tracking-widest hover:bg-black transition-colors rounded-none mt-6 disabled:opacity-50"
               >
                 {submitting ? 'Invio in corso...' : 'Invia candidatura'}
               </button>
@@ -438,13 +438,13 @@ function OfficialJobCard({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h3 className="font-serif text-lg font-bold text-gray-900 leading-tight">{offer.title}</h3>
-            <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-[#1a4a3a] text-white uppercase tracking-wide">
+            <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-forest text-white uppercase tracking-wide">
               {offer.company}
             </span>
           </div>
           {canManage && (
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-[#1a4a3a] transition-colors">
+              <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-forest transition-colors">
                 <PencilIcon />
               </button>
               {confirmDelete ? (
@@ -473,7 +473,7 @@ function OfficialJobCard({
             </p>
             <button
               onClick={() => setCollapsed(c => !c)}
-              className="mt-1 text-xs text-[#1a4a3a] hover:underline underline-offset-2"
+              className="mt-1 text-xs text-forest hover:underline underline-offset-2"
             >
               {collapsed ? 'Leggi di più ↓' : 'Chiudi ↑'}
             </button>
@@ -483,13 +483,13 @@ function OfficialJobCard({
           {isFormMode ? (
             <button
               onClick={() => setShowAppModal(true)}
-              className="inline-block bg-[#1a4a3a] text-white text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-[#123a2d] transition-colors"
+              className="inline-block bg-forest text-white text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-forest-deep transition-colors"
             >
               Candidati →
             </button>
           ) : (
             <a href={offer.link} target="_blank" rel="noopener noreferrer"
-              className="inline-block bg-[#1a4a3a] text-white text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-[#123a2d] transition-colors">
+              className="inline-block bg-forest text-white text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-forest-deep transition-colors">
               Candidati →
             </a>
           )}
@@ -533,7 +533,7 @@ function MemberJobCard({
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <h3 className="font-serif text-lg font-bold text-gray-900 leading-tight">{offer.title}</h3>
-          <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-[#1a4a3a] text-white uppercase tracking-wide">
+          <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-forest text-white uppercase tracking-wide">
             {offer.company}
           </span>
         </div>
@@ -565,7 +565,7 @@ function MemberJobCard({
           </p>
           <button
             onClick={() => setCollapsed(c => !c)}
-            className="mt-1 text-xs text-[#1a4a3a] hover:underline underline-offset-2"
+            className="mt-1 text-xs text-forest hover:underline underline-offset-2"
           >
             {collapsed ? 'Leggi di più ↓' : 'Chiudi ↑'}
           </button>
@@ -577,7 +577,7 @@ function MemberJobCard({
           {fmtDate(offer.created_at)}
         </div>
         <a href={offer.link} target="_blank" rel="noopener noreferrer"
-          className="inline-block text-sm font-medium text-[#1a4a3a] hover:underline underline-offset-2 flex-shrink-0">
+          className="inline-block text-sm font-medium text-forest hover:underline underline-offset-2 flex-shrink-0">
           Vedi offerta →
         </a>
       </div>
@@ -678,7 +678,7 @@ export default function JobsPage() {
       <div className="flex items-start justify-between gap-6 mb-10">
         <div>
           <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 mb-3">Job Offers</h1>
-          <div className="w-8 h-px bg-[#1a4a3a]" />
+          <div className="w-8 h-px bg-forest" />
         </div>
         {/* Subscription toggle */}
         <div className="flex items-center gap-3 flex-shrink-0 pt-1">
@@ -690,13 +690,13 @@ export default function JobsPage() {
             className="relative flex-shrink-0 w-6 h-6 transition-colors disabled:opacity-50"
           >
             {subscribed ? (
-              <span className="flex items-center justify-center w-6 h-6 bg-[#1a4a3a] text-white">
+              <span className="flex items-center justify-center w-6 h-6 bg-forest text-white">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               </span>
             ) : (
-              <span className="flex items-center justify-center w-6 h-6 border-2 border-gray-400 hover:border-[#1a4a3a] transition-colors" />
+              <span className="flex items-center justify-center w-6 h-6 border-2 border-gray-400 hover:border-forest transition-colors" />
             )}
           </button>
         </div>
@@ -707,12 +707,12 @@ export default function JobsPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="font-serif text-2xl font-bold text-gray-900">Offerte del Club</h2>
-            <div className="w-6 h-px bg-[#1a4a3a] mt-2" />
+            <div className="w-6 h-px bg-forest mt-2" />
           </div>
           {isBoD && (
             <button
               onClick={() => setModal({ mode: 'add-official' })}
-              className="flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors flex-shrink-0"
+              className="flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors flex-shrink-0"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -749,11 +749,11 @@ export default function JobsPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="font-serif text-2xl font-bold text-gray-900">Segnalate dalla Community</h2>
-            <div className="w-6 h-px bg-[#1a4a3a] mt-2" />
+            <div className="w-6 h-px bg-forest mt-2" />
           </div>
           <button
             onClick={() => setModal({ mode: 'add-member' })}
-            className="flex items-center gap-1.5 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors flex-shrink-0"
+            className="flex items-center gap-1.5 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors flex-shrink-0"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

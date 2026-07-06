@@ -89,7 +89,7 @@ function formatDate(dateStr: string): string {
 }
 
 function statusBadgeCls(status: string): string {
-  if (status === 'confirmed')      return 'bg-[#1a4a3a] text-white'
+  if (status === 'confirmed')      return 'bg-forest text-white'
   if (status === 'cancelled')      return 'bg-red-100 text-red-700'
   return 'bg-yellow-100 text-yellow-800'
 }
@@ -102,9 +102,9 @@ function statusLabel(status: string): string {
 
 // ── Shared style constants ────────────────────────────────────────────────────
 
-const inputCls  = 'w-full border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a] bg-white'
+const inputCls  = 'w-full border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white'
 const labelCls  = 'block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1'
-const btnPrimary = 'bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest px-5 py-2 transition-colors disabled:opacity-40'
+const btnPrimary = 'bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest px-5 py-2 transition-colors disabled:opacity-40'
 const btnGhost  = 'border border-gray-200 px-4 py-2 text-xs text-gray-600 hover:border-gray-400 transition-colors'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -230,7 +230,7 @@ function SvcFormFields({ form, onChange }: { form: ServiceForm | undefined; onCh
       <div className="flex items-center gap-2 pt-5">
         <input type="checkbox" id="svc-active" checked={form.active}
           onChange={e => onChange({ ...form, active: e.target.checked })}
-          className="accent-[#1a4a3a] w-3.5 h-3.5" />
+          className="accent-forest w-3.5 h-3.5" />
         <label htmlFor="svc-active" className="text-sm text-gray-700">Active</label>
       </div>
     </div>
@@ -335,7 +335,7 @@ function ServicesTab({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-semibold text-gray-900">{s.name}</span>
-                    <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${s.active ? 'bg-[#1a4a3a] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                    <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${s.active ? 'bg-forest text-white' : 'bg-gray-200 text-gray-500'}`}>
                       {s.active ? 'Active' : 'Inactive'}
                     </span>
                   </div>
@@ -352,7 +352,7 @@ function ServicesTab({
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button onClick={() => toggleActive(s)} title={s.active ? 'Deactivate' : 'Activate'}
-                    className="p-1.5 text-gray-400 hover:text-[#1a4a3a] transition-colors">
+                    className="p-1.5 text-gray-400 hover:text-forest transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {s.active
                         ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
@@ -362,7 +362,7 @@ function ServicesTab({
                   </button>
                   {editingId !== s.id && (
                     <button onClick={() => startEdit(s)} title="Edit"
-                      className="p-1.5 text-gray-400 hover:text-[#1a4a3a] transition-colors">
+                      className="p-1.5 text-gray-400 hover:text-forest transition-colors">
                       <PencilIcon />
                     </button>
                   )}
@@ -383,7 +383,7 @@ function ServicesTab({
 
               {/* Inline edit form */}
               {editingId === s.id && editForms[s.id] && (
-                <div className="border-t border-[#1a4a3a]/20 bg-[#f9f9f8] px-5 py-5">
+                <div className="border-t border-forest/20 bg-[#f9f9f8] px-5 py-5">
                   <SvcFormFields form={editForms[s.id]} onChange={f => setEditForms(prev => ({ ...prev, [s.id]: f }))} />
                   {error && <p className="mt-3 text-xs text-red-600 border-l-2 border-red-400 pl-2">{error}</p>}
                   <div className="flex items-center gap-3 mt-4">
@@ -401,8 +401,8 @@ function ServicesTab({
 
       {/* Add form */}
       {addForm && (
-        <div className="border border-[#1a4a3a]/30 bg-[#f9f9f8] px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-4">New Service</p>
+        <div className="border border-forest/30 bg-[#f9f9f8] px-5 py-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-4">New Service</p>
           <SvcFormFields form={addForm} onChange={setAddForm} />
           {error && <p className="mt-3 text-xs text-red-600 border-l-2 border-red-400 pl-2">{error}</p>}
           <div className="flex items-center gap-3 mt-4">
@@ -533,13 +533,13 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
                 <span className="text-sm text-gray-500">
                   {a.start_time?.slice(0, 5)}{a.end_time ? ` – ${a.end_time.slice(0, 5)}` : ''}
                 </span>
-                <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${a.active ? 'bg-[#1a4a3a] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${a.active ? 'bg-forest text-white' : 'bg-gray-200 text-gray-500'}`}>
                   {a.active ? 'Active' : 'Inactive'}
                 </span>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <button onClick={() => toggleActive(a)} title={a.active ? 'Deactivate' : 'Activate'}
-                  className="p-1.5 text-gray-400 hover:text-[#1a4a3a] transition-colors">
+                  className="p-1.5 text-gray-400 hover:text-forest transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                       d={a.active
@@ -563,8 +563,8 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
       )}
 
       {/* Add Slot Form */}
-      <div className="border border-[#1a4a3a]/30 bg-[#f9f9f8] px-5 py-5">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-4">Add Slot</p>
+      <div className="border border-forest/30 bg-[#f9f9f8] px-5 py-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-4">Add Slot</p>
 
         {/* Type toggle */}
         <div className="mb-4">
@@ -572,7 +572,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
           <div className="flex border border-gray-200 max-w-xs">
             {(['recurring', 'one_time'] as const).map(t => (
               <button key={t} type="button" onClick={() => setForm(f => ({ ...f, type: t }))}
-                className={`flex-1 px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors border-r border-gray-200 last:border-r-0 ${form.type === t ? 'bg-[#1a4a3a] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+                className={`flex-1 px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors border-r border-gray-200 last:border-r-0 ${form.type === t ? 'bg-forest text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
                 {t === 'recurring' ? 'Recurring' : 'One-Time'}
               </button>
             ))}
@@ -593,7 +593,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
               {DOW_BUTTONS.map(({ label, value }) => (
                 <button key={value} type="button"
                   onClick={() => setForm(f => ({ ...f, day_of_week: value }))}
-                  className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border transition-colors ${form.day_of_week === value ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]' : 'border-gray-200 text-gray-600 hover:border-[#1a4a3a]'}`}>
+                  className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border transition-colors ${form.day_of_week === value ? 'bg-forest text-white border-forest' : 'border-gray-200 text-gray-600 hover:border-forest'}`}>
                   {label}
                 </button>
               ))}
@@ -618,7 +618,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
         <div className="flex items-center gap-2 mb-4">
           <input type="checkbox" id="avail-active" checked={form.active}
             onChange={e => setForm(f => ({ ...f, active: e.target.checked }))}
-            className="accent-[#1a4a3a] w-3.5 h-3.5" />
+            className="accent-forest w-3.5 h-3.5" />
           <label htmlFor="avail-active" className="text-sm text-gray-700">Active</label>
         </div>
 
@@ -733,7 +733,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {b.is_member_free && (
-              <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-[#1a4a3a]/10 text-[#1a4a3a]">
+              <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-forest/10 text-forest">
                 Member
               </span>
             )}
@@ -752,7 +752,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
         </button>
 
         {expandedId === b.id && (
-          <div className="border-t border-[#1a4a3a]/20 bg-[#f9f9f8] px-5 py-5">
+          <div className="border-t border-forest/20 bg-[#f9f9f8] px-5 py-5">
             <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4 mb-5">
               <div>
                 <p className={labelCls}>Service</p>
@@ -760,7 +760,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
               </div>
               <div>
                 <p className={labelCls}>Email</p>
-                <a href={`mailto:${b.email}`} className="text-sm text-[#1a4a3a] hover:underline underline-offset-2">{b.email}</a>
+                <a href={`mailto:${b.email}`} className="text-sm text-forest hover:underline underline-offset-2">{b.email}</a>
               </div>
               <div className="sm:col-span-2">
                 <p className={labelCls}>Motivation</p>
@@ -774,7 +774,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
                 <div>
                   <p className={labelCls}>CV</p>
                   <a href={b.cv_url} target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-[#1a4a3a] hover:underline underline-offset-2">
+                    className="text-sm text-forest hover:underline underline-offset-2">
                     Download CV →
                   </a>
                 </div>
@@ -791,7 +791,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
               <div className="relative">
                 <select value={b.status} onChange={e => updateStatus(b.id, e.target.value)}
                   disabled={updatingId === b.id}
-                  className="border border-gray-200 px-3 py-1.5 text-xs appearance-none bg-white focus:outline-none focus:border-[#1a4a3a] pr-7 disabled:opacity-50">
+                  className="border border-gray-200 px-3 py-1.5 text-xs appearance-none bg-white focus:outline-none focus:border-forest pr-7 disabled:opacity-50">
                   <option value="pending_payment">Pending Payment</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="cancelled">Cancelled</option>
@@ -840,7 +840,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
           { value: statFilter, onChange: setStatFilter, options: statOptions }].map(({ value, onChange, options }, idx) => (
           <div key={idx} className="relative">
             <select value={value} onChange={e => onChange(e.target.value)}
-              className="border border-gray-200 px-3 py-2 text-sm appearance-none bg-white focus:outline-none focus:border-[#1a4a3a] pr-8">
+              className="border border-gray-200 px-3 py-2 text-sm appearance-none bg-white focus:outline-none focus:border-forest pr-8">
               {options.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
             </select>
             <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -986,8 +986,8 @@ function NotificationsTab({ services }: { services: CareerService[] }) {
       )}
 
       {/* Add contact form */}
-      <div className="border border-[#1a4a3a]/30 bg-[#f9f9f8] px-5 py-5">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-4">Add Contact</p>
+      <div className="border border-forest/30 bg-[#f9f9f8] px-5 py-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-4">Add Contact</p>
         <div className="grid sm:grid-cols-2 gap-4 mb-4 max-w-lg">
           <div>
             <label className={labelCls}>Name *</label>
@@ -1140,7 +1140,7 @@ function SuggestionsTab({ services }: { services: CareerService[] }) {
                 type="number"
                 defaultValue={row.sort_order}
                 onBlur={e => updateOrder(row, e.target.value)}
-                className="w-16 border border-gray-200 px-2 py-1 text-xs text-center focus:outline-none focus:border-[#1a4a3a]"
+                className="w-16 border border-gray-200 px-2 py-1 text-xs text-center focus:outline-none focus:border-forest"
                 title="Sort order"
               />
               {/* Visible toggle */}
@@ -1148,7 +1148,7 @@ function SuggestionsTab({ services }: { services: CareerService[] }) {
                 onClick={() => toggleVisible(row)}
                 className={`text-xs font-semibold uppercase tracking-widest px-3 py-1 border transition-colors ${
                   row.visible
-                    ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
+                    ? 'bg-forest text-white border-forest'
                     : 'border-gray-300 text-gray-400'
                 }`}
               >
@@ -1174,8 +1174,8 @@ function SuggestionsTab({ services }: { services: CareerService[] }) {
 
       {/* Add form */}
       {showForm ? (
-        <div className="border border-[#1a4a3a]/30 bg-[#f9f9f8] px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-4">Nuovo Suggerimento</p>
+        <div className="border border-forest/30 bg-[#f9f9f8] px-5 py-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-4">Nuovo Suggerimento</p>
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
             {/* Type */}
             <div>
@@ -1302,7 +1302,7 @@ export default function CareerBookingsPage() {
       {/* Page header */}
       <div className="mb-10">
         <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 mb-3">Career Bookings</h1>
-        <div className="w-8 h-px bg-[#1a4a3a]" />
+        <div className="w-8 h-px bg-forest" />
       </div>
 
       {/* Tab bar */}
@@ -1314,7 +1314,7 @@ export default function CareerBookingsPage() {
             onClick={() => setTab(t.key)}
             className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px ${
               tab === t.key
-                ? 'border-[#1a4a3a] text-[#1a4a3a]'
+                ? 'border-forest text-forest'
                 : 'border-transparent text-gray-400 hover:text-gray-700'
             }`}
           >

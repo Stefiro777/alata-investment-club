@@ -274,7 +274,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                       required
                       checked={privacyConsent}
                       onChange={e => setPrivacyConsent(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#1a4a3a]"
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 accent-forest"
                     />
                     <label htmlFor="privacy-consent" className="text-xs text-ink-500 leading-relaxed cursor-pointer">
                       I have read and accept the{' '}

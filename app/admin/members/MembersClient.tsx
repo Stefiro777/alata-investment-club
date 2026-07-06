@@ -110,8 +110,8 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
         <select
           value={industry}
           onChange={e => setIndustry(e.target.value)}
-          className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors"
-          style={{ accentColor: '#1a4a3a' }}
+          className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-forest focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors"
+          style={{ accentColor: 'var(--forest)' }}
         >
           <option value="" disabled className="text-gray-400">Select industry</option>
           {INDUSTRY_OPTIONS.map(opt => (
@@ -258,8 +258,8 @@ function AlumniRow({
             <select
               value={industry}
               onChange={e => setIndustry(e.target.value)}
-              className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors sm:col-span-2"
-              style={{ accentColor: '#1a4a3a' }}
+              className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-forest focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors sm:col-span-2"
+              style={{ accentColor: 'var(--forest)' }}
             >
               <option value="" disabled className="text-gray-400">Select industry</option>
               {INDUSTRY_OPTIONS.map(opt => (

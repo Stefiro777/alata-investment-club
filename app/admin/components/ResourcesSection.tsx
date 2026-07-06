@@ -118,7 +118,7 @@ function ResourceInsertForm({ onInserted }: { onInserted: (r: Resource) => void 
         </div>
       </div>
       <label className="flex items-center gap-3 cursor-pointer">
-        <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-[#1a4a3a]" />
+        <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-forest" />
         <span className="text-sm text-ink-900">È una cartella (folder)</span>
       </label>
       {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
@@ -187,7 +187,7 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
   }
 
   return (
-    <div className={`bg-white ${expanded ? 'ring-1 ring-[#1a4a3a]' : 'border-b border-black/5'}`}>
+    <div className={`bg-white ${expanded ? 'ring-1 ring-forest' : 'border-b border-black/5'}`}>
       <div className="px-4 py-4 flex items-center gap-3">
         {showDragHandle && (
           <div className="cursor-grab active:cursor-grabbing text-ink-400 hover:text-forest transition-colors flex-shrink-0">
@@ -243,7 +243,7 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
             </div>
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-[#1a4a3a]" />
+            <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-forest" />
             <span className="text-sm text-ink-900">È una cartella</span>
           </label>
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}

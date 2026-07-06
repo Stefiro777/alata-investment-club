@@ -143,7 +143,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
     justifyContent: 'center',
     background: 'rgba(255,255,255,0.92)',
     border: '1px solid #1a4a3a',
-    color: '#1a4a3a',
+    color: 'var(--forest)',
     cursor: 'pointer',
     zIndex: 10,
     transition: 'background 150ms, color 150ms',
@@ -165,7 +165,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
         {/* Loading spinner */}
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-paper-stone gap-4">
-            <div className="w-8 h-8 border-2 border-forest/20 border-t-[#1a4a3a] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-forest/20 border-t-forest rounded-full animate-spin" />
             <span className="text-xs text-ink-400 tracking-wide">Caricamento PDF…</span>
           </div>
         )}
@@ -247,7 +247,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
           onClick={() => setExpanded(true)}
           style={{
             height: 32,
-            background: '#1a4a3a',
+            background: 'var(--forest)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',

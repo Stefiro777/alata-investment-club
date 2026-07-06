@@ -346,7 +346,7 @@ function PeoplePanel({ partner, onChange }: { partner: PartnerRow; onChange: (up
   }
 
   return (
-    <div className="border-t border-line-faint bg-[#fafafa]">
+    <div className="border-t border-line-faint bg-paper-cool">
       <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-2 bg-[#f3f4f6] border-b border-line-faint">
         {['Name', 'Role', 'Email', 'Phone', ''].map((h, i) => (
           <span key={i} className="text-[10px] font-medium uppercase tracking-widest text-ink-400">{h}</span>

@@ -115,7 +115,7 @@ export default async function HomePage() {
                   alt="Alata"
                   width={4228}
                   height={4228}
-                  className="w-64 h-auto border-2 border-[#1a4a3a]"
+                  className="w-64 h-auto border-2 border-forest"
                 />
               </div>
             </div>

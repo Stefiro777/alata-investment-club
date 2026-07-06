@@ -45,7 +45,7 @@ function QuotePreview({ q }: { q: QuoteData }) {
   return (
     <div className="bg-white border border-gray-200 shadow-sm" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontSize: 13, color: '#000', minHeight: 780, padding: 0 }}>
       {/* Header */}
-      <div style={{ background: '#1a4a3a', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ background: 'var(--forest)', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>ALATA INVESTMENT CLUB</p>
             <p style={{ margin: '2px 0 0', fontSize: 8, color: '#b8d4c8' }}>alatainvestmentclub.com</p>
@@ -68,12 +68,12 @@ function QuotePreview({ q }: { q: QuoteData }) {
         {/* Sender / Recipient */}
         <div style={{ display: 'flex', gap: 24, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 8, fontWeight: 700, color: '#1a4a3a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Mittente</p>
+            <p style={{ fontSize: 8, fontWeight: 700, color: 'var(--forest)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Mittente</p>
             <p style={{ margin: '0 0 2px', fontSize: 10 }}>Alata Investment Club</p>
             <p style={{ margin: 0, fontSize: 10 }}>info@alatainvestmentclub.com</p>
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 8, fontWeight: 700, color: '#1a4a3a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Destinatario</p>
+            <p style={{ fontSize: 8, fontWeight: 700, color: 'var(--forest)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Destinatario</p>
             {q.recipient_name && <p style={{ margin: '0 0 2px', fontSize: 10 }}>{q.recipient_name}</p>}
             {q.recipient_org  && <p style={{ margin: '0 0 2px', fontSize: 10 }}>{q.recipient_org}</p>}
             {q.recipient_email && <p style={{ margin: 0, fontSize: 10 }}>{q.recipient_email}</p>}
@@ -83,7 +83,7 @@ function QuotePreview({ q }: { q: QuoteData }) {
         {/* Table */}
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, marginBottom: 0 }}>
           <thead>
-            <tr style={{ background: '#1a4a3a', color: '#fff' }}>
+            <tr style={{ background: 'var(--forest)', color: '#fff' }}>
               <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 700, fontSize: 9 }}>DESCRIZIONE</th>
               <th style={{ textAlign: 'center', padding: '6px 6px', fontWeight: 700, fontSize: 9, width: 40 }}>QTÀ</th>
               <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 700, fontSize: 9, width: 90 }}>PREZZO UNIT.</th>
@@ -111,7 +111,7 @@ function QuotePreview({ q }: { q: QuoteData }) {
         {/* Notes */}
         {q.notes && (
           <div style={{ marginTop: 16, paddingTop: 10, borderTop: '1px solid #e5e5e5' }}>
-            <p style={{ fontSize: 8, fontWeight: 700, color: '#1a4a3a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Note e Condizioni</p>
+            <p style={{ fontSize: 8, fontWeight: 700, color: 'var(--forest)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Note e Condizioni</p>
             <p style={{ fontSize: 9, lineHeight: 1.5, margin: 0 }}>{q.notes}</p>
           </div>
         )}
@@ -160,7 +160,7 @@ function SendModal({ quote, onClose }: { quote: QuoteData; onClose: () => void }
           {sent ? (
             <div className="text-center py-6">
               <p className="text-green-700 font-semibold">Email inviata con successo!</p>
-              <button onClick={onClose} className="mt-4 px-6 py-2 bg-[#1a4a3a] text-white text-xs font-semibold uppercase tracking-widest">Chiudi</button>
+              <button onClick={onClose} className="mt-4 px-6 py-2 bg-forest text-white text-xs font-semibold uppercase tracking-widest">Chiudi</button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -168,16 +168,16 @@ function SendModal({ quote, onClose }: { quote: QuoteData; onClose: () => void }
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Destinatario email</label>
                 <input value={to} onChange={e => setTo(e.target.value)} type="email"
-                  className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]" />
+                  className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-forest" />
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Oggetto</label>
                 <input value={subject} onChange={e => setSubject(e.target.value)}
-                  className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]" />
+                  className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-forest" />
               </div>
               <div className="flex gap-2 pt-2">
                 <button onClick={send} disabled={sending || !to}
-                  className="flex-1 py-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 transition-colors">
+                  className="flex-1 py-3 bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 transition-colors">
                   {sending ? 'Invio...' : 'Invia con allegato PDF'}
                 </button>
                 <button onClick={onClose} className="px-4 py-3 border border-gray-300 text-xs text-gray-600 hover:bg-gray-50">Annulla</button>
@@ -260,47 +260,47 @@ function QuoteForm({ onSaved }: { onSaved: () => void }) {
       {/* Form */}
       <div className="space-y-5">
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-[#1a4a3a] mb-3">Destinatario</h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-forest mb-3">Destinatario</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="text-xs text-gray-500 uppercase tracking-wide">Nome *</label>
               <input value={q.recipient_name} onChange={e => setQ(p => ({ ...p, recipient_name: e.target.value }))}
-                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]" />
+                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-forest" />
             </div>
             <div>
               <label className="text-xs text-gray-500 uppercase tracking-wide">Email</label>
               <input type="email" value={q.recipient_email} onChange={e => setQ(p => ({ ...p, recipient_email: e.target.value }))}
-                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]" />
+                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-forest" />
             </div>
             <div>
               <label className="text-xs text-gray-500 uppercase tracking-wide">Organizzazione</label>
               <input value={q.recipient_org} onChange={e => setQ(p => ({ ...p, recipient_org: e.target.value }))}
-                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]" />
+                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-forest" />
             </div>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-[#1a4a3a] mb-3">Dettagli</h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-forest mb-3">Dettagli</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="text-xs text-gray-500 uppercase tracking-wide">Oggetto preventivo *</label>
               <input value={q.subject} onChange={e => setQ(p => ({ ...p, subject: e.target.value }))}
-                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]" />
+                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-forest" />
             </div>
             <div>
               <label className="text-xs text-gray-500 uppercase tracking-wide">Data emissione</label>
               <input type="date" value={q.issued_at} onChange={e => setQ(p => ({ ...p, issued_at: e.target.value }))}
-                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]" />
+                className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-forest" />
             </div>
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#1a4a3a]">Voci</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-forest">Voci</h3>
             <button onClick={addItem}
-              className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1 hover:bg-[#1a4a3a] hover:text-white transition-colors">
+              className="text-xs font-semibold uppercase tracking-widest text-forest border border-forest px-3 py-1 hover:bg-forest hover:text-white transition-colors">
               + Aggiungi voce
             </button>
           </div>
@@ -311,19 +311,19 @@ function QuoteForm({ onSaved }: { onSaved: () => void }) {
                   placeholder="Descrizione"
                   value={item.description}
                   onChange={e => setItem(i, 'description', e.target.value)}
-                  className="flex-1 border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]"
+                  className="flex-1 border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:border-forest"
                 />
                 <input
                   type="number" min={1} placeholder="Qtà"
                   value={item.qty}
                   onChange={e => setItem(i, 'qty', Number(e.target.value))}
-                  className="w-16 border border-gray-300 px-2 py-2 text-sm text-center focus:outline-none focus:border-[#1a4a3a]"
+                  className="w-16 border border-gray-300 px-2 py-2 text-sm text-center focus:outline-none focus:border-forest"
                 />
                 <input
                   type="number" min={0} step={0.01} placeholder="Prezzo"
                   value={item.unit_price}
                   onChange={e => setItem(i, 'unit_price', Number(e.target.value))}
-                  className="w-28 border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:border-[#1a4a3a]"
+                  className="w-28 border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:border-forest"
                 />
                 <span className="pt-2 text-sm font-semibold text-gray-700 w-20 text-right">
                   {fmtEur((item.qty || 0) * (item.unit_price || 0))}
@@ -343,18 +343,18 @@ function QuoteForm({ onSaved }: { onSaved: () => void }) {
           <label className="text-xs text-gray-500 uppercase tracking-wide">Note / Condizioni</label>
           <textarea value={q.notes} onChange={e => setQ(p => ({ ...p, notes: e.target.value }))}
             rows={3} placeholder="Condizioni di pagamento, scadenza del preventivo, ecc."
-            className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a] resize-none" />
+            className="w-full mt-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-forest resize-none" />
         </div>
 
         {err && <p className="text-xs text-red-600 bg-red-50 px-3 py-2">{err}</p>}
 
         <div className="flex gap-3 pt-2">
           <button onClick={save} disabled={saving}
-            className="px-5 py-3 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 transition-colors">
+            className="px-5 py-3 bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 transition-colors">
             {saving ? 'Salvo...' : 'Salva preventivo'}
           </button>
           <button onClick={downloadPDF} disabled={sending || !q.subject}
-            className="px-5 py-3 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 transition-colors">
+            className="px-5 py-3 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-semibold uppercase tracking-widest disabled:opacity-50 transition-colors">
             {sending ? 'Generazione...' : 'Scarica PDF'}
           </button>
           <button onClick={() => setShowSend(true)} disabled={!q.subject}
@@ -445,7 +445,7 @@ function QuotesHistory({ reloadTrigger }: { reloadTrigger?: number }) {
           <tbody>
             {quotes.map(q => (
               <tr key={q.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 pr-4 font-mono text-xs font-semibold text-[#1a4a3a]">{q.number}</td>
+                <td className="py-3 pr-4 font-mono text-xs font-semibold text-forest">{q.number}</td>
                 <td className="py-3 pr-4">
                   <p className="font-medium text-gray-900">{q.recipient_name}</p>
                   {q.recipient_org && <p className="text-xs text-gray-500">{q.recipient_org}</p>}
@@ -456,7 +456,7 @@ function QuotesHistory({ reloadTrigger }: { reloadTrigger?: number }) {
                 <td className="py-3">
                   <div className="flex gap-2">
                     <button onClick={() => downloadPDF(q)} disabled={dlding === q.id}
-                      className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1 hover:bg-[#1a4a3a] hover:text-white transition-colors disabled:opacity-50">
+                      className="text-xs font-semibold uppercase tracking-widest text-forest border border-forest px-3 py-1 hover:bg-forest hover:text-white transition-colors disabled:opacity-50">
                       {dlding === q.id ? '...' : 'PDF'}
                     </button>
                     <button onClick={() => setShowSend(q)}
@@ -499,7 +499,7 @@ export default function QuoteClient() {
             <button key={t} onClick={() => setTab(t)}
               className="pb-2 text-sm font-['Inter'] transition-colors capitalize"
               style={tab === t
-                ? { borderBottom: '2px solid #1a4a3a', color: '#1a4a3a', fontWeight: 600 }
+                ? { borderBottom: '2px solid #1a4a3a', color: 'var(--forest)', fontWeight: 600 }
                 : { borderBottom: '2px solid transparent', color: '#9ca3af' }}>
               {t === 'nuovo' ? 'Nuovo preventivo' : 'Preventivi inviati'}
             </button>

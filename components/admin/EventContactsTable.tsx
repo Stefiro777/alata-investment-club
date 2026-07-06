@@ -135,7 +135,7 @@ function EditModal({
   }
 
   const inputClass =
-    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#1a1a1a] bg-white transition-colors'
+    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-forest text-sm text-[#1a1a1a] bg-white transition-colors'
 
   return (
     <div
@@ -143,52 +143,52 @@ function EditModal({
       style={{ backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 9999 }}
       onClick={e => { if (e.target === e.currentTarget && !saving) onClose() }}
     >
-      <div className="bg-white border border-[#e5e5e5] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e5e5]">
-          <p className="font-serif text-base font-bold text-[#1a4a3a]">Edit Contact</p>
-          <button onClick={onClose} disabled={saving} className="text-[#6b7280] hover:text-[#1a1a1a] text-xl leading-none transition-colors disabled:opacity-40">✕</button>
+      <div className="bg-white border border-line w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+          <p className="font-serif text-base font-bold text-forest">Edit Contact</p>
+          <button onClick={onClose} disabled={saving} className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors disabled:opacity-40">✕</button>
         </div>
         <form onSubmit={handleSave} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Nome *</label>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Nome *</label>
               <input required value={form.nome} onChange={e => set('nome', e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Cognome *</label>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Cognome *</label>
               <input required value={form.cognome} onChange={e => set('cognome', e.target.value)} className={inputClass} />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Email *</label>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Email *</label>
             <input required type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Telefono</label>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Telefono</label>
               <input value={form.telefono} onChange={e => set('telefono', e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Anno di studio *</label>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Anno di studio *</label>
               <input required value={form.anno_di_studio} onChange={e => set('anno_di_studio', e.target.value)} className={inputClass} />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Motivazione</label>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Motivazione</label>
             <textarea rows={3} value={form.motivazione} onChange={e => set('motivazione', e.target.value)} className={`${inputClass} resize-none`} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Questions for Panelists</label>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Questions for Panelists</label>
             <textarea rows={3} value={form.questions_for_panelists} onChange={e => set('questions_for_panelists', e.target.value)} className={`${inputClass} resize-none`} />
           </div>
 
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
-            <button type="button" onClick={onClose} disabled={saving} className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40">
+            <button type="button" onClick={onClose} disabled={saving} className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40">
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={saving} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {saving ? '…' : 'Save'}
             </button>
           </div>
@@ -295,7 +295,7 @@ export default function EventContactsTable() {
     setDeleting(false)
   }
 
-  if (loading) return <p className="text-sm text-[#6b7280] py-10 text-center">Loading…</p>
+  if (loading) return <p className="text-sm text-ink-500 py-10 text-center">Loading…</p>
   if (error) return <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
 
   return (
@@ -307,9 +307,9 @@ export default function EventContactsTable() {
           { label: 'Unique Emails', value: uniqueEmails },
           { label: 'Events with Registrations', value: eventsWithRegs },
         ].map(kpi => (
-          <div key={kpi.label} className="bg-white border border-[#e5e5e5] px-6 py-4">
-            <p className="text-xs text-[#6b7280] uppercase tracking-widest font-medium">{kpi.label}</p>
-            <p className="text-2xl font-bold text-[#1a4a3a] mt-1">{kpi.value}</p>
+          <div key={kpi.label} className="bg-white border border-line px-6 py-4">
+            <p className="text-xs text-ink-500 uppercase tracking-widest font-medium">{kpi.label}</p>
+            <p className="text-2xl font-bold text-forest mt-1">{kpi.value}</p>
           </div>
         ))}
       </div>
@@ -320,12 +320,12 @@ export default function EventContactsTable() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by name or email…"
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-[#1a4a3a] w-64 transition-colors"
+          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest w-64 transition-colors"
         />
         <select
           value={eventFilter}
           onChange={e => setEventFilter(e.target.value)}
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-[#1a4a3a] transition-colors"
+          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest transition-colors"
         >
           <option value="">All Events</option>
           {events.map(ev => (
@@ -335,7 +335,7 @@ export default function EventContactsTable() {
 
         <button
           onClick={() => exportCSV(filtered)}
-          className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
+          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
         >
           Export CSV
         </button>
@@ -346,43 +346,43 @@ export default function EventContactsTable() {
             {qrState === 'idle' && (
               <button
                 onClick={() => setQrState('confirm')}
-                className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
+                className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
               >
                 Send QR Codes
               </button>
             )}
             {qrState === 'confirm' && (
-              <div className="flex items-center gap-2 border border-[#1a4a3a] px-4 py-2">
-                <span className="text-xs text-[#1a4a3a]">
+              <div className="flex items-center gap-2 border border-forest px-4 py-2">
+                <span className="text-xs text-forest">
                   Send QR to {filteredForEvent.length} registrant{filteredForEvent.length !== 1 ? 's' : ''} of &ldquo;{eventFilter}&rdquo;?
                 </span>
                 <button
                   onClick={handleSendQr}
-                  className="bg-[#1a4a3a] text-white text-xs font-medium px-3 py-1 hover:bg-[#123a2d] transition-colors"
+                  className="bg-forest text-white text-xs font-medium px-3 py-1 hover:bg-forest-deep transition-colors"
                 >
                   Confirm
                 </button>
                 <button
                   onClick={() => setQrState('idle')}
-                  className="border border-[#d1d5db] text-[#6b7280] text-xs font-medium px-3 py-1 hover:bg-[#f3f4f6] transition-colors"
+                  className="border border-[#d1d5db] text-ink-500 text-xs font-medium px-3 py-1 hover:bg-[#f3f4f6] transition-colors"
                 >
                   Cancel
                 </button>
               </div>
             )}
             {qrState === 'sending' && (
-              <span className="text-xs text-[#6b7280] tracking-widest uppercase">Sending…</span>
+              <span className="text-xs text-ink-500 tracking-widest uppercase">Sending…</span>
             )}
             {qrState === 'done' && qrResult && (
-              <span className="text-xs text-[#1a4a3a] font-medium tracking-wide">
+              <span className="text-xs text-forest font-medium tracking-wide">
                 ✓ Sent: {qrResult.sent} — Failed: {qrResult.failed}
-                <button onClick={() => { setQrState('idle'); setQrResult(null) }} className="ml-2 text-[#6b7280] hover:text-[#1a1a1a]">✕</button>
+                <button onClick={() => { setQrState('idle'); setQrResult(null) }} className="ml-2 text-ink-500 hover:text-[#1a1a1a]">✕</button>
               </span>
             )}
             {qrState === 'error' && (
               <span className="text-xs text-red-600">
                 {qrError}
-                <button onClick={() => setQrState('idle')} className="ml-2 text-[#6b7280] hover:text-[#1a1a1a]">✕</button>
+                <button onClick={() => setQrState('idle')} className="ml-2 text-ink-500 hover:text-[#1a1a1a]">✕</button>
               </span>
             )}
           </div>
@@ -390,12 +390,12 @@ export default function EventContactsTable() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-[#e5e5e5] overflow-x-auto">
+      <div className="bg-white border border-line overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#e5e5e5] bg-[#f9f9f9]">
+            <tr className="border-b border-line bg-[#f9f9f9]">
               {['Name', 'Email', 'Phone', 'Event', 'Date', 'Field', ''].map((h, i) => (
-                <th key={i} className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide whitespace-nowrap">
+                <th key={i} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -404,7 +404,7 @@ export default function EventContactsTable() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-[#6b7280]">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-ink-500">
                   No contacts found.
                 </td>
               </tr>
@@ -423,18 +423,18 @@ export default function EventContactsTable() {
                   >
                     {c.nome} {c.cognome}
                   </td>
-                  <td className="px-4 py-3 text-[#6b7280]">{c.email}</td>
-                  <td className="px-4 py-3 text-[#6b7280] whitespace-nowrap">{c.telefono ?? '—'}</td>
-                  <td className="px-4 py-3 text-[#6b7280] max-w-[180px]">
+                  <td className="px-4 py-3 text-ink-500">{c.email}</td>
+                  <td className="px-4 py-3 text-ink-500 whitespace-nowrap">{c.telefono ?? '—'}</td>
+                  <td className="px-4 py-3 text-ink-500 max-w-[180px]">
                     <span title={c.upcoming_events?.title}>
                       {truncate(c.upcoming_events?.title, 40)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#6b7280] whitespace-nowrap">
+                  <td className="px-4 py-3 text-ink-500 whitespace-nowrap">
                     {c.upcoming_events?.date ?? '—'}
                   </td>
                   <td
-                    className="px-4 py-3 text-[#6b7280] max-w-[240px] cursor-pointer"
+                    className="px-4 py-3 text-ink-500 max-w-[240px] cursor-pointer"
                     onClick={() => setExpandedId(isExpanded ? null : c.id)}
                   >
                     {isExpanded ? (
@@ -456,7 +456,7 @@ export default function EventContactsTable() {
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(null)}
-                          className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors"
+                          className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors"
                         >
                           No
                         </button>
@@ -466,14 +466,14 @@ export default function EventContactsTable() {
                         <button
                           onClick={() => setEditContact(c)}
                           title="Edit"
-                          className="p-1.5 text-[#6b7280] hover:text-[#1a4a3a] hover:bg-[#f0f5f3] transition-colors"
+                          className="p-1.5 text-ink-500 hover:text-forest hover:bg-[#f0f5f3] transition-colors"
                         >
                           <PencilIcon />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(c.id)}
                           title="Delete"
-                          className="p-1.5 text-[#6b7280] hover:text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 text-ink-500 hover:text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <TrashIcon />
                         </button>

@@ -36,7 +36,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
 
   return (
       <article
-        className="relative group flex flex-col h-full border border-line-faint border-l-4 border-l-[#1a4a3a] hover:border-forest overflow-hidden cursor-pointer"
+        className="relative group flex flex-col h-full border border-line-faint border-l-4 border-l-forest hover:border-forest overflow-hidden cursor-pointer"
         style={{
           boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           transition: 'transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s cubic-bezier(0.22,1,0.36,1)',
@@ -69,7 +69,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
             <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 0 3px white' }} />
           </div>
         ) : (
-          <div className="h-64 bg-[#1a4a3a]/5 flex items-center justify-center">
+          <div className="h-64 bg-forest/5 flex items-center justify-center">
             <svg className="w-10 h-10 text-forest/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>

@@ -107,7 +107,7 @@ function ItemEditRow({
   const photoCount = (item.photos as string[] | null)?.length ?? (item.immagine_url ? 1 : 0)
 
   return (
-    <div className={`bg-white ${expanded ? 'ring-1 ring-[#1a4a3a]' : 'border-b border-black/5'}`}>
+    <div className={`bg-white ${expanded ? 'ring-1 ring-forest' : 'border-b border-black/5'}`}>
       <div className="px-6 py-5 flex items-start justify-between gap-6">
         <div className="flex-1 min-w-0">
           {item.data_pubblicazione && (
@@ -168,7 +168,7 @@ function ItemEditRow({
             <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">Tag</label>
             <div className="flex flex-wrap gap-2">
               {TAG_OPTIONS.map(option => (
-                <button key={option} type="button" onClick={() => setTag(tag === option ? '' : option)} className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast" style={tag === option ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' } : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }}>
+                <button key={option} type="button" onClick={() => setTag(tag === option ? '' : option)} className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast" style={tag === option ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' } : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }}>
                   {option}
                 </button>
               ))}
@@ -267,7 +267,7 @@ function InsertForm({ onInserted }: { onInserted: (item: Contenuto) => void }) {
         <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-3">Tag</label>
         <div className="flex flex-wrap gap-2">
           {TAG_OPTIONS.map(option => (
-            <button key={option} type="button" onClick={() => setTag(tag === option ? '' : option)} className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast" style={tag === option ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' } : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }}>
+            <button key={option} type="button" onClick={() => setTag(tag === option ? '' : option)} className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast" style={tag === option ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' } : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }}>
               {option}
             </button>
           ))}

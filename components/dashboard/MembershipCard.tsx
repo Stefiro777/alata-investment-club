@@ -168,7 +168,7 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-[10px] font-semibold uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40 flex items-center gap-2"
+          className="border border-forest text-forest hover:bg-forest hover:text-white text-[10px] font-semibold uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40 flex items-center gap-2"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -179,7 +179,7 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
         {(isExpired || isSoon) && (
           <Link
             href="/dashboard/membership"
-            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-[10px] font-semibold uppercase tracking-widest px-4 py-2 transition-colors"
+            className="bg-forest hover:bg-forest-deep text-white text-[10px] font-semibold uppercase tracking-widest px-4 py-2 transition-colors"
           >
             Rinnova Membership
           </Link>

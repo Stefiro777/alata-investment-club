@@ -104,17 +104,17 @@ function CustomSelect({
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-3 py-2.5 border border-[#1a4a3a] bg-white text-sm text-gray-900 focus:outline-none"
+        className="w-full flex items-center justify-between px-3 py-2.5 border border-forest bg-white text-sm text-gray-900 focus:outline-none"
       >
         <span className={selected ? 'text-gray-900' : 'text-ink-400'}>
           {selected?.label ?? placeholder ?? 'Select...'}
         </span>
-        <svg className="w-4 h-4 text-[#1a4a3a] flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-forest flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
-        <div className="absolute top-full left-0 right-0 z-20 bg-white border border-[#1a4a3a] border-t-0 shadow-lg">
+        <div className="absolute top-full left-0 right-0 z-20 bg-white border border-forest border-t-0 shadow-lg">
           {options.map(opt => (
             <button
               key={opt.value}
@@ -122,8 +122,8 @@ function CustomSelect({
               onClick={() => { onChange(opt.value); setOpen(false) }}
               className={`w-full text-left px-3 py-2.5 text-sm transition-colors ${
                 value === opt.value
-                  ? 'bg-[#1a4a3a] text-white'
-                  : 'text-gray-900 hover:bg-[#1a4a3a]/10'
+                  ? 'bg-forest text-white'
+                  : 'text-gray-900 hover:bg-forest/10'
               }`}
             >
               {opt.label}
@@ -334,7 +334,7 @@ function AddDocModal({
               <select
                 value={selectedFolder ?? ''}
                 onChange={e => setSelectedFolder(e.target.value || null)}
-                className="w-full border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black appearance-none"
+                className="w-full border border-forest px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black appearance-none"
               >
                 <option value="">No folder</option>
                 {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -373,7 +373,7 @@ function ExpandableDescription({ text }: { text: string }) {
       {expanded ? text : text.slice(0, LIMIT) + 'â€¦'}
       <button
         onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
-        className="ml-1 text-[#1a4a3a] hover:underline font-['Inter'] font-medium"
+        className="ml-1 text-forest hover:underline font-['Inter'] font-medium"
       >
         {expanded ? 'Less' : 'More'}
       </button>
@@ -473,7 +473,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
         {showMoveOut && onMove && (
           <button
             onClick={e => { e.stopPropagation(); onMove(doc.id, null) }}
-            className="text-xs text-gray-400 hover:text-[#1a4a3a] font-['Inter'] uppercase tracking-widest border border-gray-300 px-2 py-1 hover:border-[#1a4a3a] transition-colors"
+            className="text-xs text-gray-400 hover:text-forest font-['Inter'] uppercase tracking-widest border border-gray-300 px-2 py-1 hover:border-forest transition-colors"
           >
             Remove
           </button>
@@ -518,10 +518,10 @@ function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDo
   const [open, setOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   return (
-    <div className="border border-[#1a4a3a] mb-2">
-      <div className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-[#f5f5f5] transition-colors" onClick={() => setOpen(o => !o)}>
+    <div className="border border-forest mb-2">
+      <div className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-paper-stone transition-colors" onClick={() => setOpen(o => !o)}>
         <div className="flex items-center gap-3">
-          <span className="text-[#1a4a3a]">
+          <span className="text-forest">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
             </svg>
@@ -554,7 +554,7 @@ function FolderAccordion({ folder, docs, onDelete, onOpen, onMoveOut, onDeleteDo
         </div>
       </div>
       {open && (
-        <div className="border-t border-[#1a4a3a]/20">
+        <div className="border-t border-forest/20">
           {docs.length === 0 ? (
             <p className="text-xs text-ink-400 font-['Inter'] px-6 py-4">No documents in this folder.</p>
           ) : (
@@ -722,10 +722,10 @@ function CategorySection({
                       onChange={e => setNewFolderName(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && createFolder()}
                       placeholder="Folder name..."
-                      className="border border-[#1a4a3a] px-2 py-1 text-xs font-['Inter'] focus:outline-none w-36"
+                      className="border border-forest px-2 py-1 text-xs font-['Inter'] focus:outline-none w-36"
                       autoFocus
                     />
-                    <button onClick={createFolder} disabled={creatingFolder} className="text-xs text-[#1a4a3a] font-semibold hover:underline font-['Inter']">
+                    <button onClick={createFolder} disabled={creatingFolder} className="text-xs text-forest font-semibold hover:underline font-['Inter']">
                       {creatingFolder ? '...' : 'Create'}
                     </button>
                     <button onClick={() => { setShowNewFolderInput(false); setNewFolderName('') }} className="text-xs text-gray-400 hover:text-black font-['Inter']">
@@ -735,7 +735,7 @@ function CategorySection({
                 ) : (
                   <button
                     onClick={() => setShowNewFolderInput(true)}
-                    className="text-xs text-[#1a4a3a] border border-dashed border-[#1a4a3a] px-3 py-1.5 hover:bg-[#1a4a3a] hover:text-white transition-colors font-['Inter']"
+                    className="text-xs text-forest border border-dashed border-forest px-3 py-1.5 hover:bg-forest hover:text-white transition-colors font-['Inter']"
                   >
                     + New folder
                   </button>

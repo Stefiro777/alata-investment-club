@@ -74,7 +74,7 @@ function PhaseRow({ step, index }: { step: Step; index: number }) {
           fontSize: '0.7rem',
           letterSpacing: '0.2em',
           textTransform: 'uppercase',
-          color: '#1a4a3a',
+          color: 'var(--forest)',
           opacity: 0.6,
           marginBottom: '0.75rem',
         }}
@@ -85,13 +85,13 @@ function PhaseRow({ step, index }: { step: Step; index: number }) {
       {/* Title */}
       <h3
         className="font-serif font-bold leading-tight"
-        style={{ fontSize: '2.25rem', color: '#1a4a3a' }}
+        style={{ fontSize: '2.25rem', color: 'var(--forest)' }}
       >
         {step.title}
       </h3>
 
       {/* Decorative line */}
-      <div style={{ width: '2rem', height: '1px', background: '#1a4a3a', marginTop: '1.25rem', marginBottom: '1.25rem' }} />
+      <div style={{ width: '2rem', height: '1px', background: 'var(--forest)', marginTop: '1.25rem', marginBottom: '1.25rem' }} />
 
       {/* Skills */}
       <div className="flex flex-wrap gap-2">
@@ -103,7 +103,7 @@ function PhaseRow({ step, index }: { step: Step; index: number }) {
               letterSpacing: '0.05em',
               padding: '0.25rem 0.75rem',
               border: '1px solid #1a4a3a',
-              color: '#1a4a3a',
+              color: 'var(--forest)',
               background: 'transparent',
             }}
           >
