@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import FileUploadButton from '@/app/components/FileUploadButton'
+import { getRoleColor } from '@/lib/hackathon-colors'
 
 const STORAGE_KEY = 'alata_hackathon_participant_id'
 const POLL_INTERVAL_MS = 10000
@@ -487,8 +488,15 @@ export default function HackathonClient() {
             <p className="font-sans text-sm text-ink-500">Nessuna stanza di diligence disponibile.</p>
           ) : (
             rooms.map((room) => (
-              <div key={room.id} className="border border-line px-6 py-6 space-y-4">
-                <h3 className="font-sans text-xs tracking-widest uppercase text-ink-500">
+              <div
+                key={room.id}
+                className="border border-line px-6 py-6 space-y-4"
+                style={{ borderLeft: `3px solid ${getRoleColor(room.buy_side_role)}` }}
+              >
+                <h3
+                  className="font-sans text-xs tracking-widest uppercase"
+                  style={{ color: getRoleColor(room.buy_side_role) }}
+                >
                   {ROLE_LABELS[room.buy_side_role] ?? room.buy_side_role}
                 </h3>
 
@@ -497,8 +505,12 @@ export default function HackathonClient() {
                     <p className="font-sans text-sm text-ink-500">Nessun messaggio ancora.</p>
                   ) : (
                     room.messages.map((msg) => (
-                      <div key={msg.id} className="border-b border-line-faint pb-2">
-                        <p className="font-sans text-xs text-ink-500">
+                      <div
+                        key={msg.id}
+                        className="border-b border-line-faint pb-2 pl-3"
+                        style={{ borderLeft: `2px solid ${getRoleColor(msg.sender_role)}` }}
+                      >
+                        <p className="font-sans text-xs" style={{ color: getRoleColor(msg.sender_role) }}>
                           {ROLE_LABELS[msg.sender_role] ?? msg.sender_role}
                         </p>
                         {msg.message && <p className="font-sans text-ink-900">{msg.message}</p>}

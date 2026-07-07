@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import FileUploadButton from '@/app/components/FileUploadButton'
+import { getRoleColor } from '@/lib/hackathon-colors'
 
 const MAX_PHASE = 6
 const ROLES = ['sell_side', 'buy_side_1', 'buy_side_2', 'buy_side_3'] as const
@@ -729,8 +730,15 @@ export default function HackathonAdminClient() {
                 <p className="text-sm text-ink-500">No diligence rooms yet.</p>
               ) : (
                 diligenceRooms.map((room) => (
-                  <div key={room.id} className="border border-line-faint px-4 py-4">
-                    <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-3">
+                  <div
+                    key={room.id}
+                    className="border border-line-faint px-4 py-4"
+                    style={{ borderLeft: `3px solid ${getRoleColor(room.buy_side_role)}` }}
+                  >
+                    <p
+                      className="text-xs tracking-[0.2em] uppercase mb-3"
+                      style={{ color: getRoleColor(room.buy_side_role) }}
+                    >
                       {ROLE_LABELS[room.buy_side_role] ?? room.buy_side_role}
                     </p>
                     {room.messages.length === 0 ? (
@@ -738,8 +746,12 @@ export default function HackathonAdminClient() {
                     ) : (
                       <div className="space-y-2">
                         {room.messages.map((msg) => (
-                          <div key={msg.id} className="border-b border-line-faint pb-2">
-                            <p className="text-xs text-ink-500">
+                          <div
+                            key={msg.id}
+                            className="border-b border-line-faint pb-2 pl-3"
+                            style={{ borderLeft: `2px solid ${getRoleColor(msg.sender_role)}` }}
+                          >
+                            <p className="text-xs" style={{ color: getRoleColor(msg.sender_role) }}>
                               {ROLE_LABELS[msg.sender_role] ?? msg.sender_role} · {new Date(msg.created_at).toLocaleString()}
                             </p>
                             {msg.message && <p className="text-sm text-ink-900">{msg.message}</p>}

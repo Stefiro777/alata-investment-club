@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { getRubricForRole } from '@/lib/hackathon-rubric'
+import { getRoleColor } from '@/lib/hackathon-colors'
 
 const STORAGE_KEY = 'alata_hackathon_judge_session'
 const LEADERBOARD_POLL_MS = 15000
@@ -315,8 +316,15 @@ export default function JudgeClient() {
               <p className="font-sans text-sm text-ink-500">No diligence rooms yet.</p>
             ) : (
               overview.rooms.map((room) => (
-                <div key={room.id} className="border border-line px-6 py-6">
-                  <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-3">
+                <div
+                  key={room.id}
+                  className="border border-line px-6 py-6"
+                  style={{ borderLeft: `3px solid ${getRoleColor(room.buy_side_role)}` }}
+                >
+                  <p
+                    className="text-xs tracking-[0.2em] uppercase mb-3"
+                    style={{ color: getRoleColor(room.buy_side_role) }}
+                  >
                     {ROLE_LABELS[room.buy_side_role] ?? room.buy_side_role}
                   </p>
                   {room.messages.length === 0 ? (
@@ -324,8 +332,12 @@ export default function JudgeClient() {
                   ) : (
                     <div className="space-y-2">
                       {room.messages.map((msg) => (
-                        <div key={msg.id} className="border-b border-line-faint pb-2">
-                          <p className="font-sans text-xs text-ink-500">
+                        <div
+                          key={msg.id}
+                          className="border-b border-line-faint pb-2 pl-3"
+                          style={{ borderLeft: `2px solid ${getRoleColor(msg.sender_role)}` }}
+                        >
+                          <p className="font-sans text-xs" style={{ color: getRoleColor(msg.sender_role) }}>
                             {ROLE_LABELS[msg.sender_role] ?? msg.sender_role} · {new Date(msg.created_at).toLocaleString()}
                           </p>
                           {msg.message && <p className="font-sans text-sm text-ink-900">{msg.message}</p>}
