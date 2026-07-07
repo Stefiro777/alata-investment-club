@@ -8,7 +8,6 @@ import PartnersMarquee from './components/PartnersMarquee'
 import { MotionReveal, MotionLine, MotionWipe } from './components/motion/Motion'
 import AboutHero from './components/about/AboutHero'
 import TiltCard from './components/about/TiltCard'
-import Signature3D from './components/about/Signature3D'
 
 export const dynamic = 'force-dynamic'
 
@@ -179,9 +178,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Signature — winged 3D brand moment */}
-      <Signature3D />
 
       {/* News & Events */}
       <section className="py-20 sm:py-28 bg-white">

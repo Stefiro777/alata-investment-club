@@ -7,7 +7,7 @@ import CrossfadeVideo from './CrossfadeVideo'
 type Tile = {
   kind: 'video' | 'photo'
   src: string
-  caption: string
+  caption: string | null
   /** desktop grid span within a 4-column bento */
   span: string
   sizes: string
@@ -16,12 +16,11 @@ type Tile = {
 // Mixed-format editorial bento: tall tiles for the portrait clips, wide tiles
 // for the landscape stills — no uniform vertical columns.
 const TILES: Tile[] = [
-  { kind: 'video', src: '/redesign/palazzo-3.mp4', caption: 'Members’ Reception', span: 'md:col-span-1 md:row-span-2', sizes: '(max-width:768px) 100vw, 25vw' },
+  { kind: 'video', src: '/redesign/palazzo-3.mp4', caption: null, span: 'md:col-span-1 md:row-span-2', sizes: '(max-width:768px) 100vw, 25vw' },
   { kind: 'photo', src: '/redesign/evento-sala.png', caption: 'Speaker Sessions', span: 'md:col-span-2 md:row-span-1', sizes: '(max-width:768px) 100vw, 50vw' },
   { kind: 'video', src: '/redesign/vigna-2.mp4', caption: 'Summer Social', span: 'md:col-span-1 md:row-span-2', sizes: '(max-width:768px) 100vw, 25vw' },
   { kind: 'photo', src: '/redesign/evento-aperitivo.png', caption: 'Networking', span: 'md:col-span-1 md:row-span-1', sizes: '(max-width:768px) 100vw, 25vw' },
   { kind: 'photo', src: '/redesign/paintball-gruppo.jpeg', caption: 'Team Building', span: 'md:col-span-1 md:row-span-1', sizes: '(max-width:768px) 100vw, 25vw' },
-  { kind: 'video', src: '/redesign/palazzo-2.mp4', caption: 'Roundtables', span: 'md:col-span-4 md:row-span-1', sizes: '100vw' },
 ]
 
 export default function LifeAtAlata() {
@@ -49,18 +48,20 @@ export default function LifeAtAlata() {
                 ) : (
                   <Image
                     src={tile.src}
-                    alt={tile.caption}
+                    alt={tile.caption ?? 'Life at Alata'}
                     fill
                     sizes={tile.sizes}
                     className="object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]"
                   />
                 )}
                 {/* Caption — quiet by default, brightens on hover */}
-                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/55 to-transparent">
-                  <figcaption className="text-[11px] tracking-[0.2em] uppercase text-white/85">
-                    {tile.caption}
-                  </figcaption>
-                </div>
+                {tile.caption && (
+                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/55 to-transparent">
+                    <figcaption className="text-[11px] tracking-[0.2em] uppercase text-white/85">
+                      {tile.caption}
+                    </figcaption>
+                  </div>
+                )}
               </figure>
             ))}
           </div>
