@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import FileUploadButton from '@/app/components/FileUploadButton'
 
 const STORAGE_KEY = 'alata_hackathon_participant_id'
 const POLL_INTERVAL_MS = 10000
@@ -397,11 +398,7 @@ export default function HackathonClient() {
               )}
 
               <form onSubmit={handleSubmitPhase} className="space-y-4">
-                <input
-                  type="file"
-                  onChange={(e) => setSubmissionFile(e.target.files?.[0] ?? null)}
-                  className="font-sans text-xs text-ink-500"
-                />
+                <FileUploadButton value={submissionFile} onChange={setSubmissionFile} />
 
                 {participant.current_phase === 4 && (
                   <div className="space-y-3 border-t border-line-faint pt-4">
@@ -537,20 +534,17 @@ export default function HackathonClient() {
                     rows={2}
                   />
                   <div className="flex items-center gap-3">
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        setAttachmentDrafts((prev) => ({
-                          ...prev,
-                          [room.id]: e.target.files?.[0] ?? null,
-                        }))
+                    <FileUploadButton
+                      value={attachmentDrafts[room.id] ?? null}
+                      onChange={(file) =>
+                        setAttachmentDrafts((prev) => ({ ...prev, [room.id]: file }))
                       }
-                      className="font-sans text-xs text-ink-500"
+                      className="flex-1"
                     />
                     <button
                       type="submit"
                       disabled={sendingRoom === room.id}
-                      className="ml-auto bg-forest text-white font-sans text-sm px-5 py-2 hover:bg-forest-deep transition-colors disabled:opacity-50"
+                      className="bg-forest text-white font-sans text-sm px-5 py-2 hover:bg-forest-deep transition-colors disabled:opacity-50 flex-shrink-0"
                     >
                       {sendingRoom === room.id ? 'Sending…' : 'Send'}
                     </button>

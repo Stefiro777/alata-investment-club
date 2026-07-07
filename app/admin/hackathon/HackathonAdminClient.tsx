@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import FileUploadButton from '@/app/components/FileUploadButton'
 
 const MAX_PHASE = 6
 const ROLES = ['sell_side', 'buy_side_1', 'buy_side_2', 'buy_side_3'] as const
@@ -610,11 +611,7 @@ export default function HackathonAdminClient() {
                     </option>
                   ))}
                 </select>
-                <input
-                  type="file"
-                  onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-                  className="text-xs text-ink-500 md:col-span-1"
-                />
+                <FileUploadButton value={uploadFile} onChange={setUploadFile} className="md:col-span-1" />
                 <button
                   type="submit"
                   disabled={uploading}
