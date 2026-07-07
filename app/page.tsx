@@ -95,8 +95,8 @@ export default async function HomePage() {
                 <div className="frame-double">
                   <div className="relative w-full aspect-[4/5] overflow-hidden bg-paper-stone">
                     <Image
-                      src="/redesign/evento-cortile.png"
-                      alt="Alata members at a club reception"
+                      src="/redesign/evento-platea.jpeg"
+                      alt="Alata members at a club event"
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 40vw"
@@ -104,11 +104,6 @@ export default async function HomePage() {
                   </div>
                 </div>
               </MotionWipe>
-              <MotionReveal delay={0.55} y={12}>
-                <p className="mt-6 text-[11px] tracking-[0.22em] uppercase text-ink-400">
-                  Life at Alata — members&rsquo; reception
-                </p>
-              </MotionReveal>
             </div>
           </div>
         </div>
