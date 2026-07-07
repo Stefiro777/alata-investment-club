@@ -4,14 +4,8 @@ import Stripe from 'stripe'
 
 export async function POST(req: NextRequest) {
   try {
-    // Step 0: env check
-    console.log('[payment-intent] NEXT_PUBLIC_SUPABASE_URL defined:', !!process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('[payment-intent] SUPABASE_SERVICE_ROLE_KEY defined:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
-    console.log('[payment-intent] STRIPE_SECRET_KEY defined:', !!process.env.STRIPE_SECRET_KEY)
-
     // Step 1: auth
     const token = req.headers.get('authorization')?.replace('Bearer ', '')
-    console.log('[payment-intent] token present:', !!token)
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const supabaseAdmin = createSupabaseAdmin(
@@ -20,7 +14,6 @@ export async function POST(req: NextRequest) {
     )
 
     const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
-    console.log('[payment-intent] getUser error:', authErr?.message ?? null, '| user:', user?.email ?? null)
     if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Step 2: member lookup
@@ -29,24 +22,20 @@ export async function POST(req: NextRequest) {
       .select('id, full_name, email')
       .eq('email', user.email ?? '')
       .maybeSingle()
-    console.log('[payment-intent] member lookup error:', memberErr?.message ?? null, '| found:', !!member)
-    if (!member) return NextResponse.json({ error: 'Member not found' }, { status: 404 })
+    if (memberErr || !member) return NextResponse.json({ error: 'Member not found' }, { status: 404 })
 
     // Step 3: membership_settings
-    const { data: settings, error: settingsErr } = await supabaseAdmin
+    const { data: settings } = await supabaseAdmin
       .from('membership_settings')
       .select('price_cents')
       .limit(1)
       .single()
-    console.log('[payment-intent] settings error:', settingsErr?.message ?? null, '| price_cents:', settings?.price_cents ?? null)
-    const priceCents = settings?.price_cents ?? 2000
 
     // Step 4: Stripe PaymentIntent
     const amount = Math.round(Number(settings?.price_cents ?? 2000))
     if (!amount || amount < 50) throw new Error('Invalid amount: ' + amount)
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-    console.log('[payment-intent] creating PaymentIntent, amount:', amount)
     const pi = await stripe.paymentIntents.create({
       amount,
       currency: 'eur',
@@ -57,7 +46,6 @@ export async function POST(req: NextRequest) {
         user_email: member.email ?? '',
       },
     })
-    console.log('[payment-intent] created:', pi.id, 'amount:', pi.amount)
 
     return NextResponse.json({ clientSecret: pi.client_secret })
   } catch (err: unknown) {

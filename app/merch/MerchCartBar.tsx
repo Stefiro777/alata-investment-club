@@ -6,7 +6,7 @@ export default function MerchCartBar() {
   const { count, openDrawer } = useCart()
 
   return (
-    <div className="sticky top-[64px] z-50 bg-white border-b border-black/10">
+    <div className="sticky top-[64px] z-50 bg-white border-b border-line-faint">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-11">
         <p className="text-xs font-semibold uppercase tracking-widest text-black/40">Shop</p>
         <button
@@ -19,7 +19,7 @@ export default function MerchCartBar() {
               d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
           {count > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#1a4a3a] text-white text-[9px] font-bold flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-forest text-white text-[9px] font-bold flex items-center justify-center">
               {count > 9 ? '9+' : count}
             </span>
           )}

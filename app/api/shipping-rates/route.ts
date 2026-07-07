@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase-server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const supabaseAdmin = createAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,16 +18,11 @@ export async function GET() {
   return NextResponse.json({ rates: data ?? [] })
 }
 
-// PATCH /api/shipping-rates — admin only { zone, price_cents }
+// PATCH /api/shipping-rates — privileged only { zone, price_cents }
 export async function PATCH(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: member } = await supabaseAdmin
-    .from('club_members').select('role').eq('email', user.email!).maybeSingle()
-  if (member?.role !== 'bod' && member?.role !== 'director')
+  if (!(await requirePrivilegedAccess())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { zone, price_cents } = await req.json() as { zone: string; price_cents: number }
   if (!zone || price_cents == null) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })

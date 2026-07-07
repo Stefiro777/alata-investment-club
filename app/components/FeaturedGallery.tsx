@@ -118,7 +118,7 @@ function GalleryPanel({ media }: { media: MediaItem[] }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={m.url} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-[#1a4a3a]/10 flex items-center justify-center">
+                <div className="w-full h-full bg-forest/10 flex items-center justify-center">
                   <svg className="w-4 h-4 text-forest" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
@@ -175,7 +175,7 @@ function GallerySection({
               <div className="mb-5">
                 <span
                   className="inline-block text-white font-medium uppercase"
-                  style={{ background: '#1a4a3a', fontSize: '0.65rem', letterSpacing: '0.15em', padding: '3px 8px' }}
+                  style={{ background: 'var(--forest)', fontSize: '0.65rem', letterSpacing: '0.15em', padding: '3px 8px' }}
                 >
                   {label}
                 </span>
@@ -183,7 +183,7 @@ function GallerySection({
             </FadeSlide>
 
             <FadeSlide visible={textVisible} delay={s(1)} xOffset={xText}>
-              <h3 className="font-serif text-3xl font-bold leading-snug mb-4" style={{ color: '#1a4a3a' }}>
+              <h3 className="font-serif text-3xl font-bold leading-snug mb-4" style={{ color: 'var(--forest)' }}>
                 {item.title}
               </h3>
             </FadeSlide>

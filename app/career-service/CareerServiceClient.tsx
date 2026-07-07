@@ -95,7 +95,7 @@ function formatEuros(cents: number) {
 
 // ── Shared style tokens ───────────────────────────────────────────────────────
 
-const inputCls = 'w-full border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#1a4a3a] bg-white'
+const inputCls = 'w-full border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-forest bg-white'
 const labelCls = 'block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1.5'
 
 // ── Step 3 Payment Form (must be inside <Elements>) ───────────────────────────
@@ -214,12 +214,12 @@ function PaymentForm({
 
         {/* Member badge */}
         {isMember && (
-          <div className="mt-4 flex items-center gap-3 bg-[#1a4a3a]/5 border border-[#1a4a3a]/20 px-4 py-3">
-            <svg className="w-4 h-4 text-[#1a4a3a] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mt-4 flex items-center gap-3 bg-forest/5 border border-forest/20 px-4 py-3">
+            <svg className="w-4 h-4 text-forest flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a]">Member Benefit — Free Session</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-forest">Member Benefit — Free Session</p>
               <p className="text-xs text-gray-500 mt-0.5">€0,00</p>
             </div>
           </div>
@@ -288,7 +288,7 @@ function PaymentForm({
       <button
         onClick={handleConfirm}
         disabled={processing || (!isFree && !stripe)}
-        className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors disabled:opacity-40"
+        className="w-full bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors disabled:opacity-40"
       >
         {processing
           ? 'Processing…'
@@ -475,7 +475,7 @@ function BookingOverlay({
         <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200 flex-shrink-0">
           <div>
             {service && (
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] mb-0.5">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-forest mb-0.5">
                 {service.name}
               </p>
             )}
@@ -518,7 +518,7 @@ function BookingOverlay({
               {/* Month navigator */}
               <div className="flex items-center justify-between mb-5">
                 <button onClick={prevMonth} disabled={isPrevDisabled}
-                  className="p-1.5 text-gray-400 hover:text-[#1a4a3a] transition-colors disabled:opacity-25">
+                  className="p-1.5 text-gray-400 hover:text-forest transition-colors disabled:opacity-25">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
@@ -527,7 +527,7 @@ function BookingOverlay({
                   {MONTHS[month - 1]} {year}
                 </span>
                 <button onClick={nextMonth}
-                  className="p-1.5 text-gray-400 hover:text-[#1a4a3a] transition-colors">
+                  className="p-1.5 text-gray-400 hover:text-forest transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -580,7 +580,7 @@ function BookingOverlay({
                         {/* Green dot indicator */}
                         {hasSlot && !isPast && (
                           <span className="absolute bottom-0 w-1 h-1 rounded-full"
-                            style={{ background: isSel ? '#fff' : '#1a4a3a' }} />
+                            style={{ background: isSel ? '#fff' : 'var(--forest)' }} />
                         )}
                       </div>
                     )
@@ -656,8 +656,8 @@ function BookingOverlay({
                   onChange={handleCvUpload}
                 />
                 {cvFilename ? (
-                  <div className="flex items-center gap-3 border border-[#1a4a3a]/30 bg-[#f9f9f8] px-4 py-3">
-                    <svg className="w-4 h-4 text-[#1a4a3a] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-3 border border-forest/30 bg-[#f9f9f8] px-4 py-3">
+                    <svg className="w-4 h-4 text-forest flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span className="text-sm text-gray-700 flex-1 min-w-0 truncate">{cvFilename}</span>
@@ -699,7 +699,7 @@ function BookingOverlay({
                   </p>
                   <a
                     href="/dashboard/membership"
-                    className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] underline"
+                    className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest text-forest underline"
                   >
                     Rinnova →
                   </a>
@@ -734,7 +734,7 @@ function BookingOverlay({
           {confirmed && (
             <div className="flex flex-col items-center text-center py-10">
               <div className="flex items-center justify-center w-16 h-16 mb-6"
-                style={{ background: '#1a4a3a' }}>
+                style={{ background: 'var(--forest)' }}>
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
@@ -753,7 +753,7 @@ function BookingOverlay({
               <button
                 onClick={onClose}
                 className="border text-xs font-semibold uppercase tracking-widest px-8 py-3 transition-colors"
-                style={{ borderColor: '#1a4a3a', color: '#1a4a3a' }}
+                style={{ borderColor: 'var(--forest)', color: 'var(--forest)' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#1a4a3a'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#1a4a3a' }}
               >
@@ -780,7 +780,7 @@ function BookingOverlay({
               onClick={() => setStep(s => (s + 1) as 2 | 3)}
               disabled={step === 1 ? !canContinueStep1 : !canContinueStep2}
               className="text-xs font-semibold uppercase tracking-widest px-8 py-3 transition-colors disabled:opacity-40"
-              style={{ background: '#1a4a3a', color: '#fff' }}
+              style={{ background: 'var(--forest)', color: '#fff' }}
             >
               Continue →
             </button>
@@ -885,7 +885,7 @@ export default function CareerServiceClient() {
             {/* Window 1: Master & Education */}
             <Reveal delay={0} direction="up">
               <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
-                <div className="px-10 py-8" style={{ background: '#1a4a3a' }}>
+                <div className="px-10 py-8" style={{ background: 'var(--forest)' }}>
                   <h2 className="font-serif text-4xl sm:text-5xl font-normal uppercase text-white tracking-widest">
                     Master &amp; Education
                   </h2>
@@ -907,7 +907,7 @@ export default function CareerServiceClient() {
             {/* Window 2: Career */}
             <Reveal delay={150} direction="up">
               <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
-                <div className="px-10 py-8" style={{ background: '#1a4a3a' }}>
+                <div className="px-10 py-8" style={{ background: 'var(--forest)' }}>
                   <h2 className="font-serif text-4xl sm:text-5xl font-normal uppercase text-white tracking-widest">
                     Career
                   </h2>

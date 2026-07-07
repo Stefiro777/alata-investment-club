@@ -90,7 +90,7 @@ export default function MemberAutocomplete({
           {selectedMembers.map(m => (
             <span
               key={m.user_id}
-              className="flex items-center gap-1.5 bg-[#1a4a3a] text-white text-xs font-medium px-2 py-0.5"
+              className="flex items-center gap-1.5 bg-forest text-white text-xs font-medium px-2 py-0.5"
             >
               {m.full_name}
               <button
@@ -131,7 +131,7 @@ export default function MemberAutocomplete({
                     key={m.user_id}
                     type="button"
                     onMouseDown={e => { e.preventDefault(); add(m.user_id) }}
-                    className="w-full text-left px-4 py-2.5 hover:bg-[#f5f5f5] border-b border-line last:border-b-0"
+                    className="w-full text-left px-4 py-2.5 hover:bg-paper-stone border-b border-line last:border-b-0"
                   >
                     <p className="text-sm font-medium text-ink-900">{m.full_name}</p>
                     {(badges.length > 0 || m.lab_subdivision) && (

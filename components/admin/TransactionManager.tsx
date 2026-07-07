@@ -207,7 +207,7 @@ function TxModal({
     setSaving(false)
   }
 
-  const inputClass = 'w-full border border-line px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#1a4a3a] text-ink-900 font-[\'Inter\']'
+  const inputClass = 'w-full border border-line px-3 py-2 text-sm bg-white focus:outline-none focus:border-forest text-ink-900 font-[\'Inter\']'
   const labelClass = 'block text-[10px] uppercase tracking-widest text-ink-400 font-medium mb-1'
 
   return (
@@ -255,7 +255,7 @@ function TxModal({
                   type="checkbox"
                   checked={form.isRimborso}
                   onChange={e => set('isRimborso', e.target.checked)}
-                  className="w-4 h-4 accent-[#1a4a3a]"
+                  className="w-4 h-4 accent-forest"
                 />
                 <span className="text-sm text-ink-700">È un rimborso?</span>
               </label>
@@ -306,14 +306,14 @@ function TxModal({
                 value={newCatName}
                 onChange={e => setNewCatName(e.target.value)}
                 placeholder="+ Nuova categoria..."
-                className="flex-1 border border-dashed border-ink-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-[#1a4a3a]"
+                className="flex-1 border border-dashed border-ink-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-forest"
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCat() } }}
               />
               <button
                 type="button"
                 onClick={handleAddCat}
                 disabled={addingCat || !newCatName.trim()}
-                className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs px-3 py-1.5 transition-colors disabled:opacity-40"
+                className="border border-forest text-forest hover:bg-forest hover:text-white text-xs px-3 py-1.5 transition-colors disabled:opacity-40"
               >
                 {addingCat ? '…' : 'Aggiungi'}
               </button>
@@ -338,13 +338,13 @@ function TxModal({
                 value={form.receipt_url}
                 onChange={e => set('receipt_url', e.target.value)}
                 placeholder="URL o carica file"
-                className="flex-1 border border-line px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#1a4a3a] text-ink-900"
+                className="flex-1 border border-line px-3 py-2 text-sm bg-white focus:outline-none focus:border-forest text-ink-900"
               />
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="flex-shrink-0 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium px-3 py-2 transition-colors disabled:opacity-50 whitespace-nowrap"
+                className="flex-shrink-0 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-2 transition-colors disabled:opacity-50 whitespace-nowrap"
               >
                 {uploading ? '…' : 'Upload'}
               </button>
@@ -358,7 +358,7 @@ function TxModal({
             <button
               type="submit"
               disabled={saving}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-widest px-6 py-2.5 transition-colors disabled:opacity-40"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-widest px-6 py-2.5 transition-colors disabled:opacity-40"
             >
               {saving ? '…' : initial.id ? 'Salva' : 'Aggiungi'}
             </button>
@@ -510,7 +510,7 @@ export default function TransactionManager() {
           <p className="text-[10px] uppercase tracking-widest text-ink-400 font-medium mb-1">Totale Uscite</p>
           <p className="text-xl font-bold text-red-700">{fmtAmt(totalCosts)}</p>
         </div>
-        <div className="px-5 py-4" style={{ backgroundColor: '#1a4a3a' }}>
+        <div className="px-5 py-4" style={{ backgroundColor: 'var(--forest)' }}>
           <p className="text-[10px] uppercase tracking-widest font-medium mb-1" style={{ color: 'rgba(255,255,255,0.65)' }}>Cash Balance</p>
           <p className="text-xl font-bold text-white">{fmtAmt(balance)}</p>
         </div>
@@ -522,7 +522,7 @@ export default function TransactionManager() {
           <button
             onClick={() => selectedIdx > 0 && setSelectedKey(months[selectedIdx - 1].key)}
             disabled={selectedIdx === 0}
-            className="flex-shrink-0 p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors disabled:opacity-30"
+            className="flex-shrink-0 p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-forest transition-colors disabled:opacity-30"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -539,7 +539,7 @@ export default function TransactionManager() {
                   onClick={() => setSelectedKey(m.key)}
                   className="flex-shrink-0 flex flex-col items-center px-3 py-2 border text-xs font-medium transition-colors"
                   style={isActive
-                    ? { backgroundColor: '#1a4a3a', borderColor: '#1a4a3a', color: 'white' }
+                    ? { backgroundColor: 'var(--forest)', borderColor: 'var(--forest)', color: 'white' }
                     : { backgroundColor: 'white', borderColor: '#e5e5e5', color: '#4a4a4a' }
                   }
                 >
@@ -555,7 +555,7 @@ export default function TransactionManager() {
           <button
             onClick={() => selectedIdx < months.length - 1 && setSelectedKey(months[selectedIdx + 1].key)}
             disabled={selectedIdx === months.length - 1}
-            className="flex-shrink-0 p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-[#1a4a3a] transition-colors disabled:opacity-30"
+            className="flex-shrink-0 p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-forest transition-colors disabled:opacity-30"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -571,7 +571,7 @@ export default function TransactionManager() {
         </p>
         <button
           onClick={openAdd}
-          className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-widest px-5 py-2.5 transition-colors"
+          className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-widest px-5 py-2.5 transition-colors"
         >
           + Aggiungi
         </button>
@@ -617,7 +617,7 @@ export default function TransactionManager() {
                           href={tx.receipt_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 text-ink-400 hover:text-[#1a4a3a] transition-colors"
+                          className="p-1.5 text-ink-400 hover:text-forest transition-colors"
                           title="Apri ricevuta"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -627,7 +627,7 @@ export default function TransactionManager() {
                       )}
                       <button
                         onClick={() => openEdit(tx)}
-                        className="p-1.5 text-ink-400 hover:text-[#1a4a3a] transition-colors"
+                        className="p-1.5 text-ink-400 hover:text-forest transition-colors"
                         title="Modifica"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -651,7 +651,7 @@ export default function TransactionManager() {
           </tbody>
           {filtered.length > 0 && (
             <tfoot>
-              <tr className="border-t-2 border-[#1a4a3a]/20 bg-[#f9f9f9]">
+              <tr className="border-t-2 border-forest/20 bg-[#f9f9f9]">
                 <td colSpan={4} className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-500">
                   Saldo mese
                 </td>

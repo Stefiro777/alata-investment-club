@@ -52,7 +52,7 @@ const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 function fmtEur(cents: number) { return `€${(cents / 100).toFixed(2).replace('.', ',')}` }
 function slugify(s: string)    { return s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') }
 
-const INPUT_CLS = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1a4a3a] bg-white'
+const INPUT_CLS = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-forest bg-white'
 const LABEL_CLS = 'block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1'
 
 // ── SizeToggle ────────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ function SizeToggle({ sizes, onChange }: { sizes: string[]; onChange: (s: string
           onClick={() => toggle(s)}
           className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-widest border transition-colors ${
             sizes.includes(s)
-              ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
+              ? 'bg-forest text-white border-forest'
               : 'bg-white text-gray-600 border-gray-300 hover:border-black'
           }`}
         >
@@ -121,7 +121,7 @@ function VisibilityToggle() {
         disabled={saving || visible === null}
         className={`ml-auto px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-colors disabled:opacity-50 ${
           visible
-            ? 'bg-[#1a4a3a] text-white hover:bg-[#143d30]'
+            ? 'bg-forest text-white hover:bg-[#143d30]'
             : 'bg-black text-white hover:bg-gray-800'
         }`}
       >
@@ -214,7 +214,7 @@ function VariantEditor({ productId, variants, onRefresh }: {
               <span className="text-[10px] text-gray-400">{imgs.length}/5</span>
               <button
                 onClick={() => setActiveVariantId(activeVariantId === v.id ? null : v.id)}
-                className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline"
+                className="text-[10px] font-semibold uppercase tracking-widest text-forest hover:underline"
               >
                 {activeVariantId === v.id ? 'Close' : 'Images'}
               </button>
@@ -265,7 +265,7 @@ function VariantEditor({ productId, variants, onRefresh }: {
                 </div>
                 {imgs.length < 5 && (
                   <label className={`inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest cursor-pointer hover:underline ${
-                    uploading === v.id ? 'text-gray-400 pointer-events-none' : 'text-[#1a4a3a]'
+                    uploading === v.id ? 'text-gray-400 pointer-events-none' : 'text-forest'
                   }`}>
                     {uploading === v.id ? 'Uploading…' : '+ Add image'}
                     <input type="file" accept="image/*" className="hidden"
@@ -287,13 +287,13 @@ function VariantEditor({ productId, variants, onRefresh }: {
         <input
           value={color} onChange={e => setColor(e.target.value)}
           placeholder="Colour name"
-          className="flex-1 text-sm border border-black px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1a4a3a]"
+          className="flex-1 text-sm border border-black px-3 py-2 focus:outline-none focus:ring-1 focus:ring-forest"
         />
         <input type="color" value={colorHex} onChange={e => setColorHex(e.target.value)}
           title="Pick colour"
           className="w-10 h-10 border border-black cursor-pointer p-0.5 flex-shrink-0" />
         <button onClick={addVariant} disabled={!color.trim() || adding}
-          className="px-4 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+          className="px-4 py-2 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
           {adding ? '…' : 'Add'}
         </button>
       </div>
@@ -350,7 +350,7 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
           {fmtEur(product.price_cents)}
         </span>
         <span className={`text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 flex-shrink-0 ${
-          product.visible ? 'bg-[#1a4a3a] text-white' : 'bg-gray-200 text-gray-500'
+          product.visible ? 'bg-forest text-white' : 'bg-gray-200 text-gray-500'
         }`}>
           {product.visible ? 'Active' : 'Hidden'}
         </span>
@@ -387,7 +387,7 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
               <button
                 type="button"
                 onClick={() => setVisible(v => !v)}
-                className={`relative w-10 h-5 transition-colors flex-shrink-0 ${visible ? 'bg-[#1a4a3a]' : 'bg-gray-300'}`}
+                className={`relative w-10 h-5 transition-colors flex-shrink-0 ${visible ? 'bg-forest' : 'bg-gray-300'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white transition-all ${visible ? 'left-5' : 'left-0.5'}`} />
               </button>
@@ -397,7 +397,7 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
 
           <div className="flex items-center gap-3 mt-5 pt-4 border-t border-gray-100">
             <button onClick={save} disabled={saving}
-              className="px-5 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+              className="px-5 py-2 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
               {saving ? 'Saving…' : 'Save changes'}
             </button>
             {confirmDel ? (
@@ -602,7 +602,7 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
                         </div>
                       ))}
                       {v.images.length < 5 && (
-                        <label className={`w-12 h-12 border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-[#1a4a3a] transition-colors flex-shrink-0 ${v.uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <label className={`w-12 h-12 border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-forest transition-colors flex-shrink-0 ${v.uploading ? 'opacity-50 pointer-events-none' : ''}`}>
                           <span className="text-lg text-gray-400 leading-none">{v.uploading ? '…' : '+'}</span>
                           <input type="file" accept="image/*" className="hidden"
                             disabled={v.uploading}
@@ -620,13 +620,13 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
               <div className="flex gap-2 items-center">
                 <input value={newColor} onChange={e => setNewColor(e.target.value)}
                   placeholder="Colour name"
-                  className="flex-1 text-sm border border-black px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1a4a3a]"
+                  className="flex-1 text-sm border border-black px-3 py-2 focus:outline-none focus:ring-1 focus:ring-forest"
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addDraftVariant() } }}
                   autoFocus />
                 <input type="color" value={newColorHex} onChange={e => setNewColorHex(e.target.value)}
                   className="w-10 h-10 border border-black cursor-pointer p-0.5 flex-shrink-0" />
                 <button type="button" onClick={addDraftVariant} disabled={!newColor.trim()}
-                  className="px-3 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] disabled:opacity-40 flex-shrink-0">
+                  className="px-3 py-2 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] disabled:opacity-40 flex-shrink-0">
                   Add
                 </button>
                 <button type="button" onClick={() => { setAddingVariant(false); setNewColor(''); setNewColorHex('#000000') }}
@@ -636,7 +636,7 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
               </div>
             ) : (
               <button type="button" onClick={() => setAddingVariant(true)}
-                className="w-full py-2.5 border border-dashed border-gray-300 text-[10px] font-semibold uppercase tracking-widest text-gray-500 hover:border-[#1a4a3a] hover:text-[#1a4a3a] transition-colors">
+                className="w-full py-2.5 border border-dashed border-gray-300 text-[10px] font-semibold uppercase tracking-widest text-gray-500 hover:border-forest hover:text-forest transition-colors">
                 + Add colour variant
               </button>
             )}
@@ -644,7 +644,7 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
 
           <div className="flex gap-3 pt-2 border-t border-gray-100">
             <button type="submit" disabled={saving}
-              className="px-6 py-2.5 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+              className="px-6 py-2.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
               {saving ? 'Creating…' : 'Create product'}
             </button>
             <button type="button" onClick={onClose}
@@ -781,7 +781,7 @@ function UpsellSection() {
                   <button onClick={() => toggleActive(item)}
                     className={`text-[9px] font-semibold uppercase tracking-widest px-3 py-1.5 border transition-colors flex-shrink-0 ${
                       item.active
-                        ? 'bg-[#1a4a3a] text-white border-[#1a4a3a] hover:bg-[#143d30]'
+                        ? 'bg-forest text-white border-forest hover:bg-[#143d30]'
                         : 'bg-white text-gray-500 border-gray-300 hover:border-gray-500'
                     }`}>
                     {item.active ? 'Active' : 'Inactive'}
@@ -797,11 +797,11 @@ function UpsellSection() {
 
           {!showAdd ? (
             <button onClick={() => setShowAdd(true)}
-              className="w-full py-2.5 border border-dashed border-gray-300 text-xs text-gray-500 hover:border-[#1a4a3a] hover:text-[#1a4a3a] transition-colors uppercase tracking-widest font-semibold">
+              className="w-full py-2.5 border border-dashed border-gray-300 text-xs text-gray-500 hover:border-forest hover:text-forest transition-colors uppercase tracking-widest font-semibold">
               + Add Upsell Item
             </button>
           ) : (
-            <form onSubmit={submitAdd} className="border border-[#1a4a3a] p-3 space-y-3">
+            <form onSubmit={submitAdd} className="border border-forest p-3 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-widest text-black">New Upsell Item</p>
               {addErr && <p className="text-xs text-red-600">{addErr}</p>}
               <div className="grid grid-cols-2 gap-3">
@@ -834,7 +834,7 @@ function UpsellSection() {
               </div>
               <div className="flex gap-2">
                 <button type="submit" disabled={addSaving}
-                  className="px-4 py-2 bg-[#1a4a3a] text-white text-xs font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+                  className="px-4 py-2 bg-forest text-white text-xs font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
                   {addSaving ? '…' : 'Add Item'}
                 </button>
                 <button type="button" onClick={() => { setShowAdd(false); setAddErr('') }}
@@ -933,7 +933,7 @@ function ShippingRatesSection() {
               <button
                 onClick={() => handleSave(zone)}
                 disabled={saving[zone]}
-                className="mb-6 px-4 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40"
+                className="mb-6 px-4 py-2 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40"
               >
                 {saved[zone] ? 'Saved ✓' : saving[zone] ? '…' : 'Save'}
               </button>
@@ -1005,7 +1005,7 @@ function DiscountCodesSection() {
         <p className="text-xs text-gray-500">{codes.length} code{codes.length !== 1 ? 's' : ''}</p>
         <button
           onClick={() => setShowAdd(v => !v)}
-          className="text-[10px] font-semibold uppercase tracking-widest px-3 py-1.5 border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+          className="text-[10px] font-semibold uppercase tracking-widest px-3 py-1.5 border border-forest text-forest hover:bg-forest hover:text-white transition-colors"
         >
           {showAdd ? 'Cancel' : '+ Add Code'}
         </button>
@@ -1043,7 +1043,7 @@ function DiscountCodesSection() {
           </div>
           {addErr && <p className="text-xs text-red-600">{addErr}</p>}
           <button onClick={handleAdd} disabled={saving}
-            className="w-full py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+            className="w-full py-2 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
             {saving ? 'Creating…' : 'Create Code'}
           </button>
         </div>
@@ -1061,7 +1061,7 @@ function DiscountCodesSection() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-black font-mono">{c.code}</span>
                   <span className={`text-[9px] font-semibold uppercase tracking-widest px-1.5 py-0.5 ${
-                    c.active ? 'bg-[#1a4a3a]/10 text-[#1a4a3a]' : 'bg-gray-100 text-gray-400'
+                    c.active ? 'bg-forest/10 text-forest' : 'bg-gray-100 text-gray-400'
                   }`}>
                     {c.active ? 'Active' : 'Inactive'}
                   </span>
@@ -1075,7 +1075,7 @@ function DiscountCodesSection() {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button onClick={() => handleToggle(c.id, !c.active)}
-                  className="text-[9px] font-semibold uppercase tracking-widest px-2 py-1 border border-gray-300 text-gray-600 hover:border-[#1a4a3a] hover:text-[#1a4a3a] transition-colors">
+                  className="text-[9px] font-semibold uppercase tracking-widest px-2 py-1 border border-gray-300 text-gray-600 hover:border-forest hover:text-forest transition-colors">
                   {c.active ? 'Disable' : 'Enable'}
                 </button>
                 <button onClick={() => handleDelete(c.id)} className="text-gray-300 hover:text-red-400 transition-colors">
@@ -1118,7 +1118,7 @@ export default function MerchManager() {
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="px-4 py-2 bg-[#1a4a3a] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors flex-shrink-0"
+          className="px-4 py-2 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors flex-shrink-0"
         >
           + Add Product
         </button>

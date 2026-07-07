@@ -7,13 +7,27 @@ const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'
 
 // Order matters: longer / more-specific patterns first to prevent partial replacement.
 const replacements = [
-  // Colors — avoid opacity variants (e.g. bg-[#1a4a3a]/80) by using negative lookahead
-  [/\bbg-\[#1a4a3a\](?!\/)/g,            'bg-forest'],
+  // Colors — variant-prefixed forms first, then bare utilities.
+  // Tailwind v4 @theme tokens support opacity modifiers, so bg-forest/10 works.
+  [/\bgroup-hover:text-\[#1a4a3a\]/g,     'group-hover:text-forest'],
+  [/\bgroup-hover:bg-\[#1a4a3a\]/g,       'group-hover:bg-forest'],
+  [/\bhover:bg-\[#1a4a3a\]\/(\d+)/g,      'hover:bg-forest/$1'],
+  [/\bhover:bg-\[#1a4a3a\]/g,             'hover:bg-forest'],
   [/\bhover:bg-\[#123a2d\]/g,             'hover:bg-forest-deep'],
-  [/\btext-\[#1a4a3a\]/g,                 'text-forest'],
-  [/\bborder-\[#1a4a3a\]/g,               'border-forest'],
   [/\bhover:border-\[#1a4a3a\]/g,         'hover:border-forest'],
   [/\bhover:text-\[#1a4a3a\]/g,           'hover:text-forest'],
+  [/\bfocus:border-\[#1a4a3a\]/g,         'focus:border-forest'],
+  [/\bfocus:ring-\[#1a4a3a\]/g,           'focus:ring-forest'],
+  [/\bfile:bg-\[#1a4a3a\]/g,              'file:bg-forest'],
+  [/\bbg-\[#1a4a3a\]\/(\d+)/g,            'bg-forest/$1'],
+  [/\bbg-\[#1a4a3a\](?!\/)/g,             'bg-forest'],
+  [/\btext-\[#1a4a3a\]/g,                 'text-forest'],
+  [/\bborder-\[#1a4a3a\]\/(\d+)/g,        'border-forest/$1'],
+  [/\bborder-\[#1a4a3a\](?!\/)/g,         'border-forest'],
+  [/\bborder-l-\[#1a4a3a\]/g,             'border-l-forest'],
+  [/\bborder-t-\[#1a4a3a\]/g,             'border-t-forest'],
+  [/\bring-\[#1a4a3a\]/g,                 'ring-forest'],
+  [/\baccent-\[#1a4a3a\]/g,               'accent-forest'],
   [/\btext-\[#0a0a0a\]/g,                 'text-ink-900'],
   [/\btext-\[#1f2937\]/g,                 'text-ink-700'],
   [/\btext-\[#6b7280\]/g,                 'text-ink-500'],
@@ -32,6 +46,13 @@ const replacements = [
   [/transition-all duration-300\b/g,      'transition-all duration-base'],
 ]
 
+// Inline-style object values (e.g. { backgroundColor: '#1a4a3a' }) — .tsx only,
+// never in app/api (email HTML must keep literal inline colors) and never in
+// SVG presentation attributes (fill="#1a4a3a"), which don't support var().
+const inlineStyleReplacements = [
+  [/:(\s*)'#1a4a3a'/g, ":$1'var(--forest)'"],
+]
+
 function walkFiles(dir, exts, out = []) {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry)
@@ -46,8 +67,10 @@ function walkFiles(dir, exts, out = []) {
   return out
 }
 
-const targetDir = join(ROOT, 'app')
-const files = walkFiles(targetDir, ['.ts', '.tsx'])
+const files = [
+  ...walkFiles(join(ROOT, 'app'), ['.ts', '.tsx']),
+  ...walkFiles(join(ROOT, 'components'), ['.ts', '.tsx']),
+]
 
 let totalFiles = 0
 let totalChanges = 0
@@ -58,6 +81,14 @@ for (const file of files) {
 
   for (const [pattern, replacement] of replacements) {
     content = content.replace(pattern, replacement)
+  }
+
+  const rel = file.replace(ROOT, '').replace(/\\/g, '/')
+  const isEmailTerritory = rel.includes('app/api/') || rel.includes('lib/')
+  if (extname(file) === '.tsx' && !isEmailTerritory) {
+    for (const [pattern, replacement] of inlineStyleReplacements) {
+      content = content.replace(pattern, replacement)
+    }
   }
 
   if (content !== original) {

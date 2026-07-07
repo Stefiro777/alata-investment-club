@@ -128,7 +128,7 @@ export default function TeamCalendarModal({
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Event title"
-              className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+              className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest"
             />
           </div>
 
@@ -139,7 +139,7 @@ export default function TeamCalendarModal({
               value={description}
               onChange={e => setDesc(e.target.value)}
               placeholder="Optional description..."
-              className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a] resize-none"
+              className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest resize-none"
             />
           </div>
 
@@ -151,7 +151,7 @@ export default function TeamCalendarModal({
                 type="date"
                 value={startDate}
                 onChange={e => { setStartDate(e.target.value); if (!endDate || endDate < e.target.value) setEndDate(e.target.value) }}
-                className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest"
               />
             </div>
             <div>
@@ -161,7 +161,7 @@ export default function TeamCalendarModal({
                 value={endDate}
                 min={startDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest"
               />
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function TeamCalendarModal({
                 type="time"
                 value={startTime}
                 onChange={e => setStartTime(e.target.value)}
-                className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest"
               />
             </div>
             <div>
@@ -182,7 +182,7 @@ export default function TeamCalendarModal({
                 type="time"
                 value={endTime}
                 onChange={e => setEndTime(e.target.value)}
-                className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                className="w-full border border-gray-200 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest"
               />
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function TeamCalendarModal({
               <button
                 type="submit"
                 disabled={saving || !title.trim()}
-                className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors disabled:opacity-40"
+                className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors disabled:opacity-40"
               >
                 {saving ? '…' : 'Save'}
               </button>

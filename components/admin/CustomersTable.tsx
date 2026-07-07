@@ -46,12 +46,12 @@ const TYPE_COLORS: Record<CustomerType, string> = {
   career_service: 'bg-blue-100 text-blue-800',
   merch:          'bg-purple-100 text-purple-800',
   event:          'bg-orange-100 text-orange-700',
-  membership:     'bg-[#edf7f0] text-[#1a4a3a]',
+  membership:     'bg-[#edf7f0] text-forest',
 }
 
-const inputCls = 'border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a] bg-white w-full'
-const btnGreen = 'bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40'
-const btnOutline = 'border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40'
+const inputCls = 'border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-full'
+const btnGreen = 'bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40'
+const btnOutline = 'border border-forest text-forest hover:bg-forest hover:text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40'
 
 // ── Email modal ────────────────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@ function EmailModal({ ids, count, onClose }: { ids: string[]; count: number; onC
           </div>
           {result ? (
             <div className="text-center py-6">
-              <p className="text-[#1a4a3a] font-semibold">Inviate {result.sent}/{result.total} email con successo.</p>
+              <p className="text-forest font-semibold">Inviate {result.sent}/{result.total} email con successo.</p>
               <button onClick={onClose} className={`mt-4 ${btnGreen}`}>Chiudi</button>
             </div>
           ) : (
@@ -100,7 +100,7 @@ function EmailModal({ ids, count, onClose }: { ids: string[]; count: number; onC
               <div>
                 <label className="text-xs font-semibold uppercase tracking-widest text-gray-500 block mb-1">Corpo</label>
                 <textarea value={body} onChange={e => setBody(e.target.value)} rows={6}
-                  className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a] bg-white w-full resize-none" />
+                  className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-full resize-none" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={send} disabled={sending} className={`flex-1 py-3 ${btnGreen}`}>
@@ -148,8 +148,8 @@ function AddCustomerForm({ onAdded }: { onAdded: () => void }) {
   )
 
   return (
-    <div className="border border-[#1a4a3a] p-5 mb-6 bg-white">
-      <p className="text-xs font-bold uppercase tracking-widest text-[#1a4a3a] mb-4">Nuovo cliente</p>
+    <div className="border border-forest p-5 mb-6 bg-white">
+      <p className="text-xs font-bold uppercase tracking-widest text-forest mb-4">Nuovo cliente</p>
       {err && <p className="text-xs text-red-600 bg-red-50 px-3 py-2 mb-3">{err}</p>}
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Nome *</label>
@@ -250,13 +250,13 @@ export default function CustomersTable() {
           placeholder="Cerca nome o email…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a] bg-white w-56"
+          className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-56"
         />
         <div className="flex border border-gray-200 overflow-hidden">
           {(['all', 'career_service', 'merch', 'event', 'membership'] as const).map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
               className="px-3 py-2 text-xs uppercase tracking-wide transition-colors"
-              style={typeFilter === t ? { background: '#1a4a3a', color: '#fff' } : { color: '#6b7280' }}>
+              style={typeFilter === t ? { background: 'var(--forest)', color: '#fff' } : { color: '#6b7280' }}>
               {t === 'all' ? 'Tutti' : TYPE_LABELS[t]}
             </button>
           ))}
@@ -281,7 +281,7 @@ export default function CustomersTable() {
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="px-4 py-3 w-8">
                   <input type="checkbox" checked={customers.length > 0 && selected.size === customers.length}
-                    onChange={toggleAll} className="accent-[#1a4a3a]" />
+                    onChange={toggleAll} className="accent-forest" />
                 </th>
                 {['Nome', 'Email', 'Tipo', 'Servizio/Prodotto', 'Importo', 'Data acquisto'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">{h}</th>
@@ -298,7 +298,7 @@ export default function CustomersTable() {
                     onClick={() => openExpand(c)}>
                     <td className="px-4 py-3" onClick={e => { e.stopPropagation(); toggleSelect(c.id) }}>
                       <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggleSelect(c.id)}
-                        onClick={e => e.stopPropagation()} className="accent-[#1a4a3a]" />
+                        onClick={e => e.stopPropagation()} className="accent-forest" />
                     </td>
                     <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{c.email}</td>
@@ -319,7 +319,7 @@ export default function CustomersTable() {
                           value={editNotes}
                           onChange={e => setEditNotes(e.target.value)}
                           rows={3}
-                          className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a] bg-white w-full max-w-xl resize-none mb-2"
+                          className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-full max-w-xl resize-none mb-2"
                           onClick={e => e.stopPropagation()}
                         />
                         <div className="flex gap-2">
@@ -344,7 +344,7 @@ export default function CustomersTable() {
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#1a4a3a] text-white px-6 py-3 shadow-xl flex items-center gap-6">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-forest text-white px-6 py-3 shadow-xl flex items-center gap-6">
           <span className="text-sm font-semibold">{selected.size} selezionati</span>
           <button onClick={() => setShowEmail(true)} className="text-xs font-semibold uppercase tracking-widest border border-white/40 px-4 py-2 hover:bg-white/10 transition-colors">
             Invia email a {selected.size} selezionati

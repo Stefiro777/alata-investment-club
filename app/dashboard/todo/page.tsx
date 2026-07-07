@@ -35,7 +35,7 @@ function HistoryToggle({ history }: { history: any[] }) {
       {open && (
         <div className="space-y-2 mt-3">
           {history.map(h => (
-            <div key={h.id} className="text-xs font-['Inter'] text-gray-600 border-l-2 border-[#1a4a3a] pl-3 py-1">
+            <div key={h.id} className="text-xs font-['Inter'] text-gray-600 border-l-2 border-forest pl-3 py-1">
               <span className="font-semibold text-black">{h.modified_by_name}</span>
               {' '}ha modificato <span className="font-semibold">{h.field_changed}</span>
               <br />
@@ -632,7 +632,7 @@ export default function TodoPage() {
           <button
             type="submit"
             disabled={adding || !newTitle.trim()}
-            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40 whitespace-nowrap"
+            className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40 whitespace-nowrap"
           >
             {adding ? '…' : 'Aggiungi'}
           </button>
@@ -658,7 +658,7 @@ export default function TodoPage() {
           <select
             value={newRecurrenceType}
             onChange={e => setNewRecurrenceType(e.target.value)}
-            className="border border-[#1a4a3a] px-3 py-2.5 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+            className="border border-forest px-3 py-2.5 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
           >
             <option value="">Nessuna ricorrenza</option>
             <option value="daily">Giornaliera</option>
@@ -709,8 +709,8 @@ export default function TodoPage() {
           {openGroups.map(group => (
             <div key={group.label} className="mb-8">
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-xs uppercase tracking-widest text-[#1a4a3a] font-['Inter'] font-semibold">{group.label}</span>
-                <div className="flex-1 h-px bg-[#1a4a3a]/20" />
+                <span className="text-xs uppercase tracking-widest text-forest font-['Inter'] font-semibold">{group.label}</span>
+                <div className="flex-1 h-px bg-forest/20" />
               </div>
               <div className="border border-line">
                 {group.tasks.map(task => (
@@ -799,7 +799,7 @@ export default function TodoPage() {
         <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto">
 
           {/* Header */}
-          <div className="bg-[#1a4a3a] px-6 py-4 flex items-center justify-between">
+          <div className="bg-forest px-6 py-4 flex items-center justify-between">
             <h2 className="text-white font-['Cormorant_Garamond',serif] text-xl tracking-wide">Modifica Task</h2>
             <button onClick={() => setEditingTask(null)} className="text-white hover:text-gray-300 text-xl">✕</button>
           </div>
@@ -812,7 +812,7 @@ export default function TodoPage() {
               <input
                 value={editTitle}
                 onChange={e => setEditTitle(e.target.value)}
-                className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest"
               />
             </div>
 
@@ -823,7 +823,7 @@ export default function TodoPage() {
                 <select
                   value={editStatus}
                   onChange={e => setEditStatus(e.target.value)}
-                  className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                  className="border border-forest px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
                 >
                   <option value="todo">To Do</option>
                   <option value="in_progress">In corso</option>
@@ -843,7 +843,7 @@ export default function TodoPage() {
                 type="date"
                 value={editDueDate}
                 onChange={e => setEditDueDate(e.target.value)}
-                className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest"
               />
             </div>
 
@@ -854,7 +854,7 @@ export default function TodoPage() {
                 <select
                   value={editRecurrenceType}
                   onChange={e => setEditRecurrenceType(e.target.value)}
-                  className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                  className="border border-forest px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
                 >
                   <option value="">Nessuna ricorrenza</option>
                   <option value="daily">Giornaliera</option>
@@ -878,7 +878,7 @@ export default function TodoPage() {
                     min={1}
                     value={editRecurrenceInterval}
                     onChange={e => setEditRecurrenceInterval(Number(e.target.value))}
-                    className="w-16 border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                    className="w-16 border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-forest"
                   />
                   <span className="text-sm text-ink-500 font-['Inter']">settimane</span>
                 </div>
@@ -891,7 +891,7 @@ export default function TodoPage() {
                     type="date"
                     value={editRecurrenceEndDate}
                     onChange={e => setEditRecurrenceEndDate(e.target.value)}
-                    className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a]"
+                    className="w-full border border-gray-300 px-3 py-2 text-sm font-['Inter'] focus:outline-none focus:border-forest"
                   />
                 </div>
               )}
@@ -905,9 +905,9 @@ export default function TodoPage() {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const m = availableMembers.find((x: any) => x.user_id === uid)
                   return m ? (
-                    <span key={uid} className="text-xs border border-[#1a4a3a] px-2 py-0.5 text-[#1a4a3a] flex items-center gap-1 font-['Inter']">
+                    <span key={uid} className="text-xs border border-forest px-2 py-0.5 text-forest flex items-center gap-1 font-['Inter']">
                       {m.full_name}
-                      <button onClick={() => setEditAssignees(prev => prev.filter(id => id !== uid))} className="text-[#1a4a3a] hover:text-black">×</button>
+                      <button onClick={() => setEditAssignees(prev => prev.filter(id => id !== uid))} className="text-forest hover:text-black">×</button>
                     </span>
                   ) : null
                 })}
@@ -916,7 +916,7 @@ export default function TodoPage() {
                 value={memberSearch}
                 onChange={e => setMemberSearch(e.target.value)}
                 placeholder="Cerca membro..."
-                className="w-full border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-[#1a4a3a] mb-1"
+                className="w-full border border-gray-300 px-3 py-1.5 text-sm font-['Inter'] focus:outline-none focus:border-forest mb-1"
               />
               {memberSearch.length > 0 && (
                 <div className="border border-gray-200 max-h-32 overflow-y-auto">
@@ -928,7 +928,7 @@ export default function TodoPage() {
                       <button
                         key={m.user_id}
                         onClick={() => { setEditAssignees(prev => [...prev, m.user_id]); setMemberSearch('') }}
-                        className="w-full text-left px-3 py-1.5 text-sm font-['Inter'] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+                        className="w-full text-left px-3 py-1.5 text-sm font-['Inter'] hover:bg-forest hover:text-white transition-colors"
                       >
                         {m.full_name}
                       </button>
@@ -949,7 +949,7 @@ export default function TodoPage() {
               <button
                 onClick={handleSaveEdit}
                 disabled={saving}
-                className="px-4 py-2 text-sm bg-[#1a4a3a] text-white font-['Inter'] hover:bg-[#143d2f] disabled:opacity-50"
+                className="px-4 py-2 text-sm bg-forest text-white font-['Inter'] hover:bg-[#143d2f] disabled:opacity-50"
               >
                 {saving ? 'Salvataggio...' : 'Salva modifiche'}
               </button>
@@ -967,7 +967,7 @@ export default function TodoPage() {
     {occurrencesTask && (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-sm">
-          <div className="bg-[#1a4a3a] px-6 py-4 flex items-center justify-between">
+          <div className="bg-forest px-6 py-4 flex items-center justify-between">
             <h2 className="text-white font-['Cormorant_Garamond',serif] text-xl tracking-wide">Prossime occorrenze</h2>
             <button onClick={() => setOccurrencesTask(null)} className="text-white hover:text-gray-300 text-xl">✕</button>
           </div>
@@ -984,7 +984,7 @@ export default function TodoPage() {
                   .slice(0, 10)
                 if (all.length === 0) return <p className="text-sm text-gray-400 font-['Inter']">Nessuna occorrenza futura.</p>
                 return all.map((d, i) => (
-                  <div key={i} className="text-sm font-['Inter'] text-ink-900 border-l-2 border-[#1a4a3a] pl-3 py-0.5">
+                  <div key={i} className="text-sm font-['Inter'] text-ink-900 border-l-2 border-forest pl-3 py-0.5">
                     {formatDate(d.toISOString())}
                   </div>
                 ))
@@ -999,7 +999,7 @@ export default function TodoPage() {
     {recurrenceToggleDialog && (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-sm">
-          <div className="bg-[#1a4a3a] px-6 py-4">
+          <div className="bg-forest px-6 py-4">
             <h2 className="text-white font-['Cormorant_Garamond',serif] text-xl tracking-wide">
               {recurrenceToggleDialog.nowDone ? 'Completa ricorrenza' : 'Riapri ricorrenza'}
             </h2>
@@ -1009,13 +1009,13 @@ export default function TodoPage() {
             <div className="flex flex-col gap-2 pt-1">
               <button
                 onClick={handleToggleThisOnly}
-                className="w-full text-left px-4 py-3 border border-[#1a4a3a] text-sm font-['Inter'] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+                className="w-full text-left px-4 py-3 border border-forest text-sm font-['Inter'] text-forest hover:bg-forest hover:text-white transition-colors"
               >
                 Solo questa occorrenza
               </button>
               <button
                 onClick={handleToggleThisAndFuture}
-                className="w-full text-left px-4 py-3 border border-[#1a4a3a] text-sm font-['Inter'] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white transition-colors"
+                className="w-full text-left px-4 py-3 border border-forest text-sm font-['Inter'] text-forest hover:bg-forest hover:text-white transition-colors"
               >
                 Questa e tutte le future
               </button>
@@ -1074,8 +1074,8 @@ function TodoRow({
         aria-label={done ? 'Segna come da fare' : 'Segna come completata'}
         className={`flex-shrink-0 mt-0.5 w-4 h-4 border transition-colors disabled:cursor-wait ${
           done
-            ? 'bg-[#1a4a3a] border-[#1a4a3a]'
-            : 'bg-white border-ink-400 hover:border-[#1a4a3a]'
+            ? 'bg-forest border-forest'
+            : 'bg-white border-ink-400 hover:border-forest'
         }`}
       >
         {done && (
@@ -1092,7 +1092,7 @@ function TodoRow({
           {task.recurrence_type && (
             <span
               title="Task ricorrente"
-              className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-[#1a4a3a] border border-[#1a4a3a] px-1.5 py-px ml-2"
+              className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-forest border border-forest px-1.5 py-px ml-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="23 4 23 10 17 10"/>
@@ -1105,7 +1105,7 @@ function TodoRow({
           {task.recurrence_type && onShowOccurrences && (
             <button
               onClick={onShowOccurrences}
-              className="text-[10px] text-[#1a4a3a] underline underline-offset-2 ml-1 font-['Inter']"
+              className="text-[10px] text-forest underline underline-offset-2 ml-1 font-['Inter']"
             >
               Vedi prossime
             </button>
@@ -1133,7 +1133,7 @@ function TodoRow({
             {task.assignees.map(m => (
               <span
                 key={m.user_id}
-                className="text-xs border border-[#1a4a3a] px-2 py-0.5 text-[#1a4a3a] font-['Inter']"
+                className="text-xs border border-forest px-2 py-0.5 text-forest font-['Inter']"
               >
                 {m.full_name}
               </span>
@@ -1170,7 +1170,7 @@ function TodoRow({
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onEditRequest() }}
                 aria-label="Modifica task"
-                className="text-[#1a4a3a] hover:text-black transition-colors"
+                className="text-forest hover:text-black transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>

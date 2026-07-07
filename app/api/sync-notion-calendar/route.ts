@@ -23,36 +23,50 @@ interface NotionEvent {
   last_edited_at: string;
 }
 
-function extractTitle(titleProp: any): string {
-  if (!titleProp?.title || titleProp.title.length === 0) return '';
-  return titleProp.title.map((t: any) => t.plain_text).join('').trim();
+// Minimal shapes for the Notion property payloads we read.
+type RichTextFragment = { plain_text: string }
+type TitleProp    = { title?: RichTextFragment[] } | undefined
+type RichTextProp = { rich_text?: RichTextFragment[] } | undefined
+type SelectProp   = { select?: { name?: string } | null } | undefined
+type DateProp     = { date?: { start?: string } | null } | undefined
+
+type NotionPage = {
+  id: string
+  url: string
+  last_edited_time: string
+  properties: Record<string, unknown>
 }
 
-function extractRichText(rtProp: any): string | null {
+function extractTitle(titleProp: TitleProp): string {
+  if (!titleProp?.title || titleProp.title.length === 0) return '';
+  return titleProp.title.map(t => t.plain_text).join('').trim();
+}
+
+function extractRichText(rtProp: RichTextProp): string | null {
   if (!rtProp?.rich_text || rtProp.rich_text.length === 0) return null;
-  const text = rtProp.rich_text.map((t: any) => t.plain_text).join('').trim();
+  const text = rtProp.rich_text.map(t => t.plain_text).join('').trim();
   return text || null;
 }
 
-function extractSelect(selectProp: any): string | null {
+function extractSelect(selectProp: SelectProp): string | null {
   return selectProp?.select?.name || null;
 }
 
-function extractDate(dateProp: any): string | null {
+function extractDate(dateProp: DateProp): string | null {
   return dateProp?.date?.start || null;
 }
 
-async function fetchAllNotionEvents() {
-  const events: any[] = [];
+async function fetchAllNotionEvents(): Promise<NotionPage[]> {
+  const events: NotionPage[] = [];
   let cursor: string | undefined = undefined;
   let hasMore = true;
 
   while (hasMore) {
-    const response: any = await notion.dataSources.query({
+    const response = await notion.dataSources.query({
       data_source_id: process.env.NOTION_CALENDAR_DATABASE_ID!,
       start_cursor: cursor,
       page_size: 100,
-    });
+    }) as unknown as { results: NotionPage[]; has_more: boolean; next_cursor: string | null };
 
     events.push(...response.results);
     hasMore = response.has_more;
@@ -63,11 +77,9 @@ async function fetchAllNotionEvents() {
 }
 
 export async function GET(request: NextRequest) {
+  // Secret accepted only via Authorization header — querystrings end up in logs.
   const authHeader = request.headers.get('authorization');
-  const isVercelCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-  const isManualAdmin = request.nextUrl.searchParams.get('secret') === process.env.CRON_SECRET;
-
-  if (!isVercelCron && !isManualAdmin) {
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -80,8 +92,8 @@ export async function GET(request: NextRequest) {
     for (const page of notionPages) {
       const props = page.properties;
 
-      const title = extractTitle(props['Event']);
-      const eventDate = extractDate(props['Date']);
+      const title = extractTitle(props['Event'] as TitleProp);
+      const eventDate = extractDate(props['Date'] as DateProp);
 
       if (!title || !eventDate) {
         skipped.push(page.id);
@@ -92,16 +104,16 @@ export async function GET(request: NextRequest) {
         notion_page_id: page.id,
         title,
         event_date: eventDate,
-        description: extractRichText(props['Description']),
-        division: extractSelect(props['Division (Lab)']),
-        team: extractSelect(props['Team']),
+        description: extractRichText(props['Description'] as RichTextProp),
+        division: extractSelect(props['Division (Lab)'] as SelectProp),
+        team: extractSelect(props['Team'] as SelectProp),
         notion_url: page.url,
         last_edited_at: page.last_edited_time,
       });
     }
 
     let upsertedCount = 0;
-    let upsertError: any = null;
+    let upsertError: { message: string } | null = null;
 
     if (events.length > 0) {
       const { error, count } = await supabase
@@ -140,10 +152,10 @@ export async function GET(request: NextRequest) {
       total_in_notion: notionPages.length,
       error: upsertError,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Sync error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

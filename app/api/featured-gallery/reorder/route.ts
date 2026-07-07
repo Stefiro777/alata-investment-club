@@ -1,17 +1,12 @@
-import { createClient, createServiceClient } from '@/lib/supabase-server'
+import { createServiceClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const ALLOWED_TABLES = ['featured_events', 'featured_partners']
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: adminRow } = await supabase
-      .from('admin_users').select('email').eq('email', user.email).maybeSingle()
-    if (!adminRow) return NextResponse.json({ error: 'not admin' }, { status: 403 })
+    if (!(await requirePrivilegedAccess())) return NextResponse.json({ error: 'not admin' }, { status: 403 })
 
     const { table, items } = await req.json() as { table: string; items: { id: string; display_order: number }[] }
 

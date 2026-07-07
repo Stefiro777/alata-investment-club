@@ -28,7 +28,7 @@ function initials(name: string) {
 
 function MemberCard({ member }: { member: TeamMember }) {
   return (
-    <div className="group member-card-simple bg-white overflow-hidden flex flex-col" style={{ border: '1px solid #1a4a3a' }}>
+    <div className="group member-card-simple bg-white overflow-hidden flex flex-col" style={{ border: '1px solid var(--forest)' }}>
       {/* Portrait — full-bleed, sharp corners */}
       <div className="relative aspect-[4/5] overflow-hidden bg-paper-stone">
         {member.photo_url ? (

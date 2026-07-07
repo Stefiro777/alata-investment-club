@@ -62,7 +62,7 @@ export default function PhotoUpload({ initialPhotos = [], onChange }: Props) {
       {/* Drop zone */}
       <div
         className={`border-2 border-dashed p-8 text-center cursor-pointer transition-colors duration-fast ${
-          isDragOver ? 'border-forest bg-[#1a4a3a]/5' : 'border-line hover:border-forest'
+          isDragOver ? 'border-forest bg-forest/5' : 'border-line hover:border-forest'
         }`}
         onClick={() => fileInputRef.current?.click()}
         onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}

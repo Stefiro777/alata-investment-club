@@ -1,22 +1,14 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function isAdmin(token: string | null): Promise<boolean> {
-  if (!token) return false
-  const { data: { user } } = await supabaseAdmin.auth.getUser(token)
-  if (!user) return false
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email ?? '')
-    .maybeSingle()
-  return member?.role === 'bod' || member?.role === 'director' || (user.email ?? null) === 'finullistefano@gmail.com'
-}
+// Shared privileged-access check (bod/director)
+const isAdmin = async () => !!(await requirePrivilegedAccess())
 
 export async function GET() {
   const { data } = await supabaseAdmin
@@ -28,8 +20,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? null
-  if (!(await isAdmin(token))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()
   const { price_cents, stripe_price_id, description } = body

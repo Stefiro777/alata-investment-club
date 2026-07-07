@@ -53,7 +53,7 @@ export default function NewsEventsFeed() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="border border-line-faint border-l-4 border-l-[#1a4a3a] overflow-hidden animate-pulse"
+                className="border border-line-faint border-l-4 border-l-forest overflow-hidden animate-pulse"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <div className="h-64 bg-paper-stone" />

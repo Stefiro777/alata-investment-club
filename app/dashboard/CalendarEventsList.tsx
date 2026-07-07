@@ -61,7 +61,7 @@ function EventRow({ event }: { event: CalendarEvent }) {
       </div>
 
       {/* Collapsible description */}
-      <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96' : 'max-h-0'}`}>
+      <div className={`overflow-hidden transition-all duration-fast ${open ? 'max-h-96' : 'max-h-0'}`}>
         <div className="mt-3 pl-32">
           <p className="text-xs text-ink-500 leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
             {event.description?.replace(/\\n/g, '\n')}

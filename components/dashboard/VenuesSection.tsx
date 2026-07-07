@@ -247,7 +247,7 @@ function VenueModal({
             <button
               type="submit"
               disabled={saving}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-8 py-3 transition-colors disabled:opacity-50"
             >
               {saving ? 'Saving…' : initial ? 'Salva modifiche' : 'Aggiungi venue'}
             </button>
@@ -393,7 +393,7 @@ function VenueRow({
           <p className="text-sm font-semibold text-ink-900">{venue.name}</p>
           {venue.address    && <p className="text-xs text-ink-500 mt-0.5">{venue.address}</p>}
           {venue.contact    && <p className="text-xs text-ink-500">{venue.contact}</p>}
-          {venue.price_notes && <p className="text-xs text-[#1a4a3a] mt-1 font-medium whitespace-pre-wrap">{venue.price_notes}</p>}
+          {venue.price_notes && <p className="text-xs text-forest mt-1 font-medium whitespace-pre-wrap">{venue.price_notes}</p>}
           {notes && (
             <div className="mt-1">
               <p className="text-xs text-ink-400 whitespace-pre-wrap">{notesDisplay}</p>
@@ -415,7 +415,7 @@ function VenueRow({
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={onEdit}
-              className="border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
+              className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
             >
               Edit
             </button>
@@ -486,7 +486,7 @@ export default function VenuesSection() {
         {canEdit && (
           <button
             onClick={() => { setEditing(null); setModalOpen(true) }}
-            className="flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide uppercase px-5 py-2 transition-colors"
+            className="flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide uppercase px-5 py-2 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

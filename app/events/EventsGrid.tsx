@@ -264,7 +264,7 @@ function EventCard({
   const hasText = !!(item.full_description || item.descrizione)
 
   return (
-    <article className="group flex flex-col h-full border border-line-faint border-l-4 border-l-[#1a4a3a] hover:border-forest overflow-hidden transition-all duration-base hover:-translate-y-1 hover:shadow-lg" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+    <article className="group flex flex-col h-full border border-line-faint border-l-4 border-l-forest hover:border-forest overflow-hidden transition-all duration-base hover:-translate-y-1 hover:shadow-lg" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* Photo area */}
       <div
         className={`relative h-64 bg-paper-stone overflow-hidden ${hasGallery ? 'cursor-pointer' : ''}`}
@@ -282,7 +282,7 @@ function EventCard({
             <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 0 3px white' }} />
           </>
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#1a4a3a]/5">
+          <div className="absolute inset-0 flex items-center justify-center bg-forest/5">
             <svg className="w-10 h-10 text-forest/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -468,8 +468,8 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
               className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast"
               style={
                 active
-                  ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' }
-                  : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }
+                  ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' }
+                  : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }
               }
             >
               {label}
@@ -510,7 +510,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
                 onClick={() => goTo(safePage - 1)}
                 disabled={safePage === 0}
                 className="w-9 h-9 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
-                style={{ background: '#1a4a3a' }}
+                style={{ background: 'var(--forest)' }}
                 aria-label="Previous"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -537,7 +537,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
                 onClick={() => goTo(safePage + 1)}
                 disabled={safePage === totalPages - 1}
                 className="w-9 h-9 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
-                style={{ background: '#1a4a3a' }}
+                style={{ background: 'var(--forest)' }}
                 aria-label="Next"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

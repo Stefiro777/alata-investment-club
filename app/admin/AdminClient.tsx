@@ -116,7 +116,7 @@ function ItemEditRow({
   const photoCount = (item.photos as string[] | null)?.length ?? (item.immagine_url ? 1 : 0)
 
   return (
-    <div className={`bg-white ${expanded ? 'ring-1 ring-[#1a4a3a]' : 'border-b border-black/5'}`}>
+    <div className={`bg-white ${expanded ? 'ring-1 ring-forest' : 'border-b border-black/5'}`}>
       <div className="px-6 py-5 flex items-start justify-between gap-6">
         <div className="flex-1 min-w-0">
           {item.data_pubblicazione && (
@@ -177,7 +177,7 @@ function ItemEditRow({
             <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">Tag</label>
             <div className="flex flex-wrap gap-2">
               {TAG_OPTIONS.map(option => (
-                <button key={option} type="button" onClick={() => setTag(tag === option ? '' : option)} className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast" style={tag === option ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' } : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }}>
+                <button key={option} type="button" onClick={() => setTag(tag === option ? '' : option)} className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast" style={tag === option ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' } : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }}>
                   {option}
                 </button>
               ))}
@@ -276,7 +276,7 @@ function InsertForm({ onInserted }: { onInserted: (item: Contenuto) => void }) {
         <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-3">Tag</label>
         <div className="flex flex-wrap gap-2">
           {TAG_OPTIONS.map(option => (
-            <button key={option} type="button" onClick={() => setTag(tag === option ? '' : option)} className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast" style={tag === option ? { background: '#1a4a3a', color: 'white', borderColor: '#1a4a3a' } : { background: 'white', color: '#1a4a3a', borderColor: '#1a4a3a' }}>
+            <button key={option} type="button" onClick={() => setTag(tag === option ? '' : option)} className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast" style={tag === option ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' } : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }}>
               {option}
             </button>
           ))}
@@ -389,7 +389,7 @@ function ResourceInsertForm({ onInserted }: { onInserted: (r: Resource) => void 
         </div>
       </div>
       <label className="flex items-center gap-3 cursor-pointer">
-        <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-[#1a4a3a]" />
+        <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-forest" />
         <span className="text-sm text-ink-900">È una cartella (folder)</span>
       </label>
       {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
@@ -458,7 +458,7 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
   }
 
   return (
-    <div className={`bg-white ${expanded ? 'ring-1 ring-[#1a4a3a]' : 'border-b border-black/5'}`}>
+    <div className={`bg-white ${expanded ? 'ring-1 ring-forest' : 'border-b border-black/5'}`}>
       <div className="px-4 py-4 flex items-center gap-3">
         {showDragHandle && (
           <div className="cursor-grab active:cursor-grabbing text-ink-400 hover:text-forest transition-colors flex-shrink-0">
@@ -514,7 +514,7 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
             </div>
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-[#1a4a3a]" />
+            <input type="checkbox" checked={isFolder} onChange={e => setIsFolder(e.target.checked)} className="w-4 h-4 accent-forest" />
             <span className="text-sm text-ink-900">È una cartella</span>
           </label>
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}

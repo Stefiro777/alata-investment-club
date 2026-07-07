@@ -34,7 +34,7 @@ export default async function MerchPage({
   if (!setting || setting.value !== 'true') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1a4a3a] mb-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-forest mb-4">
           Alata Investment Club
         </p>
         <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-none mb-6">
@@ -61,7 +61,7 @@ export default async function MerchPage({
     <div className="bg-white" style={{ fontFamily: 'Inter, sans-serif' }}>
       {/* Success banner */}
       {sp.checkout === 'success' && (
-        <div className="bg-[#1a4a3a] text-white text-center py-3 text-sm font-semibold tracking-wide">
+        <div className="bg-forest text-white text-center py-3 text-sm font-semibold tracking-wide">
           Order confirmed — a receipt has been sent to your email.
         </div>
       )}
@@ -160,7 +160,7 @@ export default async function MerchPage({
                       <p className="font-serif text-lg text-gray-900 leading-none">{fmtEur(product.price_cents)}</p>
                     </div>
 
-                    <span className="mt-4 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1a4a3a] border border-[#1a4a3a] px-3 py-1.5 group-hover:bg-[#1a4a3a] group-hover:text-white transition-colors">
+                    <span className="mt-4 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-forest border border-forest px-3 py-1.5 group-hover:bg-forest group-hover:text-white transition-colors">
                       View
                       <svg className="w-3 h-3 transition-transform duration-base group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />

@@ -112,7 +112,7 @@ function ReportSection({
                 <span
                   className="inline-block text-white font-medium uppercase"
                   style={{
-                    background: '#1a4a3a',
+                    background: 'var(--forest)',
                     fontSize: '0.65rem',
                     letterSpacing: '0.15em',
                     padding: '3px 8px',
@@ -125,7 +125,7 @@ function ReportSection({
 
             {/* Title */}
             <FadeSlide visible={textVisible} delay={s(1)} xOffset={xText}>
-              <h3 className="font-serif text-3xl font-bold leading-snug mb-4" style={{ color: '#1a4a3a' }}>
+              <h3 className="font-serif text-3xl font-bold leading-snug mb-4" style={{ color: 'var(--forest)' }}>
                 {report.title}
               </h3>
             </FadeSlide>
@@ -164,7 +164,7 @@ function ReportSection({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-white text-xs font-medium tracking-widest uppercase px-8 py-3.5"
                   style={{
-                    background: '#1a4a3a',
+                    background: 'var(--forest)',
                     transition: 'background 200ms',
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#2d6b54')}

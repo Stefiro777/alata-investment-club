@@ -1,26 +1,12 @@
-import { createClient, createServiceClient } from '@/lib/supabase-server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createServiceClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import AdminNavbar from '../components/AdminNavbar'
 import ArchiveClient from './ArchiveClient'
-
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 export default async function AdminArchivePage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/dashboard')
-
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email!)
-    .maybeSingle()
-  if (member?.role !== 'bod' && member?.role !== 'director') redirect('/dashboard')
+  const member = await requirePrivilegedAccess()
+  if (!member) redirect('/dashboard')
 
   const serviceClient = createServiceClient()
   const { data: docs } = await serviceClient
@@ -30,9 +16,9 @@ export default async function AdminArchivePage() {
 
   return (
     <>
-      <AdminNavbar userEmail={user.email ?? ''} />
+      <AdminNavbar userEmail={member.email ?? ''} />
       <main className="bg-[#f9f9f9] min-h-screen">
-        <ArchiveClient initialDocs={docs ?? []} userEmail={user.email ?? ''} />
+        <ArchiveClient initialDocs={docs ?? []} userEmail={member.email ?? ''} />
       </main>
     </>
   )

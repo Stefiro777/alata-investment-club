@@ -128,7 +128,7 @@ function TaskRow({ task }: { task: TaskRecord }) {
         )}
       </div>
       {task.team && (
-        <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-[#1a4a3a] text-white">
+        <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-forest text-white">
           {teamLabel(task.team)}
         </span>
       )}
@@ -408,13 +408,13 @@ function MemberFormModal({
                 <select
                   value={form.role}
                   onChange={e => setField('role', e.target.value)}
-                  className="border border-[#1a4a3a] bg-white text-black font-['Inter'] text-sm w-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1a4a3a] appearance-none"
+                  className="border border-forest bg-white text-black font-['Inter'] text-sm w-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest appearance-none"
                 >
                   {ROLE_OPTIONS.map(r => (
                     <option
                       key={r.key}
                       value={r.key}
-                      className={r.key === form.role ? 'bg-[#1a4a3a] text-white' : 'bg-white text-black'}
+                      className={r.key === form.role ? 'bg-forest text-white' : 'bg-white text-black'}
                     >
                       {r.label}
                     </option>
@@ -450,7 +450,7 @@ function MemberFormModal({
                     type="checkbox"
                     checked={form.teams.includes(t.key)}
                     onChange={() => toggleTeam(t.key)}
-                    className="accent-[#1a4a3a] w-3.5 h-3.5 flex-shrink-0"
+                    className="accent-forest w-3.5 h-3.5 flex-shrink-0"
                   />
                   <span className="text-sm text-ink-900">{t.label}</span>
                 </label>
@@ -466,7 +466,7 @@ function MemberFormModal({
                 <select
                   value={form.lab_subdivision}
                   onChange={e => setField('lab_subdivision', e.target.value)}
-                  className="border border-[#1a4a3a] px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
+                  className="border border-forest px-3 py-2 text-sm font-['Inter'] focus:outline-none bg-white text-black w-full appearance-none"
                 >
                   <option value="">Nessuna</option>
                   {LAB_SUBDIVISIONS.map(l => <option key={l.key} value={l.key}>{l.label}</option>)}
@@ -486,7 +486,7 @@ function MemberFormModal({
             <button
               type="submit"
               disabled={saving || !form.full_name.trim()}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40"
             >
               {saving ? 'Salvataggio…' : isNew ? 'Aggiungi' : 'Salva'}
             </button>
@@ -538,7 +538,7 @@ function MemberRow({
         <div className="flex items-baseline gap-2 flex-wrap">
           <p className="text-base font-semibold text-gray-900">{member.full_name}</p>
           {member.title && (
-            <p className="text-sm text-[#1a4a3a]">{member.title}</p>
+            <p className="text-sm text-forest">{member.title}</p>
           )}
         </div>
 
@@ -548,7 +548,7 @@ function MemberRow({
             {(member.teams ?? []).map(t => (
               <span
                 key={t}
-                className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-[#1a4a3a] text-white"
+                className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-forest text-white"
               >
                 {teamLabel(t)}
               </span>
@@ -566,7 +566,7 @@ function MemberRow({
           {member.email && (
             <a
               href={`mailto:${member.email}`}
-              className="text-sm text-gray-500 hover:text-[#1a4a3a] transition-colors"
+              className="text-sm text-gray-500 hover:text-forest transition-colors"
               onClick={e => e.stopPropagation()}
             >
               {member.email}
@@ -575,7 +575,7 @@ function MemberRow({
           {member.phone && (
             <a
               href={`tel:${member.phone}`}
-              className="text-sm text-gray-600 hover:text-[#1a4a3a] transition-colors"
+              className="text-sm text-gray-600 hover:text-forest transition-colors"
               onClick={e => e.stopPropagation()}
             >
               {member.phone}
@@ -628,7 +628,7 @@ function MemberRow({
               <button
                 onClick={onEdit}
                 title="Modifica"
-                className="p-1.5 text-ink-300 hover:text-[#1a4a3a] transition-colors"
+                className="p-1.5 text-ink-300 hover:text-forest transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -685,7 +685,7 @@ function FilterDropdown({
       >
         <span>{selected.label}</span>
         <svg
-          className="w-4 h-4 text-[#1a4a3a] flex-shrink-0 transition-transform duration-150"
+          className="w-4 h-4 text-forest flex-shrink-0 transition-transform duration-150"
           style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
@@ -701,7 +701,7 @@ function FilterDropdown({
               onMouseDown={() => { onChange(o.key); setOpen(false) }}
               className={`w-full text-left px-3 py-2 text-sm border-b border-[#e5e7eb] last:border-b-0 ${
                 o.key === value
-                  ? 'bg-[#1a4a3a] text-white'
+                  ? 'bg-forest text-white'
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
@@ -839,12 +839,12 @@ export default function MembersPage() {
       <div className="flex items-start justify-between gap-6 mb-8">
         <div>
           <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-3">Membri</h1>
-          <div className="w-8 h-px bg-[#1a4a3a]" />
+          <div className="w-8 h-px bg-forest" />
         </div>
         {canAdd && (
           <button
             onClick={() => setModal({ ...EMPTY_FORM, id: '', user_id: null, full_name: '', email: null, phone: null, role: 'member', title: null, teams: null, lab_subdivision: null, isNew: true })}
-            className="flex-shrink-0 flex items-center gap-1.5 bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
+            className="flex-shrink-0 flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -865,7 +865,7 @@ export default function MembersPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Cerca per nome…"
-            className="w-full border border-line pl-8 pr-3 py-2 text-sm bg-white focus:outline-none focus:border-[#1a4a3a]"
+            className="w-full border border-line pl-8 pr-3 py-2 text-sm bg-white focus:outline-none focus:border-forest"
           />
         </div>
 

@@ -1,45 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { requirePrivilegedAccess } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-export async function POST(request: NextRequest) {
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll() {},
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (user.email !== 'finullistefano@gmail.com') {
-    const { data: member } = await supabase
-      .from('club_members').select('role').eq('email', user.email!).maybeSingle();
-    if (member?.role !== 'bod' && member?.role !== 'director') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+export async function POST() {
+  if (!(await requirePrivilegedAccess())) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.alatainvestmentclub.com';
     const syncResponse = await fetch(
-      `${baseUrl}/api/sync-notion-calendar?secret=${process.env.CRON_SECRET}`,
-      { method: 'GET', cache: 'no-store' }
+      `${baseUrl}/api/sync-notion-calendar`,
+      {
+        method: 'GET',
+        cache: 'no-store',
+        headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      }
     );
 
     const result = await syncResponse.json();
@@ -58,9 +36,9 @@ export async function POST(request: NextRequest) {
       deleted: result.deleted,
       total: result.total_in_notion,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

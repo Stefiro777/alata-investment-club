@@ -13,8 +13,6 @@ type Member   = { role: string; created_at: string }
 type Event    = { id: string; date: string }
 type Booking  = { id: string; status: string; is_member_free: boolean; slot_date: string; created_at: string }
 type Partner  = { id: string; name: string; type: string; created_at: string }
-type Transaction    = { id: string; type: 'revenue' | 'cost' | 'rimborso'; amount: number; category_id: string | null }
-type BudgetCategory = { id: string; name: string }
 type JobOffer       = { id: string; type: string }
 type MerchOrder     = {
   id: string; product_name: string; variant_color: string | null; size: string | null
@@ -72,7 +70,7 @@ function fmtEuros(n: number): string {
 // ── Shared style constants ─────────────────────────────────────────────────────
 
 const labelCls  = 'text-[10px] font-semibold uppercase tracking-widest text-gray-500'
-const btnPrimary = 'inline-block bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest px-5 py-2.5 transition-colors'
+const btnPrimary = 'inline-block bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest px-5 py-2.5 transition-colors'
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
 
@@ -80,7 +78,7 @@ function KpiCard({ label, value, sub }: { label: string; value: number | string;
   return (
     <div className="bg-white border border-gray-200 px-5 py-5 flex flex-col">
       <p className={`${labelCls} mb-2`}>{label}</p>
-      <p className="font-serif text-4xl font-bold text-[#1a4a3a] leading-none">{value}</p>
+      <p className="font-serif text-4xl font-bold text-forest leading-none">{value}</p>
       {sub && <p className="text-[10px] text-gray-400 mt-1.5">{sub}</p>}
     </div>
   )
@@ -240,8 +238,8 @@ function OverviewTab() {
 
       {/* ── Archive banner ── */}
       {showBanner && (
-        <div className="border border-[#1a4a3a] bg-[#f0f5f3] px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-sm font-semibold text-[#1a4a3a]">
+        <div className="border border-forest bg-[#f0f5f3] px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
+          <p className="text-sm font-semibold text-forest">
             A new quarter has started. Archive Q{prevQ} {prevY} data before it updates?
           </p>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -249,7 +247,7 @@ function OverviewTab() {
               type="button"
               onClick={handleArchive}
               disabled={archiving}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] disabled:opacity-60 text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors"
+              className="bg-forest hover:bg-forest-deep disabled:opacity-60 text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors"
             >
               {archiving ? 'Archiving…' : `Archive Q${prevQ} ${prevY}`}
             </button>
@@ -274,7 +272,7 @@ function OverviewTab() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
         {/* Hero 1 — Total Members */}
-        <div className="bg-[#1a4a3a] px-7 py-7 flex flex-col justify-between min-h-[200px]">
+        <div className="bg-forest px-7 py-7 flex flex-col justify-between min-h-[200px]">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Total Members</p>
           <div>
             <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalMembers}</p>
@@ -304,7 +302,7 @@ function OverviewTab() {
         </div>
 
         {/* Hero 2 — Events */}
-        <div className="bg-[#1a4a3a] px-7 py-7 flex flex-col justify-between min-h-[200px]">
+        <div className="bg-forest px-7 py-7 flex flex-col justify-between min-h-[200px]">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Total Events</p>
           <div>
             <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalEvents}</p>
@@ -320,7 +318,7 @@ function OverviewTab() {
         </div>
 
         {/* Hero 3 — Career Bookings */}
-        <div className="bg-[#1a4a3a] px-7 py-7 flex flex-col justify-between min-h-[200px]">
+        <div className="bg-forest px-7 py-7 flex flex-col justify-between min-h-[200px]">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Career Bookings</p>
           <div>
             <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalBookings}</p>
@@ -346,7 +344,7 @@ function OverviewTab() {
         ].map(({ label, value }) => (
           <div key={label} className="bg-white border border-[#e5e7eb] px-5 py-5 flex flex-col">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">{label}</p>
-            <p className="font-serif text-[48px] font-bold text-[#1a4a3a] leading-none">{value}</p>
+            <p className="font-serif text-[48px] font-bold text-forest leading-none">{value}</p>
           </div>
         ))}
       </div>
@@ -361,7 +359,7 @@ function OverviewTab() {
           </p>
           <div className="flex h-3 w-full overflow-hidden mb-4">
             <div className="h-full transition-all duration-700 ease-out"
-              style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: '#1a4a3a' }} />
+              style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: 'var(--forest)' }} />
             <div className="h-full transition-all duration-700 ease-out delay-100"
               style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }} />
             <div className="h-full transition-all duration-700 ease-out delay-200"
@@ -369,7 +367,7 @@ function OverviewTab() {
           </div>
           <div className="space-y-2.5">
             {[
-              { color: '#1a4a3a', label: 'Board of Directors', count: membersBod },
+              { color: 'var(--forest)', label: 'Board of Directors', count: membersBod },
               { color: '#2d6a56', label: 'Directors',          count: membersDirector },
               { color: '#e5e7eb', label: 'Members',            count: membersMember, textDark: true },
             ].map(({ color, label, count, textDark }) => (
@@ -379,7 +377,7 @@ function OverviewTab() {
                     style={{ backgroundColor: color }} />
                   <span className="text-xs text-gray-600 uppercase tracking-wide font-medium">{label}</span>
                 </div>
-                <span className={`font-serif text-xl font-bold ${textDark ? 'text-gray-400' : 'text-[#1a4a3a]'}`}>
+                <span className={`font-serif text-xl font-bold ${textDark ? 'text-gray-400' : 'text-forest'}`}>
                   {count}
                 </span>
               </div>
@@ -387,7 +385,7 @@ function OverviewTab() {
           </div>
           <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
             <span className="text-[10px] uppercase tracking-widest text-gray-400">Total</span>
-            <span className="font-serif text-2xl font-bold text-[#1a4a3a]">{totalMembers}</span>
+            <span className="font-serif text-2xl font-bold text-forest">{totalMembers}</span>
           </div>
         </div>
 
@@ -405,7 +403,7 @@ function OverviewTab() {
             ].map(({ label, value }) => (
               <div key={label} className="bg-white px-5 py-5 flex flex-col">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">{label}</p>
-                <p className="font-serif text-3xl font-bold text-[#1a4a3a] leading-none">{value}</p>
+                <p className="font-serif text-3xl font-bold text-forest leading-none">{value}</p>
               </div>
             ))}
           </div>
@@ -471,7 +469,7 @@ function OverviewTab() {
                           {kpiItems.map(item => (
                             <div key={item.label} className="bg-[#fafaf9] border border-gray-100 px-4 py-4 flex flex-col">
                               <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">{item.label}</p>
-                              <p className="font-serif text-2xl font-bold text-[#1a4a3a] leading-none">{item.value}</p>
+                              <p className="font-serif text-2xl font-bold text-forest leading-none">{item.value}</p>
                             </div>
                           ))}
                         </div>
@@ -542,7 +540,7 @@ function QuarterComparisonTab() {
                 Metric
               </th>
               {cols.map(s => (
-                <th key={s.id} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a]">
+                <th key={s.id} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-forest">
                   Q{s.quarter_number} {s.year}
                 </th>
               ))}
@@ -575,8 +573,8 @@ function QuarterComparisonTab() {
                         key={i}
                         className="px-5 py-3.5 font-serif text-lg font-bold"
                         style={isMax
-                          ? { backgroundColor: '#1a4a3a', color: '#ffffff' }
-                          : { color: '#1a4a3a' }
+                          ? { backgroundColor: 'var(--forest)', color: '#ffffff' }
+                          : { color: 'var(--forest)' }
                         }
                       >
                         {val ?? '—'}
@@ -671,7 +669,7 @@ function LinkedInPostsTab() {
                 {p.link ? (
                   <a href={p.link.startsWith('urn:') ? `https://www.linkedin.com/feed/update/${p.link}/` : p.link}
                     target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] font-semibold uppercase tracking-widest text-[#1a4a3a] hover:underline underline-offset-2 whitespace-nowrap">
+                    className="text-[10px] font-semibold uppercase tracking-widest text-forest hover:underline underline-offset-2 whitespace-nowrap">
                     Open →
                   </a>
                 ) : (
@@ -705,13 +703,11 @@ function SponsorsTab() {
     const db = createClient()
     Promise.all([
       db.from('partners').select('id, name, type, created_at').order('created_at', { ascending: false }),
-      db.from('transactions')
-        .select('id, type, amount, date, description, budget_categories!inner(name)')
-        .ilike('budget_categories.name', '%sponsor%')
-        .order('date', { ascending: false }),
+      // Financial data goes through the privileged server route, not client-side reads.
+      fetch('/api/admin/analytics/internal?section=sponsors').then(r => r.ok ? r.json() : { transactions: [] }),
     ]).then(([pRes, txRes]) => {
       setPartners((pRes.data ?? []) as Partner[])
-      setSponsorTxs((txRes.data ?? []) as unknown as SponsorTransaction[])
+      setSponsorTxs((txRes.transactions ?? []) as SponsorTransaction[])
       setLoading(false)
     })
   }, [])
@@ -770,7 +766,7 @@ function SponsorsTab() {
                 }`}>
                   {t.type === 'revenue' ? 'Revenue' : 'Cost'}
                 </span>
-                <span className={`text-sm font-semibold text-right ${t.type === 'revenue' ? 'text-[#1a4a3a]' : 'text-red-600'}`}>
+                <span className={`text-sm font-semibold text-right ${t.type === 'revenue' ? 'text-forest' : 'text-red-600'}`}>
                   {t.type === 'cost' ? '−' : ''}{fmtEuros(t.amount)}
                 </span>
               </div>
@@ -796,7 +792,7 @@ function SponsorsTab() {
               className={`grid grid-cols-[1fr_100px_90px] gap-4 items-center px-5 py-3.5 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
               <span className="text-sm font-semibold text-gray-900">{p.name}</span>
               <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
-                p.type === 'sponsor' ? 'bg-[#1a4a3a] text-white' : 'bg-gray-100 text-gray-600'
+                p.type === 'sponsor' ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
               }`}>
                 {p.type}
               </span>
@@ -813,49 +809,33 @@ function SponsorsTab() {
 
 // ── Finance Tab ────────────────────────────────────────────────────────────────
 
+type FinanceData = {
+  income: number
+  expenses: number
+  balance: number
+  byCategory: { name: string; amount: number }[]
+  hasTransactions: boolean
+  merchOrders: MerchOrder[]
+}
+
 function FinanceTab() {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [categories, setCategories]     = useState<BudgetCategory[]>([])
-  const [merchOrders, setMerchOrders]   = useState<MerchOrder[]>([])
-  const [loading, setLoading]           = useState(true)
-  const [mounted, setMounted]           = useState(false)
+  const [finance, setFinance]  = useState<FinanceData | null>(null)
+  const [loading, setLoading]  = useState(true)
+  const [mounted, setMounted]  = useState(false)
 
   useEffect(() => {
-    const db = createClient()
-    Promise.all([
-      db.from('transactions').select('id, type, amount, category_id'),
-      db.from('budget_categories').select('id, name'),
-      db.from('merch_orders')
-        .select('id, product_name, variant_color, size, quantity, price_cents, customer_name, customer_email, status, created_at')
-        .eq('status', 'paid')
-        .order('created_at', { ascending: false }),
-    ]).then(([txRes, catRes, ordersRes]) => {
-      setTransactions((txRes.data     ?? []) as Transaction[])
-      setCategories((catRes.data      ?? []) as BudgetCategory[])
-      setMerchOrders((ordersRes.data  ?? []) as MerchOrder[])
-      setLoading(false)
-      setTimeout(() => setMounted(true), 60)
-    })
+    // Financial data goes through the privileged server route, not client-side reads.
+    fetch('/api/admin/analytics/internal?section=finance')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: FinanceData | null) => {
+        setFinance(data)
+        setLoading(false)
+        setTimeout(() => setMounted(true), 60)
+      })
   }, [])
 
-  const { income, expenses, balance, byCategory } = useMemo(() => {
-    const income   = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
-    const expenses = transactions.filter(t => t.type === 'cost').reduce((s, t) => s + t.amount, 0)
-    const refunds  = transactions.filter(t => t.type === 'rimborso').reduce((s, t) => s + t.amount, 0)
-    const balance  = income - expenses + refunds
-
-    const catMap: Record<string, { name: string; amount: number }> = {}
-    for (const tx of transactions) {
-      const key  = tx.category_id ?? '__none__'
-      const name = categories.find(c => c.id === tx.category_id)?.name ?? 'Uncategorised'
-      if (!catMap[key]) catMap[key] = { name, amount: 0 }
-      if (tx.type === 'revenue' || tx.type === 'rimborso') catMap[key].amount += tx.amount
-      if (tx.type === 'cost') catMap[key].amount -= tx.amount
-    }
-    const byCategory = Object.values(catMap).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
-
-    return { income, expenses, balance, byCategory }
-  }, [transactions, categories])
+  const merchOrders = useMemo(() => finance?.merchOrders ?? [], [finance])
+  const { income = 0, expenses = 0, balance = 0, byCategory = [] } = finance ?? {}
 
   // ── Merch KPIs ──────────────────────────────────────────────────────────────
   const { merchRevenue, merchCount, merchAvg, topProducts, recentOrders } = useMemo(() => {
@@ -883,7 +863,7 @@ function FinanceTab() {
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
-  if (transactions.length === 0) {
+  if (!finance?.hasTransactions) {
     return (
       <div className="py-16 text-center border border-dashed border-gray-200">
         <p className="text-sm font-semibold text-gray-600 mb-1">No transactions recorded yet.</p>
@@ -917,7 +897,7 @@ function FinanceTab() {
                     <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                       {c.name}
                     </span>
-                    <span className={`text-xs font-bold ${isPositive ? 'text-[#1a4a3a]' : 'text-red-600'}`}>
+                    <span className={`text-xs font-bold ${isPositive ? 'text-forest' : 'text-red-600'}`}>
                       {isPositive ? '' : '−'}{fmtEuros(Math.abs(c.amount))}
                     </span>
                   </div>
@@ -1085,7 +1065,7 @@ export default function AdminAnalyticsPage() {
           <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 mb-3">Analytics</h1>
-              <div className="w-8 h-px bg-[#1a4a3a]" />
+              <div className="w-8 h-px bg-forest" />
             </div>
 
             <a
@@ -1111,7 +1091,7 @@ export default function AdminAnalyticsPage() {
                 onClick={() => setTab(t.key)}
                 className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px whitespace-nowrap ${
                   tab === t.key
-                    ? 'border-[#1a4a3a] text-[#1a4a3a]'
+                    ? 'border-forest text-forest'
                     : 'border-transparent text-gray-400 hover:text-gray-700'
                 }`}
               >

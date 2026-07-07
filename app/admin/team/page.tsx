@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import TeamClient from './TeamClient'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 export type TeamMember = {
   id: string
@@ -14,24 +14,11 @@ export type TeamMember = {
   created_at: string
 }
 
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export default async function AdminTeamPage() {
+  const member = await requirePrivilegedAccess()
+  if (!member) redirect('/dashboard')
+
   const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email!)
-    .maybeSingle()
-  if (member?.role !== 'bod' && member?.role !== 'director') redirect('/dashboard')
-
   const { data: membersData } = await supabase
     .from('team_members')
     .select('id, name, role, photo_url, linkedin_url, type, order_index, created_at')
@@ -44,7 +31,7 @@ export default async function AdminTeamPage() {
         <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex items-center justify-between">
           <div>
             <h1 className="font-serif text-xl font-medium">Admin — Team Management</h1>
-            <p className="text-white/50 text-xs mt-0.5">{user.email}</p>
+            <p className="text-white/50 text-xs mt-0.5">{member.email}</p>
           </div>
           <div className="flex items-center gap-3">
             <a

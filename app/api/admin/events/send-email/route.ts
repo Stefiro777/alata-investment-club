@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -16,16 +16,7 @@ function sleep(ms: number) {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email!)
-    .maybeSingle()
-  if (member?.role !== 'bod' && member?.role !== 'director' && user.email !== 'finullistefano@gmail.com') {
+  if (!(await requirePrivilegedAccess())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

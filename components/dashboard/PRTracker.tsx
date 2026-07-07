@@ -124,7 +124,7 @@ function ContactModal({
   }
 
   const inputClass =
-    'w-full border border-line px-3 py-2 text-sm font-[\'Inter\'] bg-white focus:outline-none focus:border-[#1a4a3a] text-ink-900'
+    'w-full border border-line px-3 py-2 text-sm font-[\'Inter\'] bg-white focus:outline-none focus:border-forest text-ink-900'
   const labelClass = 'block text-[10px] uppercase tracking-widest text-ink-400 mb-1 font-medium'
 
   return (
@@ -266,7 +266,7 @@ function ContactModal({
             <button
               type="submit"
               disabled={saving || !form.nome.trim()}
-              className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-widest px-6 py-2.5 transition-colors disabled:opacity-40"
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-widest px-6 py-2.5 transition-colors disabled:opacity-40"
             >
               {saving ? '…' : initial.id ? 'Salva' : 'Aggiungi'}
             </button>
@@ -368,12 +368,12 @@ export default function PRTracker() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Cerca nome, firm, ruolo, email..."
-            className="border border-line px-3 py-2 text-sm font-['Inter'] bg-white focus:outline-none focus:border-[#1a4a3a] w-64"
+            className="border border-line px-3 py-2 text-sm font-['Inter'] bg-white focus:outline-none focus:border-forest w-64"
           />
           <select
             value={statusFilter ?? ''}
             onChange={e => setStatusFilter((e.target.value || '') as PRContact['status'] | '')}
-            className="border border-line px-3 py-2 text-sm font-['Inter'] bg-white focus:outline-none focus:border-[#1a4a3a]"
+            className="border border-line px-3 py-2 text-sm font-['Inter'] bg-white focus:outline-none focus:border-forest"
           >
             <option value="">Tutti gli status</option>
             {STATUS_OPTIONS.map(o => (
@@ -383,7 +383,7 @@ export default function PRTracker() {
         </div>
         <button
           onClick={openAdd}
-          className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium uppercase tracking-widest px-5 py-2.5 transition-colors whitespace-nowrap"
+          className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-widest px-5 py-2.5 transition-colors whitespace-nowrap"
         >
           + Add Contact
         </button>
@@ -393,7 +393,7 @@ export default function PRTracker() {
       <div className="overflow-x-auto border border-line">
         <table className="w-full text-sm font-['Inter'] border-collapse">
           <thead>
-            <tr className="bg-[#1a4a3a] text-white">
+            <tr className="bg-forest text-white">
               {['#', 'NOME', 'FIRM', 'RUOLO', 'SOURCE', 'CONTATTATO', 'STATUS', 'CONTESTO & NOTE', 'NEXT ACTION', 'EMAIL', ''].map(h => (
                 <th
                   key={h}
@@ -442,7 +442,7 @@ export default function PRTracker() {
                   </td>
                   <td className="px-4 py-3 text-ink-500 text-xs whitespace-nowrap">
                     {c.email ? (
-                      <a href={`mailto:${c.email}`} className="hover:text-[#1a4a3a] hover:underline">{c.email}</a>
+                      <a href={`mailto:${c.email}`} className="hover:text-forest hover:underline">{c.email}</a>
                     ) : '—'}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -470,7 +470,7 @@ export default function PRTracker() {
                       >
                         <button
                           onClick={() => openEdit(c)}
-                          className="p-1.5 text-ink-400 hover:text-[#1a4a3a] transition-colors"
+                          className="p-1.5 text-ink-400 hover:text-forest transition-colors"
                           title="Modifica"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

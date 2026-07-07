@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
+import { sendOrderConfirmation, sendRegistrationConfirmation } from '@/lib/confirmation-emails'
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const supabaseAdmin = createSupabaseAdmin(
@@ -94,11 +95,36 @@ export async function POST(req: NextRequest) {
   const actualShippingCents = shippingCents ?? 0
   const actualDiscountCents = discountCents ?? 0
 
-  // FIX 4 — short-circuit for fully free orders
+  // Fully free orders are completed entirely server-side (registrations,
+  // order records and confirmation emails) — the client only redirects.
   const itemsTotal = items.reduce((sum, i) => sum + (i.priceCents * (i.quantity ?? 1)), 0)
   const grandTotal = itemsTotal + actualShippingCents - actualDiscountCents
   if (grandTotal === 0) {
+    // 1. Event registrations
+    if (eventRegistrations?.length) {
+      for (const r of eventRegistrations) {
+        const { error } = await supabaseAdmin.from('event_registrations').insert({
+          event_id:                r.eventId,
+          nome:                    r.firstName,
+          cognome:                 r.lastName,
+          email:                   r.email,
+          telefono:                null,
+          anno_di_studio:          r.annoStudio,
+          motivazione:             r.motivation ?? null,
+          questions_for_panelists: r.questionsForPanelists ?? null,
+        })
+        if (error) {
+          console.error('Free order: registration insert failed:', error)
+          return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
+        }
+      }
+    }
+
+    // 2. Merch order records + CRM
     const freeMerch = items.filter(i => i.type === 'merch' || !i.type)
+    // A single id groups all rows of this order; UUID avoids the collisions
+    // that `free_${Date.now()}` allowed under concurrent checkouts.
+    const freeOrderId = `free_${crypto.randomUUID()}`
     if (freeMerch.length > 0 && customerEmail) {
       try {
         await supabaseAdmin.from('crm_customers').upsert({
@@ -111,7 +137,7 @@ export async function POST(req: NextRequest) {
         }, { onConflict: 'email' })
         for (const item of freeMerch) {
           await supabaseAdmin.from('merch_orders').insert({
-            stripe_session_id: `free_${Date.now()}`,
+            stripe_session_id: freeOrderId,
             product_id:        item.referenceId ?? null,
             product_name:      item.name,
             variant_color:     item.variantColor ?? null,
@@ -128,6 +154,40 @@ export async function POST(req: NextRequest) {
         console.error('Failed to record free merch order:', e)
       }
     }
+
+    // 3. Confirmation emails (failures logged, never block the order)
+    const ticketItemsFree = items.filter(i => i.type === 'ticket')
+    if (eventRegistrations?.length && eventRegistrations[0].email) {
+      await sendRegistrationConfirmation({
+        customerEmail: eventRegistrations[0].email,
+        customerName:  `${eventRegistrations[0].firstName} ${eventRegistrations[0].lastName}`.trim(),
+        events: eventRegistrations.map(r => {
+          const ticket = ticketItemsFree.find(t => t.referenceId === r.eventId)
+          return {
+            name:      ticket?.name ?? 'Event',
+            eventDate: ticket?.eventDate ?? null,
+            location:  ticket?.eventLocation ?? null,
+          }
+        }),
+      })
+    }
+    if (freeMerch.length > 0 && customerEmail) {
+      await sendOrderConfirmation({
+        customerEmail,
+        customerName,
+        items: freeMerch.map(i => ({
+          name:         i.name,
+          variantColor: i.variantColor ?? null,
+          size:         i.size ?? null,
+          quantity:     i.quantity ?? 1,
+          priceCents:   0,
+        })),
+        totalCents:      0,
+        shippingCents:   0,
+        shippingAddress: shippingAddress ?? null,
+      })
+    }
+
     return NextResponse.json({ free: true })
   }
 

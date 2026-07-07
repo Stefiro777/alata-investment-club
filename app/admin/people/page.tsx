@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
+import { requirePrivilegedAccess } from '@/lib/auth'
 import AdminNavbar from '../components/AdminNavbar'
 import TeamClient from '../team/TeamClient'
 import AlumniSection from '../components/AlumniSection'
@@ -8,23 +8,11 @@ import AlumniCompaniesSection from '../components/AlumniCompaniesSection'
 import type { Alumni, AlumniCompany } from '@/lib/types'
 import type { TeamMember } from '../team/page'
 
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export default async function AdminPeoplePage() {
+  const member = await requirePrivilegedAccess()
+  if (!member) redirect('/dashboard')
+
   const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/dashboard')
-
-  const { data: member } = await supabaseAdmin
-    .from('club_members')
-    .select('role')
-    .eq('email', user.email!)
-    .maybeSingle()
-  if (member?.role !== 'bod' && member?.role !== 'director') redirect('/dashboard')
 
   const [
     { data: teamMembersData },
@@ -56,7 +44,7 @@ export default async function AdminPeoplePage() {
 
   return (
     <>
-      <AdminNavbar userEmail={user.email ?? ''} />
+      <AdminNavbar userEmail={member.email ?? ''} />
       <main className="bg-[#f9f9f9] min-h-screen">
         {/* TeamClient has its own max-w-5xl wrapper */}
         <TeamClient members={(teamMembersData ?? []) as TeamMember[]} />

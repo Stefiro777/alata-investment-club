@@ -83,25 +83,25 @@ function RegistrationsList({ eventId }: { eventId: string }) {
 
   const presentCount = regs.filter(r => r.checked_in).length
 
-  if (loading) return <p className="text-sm text-[#6b7280] py-10 text-center">Loading…</p>
+  if (loading) return <p className="text-sm text-ink-500 py-10 text-center">Loading…</p>
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-medium tracking-widest uppercase text-[#6b7280]">
+        <p className="text-xs font-medium tracking-widest uppercase text-ink-500">
           Presenti
         </p>
-        <p className="text-2xl font-bold text-[#1a4a3a]">
+        <p className="text-2xl font-bold text-forest">
           {presentCount} / {regs.length}
         </p>
       </div>
 
-      <div className="bg-white border border-[#e5e5e5] overflow-x-auto">
+      <div className="bg-white border border-line overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#e5e5e5] bg-[#f9f9f9]">
+            <tr className="border-b border-line bg-[#f9f9f9]">
               {['Name', 'Email', 'Status', ''].map((h, i) => (
-                <th key={i} className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide whitespace-nowrap">
+                <th key={i} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -110,19 +110,19 @@ function RegistrationsList({ eventId }: { eventId: string }) {
           <tbody>
             {regs.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-10 text-center text-sm text-[#6b7280]">No registrations.</td>
+                <td colSpan={4} className="px-4 py-10 text-center text-sm text-ink-500">No registrations.</td>
               </tr>
             ) : regs.map(r => (
               <tr key={r.id} className="border-b border-black/5 last:border-0 hover:bg-[#f9f9f9] transition-colors">
                 <td className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap">{r.nome} {r.cognome}</td>
-                <td className="px-4 py-3 text-[#6b7280]">{r.email}</td>
+                <td className="px-4 py-3 text-ink-500">{r.email}</td>
                 <td className="px-4 py-3">
                   {r.checked_in ? (
-                    <span className="text-[10px] font-medium tracking-widest uppercase px-2 py-1 bg-[#1a4a3a] text-white">
+                    <span className="text-[10px] font-medium tracking-widest uppercase px-2 py-1 bg-forest text-white">
                       Presente
                     </span>
                   ) : (
-                    <span className="text-[10px] font-medium tracking-widest uppercase px-2 py-1 border border-[#d1d5db] text-[#6b7280]">
+                    <span className="text-[10px] font-medium tracking-widest uppercase px-2 py-1 border border-[#d1d5db] text-ink-500">
                       Non Arrivato
                     </span>
                   )}
@@ -133,8 +133,8 @@ function RegistrationsList({ eventId }: { eventId: string }) {
                     disabled={toggling === r.id}
                     className={`text-xs font-medium tracking-wide px-3 py-1.5 transition-colors disabled:opacity-40 ${
                       r.checked_in
-                        ? 'border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6]'
-                        : 'border border-[#1a4a3a] text-[#1a4a3a] hover:bg-[#1a4a3a] hover:text-white'
+                        ? 'border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6]'
+                        : 'border border-forest text-forest hover:bg-forest hover:text-white'
                     }`}
                   >
                     {toggling === r.id ? '…' : r.checked_in ? 'Revoca' : 'Check-in'}
@@ -257,7 +257,7 @@ function QRScannerTab() {
           className={`text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors ${
             cameraActive
               ? 'border border-red-400 text-red-500 hover:bg-red-500 hover:text-white'
-              : 'bg-[#1a4a3a] hover:bg-[#123a2d] text-white'
+              : 'bg-forest hover:bg-forest-deep text-white'
           }`}
         >
           {cameraActive ? 'Stop Camera' : 'Activate Camera'}
@@ -265,7 +265,7 @@ function QRScannerTab() {
         {scanResult && (
           <button
             onClick={clearResult}
-            className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
+            className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
           >
             Scan Next
           </button>
@@ -280,7 +280,7 @@ function QRScannerTab() {
       <div className="relative w-full max-w-sm">
         <div
           id="qr-reader"
-          className="w-full border border-[#e5e5e5] bg-[#f9f9f9]"
+          className="w-full border border-line bg-[#f9f9f9]"
           style={{ minHeight: cameraActive ? 300 : 0, overflow: 'hidden' }}
         />
 
@@ -336,7 +336,7 @@ function QRScannerTab() {
       {/* Placeholder when camera is off */}
       {!cameraActive && !cameraError && (
         <div className="w-full max-w-sm border border-dashed border-[#d1d5db] bg-[#f9f9f9] flex items-center justify-center" style={{ height: 240 }}>
-          <p className="text-xs text-[#6b7280] uppercase tracking-widest">Camera off</p>
+          <p className="text-xs text-ink-500 uppercase tracking-widest">Camera off</p>
         </div>
       )}
     </div>
@@ -365,18 +365,18 @@ export default function EventScanner() {
     <div className="max-w-5xl mx-auto px-8 py-10">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-xs font-medium tracking-widest uppercase text-[#6b7280] mb-1">Admin</p>
-        <h2 className="font-serif text-2xl font-bold text-[#1a4a3a]">Event Scanner</h2>
-        <div className="w-8 h-px bg-[#1a4a3a] mt-2" />
+        <p className="text-xs font-medium tracking-widest uppercase text-ink-500 mb-1">Admin</p>
+        <h2 className="font-serif text-2xl font-bold text-forest">Event Scanner</h2>
+        <div className="w-8 h-px bg-forest mt-2" />
       </div>
 
       {/* Event selector */}
       <div className="mb-8">
-        <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-2">Select Event</label>
+        <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-2">Select Event</label>
         <select
           value={selectedEventId}
           onChange={e => { setSelectedEventId(e.target.value); setTab('list') }}
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-[#1a4a3a] transition-colors w-full max-w-md"
+          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest transition-colors w-full max-w-md"
         >
           <option value="">— Select an event —</option>
           {events.map(ev => (
@@ -388,15 +388,15 @@ export default function EventScanner() {
       {selectedEvent && (
         <>
           {/* Tab switcher */}
-          <div className="flex border-b border-[#e5e5e5] mb-6">
+          <div className="flex border-b border-line mb-6">
             {(['list', 'scanner'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-6 py-3 text-xs font-medium tracking-widest uppercase transition-colors ${
                   tab === t
-                    ? 'text-[#1a4a3a] border-b-2 border-[#1a4a3a]'
-                    : 'text-[#6b7280] hover:text-[#1a1a1a] border-b-2 border-transparent'
+                    ? 'text-forest border-b-2 border-forest'
+                    : 'text-ink-500 hover:text-[#1a1a1a] border-b-2 border-transparent'
                 }`}
               >
                 {t === 'list' ? 'Registrations List' : 'QR Scanner'}

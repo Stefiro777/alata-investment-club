@@ -317,7 +317,7 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
                     type="checkbox"
                     checked={formVisible}
                     onChange={e => setFormVisible(e.target.checked)}
-                    className="w-4 h-4 accent-[#1a4a3a]"
+                    className="w-4 h-4 accent-forest"
                   />
                   <span className="text-sm text-ink-900">Visibile</span>
                 </label>

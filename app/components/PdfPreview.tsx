@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist'
 
 interface Props {
   pdfUrl: string
@@ -26,8 +27,8 @@ function PdfFallback({ title }: { title: string }) {
 export default function PdfPreview({ pdfUrl, title }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const pdfRef = useRef<any>(null)
-  const renderTaskRef = useRef<any>(null)
+  const pdfRef = useRef<PDFDocumentProxy | null>(null)
+  const renderTaskRef = useRef<RenderTask | null>(null)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
@@ -38,7 +39,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
   // Incremented each time a new PDF is ready to render; drives the render effect.
   const [pdfReady, setPdfReady] = useState(0)
 
-  const renderPage = useCallback(async (pdf: any, pageNum: number) => {
+  const renderPage = useCallback(async (pdf: PDFDocumentProxy, pageNum: number) => {
     const canvas = canvasRef.current
     if (!canvas) return
     // Cancel any in-flight render and wait for it to actually stop before
@@ -62,12 +63,12 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
       canvas.height = viewport.height
       setCanvasHeight(viewport.height)
       const ctx = canvas.getContext('2d')!
-      const task = page.render({ canvasContext: ctx, viewport })
+      const task = page.render({ canvas, canvasContext: ctx, viewport })
       renderTaskRef.current = task
       await task.promise
       renderTaskRef.current = null
-    } catch (err: any) {
-      if (err?.name !== 'RenderingCancelledException') {
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name !== 'RenderingCancelledException') {
         console.error('[PdfPreview] render error:', err)
       }
     }
@@ -143,7 +144,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
     justifyContent: 'center',
     background: 'rgba(255,255,255,0.92)',
     border: '1px solid #1a4a3a',
-    color: '#1a4a3a',
+    color: 'var(--forest)',
     cursor: 'pointer',
     zIndex: 10,
     transition: 'background 150ms, color 150ms',
@@ -165,7 +166,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
         {/* Loading spinner */}
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-paper-stone gap-4">
-            <div className="w-8 h-8 border-2 border-forest/20 border-t-[#1a4a3a] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-forest/20 border-t-forest rounded-full animate-spin" />
             <span className="text-xs text-ink-400 tracking-wide">Caricamento PDF…</span>
           </div>
         )}
@@ -247,7 +248,7 @@ export default function PdfPreview({ pdfUrl, title }: Props) {
           onClick={() => setExpanded(true)}
           style={{
             height: 32,
-            background: '#1a4a3a',
+            background: 'var(--forest)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',

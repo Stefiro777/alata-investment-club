@@ -1,7 +1,7 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -94,12 +94,15 @@ export async function POST(req: NextRequest) {
       const eventTitle = eventRow?.title ?? 'Event'
       const html = buildConfirmationHtml(eventTitle)
 
-      await resend.emails.send({
+      const { error: sendErr } = await resend.emails.send({
         from: FROM,
         to: email,
         subject: `Registration Confirmed — ${eventTitle}`,
         html,
       })
+      if (sendErr) {
+        console.error('[email-failure]', JSON.stringify({ kind: 'event-registration', to: email, error: sendErr }))
+      }
     } catch (emailErr) {
       console.error('Confirmation email failed:', emailErr)
     }
@@ -111,19 +114,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/event-registrations?event_id=... — admin only
+// GET /api/event-registrations?event_id=... — privileged only
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: adminRow } = await supabase
-      .from('admin_users')
-      .select('email')
-      .eq('email', user.email)
-      .maybeSingle()
-    if (!adminRow) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!(await requirePrivilegedAccess())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const event_id = req.nextUrl.searchParams.get('event_id')
     if (!event_id) {

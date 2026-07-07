@@ -9,9 +9,8 @@ import MobileMenu from './components/MobileMenu'
 import CookieBanner from './components/CookieBanner'
 import CookiePolicy from './components/CookiePolicy'
 import AnalyticsWrapper from './components/AnalyticsWrapper'
+import GoogleAnalytics from './components/GoogleAnalytics'
 import { CartProvider } from './components/CartContext'
-
-import Script from 'next/script'
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -160,18 +159,8 @@ export default async function RootLayout({
         {/* Main */}
         <main className="flex-1">{children}</main>
         <AnalyticsWrapper />
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-1DKFFPXFT6"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-1DKFFPXFT6');
-          `}
-        </Script>
+        {/* GA loads only after the cookie banner records consent */}
+        <GoogleAnalytics />
         <CookieBanner />
 
         {/* Footer */}
@@ -183,6 +172,8 @@ export default async function RootLayout({
                 <img
                   src="/white.png"
                   alt="Alata"
+                  width={5200}
+                  height={2800}
                   className="h-10 w-auto"
                 />
               </div>

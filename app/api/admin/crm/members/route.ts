@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,19 +8,8 @@ const supabaseAdmin = createAdminClient(
 )
 
 export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  if (user.email !== 'finullistefano@gmail.com') {
-    const { data: member } = await supabaseAdmin
-      .from('club_members')
-      .select('role')
-      .eq('email', user.email!)
-      .maybeSingle()
-    if (member?.role !== 'bod' && member?.role !== 'director') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  if (!(await requirePrivilegedAccess())) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const { data, error } = await supabaseAdmin

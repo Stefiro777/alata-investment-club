@@ -70,7 +70,7 @@ export default function ProductClient({ product }: { product: Product }) {
                   <button
                     key={i}
                     onClick={() => setMainImg(i)}
-                    className={`relative aspect-square w-16 overflow-hidden border-2 transition-colors ${i === mainImg ? 'border-[#1a4a3a]' : 'border-transparent hover:border-[#1a4a3a]/40'}`}
+                    className={`relative aspect-square w-16 overflow-hidden border-2 transition-colors ${i === mainImg ? 'border-forest' : 'border-transparent hover:border-forest/40'}`}
                   >
                     <Image src={img} alt="" fill className="object-cover" />
                   </button>
@@ -122,7 +122,7 @@ export default function ProductClient({ product }: { product: Product }) {
                       key={v.id}
                       onClick={() => { setSelectedVariant(v); setMainImg(0) }}
                       title={v.color}
-                      className={`w-8 h-8 border-2 transition-all ${selectedVariant?.id === v.id ? 'border-[#1a4a3a] scale-110' : 'border-gray-200 hover:border-gray-400'}`}
+                      className={`w-8 h-8 border-2 transition-all ${selectedVariant?.id === v.id ? 'border-forest scale-110' : 'border-gray-200 hover:border-gray-400'}`}
                       style={{ backgroundColor: v.color_hex ?? '#ccc' }}
                     />
                   ))}
@@ -141,8 +141,8 @@ export default function ProductClient({ product }: { product: Product }) {
                       onClick={() => setSelectedSize(s)}
                       className={`px-4 py-2 text-sm font-semibold uppercase border transition-colors ${
                         selectedSize === s
-                          ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
-                          : 'bg-white text-gray-900 border-gray-300 hover:border-[#1a4a3a]'
+                          ? 'bg-forest text-white border-forest'
+                          : 'bg-white text-gray-900 border-gray-300 hover:border-forest'
                       }`}
                     >
                       {s}
@@ -163,8 +163,8 @@ export default function ProductClient({ product }: { product: Product }) {
                       onClick={() => setSelectedText(tv.option)}
                       className={`px-4 py-2 text-sm font-semibold border transition-colors ${
                         selectedText === tv.option
-                          ? 'bg-[#1a4a3a] text-white border-[#1a4a3a]'
-                          : 'bg-white text-gray-900 border-gray-300 hover:border-[#1a4a3a]'
+                          ? 'bg-forest text-white border-forest'
+                          : 'bg-white text-gray-900 border-gray-300 hover:border-forest'
                       }`}
                     >
                       {tv.option}
@@ -181,7 +181,7 @@ export default function ProductClient({ product }: { product: Product }) {
               className={`w-full py-4 text-sm font-semibold uppercase tracking-widest transition-colors ${
                 added
                   ? 'bg-[#123a2d] text-white'
-                  : 'bg-[#1a4a3a] hover:bg-[#123a2d] text-white disabled:bg-gray-200 disabled:text-gray-400'
+                  : 'bg-forest hover:bg-forest-deep text-white disabled:bg-gray-200 disabled:text-gray-400'
               }`}
             >
               {added ? 'AGGIUNTO ✓' : 'AGGIUNGI AL CARRELLO'}

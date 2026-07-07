@@ -46,7 +46,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
   const teamActive = pathname.startsWith('/dashboard/team')
 
   return (
-    <nav className="sticky top-0 z-[50] bg-[#1a4a3a] shadow-md">
+    <nav className="sticky top-0 z-[50] bg-forest shadow-md">
       <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center h-14 gap-4 md:gap-8">
 
         {/* Nav links — scrollable on mobile, normal on desktop */}
@@ -94,7 +94,7 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
                     key={item.slug}
                     href={`/dashboard/team/${item.slug}`}
                     onClick={() => setTeamOpen(false)}
-                    className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-[#1a4a3a] transition-colors whitespace-nowrap"
+                    className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-forest transition-colors whitespace-nowrap"
                   >
                     {item.label}
                   </Link>

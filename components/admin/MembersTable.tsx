@@ -60,7 +60,7 @@ function ComposeModal({
   }
 
   const inputClass =
-    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-[#1a4a3a] text-sm text-[#1a1a1a] bg-white transition-colors'
+    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-forest text-sm text-[#1a1a1a] bg-white transition-colors'
 
   return (
     <div
@@ -68,18 +68,18 @@ function ComposeModal({
       style={{ backgroundColor: 'rgba(0,0,0,0.65)', zIndex: 9999 }}
       onClick={e => { if (e.target === e.currentTarget && status !== 'sending') onClose() }}
     >
-      <div className="bg-white border border-[#e5e5e5] w-full max-w-lg shadow-xl">
-        <div className="flex items-start justify-between px-6 py-4 border-b border-[#e5e5e5]">
+      <div className="bg-white border border-line w-full max-w-lg shadow-xl">
+        <div className="flex items-start justify-between px-6 py-4 border-b border-line">
           <div>
-            <p className="font-serif text-base font-bold text-[#1a4a3a] uppercase tracking-widest">
+            <p className="font-serif text-base font-bold text-forest uppercase tracking-widest">
               Send Email
             </p>
-            <p className="text-xs text-[#6b7280] mt-0.5">{recipients.length} recipient{recipients.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-ink-500 mt-0.5">{recipients.length} recipient{recipients.length !== 1 ? 's' : ''}</p>
           </div>
           <button
             onClick={onClose}
             disabled={status === 'sending'}
-            className="text-[#6b7280] hover:text-[#1a1a1a] text-xl leading-none transition-colors ml-4 mt-0.5 disabled:opacity-40"
+            className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors ml-4 mt-0.5 disabled:opacity-40"
           >
             ✕
           </button>
@@ -88,12 +88,12 @@ function ComposeModal({
         <div className="p-6 space-y-4">
           {status === 'done' && result ? (
             <div className="py-8 text-center space-y-2">
-              <p className="text-[#1a4a3a] font-medium text-sm tracking-wide">
+              <p className="text-forest font-medium text-sm tracking-wide">
                 ✓ Sent: {result.sent} — Failed: {result.failed}
               </p>
               <button
                 onClick={onClose}
-                className="mt-4 border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors"
+                className="mt-4 border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors"
               >
                 Close
               </button>
@@ -103,19 +103,19 @@ function ComposeModal({
               {/* Recipient chips */}
               <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                 {visibleRecipients.map(m => (
-                  <span key={m.id} className="text-[11px] bg-[#f0f5f3] text-[#1a4a3a] px-2 py-1 border border-[#c8ddd6]">
+                  <span key={m.id} className="text-[11px] bg-[#f0f5f3] text-forest px-2 py-1 border border-[#c8ddd6]">
                     {m.full_name}
                   </span>
                 ))}
                 {overflow > 0 && (
-                  <span className="text-[11px] bg-[#f3f4f6] text-[#6b7280] px-2 py-1 border border-[#e5e5e5]">
+                  <span className="text-[11px] bg-[#f3f4f6] text-ink-500 px-2 py-1 border border-line">
                     +{overflow} others
                   </span>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Subject</label>
+                <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Subject</label>
                 <input
                   value={subject}
                   onChange={e => setSubject(e.target.value)}
@@ -125,7 +125,7 @@ function ComposeModal({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#6b7280] uppercase tracking-widest mb-1">Message</label>
+                <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Message</label>
                 <textarea
                   rows={6}
                   value={message}
@@ -134,7 +134,7 @@ function ComposeModal({
                   placeholder="Write your message here…"
                   className={`${inputClass} resize-none`}
                 />
-                <p className="text-[11px] text-[#9ca3af] mt-1">
+                <p className="text-[11px] text-ink-400 mt-1">
                   [Nome] will be replaced with each member's name.
                 </p>
               </div>
@@ -148,7 +148,7 @@ function ComposeModal({
                   type="button"
                   onClick={onClose}
                   disabled={status === 'sending'}
-                  className="border border-[#d1d5db] text-[#6b7280] hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40"
+                  className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40"
                 >
                   Cancel
                 </button>
@@ -156,7 +156,7 @@ function ComposeModal({
                   type="button"
                   onClick={handleSend}
                   disabled={status === 'sending' || !subject.trim() || !message.trim()}
-                  className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {status === 'sending' ? 'Sending…' : 'Send'}
                 </button>
@@ -245,7 +245,7 @@ export default function MembersTable() {
 
   const selectedMembers = members.filter(m => selected.has(m.id))
 
-  if (loading) return <p className="text-sm text-[#6b7280] py-10 text-center">Loading…</p>
+  if (loading) return <p className="text-sm text-ink-500 py-10 text-center">Loading…</p>
   if (error) return <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
 
   return (
@@ -257,9 +257,9 @@ export default function MembersTable() {
           { label: 'BoD', value: bodCount },
           { label: 'Directors', value: directorCount },
         ].map(kpi => (
-          <div key={kpi.label} className="bg-white border border-[#e5e5e5] px-6 py-4">
-            <p className="text-xs text-[#6b7280] uppercase tracking-widest font-medium">{kpi.label}</p>
-            <p className="text-2xl font-bold text-[#1a4a3a] mt-1">{kpi.value}</p>
+          <div key={kpi.label} className="bg-white border border-line px-6 py-4">
+            <p className="text-xs text-ink-500 uppercase tracking-widest font-medium">{kpi.label}</p>
+            <p className="text-2xl font-bold text-forest mt-1">{kpi.value}</p>
           </div>
         ))}
       </div>
@@ -270,12 +270,12 @@ export default function MembersTable() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by name, email, team…"
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-[#1a4a3a] w-64 transition-colors"
+          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest w-64 transition-colors"
         />
         <select
           value={teamFilter}
           onChange={e => setTeamFilter(e.target.value)}
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-[#1a4a3a] transition-colors"
+          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest transition-colors"
         >
           <option value="">All Teams</option>
           {teams.map(t => (
@@ -286,7 +286,7 @@ export default function MembersTable() {
         {selected.size > 0 && (
           <button
             onClick={() => setComposeOpen(true)}
-            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
+            className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
           >
             Send Email ({selected.size})
           </button>
@@ -294,10 +294,10 @@ export default function MembersTable() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-[#e5e5e5] overflow-x-auto">
+      <div className="bg-white border border-line overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#e5e5e5] bg-[#f9f9f9]">
+            <tr className="border-b border-line bg-[#f9f9f9]">
               <th className="px-4 py-3 w-10">
                 <input
                   type="checkbox"
@@ -307,7 +307,7 @@ export default function MembersTable() {
                 />
               </th>
               {['Name', 'Email', 'Role', 'Team', 'Joined'].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-medium text-[#6b7280] uppercase tracking-wide whitespace-nowrap">
+                <th key={h} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -316,7 +316,7 @@ export default function MembersTable() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-[#6b7280]">
+                <td colSpan={6} className="px-4 py-10 text-center text-sm text-ink-500">
                   No members found.
                 </td>
               </tr>
@@ -341,7 +341,7 @@ export default function MembersTable() {
                     />
                   </td>
                   <td className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap">{m.full_name}</td>
-                  <td className="px-4 py-3 text-[#6b7280]">{m.email}</td>
+                  <td className="px-4 py-3 text-ink-500">{m.email}</td>
                   <td className="px-4 py-3">
                     {roleBadge ? (
                       <span
@@ -351,14 +351,14 @@ export default function MembersTable() {
                         {roleBadge.label}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-medium tracking-widest uppercase px-2 py-1 border border-[#e5e5e5] text-[#6b7280]">
+                      <span className="text-[10px] font-medium tracking-widest uppercase px-2 py-1 border border-line text-ink-500">
                         {m.role ?? '—'}
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     {memberTeams.length === 0 ? (
-                      <span className="text-[10px] text-[#6b7280]">—</span>
+                      <span className="text-[10px] text-ink-500">—</span>
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {memberTeams.map(t => {
@@ -372,13 +372,13 @@ export default function MembersTable() {
                               {badge.label}
                             </span>
                           ) : (
-                            <span key={t} className="text-[10px] text-[#6b7280]">{t}</span>
+                            <span key={t} className="text-[10px] text-ink-500">{t}</span>
                           )
                         })}
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-[#6b7280] whitespace-nowrap">
+                  <td className="px-4 py-3 text-ink-500 whitespace-nowrap">
                     {m.created_at ? new Date(m.created_at).toLocaleDateString('it-IT') : '—'}
                   </td>
                 </tr>

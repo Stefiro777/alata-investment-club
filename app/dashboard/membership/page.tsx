@@ -44,7 +44,7 @@ const ELEM_STYLE = {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#1a4a3a' }}>
+    <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--forest)' }}>
       {children}
     </p>
   )
@@ -175,7 +175,7 @@ function PaymentForm({
         disabled={processing || !stripe}
         style={{
           width: '100%', height: 48,
-          background: processing || !stripe ? '#9ca3af' : '#1a4a3a',
+          background: processing || !stripe ? '#9ca3af' : 'var(--forest)',
           color: 'white', border: 'none', cursor: processing || !stripe ? 'not-allowed' : 'pointer',
           fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -307,18 +307,18 @@ export default function MembershipPage() {
     return (
       <div className="max-w-2xl mx-auto px-6 lg:px-8 py-12" style={{ fontFamily: 'Inter, sans-serif' }}>
         <div className="flex flex-col items-center text-center py-12">
-          <div className="w-16 h-16 bg-[#1a4a3a] flex items-center justify-center mb-6">
+          <div className="w-16 h-16 bg-forest flex items-center justify-center mb-6">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <h1 className="font-serif text-3xl font-bold text-gray-900 mb-3">Pagamento completato</h1>
-          <div className="w-8 h-px bg-[#1a4a3a] mb-5" />
+          <div className="w-8 h-px bg-forest mb-5" />
           <p className="text-sm text-gray-600 mb-2">La tua membership è stata rinnovata con successo.</p>
-          <p className="text-sm font-semibold text-[#1a4a3a] mb-8">Valida fino al {nextYearDate()}</p>
+          <p className="text-sm font-semibold text-forest mb-8">Valida fino al {nextYearDate()}</p>
           <button
             onClick={() => router.push('/dashboard')}
-            className="bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest px-8 py-4 transition-colors"
+            className="bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest px-8 py-4 transition-colors"
           >
             TORNA ALLA DASHBOARD
           </button>
@@ -339,7 +339,7 @@ export default function MembershipPage() {
             ← Torna al riepilogo
           </button>
           <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Pagamento</h1>
-          <div className="w-8 h-px bg-[#1a4a3a]" />
+          <div className="w-8 h-px bg-forest" />
         </div>
 
         <div className="border border-gray-100 bg-gray-50 px-5 py-4 mb-6 flex justify-between items-center">
@@ -372,7 +372,7 @@ export default function MembershipPage() {
             ← Torna indietro
           </button>
           <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Riepilogo ordine</h1>
-          <div className="w-8 h-px bg-[#1a4a3a]" />
+          <div className="w-8 h-px bg-forest" />
         </div>
 
         <div className="border border-gray-200 p-6 mb-4">
@@ -413,7 +413,7 @@ export default function MembershipPage() {
           <button
             onClick={handleGoToPayment}
             disabled={fetching}
-            className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {fetching ? (
               <>
@@ -442,7 +442,7 @@ export default function MembershipPage() {
     <div className="max-w-2xl mx-auto px-6 lg:px-8 py-12" style={{ fontFamily: 'Inter, sans-serif' }}>
       <div className="mb-10">
         <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Membership</h1>
-        <div className="w-8 h-px bg-[#1a4a3a]" />
+        <div className="w-8 h-px bg-forest" />
       </div>
 
       {loading ? (
@@ -450,8 +450,8 @@ export default function MembershipPage() {
       ) : (
         <>
           {isNewMember && (
-            <div className="mb-6 border border-[#1a4a3a] bg-[#1a4a3a]/5 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-1">
+            <div className="mb-6 border border-forest bg-forest/5 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-1">
                 Benvenuto in Alata Investment Club!
               </p>
               <p className="text-sm text-gray-600">
@@ -483,7 +483,7 @@ export default function MembershipPage() {
                 {expires && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Scadenza</span>
-                    <span className={`font-semibold ${isExpired ? 'text-red-600' : isSoon ? 'text-yellow-700' : 'text-[#1a4a3a]'}`}>
+                    <span className={`font-semibold ${isExpired ? 'text-red-600' : isSoon ? 'text-yellow-700' : 'text-forest'}`}>
                       {formatDate(expires.toISOString())}
                     </span>
                   </div>
@@ -507,8 +507,8 @@ export default function MembershipPage() {
             </div>
           )}
           {isActive && (
-            <div className="mb-6 border border-[#1a4a3a] bg-[#1a4a3a]/5 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a]">
+            <div className="mb-6 border border-forest bg-forest/5 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-forest">
                 Membership attiva fino al {expires ? formatDate(expires.toISOString()) : '—'}
               </p>
             </div>
@@ -524,7 +524,7 @@ export default function MembershipPage() {
             )}
             <button
               onClick={() => setView('summary')}
-              className="w-full bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors"
+              className="w-full bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors"
             >
               RINNOVA ORA →
             </button>

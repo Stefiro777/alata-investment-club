@@ -77,7 +77,7 @@ function loadFromStorage(): CartItem[] {
 
 function CalendarIcon() {
   return (
-    <svg className="w-7 h-7 text-[#1a4a3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-7 h-7 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
@@ -119,10 +119,10 @@ function CartDrawer({
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-2">
               <button onClick={() => updateQty(item.cartKey, item.quantity - 1)}
-                className="w-6 h-6 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-[#1a4a3a] transition-colors text-sm">−</button>
+                className="w-6 h-6 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">−</button>
               <span className="text-sm w-4 text-center">{item.quantity}</span>
               <button onClick={() => updateQty(item.cartKey, item.quantity + 1)}
-                className="w-6 h-6 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-[#1a4a3a] transition-colors text-sm">+</button>
+                className="w-6 h-6 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">+</button>
             </div>
             <p className="text-sm font-semibold text-gray-900">{fmtEur(item.priceCents * item.quantity)}</p>
           </div>
@@ -140,7 +140,7 @@ function CartDrawer({
   function renderTicketItem(item: CartItem) {
     return (
       <div key={item.cartKey} className="flex gap-4 border border-gray-100 p-3">
-        <div className="w-16 h-16 flex-shrink-0 bg-[#1a4a3a]/10 flex items-center justify-center">
+        <div className="w-16 h-16 flex-shrink-0 bg-forest/10 flex items-center justify-center">
           <CalendarIcon />
         </div>
         <div className="flex-1 min-w-0">
@@ -181,7 +181,7 @@ function CartDrawer({
             <div className="flex flex-col items-center justify-center h-full text-center py-16">
               <p className="text-sm text-gray-400 mb-2">Your cart is empty.</p>
               <button onClick={onClose}
-                className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] underline">
+                className="text-xs font-semibold uppercase tracking-widest text-forest underline">
                 Continue shopping
               </button>
             </div>
@@ -210,7 +210,7 @@ function CartDrawer({
               <p className="text-xl font-bold text-gray-900">{fmtEur(totalCents)}</p>
             </div>
             <button onClick={onCheckout}
-              className="w-full bg-[#1a4a3a] hover:bg-[#143d30] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors">
+              className="w-full bg-forest hover:bg-[#143d30] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors">
               Proceed to Checkout →
             </button>
             <button onClick={clearCart}
@@ -284,14 +284,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {count > 0 && !drawerOpen && (
         <button
           onClick={() => setDrawerOpen(true)}
-          className="fixed bottom-6 right-6 z-[190] w-14 h-14 bg-[#1a4a3a] hover:bg-[#143d30] text-white shadow-xl flex items-center justify-center transition-colors"
+          className="fixed bottom-6 right-6 z-[190] w-14 h-14 bg-forest hover:bg-[#143d30] text-white shadow-xl flex items-center justify-center transition-colors"
           aria-label="Open cart"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-[#1a4a3a] text-[10px] font-bold flex items-center justify-center border border-[#1a4a3a]">
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-forest text-[10px] font-bold flex items-center justify-center border border-forest">
             {count > 9 ? '9+' : count}
           </span>
         </button>

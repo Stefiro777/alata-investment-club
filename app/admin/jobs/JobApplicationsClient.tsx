@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   pending:  'bg-yellow-100 text-yellow-800',
   reviewed: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-[#1a4a3a] text-white',
+  accepted: 'bg-forest text-white',
   rejected: 'bg-red-100 text-red-800',
 }
 
@@ -77,7 +77,7 @@ function CoverLetterModal({ text, applicant, onClose }: { text: string; applican
       className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white w-full max-w-2xl max-h-[80vh] overflow-y-auto border-t-4 border-[#1a4a3a] relative">
+      <div className="bg-white w-full max-w-2xl max-h-[80vh] overflow-y-auto border-t-4 border-forest relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-black text-xl leading-none hover:opacity-60 transition-opacity"
@@ -158,7 +158,7 @@ function AppTable({
     <div className={`border overflow-x-auto ${muted ? 'border-gray-200 bg-gray-50' : 'border-line-faint bg-white'}`}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-black/10">
+          <tr className="border-b border-line-faint">
             {(muted ? COLS_ARCHIVED : COLS).map(h => (
               <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-500 whitespace-nowrap">
                 {h}

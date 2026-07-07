@@ -23,9 +23,9 @@ type MSettings = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const inputCls   = 'w-full border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#1a4a3a] bg-white'
+const inputCls   = 'w-full border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white'
 const labelCls   = 'block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1'
-const btnPrimary = 'bg-[#1a4a3a] hover:bg-[#123a2d] text-white text-xs font-semibold uppercase tracking-widest px-5 py-2 transition-colors disabled:opacity-40'
+const btnPrimary = 'bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest px-5 py-2 transition-colors disabled:opacity-40'
 const btnGhost   = 'border border-gray-200 px-4 py-2 text-xs text-gray-600 hover:border-gray-400 transition-colors'
 
 function fmtDate(iso: string | null): string {
@@ -52,7 +52,7 @@ function KpiBar({ members }: { members: MemberRow[] }) {
   return (
     <div className="grid grid-cols-3 gap-4 mb-10">
       {[
-        { label: 'Attivi',       value: active,  color: '#1a4a3a' },
+        { label: 'Attivi',       value: active,  color: 'var(--forest)' },
         { label: 'In scadenza',  value: soon,    color: '#b45309' },
         { label: 'Scaduti',      value: expired, color: '#b91c1c' },
       ].map(k => (
@@ -110,7 +110,7 @@ function SettingsPanel({ token }: { token: string }) {
 
   return (
     <div className="border border-gray-200 p-6 mb-10">
-      <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-5">
+      <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-5">
         Impostazioni Membership
       </p>
       <div className="grid sm:grid-cols-3 gap-4 mb-5">
@@ -187,7 +187,7 @@ function MembersTable({ token }: { token: string }) {
 
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-widest text-[#1a4a3a] mb-4">
+      <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-4">
         Lista Membri — {members.length} totali
       </p>
       {error && <p className="mb-3 text-xs text-red-600 border-l-2 border-red-400 pl-2">{error}</p>}
@@ -212,16 +212,16 @@ function MembersTable({ token }: { token: string }) {
                   <div className="flex items-center gap-2">
                     <input type="date" value={editDate}
                       onChange={e => { editDateRef.current = e.target.value; setEditDate(e.target.value) }}
-                      className="border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:border-[#1a4a3a] w-32" />
+                      className="border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:border-forest w-32" />
                     <button onClick={() => saveExpiry(m.id)} disabled={saving}
-                      className="text-xs font-semibold text-[#1a4a3a] hover:underline disabled:opacity-40">
+                      className="text-xs font-semibold text-forest hover:underline disabled:opacity-40">
                       {saving ? '…' : 'OK'}
                     </button>
                     <button onClick={() => setEditId(null)} className="text-xs text-gray-400 hover:text-gray-700">✕</button>
                   </div>
                 ) : (
                   <button onClick={() => startEdit(m)}
-                    className="text-xs text-gray-700 hover:text-[#1a4a3a] transition-colors text-left">
+                    className="text-xs text-gray-700 hover:text-forest transition-colors text-left">
                     {fmtDate(m.membership_expires_at)} ✎
                   </button>
                 )}
@@ -280,7 +280,7 @@ export default function MembershipAdminPage() {
 
         <div className="mb-10">
           <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 mb-3">Membership</h1>
-          <div className="w-8 h-px bg-[#1a4a3a]" />
+          <div className="w-8 h-px bg-forest" />
         </div>
 
         <KpiBar members={members} />
