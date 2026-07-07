@@ -33,8 +33,10 @@ type DiligenceMessage = {
   created_at: string
 }
 type DiligenceRoom = { id: string; buy_side_role: string; messages: DiligenceMessage[] }
+type LeaderboardEntry = { role_key: string; weighted_score: number | null }
+type Leaderboard = { buy_side: LeaderboardEntry[]; sell_side: { weighted_score: number | null } }
 
-type TabType = 'participants' | 'materials' | 'mandates' | 'fair_value' | 'diligence'
+type TabType = 'participants' | 'materials' | 'mandates' | 'fair_value' | 'diligence' | 'leaderboard'
 
 function Chevron({ open }: { open: boolean }) {
   return (
@@ -130,6 +132,10 @@ export default function HackathonAdminClient() {
   const [diligenceRooms, setDiligenceRooms] = useState<DiligenceRoom[]>([])
   const [diligenceLoading, setDiligenceLoading] = useState(false)
   const [diligenceError, setDiligenceError] = useState<string | null>(null)
+
+  const [leaderboard, setLeaderboard] = useState<Leaderboard | null>(null)
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false)
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null)
 
   const loadSessions = useCallback(async () => {
     setLoadingSessions(true)
@@ -270,6 +276,19 @@ export default function HackathonAdminClient() {
     }
   }, [])
 
+  const loadLeaderboard = useCallback(async (sessionId: string) => {
+    setLeaderboardLoading(true)
+    setLeaderboardError(null)
+    try {
+      const data = await jsonFetch<Leaderboard>(`/api/hackathon/judge/${sessionId}/leaderboard`)
+      setLeaderboard(data)
+    } catch (err) {
+      setLeaderboardError(err instanceof Error ? err.message : 'Errore imprevisto')
+    } finally {
+      setLeaderboardLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (!selectedSessionId) return
     if (activeTab === 'participants') loadParticipants(selectedSessionId)
@@ -277,7 +296,8 @@ export default function HackathonAdminClient() {
     if (activeTab === 'mandates') loadMandates(selectedSessionId)
     if (activeTab === 'fair_value') loadFairValue(selectedSessionId)
     if (activeTab === 'diligence') loadDiligence(selectedSessionId)
-  }, [selectedSessionId, activeTab, loadParticipants, loadMaterials, loadMandates, loadFairValue, loadDiligence])
+    if (activeTab === 'leaderboard') loadLeaderboard(selectedSessionId)
+  }, [selectedSessionId, activeTab, loadParticipants, loadMaterials, loadMandates, loadFairValue, loadDiligence, loadLeaderboard])
 
   async function handleReassign(participantId: string, roleKey: string) {
     if (!selectedSessionId) return
@@ -384,6 +404,7 @@ export default function HackathonAdminClient() {
     { id: 'mandates', label: 'Mandates' },
     { id: 'fair_value', label: 'Fair Value' },
     { id: 'diligence', label: 'Diligence Overview' },
+    { id: 'leaderboard', label: 'Leaderboard' },
   ]
 
   return (
@@ -741,6 +762,39 @@ export default function HackathonAdminClient() {
                     )}
                   </div>
                 ))
+              )}
+            </div>
+          )}
+
+          {activeTab === 'leaderboard' && (
+            <div className="space-y-4">
+              {leaderboardError && <p className="text-sm text-red-700">{leaderboardError}</p>}
+              {leaderboardLoading || !leaderboard ? (
+                <p className="text-sm text-ink-500">Loading…</p>
+              ) : (
+                <>
+                  <div className="border border-line-faint px-4 py-4">
+                    <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-3">Buy-Side Ranking</p>
+                    <ol className="space-y-2">
+                      {leaderboard.buy_side.map((entry, i) => (
+                        <li key={entry.role_key} className="flex items-center justify-between text-sm">
+                          <span className="text-ink-900">
+                            {i + 1}. {ROLE_LABELS[entry.role_key] ?? entry.role_key}
+                          </span>
+                          <span className="text-forest font-medium">
+                            {entry.weighted_score !== null ? entry.weighted_score.toFixed(1) : '—'}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                  <div className="border border-line-faint px-4 py-4">
+                    <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-3">Sell-Side Score</p>
+                    <p className="text-forest font-medium text-lg">
+                      {leaderboard.sell_side.weighted_score !== null ? leaderboard.sell_side.weighted_score.toFixed(1) : '—'}
+                    </p>
+                  </div>
+                </>
               )}
             </div>
           )}

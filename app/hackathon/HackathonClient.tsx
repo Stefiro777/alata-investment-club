@@ -38,7 +38,17 @@ type DiligenceRoom = {
   messages: DiligenceMessage[]
 }
 
+type Submission = {
+  id: string
+  phase_number: number
+  file_path: string | null
+  deal_structure: Record<string, unknown> | null
+  submitted_at: string
+}
+
 type Step = 'code' | 'name' | 'dashboard'
+
+const DEAL_STRUCTURE_TYPES = ['cash', 'earn-out', 'vendor loan', 'rollover'] as const
 
 export default function HackathonClient() {
   const [step, setStep] = useState<Step>('code')
@@ -53,6 +63,17 @@ export default function HackathonClient() {
   const [messageDrafts, setMessageDrafts] = useState<Record<string, string>>({})
   const [attachmentDrafts, setAttachmentDrafts] = useState<Record<string, File | null>>({})
   const [sendingRoom, setSendingRoom] = useState<string | null>(null)
+
+  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [submissionFile, setSubmissionFile] = useState<File | null>(null)
+  const [dealStructureType, setDealStructureType] = useState<string>(DEAL_STRUCTURE_TYPES[0])
+  const [cashPct, setCashPct] = useState('')
+  const [earnoutPct, setEarnoutPct] = useState('')
+  const [vendorLoanPct, setVendorLoanPct] = useState('')
+  const [rolloverPct, setRolloverPct] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submissionError, setSubmissionError] = useState<string | null>(null)
+  const [submissionSaved, setSubmissionSaved] = useState(false)
 
   const participantIdRef = useRef<string | null>(null)
 
@@ -70,6 +91,13 @@ export default function HackathonClient() {
     return data.rooms as DiligenceRoom[]
   }, [])
 
+  const loadSubmissions = useCallback(async (participantId: string) => {
+    const res = await fetch(`/api/hackathon/participant/${participantId}/submissions`)
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Errore nel caricamento delle submission')
+    return data.submissions as Submission[]
+  }, [])
+
   // Restore session from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -84,6 +112,8 @@ export default function HackathonClient() {
         setParticipant(state)
         const roomsData = await loadRooms(saved)
         setRooms(roomsData)
+        const submissionsData = await loadSubmissions(saved)
+        setSubmissions(submissionsData)
         setStep('dashboard')
       } catch {
         localStorage.removeItem(STORAGE_KEY)
@@ -91,7 +121,7 @@ export default function HackathonClient() {
         setRestoring(false)
       }
     })()
-  }, [loadParticipant, loadRooms])
+  }, [loadParticipant, loadRooms, loadSubmissions])
 
   // Polling for phase/material updates + diligence rooms
   useEffect(() => {
@@ -105,13 +135,15 @@ export default function HackathonClient() {
         setParticipant(state)
         const roomsData = await loadRooms(participantId)
         setRooms(roomsData)
+        const submissionsData = await loadSubmissions(participantId)
+        setSubmissions(submissionsData)
       } catch {
         // silent retry on next tick
       }
     }, POLL_INTERVAL_MS)
 
     return () => clearInterval(interval)
-  }, [step, participant, loadParticipant, loadRooms])
+  }, [step, participant, loadParticipant, loadRooms, loadSubmissions])
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
@@ -134,6 +166,8 @@ export default function HackathonClient() {
       setParticipant(state)
       const roomsData = await loadRooms(data.participant_id)
       setRooms(roomsData)
+      const submissionsData = await loadSubmissions(data.participant_id)
+      setSubmissions(submissionsData)
       setStep('dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore imprevisto')
@@ -170,6 +204,52 @@ export default function HackathonClient() {
       setError(err instanceof Error ? err.message : 'Errore imprevisto')
     } finally {
       setSendingRoom(null)
+    }
+  }
+
+  async function handleSubmitPhase(e: React.FormEvent) {
+    e.preventDefault()
+    const participantId = participantIdRef.current
+    if (!participantId || !participant) return
+    setSubmissionError(null)
+    setSubmissionSaved(false)
+
+    if (!submissionFile && participant.current_phase !== 4) return
+
+    setSubmitting(true)
+    try {
+      const formData = new FormData()
+      formData.set('phase_number', String(participant.current_phase))
+      if (submissionFile) formData.set('file', submissionFile)
+
+      if (participant.current_phase === 4) {
+        formData.set(
+          'deal_structure',
+          JSON.stringify({
+            type: dealStructureType,
+            cash_pct: cashPct ? Number(cashPct) : null,
+            earnout_pct: earnoutPct ? Number(earnoutPct) : null,
+            vendor_loan_pct: vendorLoanPct ? Number(vendorLoanPct) : null,
+            rollover_pct: rolloverPct ? Number(rolloverPct) : null,
+          })
+        )
+      }
+
+      const res = await fetch(`/api/hackathon/participant/${participantId}/submissions`, {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Errore nell\'invio della submission')
+
+      setSubmissionFile(null)
+      setSubmissionSaved(true)
+      const submissionsData = await loadSubmissions(participantId)
+      setSubmissions(submissionsData)
+    } catch (err) {
+      setSubmissionError(err instanceof Error ? err.message : 'Errore imprevisto')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -305,6 +385,101 @@ export default function HackathonClient() {
                   ))}
                 </ul>
               )}
+            </section>
+
+            <section className="border border-line px-6 py-6">
+              <h2 className="font-serif text-2xl text-forest mb-4">Submit — Phase {participant.current_phase}</h2>
+
+              {submissions.some((s) => s.phase_number === participant.current_phase) && (
+                <p className="font-sans text-xs text-ink-500 mb-3">
+                  You already submitted for this phase — submitting again will replace it.
+                </p>
+              )}
+
+              <form onSubmit={handleSubmitPhase} className="space-y-4">
+                <input
+                  type="file"
+                  onChange={(e) => setSubmissionFile(e.target.files?.[0] ?? null)}
+                  className="font-sans text-xs text-ink-500"
+                />
+
+                {participant.current_phase === 4 && (
+                  <div className="space-y-3 border-t border-line-faint pt-4">
+                    <p className="font-sans text-xs tracking-widest uppercase text-ink-500">Deal structure (LOI)</p>
+                    <label className="block font-sans text-sm text-ink-700">
+                      Structure type
+                      <select
+                        value={dealStructureType}
+                        onChange={(e) => setDealStructureType(e.target.value)}
+                        className="mt-1 w-full border border-line px-3 py-2 font-sans text-sm text-ink-900 focus:outline-none focus:border-forest"
+                      >
+                        {DEAL_STRUCTURE_TYPES.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="block font-sans text-xs text-ink-500">
+                        Cash %
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={cashPct}
+                          onChange={(e) => setCashPct(e.target.value)}
+                          className="mt-1 w-full border border-line px-3 py-2 font-sans text-sm text-ink-900 focus:outline-none focus:border-forest"
+                        />
+                      </label>
+                      <label className="block font-sans text-xs text-ink-500">
+                        Earn-out %
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={earnoutPct}
+                          onChange={(e) => setEarnoutPct(e.target.value)}
+                          className="mt-1 w-full border border-line px-3 py-2 font-sans text-sm text-ink-900 focus:outline-none focus:border-forest"
+                        />
+                      </label>
+                      <label className="block font-sans text-xs text-ink-500">
+                        Vendor loan %
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={vendorLoanPct}
+                          onChange={(e) => setVendorLoanPct(e.target.value)}
+                          className="mt-1 w-full border border-line px-3 py-2 font-sans text-sm text-ink-900 focus:outline-none focus:border-forest"
+                        />
+                      </label>
+                      <label className="block font-sans text-xs text-ink-500">
+                        Rollover %
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={rolloverPct}
+                          onChange={(e) => setRolloverPct(e.target.value)}
+                          className="mt-1 w-full border border-line px-3 py-2 font-sans text-sm text-ink-900 focus:outline-none focus:border-forest"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {submissionError && <p className="text-sm text-red-700 font-sans">{submissionError}</p>}
+                {submissionSaved && <p className="text-sm text-forest font-sans">Submission saved.</p>}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-forest text-white font-sans text-sm px-5 py-2 hover:bg-forest-deep transition-colors disabled:opacity-50"
+                >
+                  {submitting ? 'Submitting…' : 'Submit'}
+                </button>
+              </form>
             </section>
           </>
         )}
