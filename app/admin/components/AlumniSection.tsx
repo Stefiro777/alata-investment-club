@@ -1,20 +1,20 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { createClient } from '@/lib/supabase'
 import type { Alumni } from '@/lib/types'
 
 // ── Photo upload helper ────────────────────────────────────────────────────────
+// Uploaded via the /api/alumni/photo route (service role) rather than directly
+// from the browser client — the alumni-photos bucket has no anon/authenticated
+// storage policy, same reason the alumni table writes below go through API routes.
 
 async function uploadAlumniPhoto(file: File): Promise<{ url: string } | { error: string }> {
-  const supabase = createClient()
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name.replace(/\s+/g, '_')}`
-  const { data, error } = await supabase.storage
-    .from('alumni-photos')
-    .upload(path, file, { upsert: false })
-  if (error) return { error: error.message }
-  const { data: { publicUrl } } = supabase.storage.from('alumni-photos').getPublicUrl(data.path)
-  return { url: publicUrl }
+  const formData = new FormData()
+  formData.set('file', file)
+  const res = await fetch('/api/alumni/photo', { method: 'POST', body: formData })
+  const data = await res.json()
+  if (!res.ok) return { error: data.error || 'Upload failed' }
+  return { url: data.url }
 }
 
 function PhotoInput({
@@ -107,31 +107,35 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
     if (!name.trim() || !role.trim()) return
     setSaving(true)
     setError(null)
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('alumni')
-      .insert({
-        name: name.trim(),
-        role: role.trim(),
-        graduation_year: graduationYear.trim() || null,
-        linkedin_url: linkedinUrl.trim() || null,
-        current_company: currentCompany.trim() || null,
-        industry: industry || null,
-        photo_url: photoUrl.trim() || null,
+    try {
+      const res = await fetch('/api/alumni', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          role: role.trim(),
+          graduation_year: graduationYear.trim() || null,
+          linkedin_url: linkedinUrl.trim() || null,
+          current_company: currentCompany.trim() || null,
+          industry: industry || null,
+          photo_url: photoUrl.trim() || null,
+        }),
       })
-      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, photo_url, order_index, created_at')
-      .single()
-    if (error) {
-      setError(error.message)
-    } else {
-      onInserted(data as Alumni)
-      setName('')
-      setRole('')
-      setGraduationYear('')
-      setLinkedinUrl('')
-      setCurrentCompany('')
-      setIndustry('')
-      setPhotoUrl('')
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Error adding alumni')
+      } else {
+        onInserted(data.alumni as Alumni)
+        setName('')
+        setRole('')
+        setGraduationYear('')
+        setLinkedinUrl('')
+        setCurrentCompany('')
+        setIndustry('')
+        setPhotoUrl('')
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err))
     }
     setSaving(false)
   }
@@ -234,10 +238,10 @@ function AlumniRow({
     setSaving(true)
     setError(null)
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('alumni')
-        .update({
+      const res = await fetch(`/api/alumni/${alumni.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           name: String(name ?? '').trim(),
           role: String(role ?? '').trim(),
           graduation_year: String(graduationYear ?? '').trim() || null,
@@ -245,15 +249,14 @@ function AlumniRow({
           current_company: String(currentCompany ?? '').trim() || null,
           industry: String(industry ?? '').trim() || null,
           photo_url: String(photoUrl ?? '').trim() || null,
-        })
-        .eq('id', alumni.id)
-        .select('id, name, role, graduation_year, linkedin_url, current_company, industry, photo_url, order_index, created_at')
-        .single()
-      if (error) {
-        console.error('[AlumniRow] update error:', error)
-        setError(error.message)
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        console.error('[AlumniRow] update error:', data.error)
+        setError(data.error || 'Error updating alumni')
       } else {
-        onUpdated(data as Alumni)
+        onUpdated(data.alumni as Alumni)
         setOpen(false)
       }
     } catch (err: unknown) {
@@ -268,9 +271,19 @@ function AlumniRow({
   async function handleDelete() {
     if (!confirm(`Remove ${alumni.name}?`)) return
     setDeleting(true)
-    const supabase = createClient()
-    await supabase.from('alumni').delete().eq('id', alumni.id)
-    onDeleted(alumni.id)
+    try {
+      const res = await fetch(`/api/alumni/${alumni.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        console.error('[AlumniRow] delete error:', data.error)
+        setDeleting(false)
+        return
+      }
+      onDeleted(alumni.id)
+    } catch (err) {
+      console.error('[AlumniRow] unexpected delete error:', err)
+      setDeleting(false)
+    }
   }
 
   return (
