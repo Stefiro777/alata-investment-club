@@ -1,11 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getRubricForRole } from '@/lib/hackathon-rubric'
 import { getRoleColor } from '@/lib/hackathon-colors'
+import { appendDiligenceMessage, useDiligenceRealtime } from '@/lib/hackathon-realtime'
 
 const STORAGE_KEY = 'alata_hackathon_judge_session'
 const LEADERBOARD_POLL_MS = 15000
+const DILIGENCE_POLL_MS = 30000
 
 const ROLES = ['sell_side', 'buy_side_1', 'buy_side_2', 'buy_side_3'] as const
 const ROLE_LABELS: Record<string, string> = {
@@ -135,6 +137,31 @@ export default function JudgeClient() {
     const interval = setInterval(() => loadLeaderboard(judgeSession), LEADERBOARD_POLL_MS)
     return () => clearInterval(interval)
   }, [judgeSession, activeTab, loadLeaderboard])
+
+  // Realtime keeps diligence messages current; this is just the disconnect fallback.
+  useEffect(() => {
+    if (!judgeSession || activeTab !== 'diligence') return
+    const interval = setInterval(() => loadOverview(judgeSession), DILIGENCE_POLL_MS)
+    return () => clearInterval(interval)
+  }, [judgeSession, activeTab, loadOverview])
+
+  const roomIds = useMemo(() => overview?.rooms.map((r) => r.id) ?? [], [overview])
+
+  useDiligenceRealtime(
+    roomIds,
+    useCallback((roomId: string, message: DiligenceMessage) => {
+      setOverview((prev) =>
+        prev
+          ? {
+              ...prev,
+              rooms: prev.rooms.map((room) =>
+                room.id === roomId ? { ...room, messages: appendDiligenceMessage(room.messages, message) } : room
+              ),
+            }
+          : prev
+      )
+    }, [])
+  )
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()

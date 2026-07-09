@@ -93,13 +93,23 @@ export async function POST(
       attachment_url = signed?.signedUrl ?? null
     }
 
-    return NextResponse.json({
+    const broadcastPayload = {
       id: inserted.id,
       sender_role: inserted.sender_role,
       message: inserted.message,
       attachment_url,
       created_at: inserted.created_at,
-    })
+    }
+
+    // Push to anyone already subscribed to this room so the UI updates without
+    // waiting for the next poll. Best-effort: a failure here shouldn't fail the send.
+    try {
+      await supabase.channel(`diligence-room-${room_id}`).httpSend('new_message', broadcastPayload)
+    } catch {
+      // subscribers will still pick this up on the next fallback poll
+    }
+
+    return NextResponse.json(broadcastPayload)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: message }, { status: 500 })

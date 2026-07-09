@@ -1,10 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import FileUploadButton from '@/app/components/FileUploadButton'
 import { getRoleColor } from '@/lib/hackathon-colors'
+import { appendDiligenceMessage, useDiligenceRealtime } from '@/lib/hackathon-realtime'
 
 const MAX_PHASE = 6
+const DILIGENCE_POLL_MS = 30000
 const ROLES = ['sell_side', 'buy_side_1', 'buy_side_2', 'buy_side_3'] as const
 const ROLE_LABELS: Record<string, string> = {
   sell_side: 'Sell-Side',
@@ -300,6 +302,26 @@ export default function HackathonAdminClient() {
     if (activeTab === 'diligence') loadDiligence(selectedSessionId)
     if (activeTab === 'leaderboard') loadLeaderboard(selectedSessionId)
   }, [selectedSessionId, activeTab, loadParticipants, loadMaterials, loadMandates, loadFairValue, loadDiligence, loadLeaderboard])
+
+  // Realtime keeps diligence messages current; this is just the disconnect fallback.
+  useEffect(() => {
+    if (!selectedSessionId || activeTab !== 'diligence') return
+    const interval = setInterval(() => loadDiligence(selectedSessionId), DILIGENCE_POLL_MS)
+    return () => clearInterval(interval)
+  }, [selectedSessionId, activeTab, loadDiligence])
+
+  const diligenceRoomIds = useMemo(() => diligenceRooms.map((r) => r.id), [diligenceRooms])
+
+  useDiligenceRealtime(
+    diligenceRoomIds,
+    useCallback((roomId: string, message: DiligenceMessage) => {
+      setDiligenceRooms((prev) =>
+        prev.map((room) =>
+          room.id === roomId ? { ...room, messages: appendDiligenceMessage(room.messages, message) } : room
+        )
+      )
+    }, [])
+  )
 
   async function handleReassign(participantId: string, roleKey: string) {
     if (!selectedSessionId) return

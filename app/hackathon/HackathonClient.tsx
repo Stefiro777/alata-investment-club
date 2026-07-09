@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import FileUploadButton from '@/app/components/FileUploadButton'
 import { getRoleColor } from '@/lib/hackathon-colors'
+import { appendDiligenceMessage, useDiligenceRealtime } from '@/lib/hackathon-realtime'
 
 const STORAGE_KEY = 'alata_hackathon_participant_id'
-const POLL_INTERVAL_MS = 10000
+const POLL_INTERVAL_MS = 30000
 
 const ROLE_LABELS: Record<string, string> = {
   sell_side: 'Sell-Side Advisor',
@@ -146,6 +147,19 @@ export default function HackathonClient() {
 
     return () => clearInterval(interval)
   }, [step, participant, loadParticipant, loadRooms, loadSubmissions])
+
+  const roomIds = useMemo(() => rooms.map((r) => r.id), [rooms])
+
+  useDiligenceRealtime(
+    roomIds,
+    useCallback((roomId: string, message: DiligenceMessage) => {
+      setRooms((prev) =>
+        prev.map((room) =>
+          room.id === roomId ? { ...room, messages: appendDiligenceMessage(room.messages, message) } : room
+        )
+      )
+    }, [])
+  )
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
