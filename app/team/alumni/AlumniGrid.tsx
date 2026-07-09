@@ -1,8 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { Alumni } from '@/lib/types'
 import Reveal from '@/app/components/Reveal'
+
+function initials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2)
+}
 
 export const INDUSTRY_OPTIONS = [
   'Investment Banking', 'Consulting', 'Asset Management', 'Private Equity',
@@ -30,9 +35,31 @@ function AlumniCard({ alumni }: { alumni: Alumni }) {
       <div className="relative p-4 bg-forest flex-grow">
         {/* Hairline that grows on hover */}
         <div className="absolute top-0 left-0 h-px bg-white/40 w-0 group-hover:w-full transition-[width] duration-slow" />
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="font-serif text-lg font-bold text-white leading-tight">{alumni.name}</h3>
+        <div className="flex items-start gap-3">
+          <div className="relative w-11 h-11 shrink-0 rounded-full overflow-hidden bg-white/10 border border-white/20">
+            {alumni.photo_url ? (
+              <Image src={alumni.photo_url} alt={alumni.name} fill sizes="44px" className="object-cover object-top" />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="font-serif text-sm text-white/60">{initials(alumni.name)}</span>
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-serif text-lg font-bold text-white leading-tight">{alumni.name}</h3>
+              {alumni.linkedin_url && (
+                <a
+                  href={alumni.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 opacity-60 group-hover:opacity-100 hover:!opacity-70 transition-opacity duration-base mt-0.5"
+                  aria-label={`${alumni.name} on LinkedIn`}
+                >
+                  <LinkedInIcon />
+                </a>
+              )}
+            </div>
             <p className="text-xs uppercase tracking-widest text-white/70 mt-1">{alumni.role}</p>
             {alumni.current_company && (
               <p className="text-sm font-semibold text-white mt-2 flex items-center gap-1.5">
@@ -51,17 +78,6 @@ function AlumniCard({ alumni }: { alumni: Alumni }) {
               </span>
             )}
           </div>
-          {alumni.linkedin_url && (
-            <a
-              href={alumni.linkedin_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 opacity-60 group-hover:opacity-100 hover:!opacity-70 transition-opacity duration-base mt-0.5"
-              aria-label={`${alumni.name} on LinkedIn`}
-            >
-              <LinkedInIcon />
-            </a>
-          )}
         </div>
       </div>
     </div>

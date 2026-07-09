@@ -47,12 +47,12 @@ function MemberCard({ member }: { member: TeamMember }) {
         {/* Subtle green veil on hover */}
         <div className="absolute inset-0 bg-forest/0 group-hover:bg-forest/10 transition-colors duration-base pointer-events-none" />
       </div>
-      {/* Info bar */}
-      <div className="relative p-4 bg-forest flex-grow">
+      {/* Info bar — fixed height so the role text never changes the card's size */}
+      <div className="relative p-4 bg-forest h-[104px] flex flex-col justify-center">
         {/* Hairline that grows on hover */}
         <div className="absolute top-0 left-0 h-px bg-white/40 w-0 group-hover:w-full transition-[width] duration-slow" />
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-serif text-lg font-bold text-white leading-tight">{member.name}</h3>
+          <h3 className="font-serif text-lg font-bold text-white leading-tight line-clamp-1">{member.name}</h3>
           {member.linkedin_url && (
             <a
               href={member.linkedin_url}
@@ -68,7 +68,7 @@ function MemberCard({ member }: { member: TeamMember }) {
             </a>
           )}
         </div>
-        <p className="text-xs uppercase tracking-widest text-white/70 mt-1">{member.role}</p>
+        <p className="text-xs uppercase tracking-widest text-white/70 mt-1 line-clamp-2">{member.role}</p>
       </div>
     </div>
   )
@@ -90,6 +90,10 @@ export default async function TeamPage() {
   const members = (membersData ?? []) as TeamMember[]
   const bod = members.filter(m => m.type === 'bod')
   const management = members.filter(m => m.type === 'management')
+  // Hide a section's heading until it actually has a photo to show — an empty
+  // wall of initials before onboarding reads as "broken", not "coming soon".
+  const bodReady = bod.some(m => m.photo_url)
+  const managementReady = management.some(m => m.photo_url)
 
   return (
     <div>
@@ -119,55 +123,40 @@ export default async function TeamPage() {
       </section>
 
       {/* Board of Directors */}
-      <section className="py-20 sm:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <Reveal>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Board of Directors</h2>
-          </Reveal>
-          {bod.length === 0 ? (
-            <p className="text-ink-500 text-sm">No members to display.</p>
-          ) : (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6 max-w-xl mx-auto">
-                {bod.slice(0, 2).map((m, i) => (
-                  <Reveal key={m.id} delay={i * 100} direction="up">
-                    <MemberCard member={m} />
-                  </Reveal>
-                ))}
-              </div>
-              {bod.length > 2 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
-                  {bod.slice(2).map((m, i) => (
-                    <Reveal key={m.id} delay={i * 80} direction="up">
-                      <MemberCard member={m} />
-                    </Reveal>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Management */}
-      <section className="py-20 sm:py-28 bg-gray-100 border-t border-line">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <Reveal>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Management</h2>
-          </Reveal>
-          {management.length === 0 ? (
-            <p className="text-ink-500 text-sm">No members to display.</p>
-          ) : (
-            <div className="flex flex-wrap justify-center gap-6 max-w-[54.75rem] mx-auto">
-              {management.map((m, i) => (
-                <Reveal key={m.id} delay={i * 70} direction="up" className="w-[calc(50%-12px)] sm:w-[calc(33.333%-16px)]">
+      {bodReady && (
+        <section className="py-20 sm:py-28 bg-white">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <Reveal>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Board of Directors</h2>
+            </Reveal>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
+              {bod.map((m, i) => (
+                <Reveal key={m.id} delay={i * 80} direction="up">
                   <MemberCard member={m} />
                 </Reveal>
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
+
+      {/* Management */}
+      {managementReady && (
+        <section className="py-20 sm:py-28 bg-gray-100 border-t border-line">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <Reveal>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Management</h2>
+            </Reveal>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
+              {management.map((m, i) => (
+                <Reveal key={m.id} delay={i * 70} direction="up">
+                  <MemberCard member={m} />
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Meet our Alumni */}
       {showAlumni && (

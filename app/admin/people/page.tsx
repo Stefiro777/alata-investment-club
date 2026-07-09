@@ -26,7 +26,7 @@ export default async function AdminPeoplePage() {
       .order('created_at', { ascending: true }),
     supabase
       .from('alumni')
-      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, photo_url, order_index, created_at')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
     supabase

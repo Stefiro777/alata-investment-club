@@ -36,7 +36,7 @@ export default async function AlumniPage() {
   const [{ data: alumniData, error: alumniError }, { data: companiesData }] = await Promise.all([
     supabase
       .from('alumni')
-      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, photo_url, order_index')
       .order('created_at', { ascending: false }),
     supabase
       .from('alumni_companies')
@@ -44,7 +44,7 @@ export default async function AlumniPage() {
       .order('created_at', { ascending: false }),
   ])
 
-  // Fallback if order_index column doesn't exist yet (migration not yet run)
+  // Fallback if order_index/photo_url columns don't exist yet (migration not yet run)
   const alumniList = alumniError
     ? (await supabase
         .from('alumni')

@@ -4,6 +4,74 @@ import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { Alumni } from '@/lib/types'
 
+// ── Photo upload helper ────────────────────────────────────────────────────────
+
+async function uploadAlumniPhoto(file: File): Promise<{ url: string } | { error: string }> {
+  const supabase = createClient()
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name.replace(/\s+/g, '_')}`
+  const { data, error } = await supabase.storage
+    .from('alumni-photos')
+    .upload(path, file, { upsert: false })
+  if (error) return { error: error.message }
+  const { data: { publicUrl } } = supabase.storage.from('alumni-photos').getPublicUrl(data.path)
+  return { url: publicUrl }
+}
+
+function PhotoInput({
+  currentUrl,
+  onChange,
+}: {
+  currentUrl: string
+  onChange: (url: string) => void
+}) {
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadError(null)
+    const result = await uploadAlumniPhoto(file)
+    if ('error' in result) {
+      setUploadError(result.error)
+    } else {
+      onChange(result.url)
+    }
+    setUploading(false)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  return (
+    <div className="sm:col-span-2">
+      <label className="block text-xs text-ink-500 mb-1">Photo</label>
+      <div className="flex gap-2 items-center">
+        <input
+          value={currentUrl}
+          onChange={e => onChange(e.target.value)}
+          className="flex-1 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
+          placeholder="https://… or upload below"
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="flex-shrink-0 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-2 transition-colors duration-fast disabled:opacity-50 whitespace-nowrap"
+        >
+          {uploading ? 'Uploading…' : 'Upload'}
+        </button>
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      </div>
+      {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
+      {currentUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={currentUrl} alt="preview" className="mt-2 h-14 w-14 rounded-full object-cover object-top border border-line" />
+      )}
+    </div>
+  )
+}
+
 const INDUSTRY_OPTIONS = [
   'Investment Banking', 'Consulting', 'Asset Management', 'Private Equity',
   'Venture Capital', 'Hedge Fund', 'Big Tech', 'Sales & Business Development', 'Start-up', 'Audit & Accounting',
@@ -30,6 +98,7 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [currentCompany, setCurrentCompany] = useState('')
   const [industry, setIndustry] = useState('')
+  const [photoUrl, setPhotoUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -48,8 +117,9 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
         linkedin_url: linkedinUrl.trim() || null,
         current_company: currentCompany.trim() || null,
         industry: industry || null,
+        photo_url: photoUrl.trim() || null,
       })
-      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
+      .select('id, name, role, graduation_year, linkedin_url, current_company, industry, photo_url, order_index, created_at')
       .single()
     if (error) {
       setError(error.message)
@@ -61,6 +131,7 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
       setLinkedinUrl('')
       setCurrentCompany('')
       setIndustry('')
+      setPhotoUrl('')
     }
     setSaving(false)
   }
@@ -112,6 +183,7 @@ function AlumniInsertForm({ onInserted }: { onInserted: (a: Alumni) => void }) {
           placeholder="LinkedIn URL"
           className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors sm:col-span-2"
         />
+        <PhotoInput currentUrl={photoUrl} onChange={setPhotoUrl} />
       </div>
       {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
       <button
@@ -151,6 +223,7 @@ function AlumniRow({
         ? alumni.industry
         : ''
   )
+  const [photoUrl, setPhotoUrl] = useState(alumni.photo_url ?? '')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -171,9 +244,10 @@ function AlumniRow({
           linkedin_url: String(linkedinUrl ?? '').trim() || null,
           current_company: String(currentCompany ?? '').trim() || null,
           industry: String(industry ?? '').trim() || null,
+          photo_url: String(photoUrl ?? '').trim() || null,
         })
         .eq('id', alumni.id)
-        .select('id, name, role, graduation_year, linkedin_url, current_company, industry, order_index, created_at')
+        .select('id, name, role, graduation_year, linkedin_url, current_company, industry, photo_url, order_index, created_at')
         .single()
       if (error) {
         console.error('[AlumniRow] update error:', error)
@@ -211,6 +285,15 @@ function AlumniRow({
             <path d="M8 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm8-16a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
           </svg>
         </div>
+
+        {alumni.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={alumni.photo_url} alt={alumni.name} className="w-8 h-8 rounded-full object-cover object-top flex-shrink-0" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-forest flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-xs font-medium">{alumni.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+          </div>
+        )}
 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-ink-900 truncate">{alumni.name}</p>
@@ -255,6 +338,7 @@ function AlumniRow({
               ))}
             </select>
             <input value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="LinkedIn URL" className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors sm:col-span-2" />
+            <PhotoInput currentUrl={photoUrl} onChange={setPhotoUrl} />
           </div>
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
           <button type="submit" disabled={saving} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2 transition-colors duration-fast disabled:opacity-50">

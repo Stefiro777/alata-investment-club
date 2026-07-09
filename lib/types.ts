@@ -6,6 +6,7 @@ export type Alumni = {
   linkedin_url: string | null
   current_company: string | null
   industry: string | null
+  photo_url?: string | null
   order_index?: number | null
   created_at?: string
 }
