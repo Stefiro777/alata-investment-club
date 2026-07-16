@@ -30,7 +30,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!nome.trim() || !cognome.trim() || !email.trim() || !anno || !fieldValue.trim()) return
+    if (!nome.trim() || !cognome.trim() || !email.trim() || !anno) return
     setLoading(true)
     setError(null)
 
@@ -173,11 +173,10 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
               {/* Dynamic field: motivation or panelists */}
               <div>
                 <label className={labelClass}>
-                  {isPanelists ? 'Questions for the Panelists' : 'Motivation'} *{' '}
+                  {isPanelists ? 'Questions for the Panelists' : 'Motivation'}{' '}
                   <span className="text-gray-400 normal-case tracking-normal">(max 500 characters)</span>
                 </label>
                 <textarea
-                  required
                   rows={4}
                   maxLength={500}
                   value={fieldValue}
