@@ -27,10 +27,12 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
   const [error, setError] = useState<string | null>(null)
 
   const isPanelists = event.registration_field === 'panelists'
+  const showFieldPrompt = event.registration_field === 'motivation' || event.registration_field === 'panelists'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!nome.trim() || !cognome.trim() || !email.trim() || !anno) return
+    if (showFieldPrompt && !fieldValue.trim()) return
     setLoading(true)
     setError(null)
 
@@ -44,9 +46,11 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
         email: email.trim(),
         telefono: telefono.trim() || null,
         anno_di_studio: anno,
-        ...(isPanelists
-          ? { questions_for_panelists: fieldValue.trim() }
-          : { motivazione: fieldValue.trim() }),
+        ...(showFieldPrompt
+          ? isPanelists
+            ? { questions_for_panelists: fieldValue.trim() }
+            : { motivazione: fieldValue.trim() }
+          : {}),
       }),
     })
     const json = await res.json()
@@ -170,22 +174,25 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                 </select>
               </div>
 
-              {/* Dynamic field: motivation or panelists */}
-              <div>
-                <label className={labelClass}>
-                  {isPanelists ? 'Questions for the Panelists' : 'Motivation'}{' '}
-                  <span className="text-gray-400 normal-case tracking-normal">(max 500 characters)</span>
-                </label>
-                <textarea
-                  rows={4}
-                  maxLength={500}
-                  value={fieldValue}
-                  onChange={e => setFieldValue(e.target.value)}
-                  placeholder={isPanelists ? 'What would you like to ask the panelists?' : 'Why do you want to attend this event?'}
-                  className="w-full bg-transparent border-b border-gray-300 focus:border-forest focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors resize-none"
-                />
-                <p className="text-right text-xs text-gray-400 mt-1">{fieldValue.length}/500</p>
-              </div>
+              {/* Dynamic field: motivation or panelists (hidden when registration_field is null) */}
+              {showFieldPrompt && (
+                <div>
+                  <label className={labelClass}>
+                    {isPanelists ? 'Questions for the Panelists' : 'Motivation'} *{' '}
+                    <span className="text-gray-400 normal-case tracking-normal">(max 500 characters)</span>
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    maxLength={500}
+                    value={fieldValue}
+                    onChange={e => setFieldValue(e.target.value)}
+                    placeholder={isPanelists ? 'What would you like to ask the panelists?' : 'Why do you want to attend this event?'}
+                    className="w-full bg-transparent border-b border-gray-300 focus:border-forest focus:outline-none text-black text-sm py-2.5 placeholder:text-gray-400 transition-colors resize-none"
+                  />
+                  <p className="text-right text-xs text-gray-400 mt-1">{fieldValue.length}/500</p>
+                </div>
+              )}
 
               {error && (
                 <p className="text-red-500 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>

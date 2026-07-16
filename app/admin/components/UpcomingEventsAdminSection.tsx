@@ -23,7 +23,7 @@ type FormState = {
   status: UpcomingEvent['status']
   action_type: 'form' | 'link' | ''
   action_link: string
-  registration_field: 'motivation' | 'panelists'
+  registration_field: 'motivation' | 'panelists' | null
   ticket_price_eur: string
   location: string
 }
@@ -35,7 +35,7 @@ const EMPTY_FORM: FormState = {
   status: 'coming_soon',
   action_type: '',
   action_link: '',
-  registration_field: 'motivation',
+  registration_field: null,
   ticket_price_eur: '',
   location: '',
 }
@@ -407,20 +407,23 @@ function EventFormModal({
           <div>
             <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-2">Registration Field</label>
             <div className="flex gap-2">
-              {(['motivation', 'panelists'] as const).map(opt => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => set('registration_field', opt)}
-                  className={`text-xs font-medium tracking-wide px-4 py-2 border transition-colors duration-fast ${
-                    form.registration_field === opt
-                      ? 'bg-forest text-white border-forest'
-                      : 'bg-white text-ink-500 border-line hover:border-forest hover:text-forest'
-                  }`}
-                >
-                  {opt === 'motivation' ? 'Motivation' : 'Questions for Panelists'}
-                </button>
-              ))}
+              {(['motivation', 'panelists', 'none'] as const).map(opt => {
+                const value = opt === 'none' ? null : opt
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setForm(prev => ({ ...prev, registration_field: value }))}
+                    className={`text-xs font-medium tracking-wide px-4 py-2 border transition-colors duration-fast ${
+                      form.registration_field === value
+                        ? 'bg-forest text-white border-forest'
+                        : 'bg-white text-ink-500 border-line hover:border-forest hover:text-forest'
+                    }`}
+                  >
+                    {opt === 'motivation' ? 'Motivation' : opt === 'panelists' ? 'Questions for Panelists' : 'None'}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -624,7 +627,7 @@ export default function UpcomingEventsAdminSection({
       status: ev.status,
       action_type: ev.action_type ?? '',
       action_link: ev.action_link ?? '',
-      registration_field: ev.registration_field ?? 'motivation',
+      registration_field: ev.registration_field ?? null,
       ticket_price_eur: ev.ticket_price_cents ? (ev.ticket_price_cents / 100).toFixed(2) : '',
       location: ev.location ?? '',
     })

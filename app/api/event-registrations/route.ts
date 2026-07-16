@@ -68,6 +68,24 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = serviceClient()
+
+    const { data: eventRowForValidation, error: eventFetchErr } = await supabase
+      .from('upcoming_events')
+      .select('registration_field')
+      .eq('id', event_id)
+      .single()
+
+    if (eventFetchErr) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 400 })
+    }
+
+    if (eventRowForValidation.registration_field === 'motivation' && !motivazione?.trim()) {
+      return NextResponse.json({ error: 'Motivation is required' }, { status: 400 })
+    }
+    if (eventRowForValidation.registration_field === 'panelists' && !questions_for_panelists?.trim()) {
+      return NextResponse.json({ error: 'Questions for panelists is required' }, { status: 400 })
+    }
+
     const { error } = await supabase.from('event_registrations').insert({
       event_id,
       nome,
