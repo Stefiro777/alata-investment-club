@@ -376,8 +376,8 @@ function MemberFormModal({
             />
           </div>
 
-          {/* Email + Phone */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Email + Phone — stacked below sm: so long emails aren't cramped into ~136px */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Email</label>
               <input
@@ -400,8 +400,8 @@ function MemberFormModal({
             </div>
           </div>
 
-          {/* Role + Title */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Role + Title — same cramped-field issue as Email/Phone above, same fix */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] uppercase tracking-wide text-ink-400 mb-1">Ruolo</label>
               <div className="relative">
@@ -561,12 +561,13 @@ function MemberRow({
           </div>
         )}
 
-        {/* Riga 4: Email */}
+        {/* Riga 4: Email — vertical padding grows the tap height to >=44px
+            without changing the text size. */}
         <div className="flex items-center gap-4 mt-2 flex-wrap">
           {member.email && (
             <a
               href={`mailto:${member.email}`}
-              className="text-sm text-gray-500 hover:text-forest transition-colors"
+              className="text-sm text-gray-500 hover:text-forest transition-colors py-3"
               onClick={e => e.stopPropagation()}
             >
               {member.email}
@@ -575,7 +576,7 @@ function MemberRow({
           {member.phone && (
             <a
               href={`tel:${member.phone}`}
-              className="text-sm text-gray-600 hover:text-forest transition-colors"
+              className="text-sm text-gray-600 hover:text-forest transition-colors py-3"
               onClick={e => e.stopPropagation()}
             >
               {member.phone}
@@ -594,7 +595,7 @@ function MemberRow({
               <button
                 type="button"
                 onClick={onOpenCompleted}
-                className="text-sm text-gray-500 underline-offset-2 hover:underline cursor-pointer"
+                className="text-sm text-gray-500 underline-offset-2 hover:underline cursor-pointer py-3"
               >
                 {taskStats.currentQuarterDone} completate questo quarter
               </button>
@@ -624,11 +625,13 @@ function MemberRow({
           </div>
         ) : (
           <>
+            {/* Padding-only growth (no negative margin) so the flex gap-2 between
+                the two buttons stays real space, guaranteeing >=8px clearance. */}
             {canEdit && (
               <button
                 onClick={onEdit}
                 title="Modifica"
-                className="p-1.5 text-ink-300 hover:text-forest transition-colors"
+                className="p-3.5 text-ink-300 hover:text-forest transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -639,7 +642,7 @@ function MemberRow({
               <button
                 onClick={() => setConfirmDel(true)}
                 title="Elimina"
-                className="p-1.5 text-ink-300 hover:text-red-500 transition-colors"
+                className="p-3.5 text-ink-300 hover:text-red-500 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
