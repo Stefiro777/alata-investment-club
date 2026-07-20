@@ -1066,23 +1066,26 @@ function TodoRow({
   return (
     <div className={`flex items-start gap-4 px-5 py-4 border-b border-line last:border-b-0 transition-opacity ${done ? 'opacity-50' : ''}`}>
 
-      {/* Checkbox */}
+      {/* Checkbox — negative margin balances the added padding so the visible
+          16×16 square keeps its exact position/size while the real tap area grows to 44×44. */}
       <button
         type="button"
         onClick={onToggle}
         disabled={toggling}
         aria-label={done ? 'Segna come da fare' : 'Segna come completata'}
-        className={`flex-shrink-0 mt-0.5 w-4 h-4 border transition-colors disabled:cursor-wait ${
+        className="flex-shrink-0 -m-3.5 p-3.5 disabled:cursor-wait"
+      >
+        <span className={`block mt-0.5 w-4 h-4 border transition-colors ${
           done
             ? 'bg-forest border-forest'
             : 'bg-white border-ink-400 hover:border-forest'
-        }`}
-      >
-        {done && (
-          <svg className="w-full h-full text-white" viewBox="0 0 16 16" fill="none">
-            <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
+        }`}>
+          {done && (
+            <svg className="w-full h-full text-white" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </span>
       </button>
 
       {/* Content */}
@@ -1166,11 +1169,14 @@ function TodoRow({
             </>
           ) : (
             <>
+              {/* Edit/Delete — padding-only growth (no negative margin) so the flex
+                  gap-2 between them stays real empty space, guaranteeing >=8px
+                  clearance between the two enlarged tap areas. */}
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onEditRequest() }}
                 aria-label="Modifica task"
-                className="text-forest hover:text-black transition-colors"
+                className="text-forest hover:text-black transition-colors p-4"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -1181,7 +1187,7 @@ function TodoRow({
                 type="button"
                 onClick={onDeleteRequest}
                 aria-label="Elimina task"
-                className="text-ink-300 hover:text-red-400 transition-colors p-1.5"
+                className="text-ink-300 hover:text-red-400 transition-colors p-3"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
