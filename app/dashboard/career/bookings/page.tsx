@@ -1305,22 +1305,29 @@ export default function CareerBookingsPage() {
         <div className="w-8 h-px bg-forest" />
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-0 border-b border-gray-200 mb-8">
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px ${
-              tab === t.key
-                ? 'border-forest text-forest'
-                : 'border-transparent text-gray-400 hover:text-gray-700'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Tab bar — scrolls horizontally within itself on narrow viewports instead of
+          pushing the whole page into overflow (border lives on the scroll container
+          so it still spans the full width even when the tabs don't). */}
+      <div
+        className="overflow-x-auto [&::-webkit-scrollbar]:hidden border-b border-gray-200 mb-8"
+        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
+        <div className="flex gap-0 w-max">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px whitespace-nowrap ${
+                tab === t.key
+                  ? 'border-forest text-forest'
+                  : 'border-transparent text-gray-400 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab content */}
