@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -22,6 +22,22 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
   const router = useRouter()
   const [teamOpen, setTeamOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const teamMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!teamOpen) return
+    function handleOutside(e: MouseEvent | TouchEvent) {
+      if (teamMenuRef.current && !teamMenuRef.current.contains(e.target as Node)) {
+        setTeamOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    document.addEventListener('touchstart', handleOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+      document.removeEventListener('touchstart', handleOutside)
+    }
+  }, [teamOpen])
 
   const isBoD = profile.role === 'bod' || profile.role === 'director' || profile.email === 'finullistefano@gmail.com'
   const canScan = isBoD || (profile.teams ?? []).some(t => t === 'events' || t === 'media')
@@ -67,9 +83,8 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
 
           {/* Team dropdown */}
           <div
+            ref={teamMenuRef}
             className="relative flex-shrink-0"
-            onMouseEnter={() => setTeamOpen(true)}
-            onMouseLeave={() => setTeamOpen(false)}
           >
             <button
               type="button"

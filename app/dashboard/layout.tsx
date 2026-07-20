@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { DashboardProfileProvider, type MemberProfile } from './DashboardProfileContext'
@@ -49,61 +49,76 @@ type Status = 'loading' | 'ok' | 'not-found' | 'unauthenticated'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [profile, setProfile] = useState<MemberProfile | null>(null)
   const [status, setStatus] = useState<Status>('loading')
 
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient()
+  const loadProfile = useCallback(async () => {
+    const supabase = createClient()
 
-      const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
-      if (!user) {
-        setStatus('unauthenticated')
-        router.push('/login')
-        return
-      }
-
-      const { data: profileData, error } = await supabase
-        .from('club_members')
-        .select('full_name, role, teams, membership_expires_at, member_id, created_at')
-        .eq('email', user?.email ?? '')
-        .maybeSingle()
-
-      console.log('Profile loaded:', profileData)
-
-      if (!profileData) {
-        setStatus('not-found')
-        return
-      }
-
-      // Collega user_id se non ancora collegato
-      await supabase
-        .from('club_members')
-        .update({ user_id: user.id })
-        .eq('email', user.email!)
-        .is('user_id', null)
-
-      setProfile({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        full_name:             (profileData as any).full_name             ?? 'Member',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        role:                  (profileData as any).role                  ?? 'member',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        teams:                 (profileData as any).teams                 ?? null,
-        email:                 user.email ?? '',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        membership_expires_at: (profileData as any).membership_expires_at ?? null,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        member_id:             (profileData as any).member_id ?? null,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        created_at:            (profileData as any).created_at ?? null,
-      })
-      setStatus('ok')
+    if (!user) {
+      setStatus('unauthenticated')
+      router.push('/login')
+      return
     }
 
-    load()
+    const { data: profileData, error } = await supabase
+      .from('club_members')
+      .select('full_name, role, teams, membership_expires_at, member_id, created_at')
+      .eq('email', user?.email ?? '')
+      .maybeSingle()
+
+    console.log('Profile loaded:', profileData)
+
+    if (!profileData) {
+      setStatus('not-found')
+      return
+    }
+
+    // Collega user_id se non ancora collegato
+    await supabase
+      .from('club_members')
+      .update({ user_id: user.id })
+      .eq('email', user.email!)
+      .is('user_id', null)
+
+    setProfile({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      full_name:             (profileData as any).full_name             ?? 'Member',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      role:                  (profileData as any).role                  ?? 'member',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      teams:                 (profileData as any).teams                 ?? null,
+      email:                 user.email ?? '',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      membership_expires_at: (profileData as any).membership_expires_at ?? null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      member_id:             (profileData as any).member_id ?? null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      created_at:            (profileData as any).created_at ?? null,
+    })
+    setStatus('ok')
   }, [router])
+
+  // Fetch iniziale + re-fetch a ogni cambio di route, così i dati
+  // (es. teams) riflettono eventuali modifiche fatte da un admin mentre
+  // la dashboard è aperta, senza bisogno di un reload manuale.
+  useEffect(() => {
+    loadProfile()
+  }, [pathname, loadProfile])
+
+  // Re-fetch quando la tab torna in foreground, per lo stesso motivo.
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        loadProfile()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [loadProfile])
 
   if (status === 'loading') {
     return (
