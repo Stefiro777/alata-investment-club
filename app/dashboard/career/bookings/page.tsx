@@ -15,6 +15,8 @@ type CareerService = {
   price_cents: number
   max_bookings_per_slot: number
   active: boolean
+  section: 'master' | 'career'
+  display_order: number
 }
 
 type CareerAvailability = {
@@ -75,11 +77,20 @@ const DOW_BUTTONS = [
 ]
 const DOW_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+const SECTION_OPTIONS = [
+  { key: 'master' as const, label: 'Master & Education' },
+  { key: 'career' as const, label: 'Career' },
+]
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatPrice(cents: number): string {
   if (cents === 0) return 'Free'
   return `€${(cents / 100).toFixed(2).replace('.', ',')}`
+}
+
+function sectionLabel(section: string): string {
+  return SECTION_OPTIONS.find(o => o.key === section)?.label ?? section
 }
 
 function formatDate(dateStr: string): string {
@@ -169,11 +180,14 @@ type ServiceForm = {
   price_euros: string
   max_bookings_per_slot: string
   active: boolean
+  section: 'master' | 'career'
+  display_order: string
 }
 
 const EMPTY_SVC_FORM: ServiceForm = {
   name: '', description: '', duration_minutes: '60',
   price_euros: '0', max_bookings_per_slot: '1', active: true,
+  section: 'master', display_order: '1',
 }
 
 function svcToForm(s: CareerService): ServiceForm {
@@ -184,6 +198,8 @@ function svcToForm(s: CareerService): ServiceForm {
     price_euros: ((s.price_cents ?? 0) / 100).toFixed(2),
     max_bookings_per_slot: String(s.max_bookings_per_slot ?? 1),
     active: s.active,
+    section: s.section ?? 'master',
+    display_order: String(s.display_order ?? 1),
   }
 }
 
@@ -195,6 +211,8 @@ function formToSvcPayload(f: ServiceForm) {
     price_cents: Math.round(parseFloat(f.price_euros || '0') * 100),
     max_bookings_per_slot: parseInt(f.max_bookings_per_slot, 10) || 1,
     active: f.active,
+    section: f.section,
+    display_order: parseInt(f.display_order, 10) || 1,
   }
 }
 
@@ -226,6 +244,18 @@ function SvcFormFields({ form, onChange }: { form: ServiceForm | undefined; onCh
         <label className={labelCls}>Max per slot</label>
         <input type="number" min={1} value={form.max_bookings_per_slot}
           onChange={e => onChange({ ...form, max_bookings_per_slot: e.target.value })} className={inputCls} />
+      </div>
+      <div>
+        <label className={labelCls}>Section</label>
+        <select value={form.section}
+          onChange={e => onChange({ ...form, section: e.target.value as 'master' | 'career' })} className={inputCls}>
+          {SECTION_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className={labelCls}>Display order</label>
+        <input type="number" min={1} value={form.display_order}
+          onChange={e => onChange({ ...form, display_order: e.target.value })} className={inputCls} />
       </div>
       <div className="flex items-center gap-2 pt-5">
         <input type="checkbox" id="svc-active" checked={form.active}
@@ -345,6 +375,9 @@ function ServicesTab({
                       <span className="text-xs text-gray-400">{s.duration_minutes} min</span>
                     )}
                     <span className="text-xs text-gray-400">Max {s.max_bookings_per_slot}/slot</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-gray-100 text-gray-600">
+                      {sectionLabel(s.section)} · #{s.display_order}
+                    </span>
                   </div>
                   {s.description && (
                     <p className="text-xs text-gray-400 mt-1 line-clamp-1">{s.description}</p>

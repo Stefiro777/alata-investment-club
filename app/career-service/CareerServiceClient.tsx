@@ -18,52 +18,17 @@ const stripePromise = stripeKey ? loadStripe(stripeKey) : null
 
 const LINKTREE_URL = 'https://linktr.ee/alatainvestmentclub'
 
-const masterServices = [
-  {
-    number: '01',
-    title: 'Master Orientation',
-    description:
-      "Personalized guidance to identify the right master's programs based on your profile, goals, and target schools. We help you build a compelling application strategy.",
-  },
-  {
-    number: '02',
-    title: 'GMAT / IELTS Prep',
-    description:
-      'Structured preparation sessions for GMAT and IELTS, focused on your weak areas. Get actionable feedback and a tailored study plan from members with first-hand experience.',
-  },
-  {
-    number: '03',
-    title: 'Finance Technicals',
-    description:
-      'Hands-on training in financial modelling, accounting fundamentals, and valuation — the core skills expected in finance internships and graduate roles.',
-  },
-]
-
-const careerServices = [
-  {
-    number: '01',
-    title: 'Career Orientation',
-    description:
-      'One-on-one sessions to map your career path in finance. We help you define your target roles, sectors, and firms, and build a realistic action plan.',
-  },
-  {
-    number: '02',
-    title: 'Interview Prep',
-    description:
-      'Mock interviews and technical drills tailored to investment banking, consulting, and asset management recruitment processes. Real questions, real feedback.',
-  },
-  {
-    number: '03',
-    title: 'CV / Cover Letter Review',
-    description:
-      'Expert review of your CV and cover letter with detailed written feedback and a revised version. Aligned with the standards of top financial firms.',
-  },
-]
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Slot = { date: string; time: string; available: boolean }
 type ServiceInfo = { id: string; name: string; price_cents: number; duration_minutes: number | null }
+type PublicService = {
+  id: string
+  name: string
+  description: string | null
+  section: 'master' | 'career'
+  display_order: number
+}
 
 // ── Calendar helpers ──────────────────────────────────────────────────────────
 
@@ -848,6 +813,26 @@ function ServiceSubCard({ number, title, description }: { number: string; title:
 // ── Full page content (mirrors original page.tsx exactly) ─────────────────────
 
 export default function CareerServiceClient() {
+  const [services, setServices]               = useState<PublicService[]>([])
+  const [loadingServices, setLoadingServices] = useState(true)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('career_services')
+      .select('id, name, description, section, display_order')
+      .eq('active', true)
+      .order('section', { ascending: true })
+      .order('display_order', { ascending: true })
+      .then(({ data }) => {
+        setServices((data ?? []) as PublicService[])
+        setLoadingServices(false)
+      })
+  }, [])
+
+  const masterServices = services.filter(s => s.section === 'master')
+  const careerServices = services.filter(s => s.section === 'career')
+
   return (
     <div>
       {/* Hero */}
@@ -882,49 +867,69 @@ export default function CareerServiceClient() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col gap-8">
 
-            {/* Window 1: Master & Education */}
-            <Reveal delay={0} direction="up">
-              <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
-                <div className="px-10 py-8" style={{ background: 'var(--forest)' }}>
-                  <h2 className="font-serif text-4xl sm:text-5xl font-normal uppercase text-white tracking-widest">
-                    Master &amp; Education
-                  </h2>
-                  <div className="w-full border-b border-white/20 my-4" />
-                  <p className="text-sm italic text-white/70">
-                    Academic guidance and technical preparation for top programs
-                  </p>
+            {/* Window 1: Master & Education — hidden once loaded if no active services in this section */}
+            {(loadingServices || masterServices.length > 0) && (
+              <Reveal delay={0} direction="up">
+                <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
+                  <div className="px-10 py-8" style={{ background: 'var(--forest)' }}>
+                    <h2 className="font-serif text-4xl sm:text-5xl font-normal uppercase text-white tracking-widest">
+                      Master &amp; Education
+                    </h2>
+                    <div className="w-full border-b border-white/20 my-4" />
+                    <p className="text-sm italic text-white/70">
+                      Academic guidance and technical preparation for top programs
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch gap-6 p-6">
+                    {loadingServices ? (
+                      <p className="col-span-full text-sm text-ink-500 py-6 text-center">Loading services…</p>
+                    ) : (
+                      masterServices.map((service, i) => (
+                        <Reveal key={service.id} delay={i * 100} direction="up">
+                          <ServiceSubCard
+                            number={String(i + 1).padStart(2, '0')}
+                            title={service.name}
+                            description={service.description ?? ''}
+                          />
+                        </Reveal>
+                      ))
+                    )}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch gap-6 p-6">
-                  {masterServices.map((service, i) => (
-                    <Reveal key={service.number} delay={i * 100} direction="up">
-                      <ServiceSubCard {...service} />
-                    </Reveal>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
+              </Reveal>
+            )}
 
-            {/* Window 2: Career */}
-            <Reveal delay={150} direction="up">
-              <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
-                <div className="px-10 py-8" style={{ background: 'var(--forest)' }}>
-                  <h2 className="font-serif text-4xl sm:text-5xl font-normal uppercase text-white tracking-widest">
-                    Career
-                  </h2>
-                  <div className="w-full border-b border-white/20 my-4" />
-                  <p className="text-sm italic text-white/70">
-                    End-to-end support for your professional journey in finance
-                  </p>
+            {/* Window 2: Career — hidden once loaded if no active services in this section */}
+            {(loadingServices || careerServices.length > 0) && (
+              <Reveal delay={150} direction="up">
+                <div className="flex flex-col h-full" style={{ border: '2px solid #1a4a3a' }}>
+                  <div className="px-10 py-8" style={{ background: 'var(--forest)' }}>
+                    <h2 className="font-serif text-4xl sm:text-5xl font-normal uppercase text-white tracking-widest">
+                      Career
+                    </h2>
+                    <div className="w-full border-b border-white/20 my-4" />
+                    <p className="text-sm italic text-white/70">
+                      End-to-end support for your professional journey in finance
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch gap-6 p-6">
+                    {loadingServices ? (
+                      <p className="col-span-full text-sm text-ink-500 py-6 text-center">Loading services…</p>
+                    ) : (
+                      careerServices.map((service, i) => (
+                        <Reveal key={service.id} delay={i * 100} direction="up">
+                          <ServiceSubCard
+                            number={String(i + 1).padStart(2, '0')}
+                            title={service.name}
+                            description={service.description ?? ''}
+                          />
+                        </Reveal>
+                      ))
+                    )}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch gap-6 p-6">
-                  {careerServices.map((service, i) => (
-                    <Reveal key={service.number} delay={i * 100} direction="up">
-                      <ServiceSubCard {...service} />
-                    </Reveal>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
+              </Reveal>
+            )}
 
           </div>
         </div>
