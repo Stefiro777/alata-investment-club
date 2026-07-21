@@ -233,7 +233,7 @@ function AddDocModal({
       <div className="bg-white w-full max-w-xl max-h-[80vh] flex flex-col shadow-2xl">
         <div className="flex items-center justify-between px-8 py-6 border-b border-line flex-shrink-0">
           <h3 className="font-serif text-xl font-bold text-ink-900">Add document</h3>
-          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 p-1">
+          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 -m-3.5 p-3.5">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -295,7 +295,7 @@ function AddDocModal({
 
           {/* Delibere: year + quarter */}
           {category === 'Delibere' && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Year *</label>
                 <input
@@ -407,7 +407,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
   const isDoc = ['doc', 'docx'].includes(ext)
 
   return (
-    <div className="flex items-start gap-4 px-6 py-4 border-b border-black/5 last:border-b-0 hover:bg-[#f9f9f9] transition-colors">
+    <div className="flex items-start flex-wrap gap-4 px-6 py-4 border-b border-black/5 last:border-b-0 hover:bg-[#f9f9f9] transition-colors">
       {/* Type icon */}
       {doc.file_name ? (
         <button
@@ -425,7 +425,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
         </div>
       )}
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-[140px]">
         <p className="text-sm font-semibold text-ink-900">{doc.title}</p>
         {doc.description && <ExpandableDescription text={doc.description} />}
         <div className="flex flex-wrap gap-1 mt-1.5 items-center">
@@ -450,12 +450,12 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
         </p>
       </div>
 
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center flex-wrap gap-2 flex-shrink-0">
         {doc.file_url && (
           <button
             type="button"
             onClick={handleDownload}
-            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
+            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-3.5 transition-colors"
           >
             Download
           </button>
@@ -465,7 +465,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
             href={doc.external_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
+            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-3.5 transition-colors"
           >
             Open â†—
           </a>
@@ -473,7 +473,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
         {showMoveOut && onMove && (
           <button
             onClick={e => { e.stopPropagation(); onMove(doc.id, null) }}
-            className="text-xs text-gray-400 hover:text-forest font-['Inter'] uppercase tracking-widest border border-gray-300 px-2 py-1 hover:border-forest transition-colors"
+            className="text-xs text-gray-400 hover:text-forest font-['Inter'] uppercase tracking-widest border border-gray-300 px-2 py-3.5 hover:border-forest transition-colors"
           >
             Remove
           </button>
@@ -482,7 +482,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
           <select
             value=""
             onChange={e => { if (e.target.value) onMove(doc.id, e.target.value) }}
-            className="text-xs border border-gray-300 px-2 py-1 font-['Inter'] bg-white text-gray-500 focus:outline-none appearance-none cursor-pointer"
+            className="text-xs border border-gray-300 px-2 py-3.5 font-['Inter'] bg-white text-gray-500 focus:outline-none appearance-none cursor-pointer"
             title="Move to folder"
           >
             <option value="">Move to...</option>
@@ -496,7 +496,7 @@ function DocRow({ doc, onDelete, onOpen, hideYearQuarter, onMove, folders, showM
             onDelete()
           }}
           disabled={deleting}
-          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-40"
+          className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-3.5 transition-colors disabled:opacity-40"
         >
           {deleting ? 'â€¦' : 'Delete'}
         </button>
@@ -846,7 +846,7 @@ function AccountingUploadModal({
       <div className="bg-white w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between px-8 py-6 border-b border-line">
           <h3 className="font-serif text-xl font-bold text-ink-900">Upload document</h3>
-          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 p-1">
+          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 -m-3.5 p-3.5">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -884,7 +884,7 @@ function AccountingUploadModal({
           </div>
 
           {/* Quarter + Year */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium uppercase tracking-wide text-ink-500 mb-2">Quarter *</label>
               <CustomSelect
@@ -975,14 +975,14 @@ function AccountingDocRow({
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-40"
+              className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-3.5 transition-colors disabled:opacity-40"
             >
               {deleting ? 'â€¦' : 'Yes'}
             </button>
             <button
               type="button"
               onClick={() => setConfirmDel(false)}
-              className="border border-line text-ink-500 hover:text-ink-900 text-xs font-medium uppercase px-3 py-1.5 transition-colors"
+              className="border border-line text-ink-500 hover:text-ink-900 text-xs font-medium uppercase px-3 py-3.5 transition-colors"
             >
               No
             </button>
@@ -991,7 +991,7 @@ function AccountingDocRow({
           <button
             type="button"
             onClick={() => setConfirmDel(true)}
-            className="p-1.5 text-ink-300 hover:text-red-500 transition-colors"
+            className="-m-3.5 p-3.5 text-ink-300 hover:text-red-500 transition-colors"
             title="Delete"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
