@@ -194,13 +194,13 @@ export default async function RootLayout({
               </div>
 
               {/* Social */}
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-8">
                 <a
                   href="https://www.instagram.com/alata_investmentclub"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
-                  className="text-white/60 hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors -m-3.5 p-3.5"
                 >
                   <InstagramIcon className="w-5 h-5" />
                 </a>
@@ -209,14 +209,14 @@ export default async function RootLayout({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
-                  className="text-white/60 hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors -m-3.5 p-3.5"
                 >
                   <LinkedInIcon className="w-5 h-5" />
                 </a>
                 <a
                   href="mailto:info@alatainvestmentclub.com"
                   aria-label="Email"
-                  className="text-white/60 hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors -m-3.5 p-3.5"
                 >
                   <MailIcon className="w-5 h-5" />
                 </a>

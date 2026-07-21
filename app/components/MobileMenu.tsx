@@ -12,7 +12,7 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
     <div className="md:hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="text-white/80 hover:text-white p-2 transition-colors"
+        className="text-white/80 hover:text-white -m-3.5 p-3.5 transition-colors"
         aria-label="Open menu"
       >
         {open ? (

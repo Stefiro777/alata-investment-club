@@ -122,7 +122,7 @@ export default function ProductClient({ product }: { product: Product }) {
                       key={v.id}
                       onClick={() => { setSelectedVariant(v); setMainImg(0) }}
                       title={v.color}
-                      className={`w-8 h-8 border-2 transition-all ${selectedVariant?.id === v.id ? 'border-forest scale-110' : 'border-gray-200 hover:border-gray-400'}`}
+                      className={`w-11 h-11 border-2 transition-all ${selectedVariant?.id === v.id ? 'border-forest scale-110' : 'border-gray-200 hover:border-gray-400'}`}
                       style={{ backgroundColor: v.color_hex ?? '#ccc' }}
                     />
                   ))}

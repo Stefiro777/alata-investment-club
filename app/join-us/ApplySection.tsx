@@ -122,7 +122,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
               </div>
               <button
                 onClick={closeModal}
-                className="text-ink-500 hover:text-ink-900 transition-colors p-1"
+                className="text-ink-500 hover:text-ink-900 transition-colors -m-3.5 p-3.5"
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

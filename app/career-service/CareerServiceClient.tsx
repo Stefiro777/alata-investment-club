@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import Reveal from '../components/Reveal'
 import Parallax from '../components/Parallax'
@@ -458,7 +459,7 @@ function BookingOverlay({
                 ))}
               </div>
             )}
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors p-1">
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors -m-3.5 p-3.5">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -483,7 +484,7 @@ function BookingOverlay({
               {/* Month navigator */}
               <div className="flex items-center justify-between mb-5">
                 <button onClick={prevMonth} disabled={isPrevDisabled}
-                  className="p-1.5 text-gray-400 hover:text-forest transition-colors disabled:opacity-25">
+                  className="-m-3 p-3 text-gray-400 hover:text-forest transition-colors disabled:opacity-25">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
@@ -492,7 +493,7 @@ function BookingOverlay({
                   {MONTHS[month - 1]} {year}
                 </span>
                 <button onClick={nextMonth}
-                  className="p-1.5 text-gray-400 hover:text-forest transition-colors">
+                  className="-m-3 p-3 text-gray-400 hover:text-forest transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -500,7 +501,7 @@ function BookingOverlay({
               </div>
 
               {/* Weekday labels */}
-              <div className="grid grid-cols-7 mb-1">
+              <div className="grid grid-cols-7 -mx-3 mb-1">
                 {WEEKDAYS.map(d => (
                   <div key={d} className="text-center text-[10px] font-semibold uppercase tracking-widest text-gray-400 py-1">
                     {d}
@@ -514,7 +515,7 @@ function BookingOverlay({
                   <p className="text-sm text-gray-400">Loading availability…</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-7">
+                <div className="grid grid-cols-7 -mx-3">
                   {/* Leading empty cells */}
                   {Array.from({ length: offset }).map((_, i) => <div key={`e${i}`} />)}
                   {/* Day cells */}
@@ -531,7 +532,7 @@ function BookingOverlay({
                           type="button"
                           disabled={isPast || !hasSlot}
                           onClick={() => { setSelectedDate(dateStr); setSelectedTime(null) }}
-                          className="w-9 h-9 text-sm transition-colors"
+                          className="w-full max-w-11 aspect-square mx-auto text-sm transition-colors"
                           style={{
                             background: isSel ? '#1a4a3a' : 'transparent',
                             color: isSel ? '#fff' : isPast || !hasSlot ? '#d1d5db' : '#111827',
@@ -798,13 +799,15 @@ function ServiceSubCard({ number, title, description }: { number: string; title:
         </div>
       </div>
 
-      {overlayOpen && stripePromise && (
+      {overlayOpen && stripePromise && createPortal(
         <Elements stripe={stripePromise}>
           <BookingOverlay serviceTitle={title} onClose={closeOverlay} />
-        </Elements>
+        </Elements>,
+        document.body
       )}
-      {overlayOpen && !stripePromise && (
-        <BookingOverlay serviceTitle={title} onClose={closeOverlay} />
+      {overlayOpen && !stripePromise && createPortal(
+        <BookingOverlay serviceTitle={title} onClose={closeOverlay} />,
+        document.body
       )}
     </>
   )

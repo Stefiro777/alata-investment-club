@@ -99,7 +99,7 @@ function GalleryModal({
         {idx > 0 && (
           <button
             onClick={prev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-white text-2xl bg-white/10 hover:bg-white/20 transition-colors"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-white text-2xl bg-white/10 hover:bg-white/20 transition-colors"
             aria-label="Previous"
           >
             ‹
@@ -108,7 +108,7 @@ function GalleryModal({
         {idx < photos.length - 1 && (
           <button
             onClick={next}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-white text-2xl bg-white/10 hover:bg-white/20 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-white text-2xl bg-white/10 hover:bg-white/20 transition-colors"
             aria-label="Next"
           >
             ›
@@ -186,7 +186,7 @@ function EventDetailModal({
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center text-ink-500 hover:text-ink-900 transition-colors text-lg"
+          className="absolute top-2.5 right-2.5 z-10 w-11 h-11 flex items-center justify-center text-ink-500 hover:text-ink-900 transition-colors text-lg"
           aria-label="Close"
         >
           ✕
@@ -509,7 +509,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage - 1)}
                 disabled={safePage === 0}
-                className="w-9 h-9 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
+                className="w-11 h-11 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
                 style={{ background: 'var(--forest)' }}
                 aria-label="Previous"
               >
@@ -536,7 +536,7 @@ export default function EventsGrid({ items }: { items: Contenuto[] }) {
               <button
                 onClick={() => goTo(safePage + 1)}
                 disabled={safePage === totalPages - 1}
-                className="w-9 h-9 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
+                className="w-11 h-11 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition-opacity"
                 style={{ background: 'var(--forest)' }}
                 aria-label="Next"
               >

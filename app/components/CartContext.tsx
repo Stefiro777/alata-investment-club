@@ -169,7 +169,7 @@ function CartDrawer({
            style={{ fontFamily: 'Inter, sans-serif' }}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
           <h2 className="font-serif text-xl font-bold text-gray-900">Cart</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors p-1">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors -m-3.5 p-3.5">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
             </svg>

@@ -11,7 +11,7 @@ export default function MerchCartBar() {
         <p className="text-xs font-semibold uppercase tracking-widest text-black/40">Shop</p>
         <button
           onClick={openDrawer}
-          className="relative flex items-center justify-center w-9 h-9 hover:opacity-70 transition-opacity"
+          className="relative flex items-center justify-center w-11 h-11 hover:opacity-70 transition-opacity"
           aria-label="Open cart"
         >
           <svg className="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
