@@ -192,46 +192,50 @@ function MembersTable({ token }: { token: string }) {
       </p>
       {error && <p className="mb-3 text-xs text-red-600 border-l-2 border-red-400 pl-2">{error}</p>}
       <div className="border border-gray-200">
-        {/* Header */}
-        <div className="grid grid-cols-[1fr_1fr_120px_200px_100px] gap-0 bg-gray-50 border-b border-gray-200 px-4 py-2">
-          {['Nome', 'Email', 'Ruolo', 'Scadenza', 'Stato'].map(h => (
-            <p key={h} className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">{h}</p>
-          ))}
-        </div>
-        {members.map((m, i) => {
-          const status = memberStatus(m.membership_expires_at)
-          const isEdit = editId === m.id
-          return (
-            <div key={m.id}
-              className={`grid grid-cols-[1fr_1fr_120px_200px_100px] gap-0 items-center px-4 py-3 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
-              <p className="text-sm font-semibold text-gray-900 pr-3 truncate">{m.full_name}</p>
-              <p className="text-xs text-gray-500 pr-3 truncate">{m.email}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-widest pr-3">{m.role}</p>
-              <div className="pr-3">
-                {isEdit ? (
-                  <div className="flex items-center gap-2">
-                    <input type="date" value={editDate}
-                      onChange={e => { editDateRef.current = e.target.value; setEditDate(e.target.value) }}
-                      className="border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:border-forest w-32" />
-                    <button onClick={() => saveExpiry(m.id)} disabled={saving}
-                      className="text-xs font-semibold text-forest hover:underline disabled:opacity-40">
-                      {saving ? '…' : 'OK'}
-                    </button>
-                    <button onClick={() => setEditId(null)} className="text-xs text-gray-400 hover:text-gray-700">✕</button>
-                  </div>
-                ) : (
-                  <button onClick={() => startEdit(m)}
-                    className="text-xs text-gray-700 hover:text-forest transition-colors text-left">
-                    {fmtDate(m.membership_expires_at)} ✎
-                  </button>
-                )}
-              </div>
-              <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-1 ${status.cls}`}>
-                {status.label}
-              </span>
+        <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <div className="min-w-[640px]">
+            {/* Header */}
+            <div className="grid grid-cols-[1fr_1fr_120px_200px_100px] gap-0 bg-gray-50 border-b border-gray-200 px-4 py-2">
+              {['Nome', 'Email', 'Ruolo', 'Scadenza', 'Stato'].map(h => (
+                <p key={h} className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">{h}</p>
+              ))}
             </div>
-          )
-        })}
+            {members.map((m, i) => {
+              const status = memberStatus(m.membership_expires_at)
+              const isEdit = editId === m.id
+              return (
+                <div key={m.id}
+                  className={`grid grid-cols-[1fr_1fr_120px_200px_100px] gap-0 items-center px-4 py-3 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
+                  <p className="text-sm font-semibold text-gray-900 pr-3 truncate">{m.full_name}</p>
+                  <p className="text-xs text-gray-500 pr-3 truncate">{m.email}</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-widest pr-3">{m.role}</p>
+                  <div className="pr-3">
+                    {isEdit ? (
+                      <div className="flex items-center gap-2">
+                        <input type="date" value={editDate}
+                          onChange={e => { editDateRef.current = e.target.value; setEditDate(e.target.value) }}
+                          className="border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:border-forest w-32" />
+                        <button onClick={() => saveExpiry(m.id)} disabled={saving}
+                          className="text-xs font-semibold text-forest hover:underline disabled:opacity-40">
+                          {saving ? '…' : 'OK'}
+                        </button>
+                        <button onClick={() => setEditId(null)} className="text-xs text-gray-400 hover:text-gray-700">✕</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => startEdit(m)}
+                        className="text-xs text-gray-700 hover:text-forest transition-colors text-left">
+                        {fmtDate(m.membership_expires_at)} ✎
+                      </button>
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-1 ${status.cls}`}>
+                    {status.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )
