@@ -59,7 +59,7 @@ function MemberCard({ member }: { member: TeamMember }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${member.name} on LinkedIn`}
-              className="shrink-0 opacity-60 group-hover:opacity-100 hover:!opacity-70 transition-opacity duration-base"
+              className="shrink-0 opacity-60 group-hover:opacity-100 hover:!opacity-70 transition-opacity duration-base -m-3.5 p-3.5"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="20" height="20" fill="white"/>
@@ -129,7 +129,7 @@ export default async function TeamPage() {
             <Reveal>
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Board of Directors</h2>
             </Reveal>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
               {bod.map((m, i) => (
                 <Reveal key={m.id} delay={i * 80} direction="up">
                   <MemberCard member={m} />
@@ -147,7 +147,7 @@ export default async function TeamPage() {
             <Reveal>
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Management</h2>
             </Reveal>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
               {management.map((m, i) => (
                 <Reveal key={m.id} delay={i * 70} direction="up">
                   <MemberCard member={m} />

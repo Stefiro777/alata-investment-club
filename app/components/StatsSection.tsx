@@ -118,11 +118,11 @@ export default function StatsSection() {
             transition: 'transform 1.2s cubic-bezier(0.22,1,0.36,1)',
           }}
         />
-        <div className="grid grid-cols-2 gap-y-12 lg:grid-cols-4 lg:gap-y-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-12 lg:grid-cols-4 lg:gap-y-0">
           {stats.map(({ value, label }, i) => (
             <div
               key={label}
-              className={`px-8 py-4 ${i > 0 ? 'lg:border-l lg:border-white/20' : ''} ${i % 2 === 1 ? 'border-l border-white/20 lg:border-l' : ''}`}
+              className={`px-8 py-4 ${i > 0 ? 'lg:border-l lg:border-white/20' : ''} ${i % 2 === 1 ? 'sm:border-l sm:border-white/20' : ''}`}
             >
               <StatItem value={value} label={label} active={active} index={i} />
             </div>

@@ -53,7 +53,7 @@ function AlumniCard({ alumni }: { alumni: Alumni }) {
                   href={alumni.linkedin_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 opacity-60 group-hover:opacity-100 hover:!opacity-70 transition-opacity duration-base mt-0.5"
+                  className="shrink-0 opacity-60 group-hover:opacity-100 hover:!opacity-70 transition-opacity duration-base -m-3.5 p-3.5"
                   aria-label={`${alumni.name} on LinkedIn`}
                 >
                   <LinkedInIcon />
@@ -151,7 +151,7 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
           No alumni in this industry yet.
         </p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filtered.map((a, i) => (
             <Reveal key={a.id} delay={Math.min(i * 60, 360)} direction="up">
               <AlumniCard alumni={a} />
