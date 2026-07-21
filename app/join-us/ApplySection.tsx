@@ -152,7 +152,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                 <form onSubmit={handleSubmit} className="space-y-5">
 
                   {/* First / Last name */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         First Name <span className="text-red-500">*</span>
@@ -180,7 +180,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                   </div>
 
                   {/* Email / Telephone */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         Email <span className="text-red-500">*</span>
@@ -208,7 +208,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                   </div>
 
                   {/* Year of Study / Degree */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
                         Year of Study <span className="text-red-500">*</span>

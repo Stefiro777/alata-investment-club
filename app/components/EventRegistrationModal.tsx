@@ -110,7 +110,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Nome + Cognome */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className={labelClass}>First Name *</label>
                   <input
@@ -134,7 +134,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
               </div>
 
               {/* Email + Telefono */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className={labelClass}>Email *</label>
                   <input
