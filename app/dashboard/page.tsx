@@ -22,7 +22,6 @@ type Task = {
   due_date: string | null
   category_id: string | null
   category: Category | null
-  is_todo_item: boolean
   team: string | null
 }
 
@@ -124,11 +123,7 @@ function TaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
       </div>
 
       {/* Source badge */}
-      {task.is_todo_item ? (
-        <span className="self-start text-xs font-medium uppercase tracking-wide px-2 py-0.5 bg-[#374151] text-white">
-          To Do
-        </span>
-      ) : task.team ? (
+      {task.team ? (
         <span className="self-start text-xs font-medium uppercase tracking-wide px-2 py-0.5 bg-forest text-white">
           {TEAM_NAMES[task.team] ?? task.team}
         </span>
@@ -203,9 +198,9 @@ export default function DashboardPage() {
         .order('due_date', { ascending: true, nullsFirst: false })
 
       const parsedTasks: Task[] = (taskRows ?? [])
-        // Keep only: todo items OR tasks belonging to a team (exclude orphans)
+        // Exclude todo-list items and orphans: keep only tasks belonging to a team
         .filter((r: Record<string, unknown>) =>
-          r.is_todo_item === true || (r.team !== null && r.team !== undefined)
+          r.is_todo_item !== true && r.team !== null && r.team !== undefined
         )
         .map((r: Record<string, unknown>) => ({
           id: r.id as string,
@@ -215,7 +210,6 @@ export default function DashboardPage() {
           category_id: r.category_id as string | null,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           category: r.task_categories ? (r.task_categories as any) : null,
-          is_todo_item: r.is_todo_item === true,
           team: (r.team as string) ?? null,
         }))
 
@@ -334,7 +328,6 @@ export default function DashboardPage() {
                   task={task}
                   onClick={() => {
                     if (task.team) router.push(`/dashboard/team/${task.team}`)
-                    else if (task.is_todo_item) router.push('/dashboard/todo')
                   }}
                 />
               ))}

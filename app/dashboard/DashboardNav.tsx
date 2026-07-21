@@ -88,12 +88,6 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
             Dashboard
           </Link>
 
-          {isBoD && (
-            <Link href="/dashboard/todo" className={`${linkClass('/dashboard/todo')} whitespace-nowrap flex-shrink-0`}>
-              To Do
-            </Link>
-          )}
-
           <Link href="/dashboard/ideas" className={`${linkClass('/dashboard/ideas')} whitespace-nowrap flex-shrink-0`}>
             Idee
           </Link>
@@ -209,12 +203,6 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
             <Link href="/dashboard" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard', true)}>
               Dashboard
             </Link>
-
-            {isBoD && (
-              <Link href="/dashboard/todo" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard/todo')}>
-                To Do
-              </Link>
-            )}
 
             <Link href="/dashboard/ideas" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard/ideas')}>
               Idee
