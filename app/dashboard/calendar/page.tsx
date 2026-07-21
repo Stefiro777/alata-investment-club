@@ -364,6 +364,99 @@ function TaskPopup({ task, onClose }: { task: CalTask; onClose: () => void }) {
   )
 }
 
+// ── Mobile agenda (TasksTab only) ────────────────────────────────────────────
+
+function AgendaTaskRow({ task, onClick }: { task: CalTask; onClick: () => void }) {
+  const badge = task.team ? (TEAM_BADGE[task.team] ?? null) : null
+  const bg    = badge?.bg   ?? '#e5e7eb'
+  const color = badge?.text ?? '#111827'
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ backgroundColor: bg, color }}
+      className="w-full min-h-[44px] text-left text-sm font-medium px-3 py-2.5 flex items-center gap-2"
+    >
+      <span style={{ backgroundColor: priorityDotColor(task.priority), width: 6, flexShrink: 0, borderRadius: 0 }} className="self-stretch" />
+      <span className="flex-1">{task.title}</span>
+    </button>
+  )
+}
+
+function AgendaPostRow({ plan, onClick }: { plan: PostPlan; onClick: () => void }) {
+  const teamColor = plan.team ? (TEAM_BADGE[plan.team]?.bg ?? '#555555') : '#555555'
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ backgroundColor: '#3a1a2a', color: '#ffffff' }}
+      className="w-full min-h-[44px] text-left text-sm font-medium px-3 py-2.5 flex items-center gap-2"
+    >
+      <span style={{ backgroundColor: teamColor, width: 6, flexShrink: 0, borderRadius: 0 }} className="self-stretch" />
+      <span style={{ backgroundColor: '#e879a0', width: 6, flexShrink: 0, borderRadius: 0 }} className="self-stretch" />
+      <span className="flex-1">{plan.title}</span>
+    </button>
+  )
+}
+
+function MobileAgendaView({
+  year, month, tasksByDate, postsByDate, onTaskClick, onPostClick,
+}: {
+  year: number
+  month: number
+  tasksByDate: Record<string, CalTask[]>
+  postsByDate: Record<string, PostPlan[]>
+  onTaskClick: (t: CalTask) => void
+  onPostClick: (p: PostPlan) => void
+}) {
+  const days = useMemo(() => {
+    const dateSet = new Set<string>([...Object.keys(tasksByDate), ...Object.keys(postsByDate)])
+    return Array.from(dateSet)
+      .filter(dateStr => {
+        const d = new Date(dateStr + 'T00:00:00')
+        return d.getFullYear() === year && d.getMonth() === month
+      })
+      .sort((a, b) => a.localeCompare(b))
+  }, [year, month, tasksByDate, postsByDate])
+
+  if (days.length === 0) {
+    return <p className="text-sm text-ink-500 py-8 text-center">Nessun task in questo mese.</p>
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {days.map(dateStr => {
+        const dayTasks = tasksByDate[dateStr] ?? []
+        const dayPosts = postsByDate[dateStr] ?? []
+        const items: DayItem[] = [
+          ...dayTasks.map(d => ({ kind: 'task' as const, data: d })),
+          ...dayPosts.map(d => ({ kind: 'post' as const, data: d })),
+        ]
+        const d = new Date(dateStr + 'T00:00:00')
+        const weekday = d.toLocaleDateString('it-IT', { weekday: 'short' })
+        const dayLabel = weekday.charAt(0).toUpperCase() + weekday.slice(1)
+
+        return (
+          <div key={dateStr}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500 mb-1.5">
+              {dayLabel} {d.getDate()}
+            </p>
+            <div className="flex flex-col gap-1.5">
+              {items.map(item =>
+                item.kind === 'task'
+                  ? <AgendaTaskRow key={item.data.id} task={item.data} onClick={() => onTaskClick(item.data)} />
+                  : <AgendaPostRow key={item.data.id} plan={item.data} onClick={() => onPostClick(item.data)} />
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── TasksTab ──────────────────────────────────────────────────────────────────
 
 function TasksTab() {
@@ -454,16 +547,12 @@ function TasksTab() {
             {o.label}
           </button>
         ))}
-        <button type="button" onClick={() => setFilter('posts')}
-          className={`text-xs font-medium uppercase tracking-wide px-4 py-1.5 border transition-colors ${filter === 'posts' ? 'bg-[#3a1a2a] text-white border-[#3a1a2a]' : 'bg-white text-ink-500 border-[#e5e7eb] hover:border-[#3a1a2a] hover:text-ink-900'}`}>
-          Post Pianificati
-        </button>
       </div>
 
       <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
 
-      {/* Calendar grid */}
-      <div className="border border-[#e5e7eb]">
+      {/* Calendar grid — desktop/tablet (sm and up) */}
+      <div className="hidden sm:block border border-[#e5e7eb]">
         <div className="grid grid-cols-7 border-b border-[#e5e7eb]">
           {WEEKDAYS.map(d => (
             <div key={d} className="py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-ink-400">{d}</div>
@@ -507,6 +596,18 @@ function TasksTab() {
             )
           })}
         </div>
+      </div>
+
+      {/* Agenda — mobile (below sm) */}
+      <div className="sm:hidden">
+        <MobileAgendaView
+          year={year}
+          month={month}
+          tasksByDate={tasksByDate}
+          postsByDate={postsByDate}
+          onTaskClick={t => setPopup(t)}
+          onPostClick={p => setPostPopup(p)}
+        />
       </div>
 
       {/* Legend */}
@@ -771,9 +872,9 @@ function EventiTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
-        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors">
+        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center justify-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors w-full sm:w-auto">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
@@ -1350,7 +1451,7 @@ export default function CalendarPage() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
       <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-3">Calendario</h1>
       <div className="w-8 h-px bg-forest mb-8" />
 
