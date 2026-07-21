@@ -119,16 +119,16 @@ function CartDrawer({
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-2">
               <button onClick={() => updateQty(item.cartKey, item.quantity - 1)}
-                className="w-6 h-6 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">−</button>
+                className="w-11 h-11 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">−</button>
               <span className="text-sm w-4 text-center">{item.quantity}</span>
               <button onClick={() => updateQty(item.cartKey, item.quantity + 1)}
-                className="w-6 h-6 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">+</button>
+                className="w-11 h-11 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">+</button>
             </div>
             <p className="text-sm font-semibold text-gray-900">{fmtEur(item.priceCents * item.quantity)}</p>
           </div>
         </div>
         <button onClick={() => removeItem(item.cartKey)}
-          className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 self-start mt-1">
+          className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 self-start -m-3.5 p-3.5">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -151,7 +151,7 @@ function CartDrawer({
           <p className="text-sm font-semibold text-gray-900 mt-2">{fmtEur(item.priceCents)}</p>
         </div>
         <button onClick={() => removeItem(item.cartKey)}
-          className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 self-start mt-1">
+          className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 self-start -m-3.5 p-3.5">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
