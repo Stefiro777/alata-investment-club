@@ -569,38 +569,40 @@ export default function HackathonAdminClient() {
               ) : participants.length === 0 ? (
                 <p className="text-sm text-ink-500">No participants yet.</p>
               ) : (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-xs uppercase tracking-wide text-ink-500 border-b border-line-faint">
-                      <th className="py-2">Name</th>
-                      <th className="py-2">Role</th>
-                      <th className="py-2">Joined</th>
-                      <th className="py-2">Reassign</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {participants.map((p) => (
-                      <tr key={p.id} className="border-b border-line-faint">
-                        <td className="py-2 text-ink-900">{p.name}</td>
-                        <td className="py-2 text-ink-700">{ROLE_LABELS[p.role_key] ?? p.role_key}</td>
-                        <td className="py-2 text-ink-500">{new Date(p.joined_at).toLocaleString()}</td>
-                        <td className="py-2">
-                          <select
-                            value={p.role_key}
-                            onChange={(e) => handleReassign(p.id, e.target.value)}
-                            className="border border-line px-2 py-1 text-xs text-ink-900 focus:outline-none focus:border-forest"
-                          >
-                            {ROLES.map((role) => (
-                              <option key={role} value={role}>
-                                {ROLE_LABELS[role]}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[480px]">
+                    <thead>
+                      <tr className="text-left text-xs uppercase tracking-wide text-ink-500 border-b border-line-faint">
+                        <th className="py-2">Name</th>
+                        <th className="py-2">Role</th>
+                        <th className="py-2">Joined</th>
+                        <th className="py-2">Reassign</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {participants.map((p) => (
+                        <tr key={p.id} className="border-b border-line-faint">
+                          <td className="py-2 text-ink-900">{p.name}</td>
+                          <td className="py-2 text-ink-700">{ROLE_LABELS[p.role_key] ?? p.role_key}</td>
+                          <td className="py-2 text-ink-500">{new Date(p.joined_at).toLocaleString()}</td>
+                          <td className="py-2">
+                            <select
+                              value={p.role_key}
+                              onChange={(e) => handleReassign(p.id, e.target.value)}
+                              className="border border-line px-2 py-1 text-xs text-ink-900 focus:outline-none focus:border-forest"
+                            >
+                              {ROLES.map((role) => (
+                                <option key={role} value={role}>
+                                  {ROLE_LABELS[role]}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           )}
