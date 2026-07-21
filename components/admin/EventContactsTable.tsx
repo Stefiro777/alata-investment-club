@@ -146,10 +146,10 @@ function EditModal({
       <div className="bg-white border border-line w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-line">
           <p className="font-serif text-base font-bold text-forest">Edit Contact</p>
-          <button onClick={onClose} disabled={saving} className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors disabled:opacity-40">✕</button>
+          <button onClick={onClose} disabled={saving} className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors -m-4 p-4 disabled:opacity-40">✕</button>
         </div>
         <form onSubmit={handleSave} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Nome *</label>
               <input required value={form.nome} onChange={e => set('nome', e.target.value)} className={inputClass} />
@@ -163,7 +163,7 @@ function EditModal({
             <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Email *</label>
             <input required type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Telefono</label>
               <input value={form.telefono} onChange={e => set('telefono', e.target.value)} className={inputClass} />
@@ -301,7 +301,7 @@ export default function EventContactsTable() {
   return (
     <div className="space-y-6">
       {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Total Contacts', value: contacts.length },
           { label: 'Unique Emails', value: uniqueEmails },
@@ -462,7 +462,7 @@ export default function EventContactsTable() {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => setEditContact(c)}
                           title="Edit"

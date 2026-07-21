@@ -151,7 +151,7 @@ function AddCustomerForm({ onAdded }: { onAdded: () => void }) {
     <div className="border border-forest p-5 mb-6 bg-white">
       <p className="text-xs font-bold uppercase tracking-widest text-forest mb-4">Nuovo cliente</p>
       {err && <p className="text-xs text-red-600 bg-red-50 px-3 py-2 mb-3">{err}</p>}
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Nome *</label>
           <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} /></div>
         <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Email *</label>
@@ -252,10 +252,10 @@ export default function CustomersTable() {
           onChange={e => setSearch(e.target.value)}
           className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-56"
         />
-        <div className="flex border border-gray-200 overflow-hidden">
+        <div className="flex border border-gray-200 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {(['all', 'career_service', 'merch', 'event', 'membership'] as const).map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
-              className="px-3 py-2 text-xs uppercase tracking-wide transition-colors"
+              className="px-3 py-2 text-xs uppercase tracking-wide transition-colors whitespace-nowrap flex-shrink-0"
               style={typeFilter === t ? { background: 'var(--forest)', color: '#fff' } : { color: '#6b7280' }}>
               {t === 'all' ? 'Tutti' : TYPE_LABELS[t]}
             </button>

@@ -169,7 +169,7 @@ function PartnerModal({
             </button>
             {accordoOpen && (
               <div className="px-4 py-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className={LABEL}>Start date</label>
                     <input type="date" className={INPUT} value={form.agreement_start} onChange={e => set('agreement_start', e.target.value)} />
@@ -292,7 +292,7 @@ function PersonForm({
 
   return (
     <div className="px-4 py-3 bg-[#f9f9f9] border-b border-line-faint">
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div>
           <label className={LABEL}>Name *</label>
           <input className={INPUT} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Mario Rossi" />
@@ -571,7 +571,7 @@ export default function SponsorsTable() {
   return (
     <div>
       {/* KPI strip */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Total', value: totalCount },
           { label: 'Sponsors', value: sponsorCount },

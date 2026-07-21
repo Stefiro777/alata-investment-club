@@ -79,7 +79,7 @@ function ComposeModal({
           <button
             onClick={onClose}
             disabled={status === 'sending'}
-            className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors ml-4 mt-0.5 disabled:opacity-40"
+            className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors -m-4 p-4 ml-4 mt-0.5 disabled:opacity-40"
           >
             ✕
           </button>
@@ -251,7 +251,7 @@ export default function MembersTable() {
   return (
     <div className="space-y-6">
       {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Total Members', value: members.length },
           { label: 'BoD', value: bodCount },
@@ -299,12 +299,14 @@ export default function MembersTable() {
           <thead>
             <tr className="border-b border-line bg-[#f9f9f9]">
               <th className="px-4 py-3 w-10">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleSelectAll}
-                  className="cursor-pointer"
-                />
+                <label className="inline-flex items-center justify-center -m-4 p-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="cursor-pointer"
+                  />
+                </label>
               </th>
               {['Name', 'Email', 'Role', 'Team', 'Joined'].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
@@ -333,12 +335,14 @@ export default function MembersTable() {
                   }`}
                 >
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleRow(m.id)}
-                      className="cursor-pointer"
-                    />
+                    <label className="inline-flex items-center justify-center -m-4 p-4 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleRow(m.id)}
+                        className="cursor-pointer"
+                      />
+                    </label>
                   </td>
                   <td className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap">{m.full_name}</td>
                   <td className="px-4 py-3 text-ink-500">{m.email}</td>

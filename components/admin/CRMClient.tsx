@@ -26,12 +26,12 @@ export default function CRMClient() {
       </div>
 
       {/* Tab switcher */}
-      <div className="flex border-b border-line-faint mb-8">
+      <div className="flex border-b border-line-faint mb-8 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-6 py-3 text-xs font-medium tracking-widest uppercase transition-colors ${
+            className={`px-6 py-3 text-xs font-medium tracking-widest uppercase transition-colors whitespace-nowrap flex-shrink-0 ${
               tab === t.key
                 ? 'text-forest border-b-2 border-forest'
                 : 'text-ink-500 hover:text-ink-900 border-b-2 border-transparent'
