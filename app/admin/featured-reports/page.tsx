@@ -18,22 +18,22 @@ export default async function FeaturedReportsAdminPage() {
     <div className="min-h-screen bg-paper-stone">
       {/* Top bar */}
       <div className="bg-forest text-white" style={{ animation: 'heroFadeIn 0.5s ease both' }}>
-        <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.1s both' }}>
             <h1 className="font-serif text-xl font-medium">Admin — Featured Reports</h1>
             <p className="text-white/50 text-xs mt-0.5">{member.email}</p>
           </div>
-          <div className="flex items-center gap-3" style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.2s both' }}>
-            <a href="/admin" className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto" style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.2s both' }}>
+            <a href="/admin" className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast w-full sm:w-auto text-center">
               Content
             </a>
-            <a href="/admin/team" className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast">
+            <a href="/admin/team" className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast w-full sm:w-auto text-center">
               Team
             </a>
-            <a href="/admin/members" className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast">
+            <a href="/admin/members" className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast w-full sm:w-auto text-center">
               Members
             </a>
-            <a href="/dashboard" className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast">
+            <a href="/dashboard" className="border border-white/40 hover:border-white hover:bg-white/10 text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast w-full sm:w-auto text-center">
               Dashboard
             </a>
           </div>

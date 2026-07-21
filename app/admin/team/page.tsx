@@ -28,27 +28,27 @@ export default async function AdminTeamPage() {
   return (
     <div className="min-h-screen bg-paper-stone">
       <div className="bg-forest text-white">
-        <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="font-serif text-xl font-medium">Admin — Team Management</h1>
             <p className="text-white/50 text-xs mt-0.5">{member.email}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <a
               href="/admin"
-              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast"
+              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast w-full sm:w-auto text-center"
             >
               Content
             </a>
             <a
               href="/admin/members"
-              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast"
+              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast w-full sm:w-auto text-center"
             >
               Members
             </a>
             <a
               href="/dashboard"
-              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast"
+              className="border border-white/40 hover:border-white text-white text-xs font-medium tracking-wide uppercase px-4 py-2 transition-colors duration-fast w-full sm:w-auto text-center"
             >
               Dashboard
             </a>

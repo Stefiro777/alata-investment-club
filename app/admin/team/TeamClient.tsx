@@ -133,7 +133,7 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-line-faint p-6 space-y-4">
       <p className="text-sm font-medium text-ink-900">New member</p>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs text-ink-500 mb-1">Name *</label>
           <input
@@ -154,10 +154,10 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
             placeholder="President"
           />
         </div>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <PhotoInput currentUrl={photoUrl} onChange={setPhotoUrl} />
         </div>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <label className="block text-xs text-ink-500 mb-1">LinkedIn URL</label>
           <input
             value={linkedinUrl}
@@ -281,14 +281,14 @@ function MemberRow({
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-shrink-0 text-xs text-forest border border-forest px-3 py-1.5 hover:bg-forest hover:text-white transition-colors duration-fast"
+          className="flex-shrink-0 text-xs text-forest border border-forest px-3 py-3.5 hover:bg-forest hover:text-white transition-colors duration-fast"
         >
           {expanded ? 'Close' : 'Edit'}
         </button>
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="flex-shrink-0 text-xs text-red-500 border border-red-300 px-3 py-1.5 hover:bg-red-500 hover:text-white transition-colors duration-fast disabled:opacity-40"
+          className="flex-shrink-0 text-xs text-red-500 border border-red-300 px-3 py-3.5 hover:bg-red-500 hover:text-white transition-colors duration-fast disabled:opacity-40"
         >
           {deleting ? '…' : 'Delete'}
         </button>
@@ -297,7 +297,7 @@ function MemberRow({
       {/* Edit form */}
       {expanded && (
         <form onSubmit={handleUpdate} className="border-t border-black/5 px-4 py-4 space-y-3 bg-paper-cool">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-ink-500 mb-1">Name</label>
               <input
@@ -314,10 +314,10 @@ function MemberRow({
                 className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
               />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <PhotoInput currentUrl={photoUrl} onChange={setPhotoUrl} />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-xs text-ink-500 mb-1">LinkedIn URL</label>
               <input
                 value={linkedinUrl}
