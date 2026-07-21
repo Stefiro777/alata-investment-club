@@ -318,14 +318,14 @@ function AlumniRow({
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => setOpen(o => !o)}
-            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast"
+            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-3.5 transition-colors duration-fast"
           >
             {open ? 'Close' : 'Edit'}
           </button>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-1.5 transition-colors duration-fast disabled:opacity-40"
+            className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium tracking-wide uppercase px-3 py-3.5 transition-colors duration-fast disabled:opacity-40"
           >
             {deleting ? '…' : 'Delete'}
           </button>
