@@ -747,8 +747,8 @@ function SponsorsTab() {
             No sponsorship transactions recorded yet.
           </p>
         ) : (
-          <div className="border border-gray-200">
-            <div className="grid grid-cols-[90px_1fr_90px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200">
+          <div className="border border-gray-200 overflow-x-auto">
+            <div className="grid grid-cols-[90px_1fr_90px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200 min-w-[480px]">
               <span className={labelCls}>Date</span>
               <span className={labelCls}>Description</span>
               <span className={labelCls}>Type</span>
@@ -756,7 +756,7 @@ function SponsorsTab() {
             </div>
             {sponsorTxs.map((t, i) => (
               <div key={t.id}
-                className={`grid grid-cols-[90px_1fr_90px_90px] gap-4 items-center px-5 py-3.5 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
+                className={`grid grid-cols-[90px_1fr_90px_90px] gap-4 items-center px-5 py-3.5 bg-white min-w-[480px] ${i > 0 ? 'border-t border-gray-200' : ''}`}>
                 <span className="text-xs text-gray-400 whitespace-nowrap">
                   {t.date ? new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                 </span>
@@ -781,15 +781,15 @@ function SponsorsTab() {
           No partners or sponsors yet.
         </p>
       ) : (
-        <div className="border border-gray-200">
-          <div className="grid grid-cols-[1fr_100px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200">
+        <div className="border border-gray-200 overflow-x-auto">
+          <div className="grid grid-cols-[1fr_100px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200 min-w-[420px]">
             <span className={labelCls}>Name</span>
             <span className={labelCls}>Type</span>
             <span className={labelCls}>Since</span>
           </div>
           {partners.map((p, i) => (
             <div key={p.id}
-              className={`grid grid-cols-[1fr_100px_90px] gap-4 items-center px-5 py-3.5 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
+              className={`grid grid-cols-[1fr_100px_90px] gap-4 items-center px-5 py-3.5 bg-white min-w-[420px] ${i > 0 ? 'border-t border-gray-200' : ''}`}>
               <span className="text-sm font-semibold text-gray-900">{p.name}</span>
               <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
                 p.type === 'sponsor' ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
