@@ -80,7 +80,7 @@ function CoverLetterModal({ text, applicant, onClose }: { text: string; applican
       <div className="bg-white w-full max-w-2xl max-h-[80vh] overflow-y-auto border-t-4 border-forest relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-black text-xl leading-none hover:opacity-60 transition-opacity"
+          className="absolute top-0.5 right-0.5 p-3.5 text-black text-xl leading-none hover:opacity-60 transition-opacity"
           aria-label="Chiudi"
         >
           ✕
@@ -99,7 +99,7 @@ function CoverLetterModal({ text, applicant, onClose }: { text: string; applican
 
 // ── Action buttons ────────────────────────────────────────────────────────────
 
-const actionBtn = 'border border-black p-1.5 hover:bg-black hover:text-white transition-colors text-black flex-shrink-0'
+const actionBtn = 'border border-black p-4 hover:bg-black hover:text-white transition-colors text-black flex-shrink-0'
 
 function DeleteButton({ onConfirm }: { onConfirm: () => void }) {
   const [confirming, setConfirming] = useState(false)
