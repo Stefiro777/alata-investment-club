@@ -155,43 +155,45 @@ function FolderSection({ folderKey, label }: { folderKey: FolderKey; label: stri
           ) : files.length === 0 ? (
             <p className="text-xs text-ink-400 px-6 py-5 text-center">Nessun file in questa cartella.</p>
           ) : (
-            <div>
-              {/* Table header */}
-              <div className="grid grid-cols-[1fr_80px_110px_auto] gap-4 px-6 py-2 bg-[#f9f9f9] border-b border-line">
-                <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Nome</span>
-                <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Dimensione</span>
-                <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Data</span>
-                <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Azioni</span>
-              </div>
-              {files.map(f => (
-                <div
-                  key={f.path}
-                  className="grid grid-cols-[1fr_80px_110px_auto] gap-4 px-6 py-3 border-b border-line last:border-b-0 items-center hover:bg-paper-cool transition-colors"
-                >
-                  <span className="text-sm text-[#1a1a1a] truncate font-['Inter']">{f.name}</span>
-                  <span className="text-xs text-ink-500 font-['Inter']">{formatSize(f.size)}</span>
-                  <span className="text-xs text-ink-500 font-['Inter']">{formatDate(f.created_at)}</span>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <a
-                      href={f.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download={f.name}
-                      className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
-                    >
-                      Download
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(f.path)}
-                      disabled={deletingPath === f.path}
-                      className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-40"
-                    >
-                      {deletingPath === f.path ? '…' : 'Elimina'}
-                    </button>
-                  </div>
+            <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+              <div className="min-w-[560px]">
+                {/* Table header */}
+                <div className="grid grid-cols-[1fr_80px_110px_auto] gap-4 px-6 py-2 bg-[#f9f9f9] border-b border-line">
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Nome</span>
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Dimensione</span>
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Data</span>
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-ink-400">Azioni</span>
                 </div>
-              ))}
+                {files.map(f => (
+                  <div
+                    key={f.path}
+                    className="grid grid-cols-[1fr_80px_110px_auto] gap-4 px-6 py-3 border-b border-line last:border-b-0 items-center hover:bg-paper-cool transition-colors"
+                  >
+                    <span className="text-sm text-[#1a1a1a] truncate font-['Inter']">{f.name}</span>
+                    <span className="text-xs text-ink-500 font-['Inter']">{formatSize(f.size)}</span>
+                    <span className="text-xs text-ink-500 font-['Inter']">{formatDate(f.created_at)}</span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <a
+                        href={f.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={f.name}
+                        className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors"
+                      >
+                        Download
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(f.path)}
+                        disabled={deletingPath === f.path}
+                        className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium uppercase px-3 py-1.5 transition-colors disabled:opacity-40"
+                      >
+                        {deletingPath === f.path ? '…' : 'Elimina'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

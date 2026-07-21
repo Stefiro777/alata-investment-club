@@ -18,9 +18,10 @@ export default function FinanceClient() {
         <div className="w-10 h-0.5 bg-forest mt-2" />
       </div>
 
-      {/* Sub-tab bar */}
+      {/* Sub-tab bar — scrolls horizontally within itself on narrow viewports instead of
+          pushing the whole page into overflow. */}
       <div className="border-b border-gray-200 mb-8">
-        <div className="flex gap-6">
+        <div className="flex gap-6 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {([
             { key: 'transactions' as const, label: 'Transactions' },
             { key: 'budget'       as const, label: 'Budget Report' },
@@ -31,7 +32,7 @@ export default function FinanceClient() {
               key={t.key}
               type="button"
               onClick={() => setTab(t.key)}
-              className="pb-2 text-sm font-['Inter'] transition-colors"
+              className="pb-2 text-sm font-['Inter'] transition-colors whitespace-nowrap flex-shrink-0"
               style={
                 tab === t.key
                   ? { borderBottom: '2px solid #1a4a3a', color: 'var(--forest)', fontWeight: 600 }

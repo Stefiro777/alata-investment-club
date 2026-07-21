@@ -251,13 +251,13 @@ export default function BudgetReport() {
     <div className="space-y-4">
       {/* Controls + download button */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex border border-line overflow-hidden">
+        <div className="flex items-center flex-wrap gap-3">
+          <div className="flex border border-line overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
             {(['mensile', 'trimestrale', 'annuale'] as const).map(m => (
               <button
                 key={m}
                 onClick={() => { setMode(m); setOffset(0) }}
-                className="px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors"
+                className="px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors whitespace-nowrap flex-shrink-0"
                 style={mode === m ? { backgroundColor: 'var(--forest)', color: 'white' } : { backgroundColor: 'white', color: '#6b7280' }}
               >
                 {m === 'mensile' ? 'Mensile' : m === 'trimestrale' ? 'Trimestrale' : 'Annuale'}
