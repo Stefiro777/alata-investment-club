@@ -75,8 +75,12 @@ export type UpcomingEvent = {
   registration_field: 'motivation' | 'panelists' | null
   display_order: number | null
   created_at: string
-  ticket_price_cents?: number | null  // if set and > 0, event has a paid ticket
+  ticket_price_cents?: number | null  // non-member price; if set and > 0, event has a paid ticket
+  member_price_cents?: number | null  // active-member price; null = same as ticket_price_cents
   location?: string | null
+  start_time?: string | null
+  end_time?: string | null
+  slug?: string | null
 }
 
 export type EventRegistration = {
