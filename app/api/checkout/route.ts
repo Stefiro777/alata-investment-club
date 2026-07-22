@@ -92,12 +92,70 @@ export async function POST(req: NextRequest) {
   if (!items?.length)   return NextResponse.json({ error: 'Cart is empty' },   { status: 400 })
   if (!customerEmail)   return NextResponse.json({ error: 'Email required' },   { status: 400 })
 
+  // ── Determine active membership from the verified session token — never
+  // trust a client-asserted "isMember" flag. Same pattern as career/book.
+  let isActiveMember = false
+  const authHeader = req.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7)
+    const { data: { user } } = await supabaseAdmin.auth.getUser(token)
+    if (user?.email) {
+      const { data: member } = await supabaseAdmin
+        .from('club_members')
+        .select('id, membership_expires_at')
+        .eq('email', user.email)
+        .maybeSingle()
+      if (member) {
+        const membershipActive = member.membership_expires_at
+          ? new Date(member.membership_expires_at) > new Date()
+          : false
+        if (membershipActive) isActiveMember = true
+      }
+    }
+  }
+
+  // ── Recompute every item's real price server-side — the client-submitted
+  // priceCents is only ever used as a cart-display hint, never trusted here.
+  const ticketEventIds  = [...new Set(items.filter(i => i.type === 'ticket').map(i => i.referenceId))]
+  const merchProductIds = [...new Set(items.filter(i => i.type === 'merch' || !i.type).map(i => i.referenceId))]
+
+  const [{ data: eventsData, error: eventsErr }, { data: productsData, error: productsErr }] = await Promise.all([
+    ticketEventIds.length
+      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents').in('id', ticketEventIds)
+      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null }[], error: null }),
+    merchProductIds.length
+      ? supabaseAdmin.from('products').select('id, price_cents').in('id', merchProductIds)
+      : Promise.resolve({ data: [] as { id: string; price_cents: number }[], error: null }),
+  ])
+
+  if (eventsErr)   return NextResponse.json({ error: 'Failed to verify event prices' },   { status: 500 })
+  if (productsErr) return NextResponse.json({ error: 'Failed to verify product prices' }, { status: 500 })
+
+  const eventMap   = new Map((eventsData ?? []).map(e => [e.id, e]))
+  const productMap = new Map((productsData ?? []).map(p => [p.id, p]))
+
+  const items_: UnifiedLineItem[] = []
+  for (const item of items) {
+    if (item.type === 'ticket') {
+      const ev = eventMap.get(item.referenceId)
+      if (!ev) return NextResponse.json({ error: `Event not found: ${item.referenceId}` }, { status: 400 })
+      const realPriceCents = (isActiveMember && ev.member_price_cents !== null)
+        ? ev.member_price_cents
+        : (ev.ticket_price_cents ?? 0)
+      items_.push({ ...item, priceCents: realPriceCents })
+    } else {
+      const product = productMap.get(item.referenceId)
+      if (!product) return NextResponse.json({ error: `Product not found: ${item.referenceId}` }, { status: 400 })
+      items_.push({ ...item, priceCents: product.price_cents ?? 0 })
+    }
+  }
+
   const actualShippingCents = shippingCents ?? 0
   const actualDiscountCents = discountCents ?? 0
 
   // Fully free orders are completed entirely server-side (registrations,
   // order records and confirmation emails) — the client only redirects.
-  const itemsTotal = items.reduce((sum, i) => sum + (i.priceCents * (i.quantity ?? 1)), 0)
+  const itemsTotal = items_.reduce((sum, i) => sum + (i.priceCents * (i.quantity ?? 1)), 0)
   const grandTotal = itemsTotal + actualShippingCents - actualDiscountCents
   if (grandTotal === 0) {
     // 1. Event registrations
@@ -121,7 +179,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Merch order records + CRM
-    const freeMerch = items.filter(i => i.type === 'merch' || !i.type)
+    const freeMerch = items_.filter(i => i.type === 'merch' || !i.type)
     // A single id groups all rows of this order; UUID avoids the collisions
     // that `free_${Date.now()}` allowed under concurrent checkouts.
     const freeOrderId = `free_${crypto.randomUUID()}`
@@ -156,7 +214,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Confirmation emails (failures logged, never block the order)
-    const ticketItemsFree = items.filter(i => i.type === 'ticket')
+    const ticketItemsFree = items_.filter(i => i.type === 'ticket')
     if (eventRegistrations?.length && eventRegistrations[0].email) {
       await sendRegistrationConfirmation({
         customerEmail: eventRegistrations[0].email,
@@ -191,10 +249,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ free: true })
   }
 
-  const merchItems  = items.filter(i => i.type === 'merch')
-  const ticketItems = items.filter(i => i.type === 'ticket')
+  const merchItems  = items_.filter(i => i.type === 'merch')
+  const ticketItems = items_.filter(i => i.type === 'ticket')
 
-  const productNames = items
+  const productNames = items_
     .map(i => {
       if (i.type === 'merch') {
         return `${i.name}${i.variantColor ? ` (${i.variantColor}` : ''}${i.size ? `/${i.size})` : i.variantColor ? ')' : ''}`
@@ -204,7 +262,7 @@ export async function POST(req: NextRequest) {
     .join(', ')
 
   // FIX 1 — exclude free items from Stripe line items
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items_
     .filter(i => i.priceCents > 0)
     .map(i => ({
       price_data: {
