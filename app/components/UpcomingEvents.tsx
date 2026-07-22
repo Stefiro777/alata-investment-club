@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent } from '@/lib/types'
 import EventRegistrationModal from './EventRegistrationModal'
@@ -61,12 +61,12 @@ function UpcomingEventRow({
   const [added, setAdded] = useState(false)
   const { month, day } = formatDate(event.date)
   const { addItem } = useCart()
+  const router = useRouter()
   const hasTicket    = event.status === 'open' && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
   const isPaidTicket = hasTicket && (event.ticket_price_cents ?? 0) > 0
   const isFreeTicket = hasTicket && event.ticket_price_cents === 0
 
   function handleAddTicket() {
-    console.log('addItem called with:', { type: 'ticket', priceCents: event.ticket_price_cents, eventId: event.id })
     addItem({
       type:          'ticket',
       cartKey:       `ticket:${event.id}`,
@@ -80,9 +80,16 @@ function UpcomingEventRow({
     setTimeout(() => setAdded(false), 2000)
   }
 
+  function goToDetail() {
+    if (event.slug) router.push(`/events/${event.slug}`)
+  }
+
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-start gap-6 py-8 bg-forest hover:bg-[#153d30] transition-colors duration-fast px-6">
+      <div
+        onClick={goToDetail}
+        className={`flex flex-col sm:flex-row sm:items-start gap-6 py-8 bg-forest hover:bg-[#153d30] transition-colors duration-fast px-6 ${event.slug ? 'cursor-pointer' : ''}`}
+      >
 
         {/* Date block */}
         <div className="flex-shrink-0 w-16 sm:w-20">
@@ -102,7 +109,7 @@ function UpcomingEventRow({
 
           {event.description && (
             <button
-              onClick={() => setOpen(v => !v)}
+              onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
               className="mt-2 text-[10px] font-medium tracking-widest uppercase text-white/50 hover:text-white/80 transition-colors"
             >
               {open ? 'READ LESS' : 'READ MORE'}
@@ -123,7 +130,7 @@ function UpcomingEventRow({
         <div className="flex-shrink-0 flex items-start pt-1 gap-2 flex-col sm:flex-row">
           {(isPaidTicket || isFreeTicket) ? (
             <button
-              onClick={handleAddTicket}
+              onClick={e => { e.stopPropagation(); handleAddTicket() }}
               className={`inline-block border text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors ${
                 added
                   ? 'border-forest bg-forest text-white'
@@ -138,11 +145,11 @@ function UpcomingEventRow({
             </button>
           ) : event.status === 'open' ? (
             event.action_type === 'link' && event.action_link ? (
-              <a href={event.action_link} target="_blank" rel="noopener noreferrer" className={BADGE_CLASS}>
+              <a href={event.action_link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className={BADGE_CLASS}>
                 Register Now
               </a>
             ) : event.action_type === 'form' ? (
-              <button onClick={() => onOpenModal(event)} className={BADGE_CLASS}>
+              <button onClick={e => { e.stopPropagation(); onOpenModal(event) }} className={BADGE_CLASS}>
                 Register Now
               </button>
             ) : (
