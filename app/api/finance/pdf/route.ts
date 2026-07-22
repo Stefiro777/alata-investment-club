@@ -5,6 +5,12 @@ import * as zlib from 'zlib'
 import * as path from 'path'
 import { loadLogoPNG } from '@/lib/quote-pdf'
 import type { PNGImg } from '@/lib/quote-pdf'
+import {
+  PW, PH, ML, MR, CW, FOOTER_MIN,
+  GREEN, WHITE, BLACK, DARK, MUTED, LGRAY, GSUB, LGRN, SGRAY,
+  rect, hline, tx, drawImage,
+  drawBrandedHeader, drawBrandedFooter,
+} from '@/lib/pdf-branding'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,44 +30,10 @@ function italianDate(): string {
   return `${d.getDate()} ${MONTHS_IT[d.getMonth()]} ${d.getFullYear()}`
 }
 
-function esc(s: string): string {
-  return s.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[Ā-￿]/g,'?')
-}
-
 function fmtEur(n: number): string {
   const sign = n < 0 ? '-' : ''
   const parts = Math.abs(n).toFixed(2).split('.')
   return `${sign}EUR ${parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.')},${parts[1]}`
-}
-
-// ── Color constants (palette — all values now BLACK) ──────────────────────────
-const GREEN = '0.102 0.290 0.227'
-const WHITE = '1 1 1'
-const BLACK = '0 0 0'
-const DARK  = '0 0 0'      // body text
-const MUTED = '0.420 0.447 0.502'
-const LGRAY = '0.976 0.980 0.984'
-const GSUB  = '0.7 0.85 0.78'
-const LGRN  = '0.940 0.970 0.960'
-const SGRAY = '0.75 0.75 0.75'
-
-const PW = 595, PH = 842
-const ML = 50, MR = 545
-const CW = MR - ML
-
-// ── Operators ─────────────────────────────────────────────────────────────────
-
-function rect(x: number, y: number, w: number, h: number, c: string): string {
-  return `q ${c} rg ${x} ${y} ${w} ${h} re f Q`
-}
-function hline(x1: number, y: number, x2: number, c: string, lw = 0.5): string {
-  return `q ${c} RG ${lw} w ${x1} ${y} m ${x2} ${y} l S Q`
-}
-function tx(x: number, y: number, f: 'F1'|'F2', sz: number, c: string, s: string): string {
-  return `q ${c} rg BT /${f} ${sz} Tf ${x} ${y} Td (${esc(s)}) Tj ET Q`
-}
-function drawImage(name: string, x: number, y: number, w: number, h: number): string {
-  return `q ${w} 0 0 ${h} ${x} ${y} cm /${name} Do Q`
 }
 
 // ── Build PDF ─────────────────────────────────────────────────────────────────
@@ -69,7 +41,6 @@ function drawImage(name: string, x: number, y: number, w: number, h: number): st
 function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
   const today = italianDate()
   const ROW_H = 18
-  const FOOTER_MIN = 50
   const COL = { name: ML, rev: ML + 210, cost: ML + 322, bal: ML + 430 }
 
   // Compressed logo image data
@@ -88,9 +59,7 @@ function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
   let pageNum = 0
 
   function addFooter() {
-    ops.push(hline(ML, FOOTER_MIN, MR, GREEN, 0.75))
-    ops.push(tx(ML, FOOTER_MIN - 15, 'F1', 8, MUTED, 'Alata Investment Club - Documento riservato'))
-    ops.push(tx(MR - 50, FOOTER_MIN - 15, 'F1', 8, MUTED, `Pagina ${pageNum}`))
+    ops.push(...drawBrandedFooter(pageNum))
   }
 
   function flushPage(isFirstPage = false) {
@@ -99,7 +68,7 @@ function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
     const joined = ops.join('\n')
     bufs.push(Buffer.from(joined, 'latin1'))
     if (isFirstPage && logo && logoStream) {
-      bufs.push(Buffer.from(`\nq ${logoW} 0 0 ${logoH} ${MR - logoW - 8} ${PH - (72 + logoH) / 2} cm /Logo Do Q`, 'latin1'))
+      bufs.push(Buffer.from('\n' + drawImage('Logo', MR - logoW - 8, PH - (72 + logoH) / 2, logoW, logoH), 'latin1'))
     }
     pageStreams.push(bufs)
     ops = []
@@ -121,12 +90,7 @@ function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
   // ── Page 1 header ─────────────────────────────────────────────────────────
   pageNum++
   const HDR_H = 72
-  ops.push(rect(0, PH - HDR_H, PW, HDR_H, GREEN))
-  ops.push(tx(ML, PH - 28, 'F2', 16, WHITE, 'ALATA INVESTMENT CLUB'))
-  ops.push(tx(ML, PH - 46, 'F1', 9, GSUB, 'Associazione Studentesca di Finanza'))
-  ops.push(tx(ML, PH - 64, 'F1', 8, GSUB, 'Università degli Studi di Brescia'))
-  ops.push(tx(370, PH - 28, 'F2', 13, WHITE, 'BUDGET REPORT'))
-  ops.push(tx(370, PH - 46, 'F1', 9, GSUB, payload.period))
+  ops.push(...drawBrandedHeader('BUDGET REPORT', payload.period))
   curY = PH - HDR_H - 26
 
   // ── Document info block ──────────────────────────────────────────────────

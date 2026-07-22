@@ -33,29 +33,39 @@ function truncate(str: string | null | undefined, max: number): string {
   return str.length > max ? str.slice(0, max) + '…' : str
 }
 
-function exportCSV(contacts: Contact[]) {
-  const headers = ['Nome', 'Cognome', 'Email', 'Telefono', 'Anno', 'Evento', 'Data Evento', 'Campo', 'Registrato il']
-  const rows = contacts.map(c => [
-    c.nome,
-    c.cognome,
-    c.email,
-    c.telefono ?? '',
-    c.anno_di_studio,
-    c.upcoming_events?.title ?? '',
-    c.upcoming_events?.date ?? '',
-    c.motivazione ?? c.questions_for_panelists ?? '',
-    new Date(c.created_at).toLocaleDateString('it-IT'),
-  ])
+type FieldKey =
+  | 'nome' | 'cognome' | 'email' | 'telefono' | 'anno_di_studio'
+  | 'evento' | 'data_evento' | 'campo' | 'registrato_il'
 
-  const csv = [headers, ...rows]
-    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-    .join('\n')
+const FIELD_DEFS: { key: FieldKey; label: string }[] = [
+  { key: 'nome', label: 'Nome' },
+  { key: 'cognome', label: 'Cognome' },
+  { key: 'email', label: 'Email' },
+  { key: 'telefono', label: 'Telefono' },
+  { key: 'anno_di_studio', label: 'Anno di studio' },
+  { key: 'evento', label: 'Evento' },
+  { key: 'data_evento', label: 'Data evento' },
+  { key: 'campo', label: 'Campo' },
+  { key: 'registrato_il', label: 'Registrato il' },
+]
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+const ALL_FIELD_KEYS: FieldKey[] = FIELD_DEFS.map(f => f.key)
+
+async function downloadEventContactsPDF(contacts: Contact[], fields: FieldKey[], eventFilter: string) {
+  const res = await fetch('/api/admin/crm/event-contacts-pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contacts, fields, eventFilter }),
+  })
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}))
+    throw new Error(json.error ?? 'Failed to generate PDF')
+  }
+  const blob = await res.blob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'event-contacts.csv'
+  a.download = 'event-contacts.pdf'
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -213,6 +223,10 @@ export default function EventContactsTable() {
   const [qrState, setQrState] = useState<QrState>('idle')
   const [qrResult, setQrResult] = useState<{ sent: number; failed: number } | null>(null)
   const [qrError, setQrError] = useState<string | null>(null)
+  const [pdfMenuOpen, setPdfMenuOpen] = useState(false)
+  const [selectedFields, setSelectedFields] = useState<FieldKey[]>(ALL_FIELD_KEYS)
+  const [generatingPdf, setGeneratingPdf] = useState(false)
+  const [pdfError, setPdfError] = useState<string | null>(null)
 
   function loadContacts() {
     setLoading(true)
@@ -295,6 +309,25 @@ export default function EventContactsTable() {
     setDeleting(false)
   }
 
+  function toggleField(key: FieldKey) {
+    setSelectedFields(prev =>
+      prev.includes(key) ? prev.filter(f => f !== key) : [...prev, key]
+    )
+  }
+
+  async function handleGeneratePdf() {
+    setGeneratingPdf(true)
+    setPdfError(null)
+    try {
+      await downloadEventContactsPDF(filtered, selectedFields, eventFilter)
+      setPdfMenuOpen(false)
+    } catch (err: unknown) {
+      setPdfError(err instanceof Error ? err.message : 'Errore nella generazione del PDF')
+    } finally {
+      setGeneratingPdf(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-ink-500 py-10 text-center">Loading…</p>
   if (error) return <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
 
@@ -333,12 +366,53 @@ export default function EventContactsTable() {
           ))}
         </select>
 
-        <button
-          onClick={() => exportCSV(filtered)}
-          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
-        >
-          Export CSV
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setPdfMenuOpen(o => !o)}
+            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
+          >
+            Download PDF
+          </button>
+
+          {pdfMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0"
+                style={{ zIndex: 40 }}
+                onClick={() => setPdfMenuOpen(false)}
+              />
+              <div
+                className="absolute left-0 top-full mt-1 w-64 bg-white border border-line shadow-lg p-4"
+                style={{ zIndex: 50 }}
+              >
+                <p className="text-xs font-medium text-ink-500 uppercase tracking-widest mb-3">Campi da esportare</p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {FIELD_DEFS.map(f => (
+                    <label key={f.key} className="flex items-center gap-2 text-sm text-[#1a1a1a] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedFields.includes(f.key)}
+                        onChange={() => toggleField(f.key)}
+                        className="accent-forest"
+                      />
+                      {f.label}
+                    </label>
+                  ))}
+                </div>
+
+                {pdfError && <p className="text-red-600 text-xs mt-3 border-l-2 border-red-400 pl-2 py-1">{pdfError}</p>}
+
+                <button
+                  onClick={handleGeneratePdf}
+                  disabled={selectedFields.length === 0 || generatingPdf}
+                  className="mt-4 w-full bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {generatingPdf ? 'Generazione…' : 'Genera PDF'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Send QR button — only when an event is selected */}
         {eventFilter && filteredForEvent.length > 0 && (
