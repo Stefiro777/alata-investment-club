@@ -57,7 +57,6 @@ function UpcomingEventRow({
   isLast: boolean
   onOpenModal: (event: UpcomingEvent) => void
 }) {
-  const [open, setOpen] = useState(false)
   const [added, setAdded] = useState(false)
   const { month, day } = formatDate(event.date)
   const { addItem } = useCart()
@@ -106,24 +105,6 @@ function UpcomingEventRow({
           <h3 className="font-serif text-xl text-white font-bold leading-snug">
             {event.title}
           </h3>
-
-          {event.description && (
-            <button
-              onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
-              className="mt-2 text-[10px] font-medium tracking-widest uppercase text-white/50 hover:text-white/80 transition-colors"
-            >
-              {open ? 'READ LESS' : 'READ MORE'}
-            </button>
-          )}
-
-          {/* Collapsible description */}
-          <div className={`overflow-hidden transition-all duration-fast ${open ? 'max-h-96' : 'max-h-0'}`}>
-            {event.description && (
-              <p className="text-white/70 text-sm mt-2 leading-relaxed max-w-xl" style={{ whiteSpace: 'pre-wrap' }}>
-                {event.description}
-              </p>
-            )}
-          </div>
         </div>
 
         {/* Action — always visible */}
