@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 type SponsorPerson = {
   id: string
@@ -74,9 +74,25 @@ function PartnerModal({
     !!(initial?.agreement_start || initial?.agreement_end || initial?.agreement_value || initial?.agreement_description)
   )
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })) }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true); setErr(null)
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/admin/upload-partner-logo', { method: 'POST', body: formData })
+    const json = await res.json()
+    setUploading(false)
+    if (!res.ok) { setErr(json.error ?? 'Upload failed'); return }
+    set('logo_url', json.url)
+    if (fileRef.current) fileRef.current.value = ''
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -147,6 +163,21 @@ function PartnerModal({
           <div>
             <label className={LABEL}>Logo URL</label>
             <input className={INPUT} value={form.logo_url} onChange={e => set('logo_url', e.target.value)} placeholder="https://…" />
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="border border-forest text-forest hover:bg-forest hover:text-white text-[10px] font-medium uppercase tracking-widest px-3 py-1.5 transition-colors disabled:opacity-50"
+              >
+                {uploading ? 'Uploading…' : 'oppure carica un file'}
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+              {form.logo_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={form.logo_url} alt="Logo preview" className="h-8 w-8 object-contain border border-line-faint bg-white p-0.5 flex-shrink-0" />
+              )}
+            </div>
           </div>
           <div>
             <label className={LABEL}>Website URL</label>
