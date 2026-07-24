@@ -39,7 +39,7 @@ function HeroGallery({ images, title }: { images: GalleryImage[]; title: string 
   const hasImages = images.length > 0
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden">
       {hasImages ? (
         <Image
           key={images[idx].id}
