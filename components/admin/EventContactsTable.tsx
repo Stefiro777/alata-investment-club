@@ -366,6 +366,13 @@ export default function EventContactsTable() {
           ))}
         </select>
 
+        {eventFilter && (
+          <div className="flex items-baseline gap-2 border-l border-line pl-4">
+            <span className="font-serif text-3xl font-bold text-forest leading-none">{filtered.length}</span>
+            <span className="text-xs text-ink-500 uppercase tracking-widest font-medium">Participants</span>
+          </div>
+        )}
+
         <div className="relative">
           <button
             onClick={() => setPdfMenuOpen(o => !o)}
