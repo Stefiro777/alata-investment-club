@@ -39,7 +39,7 @@ function HeroGallery({ images, title }: { images: GalleryImage[]; title: string 
   const hasImages = images.length > 0
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden bg-forest">
       {hasImages ? (
         <Image
           key={images[idx].id}
@@ -47,7 +47,7 @@ function HeroGallery({ images, title }: { images: GalleryImage[]; title: string 
           alt={title}
           fill
           priority
-          className="object-cover"
+          className="object-contain"
         />
       ) : (
         <div className="absolute inset-0 bg-forest" />
