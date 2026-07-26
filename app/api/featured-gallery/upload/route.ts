@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${baseName}.${ext}`
 
   const service = createServiceClient()
-  const { data, error } = await service.storage.from(bucket).upload(path, outputBuffer, {
+  const { data, error } = await service.storage.from(bucket).upload(path, new Uint8Array(outputBuffer), {
     contentType,
     upsert: false,
   })
