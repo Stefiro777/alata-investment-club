@@ -57,6 +57,23 @@ export function textWidth(s: string, f: 'F1' | 'F2', size: number): number {
   return (units / 1000) * size
 }
 
+// Ellipsis-truncates `s` to fit within maxWidthPt using real glyph widths.
+// Shared by any caller that needs an exact-width fallback truncation (the
+// header title wrap below only reaches this for a single word/line that's
+// still too wide on its own; callers elsewhere use it directly).
+export function truncateToRealWidth(s: string, maxWidthPt: number, f: 'F1' | 'F2', size: number): string {
+  const ellipsisW = textWidth('...', f, size)
+  const available = Math.max(0, maxWidthPt - ellipsisW)
+  let cut = 0
+  let w = 0
+  for (let i = 0; i < s.length; i++) {
+    w += textWidth(s[i], f, size)
+    if (w > available) break
+    cut = i + 1
+  }
+  return s.slice(0, Math.max(1, cut)) + '...'
+}
+
 // ── Drawing operators ───────────────────────────────────────────────────────────
 export function rect(x: number, y: number, w: number, h: number, c: string): string {
   return `q ${c} rg ${x} ${y} ${w} ${h} re f Q`
@@ -71,22 +88,103 @@ export function drawImage(name: string, x: number, y: number, w: number, h: numb
   return `q ${w} 0 0 ${h} ${x} ${y} cm /${name} Do Q`
 }
 
+const HDR_BASE_H = 72
+const TITLE_SIZE_MAX = 13
+const TITLE_SIZE_MIN = 9
+const HEADER_LOGO_GAP = 12
+
+export interface BrandedHeader {
+  ops: string[]
+  height: number
+}
+
+// Greedy word-wrap into at most 2 lines within maxWidthPt at the given font
+// size (real AFM widths). Doesn't guarantee either line actually fits —
+// fitTitle below is the one that checks that and decides whether to retry
+// at a smaller size.
+function greedyWrapTwoLines(title: string, maxWidthPt: number, size: number): string[] {
+  const words = title.split(/\s+/).filter(Boolean)
+  let line1 = ''
+  let i = 0
+  for (; i < words.length; i++) {
+    const candidate = line1 ? `${line1} ${words[i]}` : words[i]
+    if (!line1 || textWidth(candidate, 'F2', size) <= maxWidthPt) {
+      line1 = candidate
+    } else {
+      break
+    }
+  }
+  const line2 = words.slice(i).join(' ')
+  return line2 ? [line1, line2] : [line1]
+}
+
+interface TitleFit {
+  lines: string[]
+  size: number
+}
+
+// Fits `title` into at most 2 lines within maxWidthPt, preferring the
+// largest size (13pt down to a 9pt floor) that lets the whole title fit
+// without losing any words. Only once the 9pt floor is reached and it still
+// doesn't fit does the trailing line get ellipsis-truncated, as a last
+// resort for pathological cases (e.g. one word wider than the budget itself).
+function fitTitle(title: string, maxWidthPt: number): TitleFit {
+  if (textWidth(title, 'F2', TITLE_SIZE_MAX) <= maxWidthPt) {
+    return { lines: [title], size: TITLE_SIZE_MAX }
+  }
+
+  for (let size = TITLE_SIZE_MAX; size >= TITLE_SIZE_MIN; size--) {
+    const lines = greedyWrapTwoLines(title, maxWidthPt, size)
+    if (lines.every(line => textWidth(line, 'F2', size) <= maxWidthPt)) {
+      return { lines, size }
+    }
+  }
+
+  const size = TITLE_SIZE_MIN
+  const lines = greedyWrapTwoLines(title, maxWidthPt, size).map(line =>
+    textWidth(line, 'F2', size) > maxWidthPt ? truncateToRealWidth(line, maxWidthPt, 'F2', size) : line,
+  )
+  return { lines, size }
+}
+
 // ── Branded header/footer ────────────────────────────────────────────────────
-// First-page header band: club name + tagline + university reference on the
-// left, document title + subtitle on the right. Logo (if any) is drawn
-// separately by the caller via drawImage, since it requires the loaded
-// PNG XObject to already be registered as a page resource.
-export function drawBrandedHeader(title: string, subtitle: string, rightBlockX = 370): string[] {
-  const HDR_H = 72
+// First-page header band: club name on the left, document title + subtitle
+// on the right. Logo (if any) is drawn separately by the caller via
+// drawImage, since it requires the loaded PNG XObject to already be
+// registered as a page resource — `logoX` here is only used to size the
+// available width for the title, so it never overlaps the logo.
+// The title wraps onto a 2nd line (growing the band height accordingly)
+// when it doesn't fit the single-line budget between rightBlockX and the
+// logo; callers must read back `height` to position content below the band.
+export function drawBrandedHeader(
+  title: string,
+  subtitle: string,
+  rightBlockX = 370,
+  logoX = MR - 8,
+): BrandedHeader {
+  const available = Math.max(20, logoX - HEADER_LOGO_GAP - rightBlockX)
+  const { lines: titleLines, size: titleSize } = fitTitle(title, available)
+  // Leading scales with the size actually used, so 2 lines at a shrunk size
+  // don't end up loosely spaced relative to the (smaller) glyphs.
+  const lineH = titleSize * 1.2
+  const extraLines = titleLines.length - 1
+  const height = HDR_BASE_H + extraLines * lineH
+
   // The club name is the only line in the left block — center its baseline
-  // on the band rather than top-aligning it.
-  const nameY = PH - HDR_H / 2 - 6
-  return [
-    rect(0, PH - HDR_H, PW, HDR_H, GREEN),
+  // on the (possibly taller) band rather than top-aligning it.
+  const nameY = PH - height / 2 - 6
+  const ops = [
+    rect(0, PH - height, PW, height, GREEN),
     tx(ML, nameY, 'F2', 16, WHITE, 'ALATA INVESTMENT CLUB'),
-    tx(rightBlockX, PH - 28, 'F2', 13, WHITE, title),
-    tx(rightBlockX, PH - 46, 'F1', 9, GSUB, subtitle),
   ]
+  titleLines.forEach((line, i) => {
+    ops.push(tx(rightBlockX, PH - 28 - i * lineH, 'F2', titleSize, WHITE, line))
+  })
+  // Subtitle size/position stays fixed (9pt) regardless of the title size —
+  // only its Y drops to clear however many title lines were drawn.
+  ops.push(tx(rightBlockX, PH - 28 - extraLines * lineH - 18, 'F1', 9, GSUB, subtitle))
+
+  return { ops, height }
 }
 
 export function drawBrandedFooter(pageNum: number): string[] {

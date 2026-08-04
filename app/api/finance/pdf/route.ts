@@ -60,6 +60,12 @@ function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
     logoH = 40
     logoW = Math.round((logo.width / logo.height) * logoH)
   }
+  const logoX = MR - logoW - 8
+
+  // Set once the page-1 header is drawn below — the title here is always
+  // fixed ('BUDGET REPORT'), so this stays 72 in practice, but flushPage()
+  // reads whatever drawBrandedHeader actually reports.
+  let headerH = 72
 
   // Collect page streams as Buffer arrays
   const pageStreams: Buffer[][] = []
@@ -77,7 +83,7 @@ function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
     const joined = ops.join('\n')
     bufs.push(Buffer.from(joined, 'latin1'))
     if (isFirstPage && logo && logoStream) {
-      bufs.push(Buffer.from('\n' + drawImage('Logo', MR - logoW - 8, PH - (72 + logoH) / 2, logoW, logoH), 'latin1'))
+      bufs.push(Buffer.from('\n' + drawImage('Logo', logoX, PH - (headerH + logoH) / 2, logoW, logoH), 'latin1'))
     }
     pageStreams.push(bufs)
     ops = []
@@ -98,16 +104,16 @@ function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
 
   // ── Page 1 header ─────────────────────────────────────────────────────────
   pageNum++
-  const HDR_H = 72
-  const logoX = MR - logoW - 8
   const titleW = textWidth('BUDGET REPORT', 'F2', 13)
   const periodW = textWidth(payload.period, 'F1', 9)
   const rightBlockX = Math.max(
     RIGHT_BLOCK_MIN_X,
     Math.min(RIGHT_BLOCK_DEFAULT_X, logoX - MIN_LOGO_GAP - Math.max(titleW, periodW)),
   )
-  ops.push(...drawBrandedHeader('BUDGET REPORT', payload.period, rightBlockX))
-  curY = PH - HDR_H - 26
+  const header = drawBrandedHeader('BUDGET REPORT', payload.period, rightBlockX, logoX)
+  ops.push(...header.ops)
+  headerH = header.height
+  curY = PH - headerH - 26
 
   // ── Document info block ──────────────────────────────────────────────────
   const infoRows: [string, string][] = [

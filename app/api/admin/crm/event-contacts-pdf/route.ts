@@ -7,7 +7,7 @@ import type { PNGImg } from '@/lib/quote-pdf'
 import {
   PW, PH, ML, MR, CW, FOOTER_MIN,
   GREEN, WHITE, BLACK, DARK, MUTED, LGRAY,
-  rect, hline, tx, drawImage,
+  rect, hline, tx, drawImage, textWidth, truncateToRealWidth,
   drawBrandedHeader, drawBrandedFooter,
 } from '@/lib/pdf-branding'
 
@@ -165,6 +165,22 @@ function buildEventContactsPDF(
     logoH = LOGO_H
     logoW = Math.round((logo.width / logo.height) * logoH)
   }
+  const logoX = MR - logoW - 8
+
+  // Set once the page-1 header is drawn below — flushPage() only reads it
+  // when finalizing page 1 (after that section has run), so the default
+  // here never actually applies.
+  let headerH = 72
+
+  // The continuation-page banner is a single fixed-height line (unlike the
+  // main header, it can't grow to 2 lines) — truncate with real widths so a
+  // long event name never overflows it.
+  const bannerPrefix = 'ALATA INVESTMENT CLUB - '
+  const bannerSuffix = ' (continua)'
+  const bannerBudget = (MR - ML) - textWidth(bannerPrefix, 'F2', 10) - textWidth(bannerSuffix, 'F2', 10)
+  const bannerTitle = textWidth(headerTitle, 'F2', 10) <= bannerBudget
+    ? headerTitle
+    : truncateToRealWidth(headerTitle, bannerBudget, 'F2', 10)
 
   const pageStreams: Buffer[][] = []
   let ops: string[] = []
@@ -181,7 +197,7 @@ function buildEventContactsPDF(
     const joined = ops.join('\n')
     bufs.push(Buffer.from(joined, 'latin1'))
     if (isFirstPage && logo && logoStream) {
-      bufs.push(Buffer.from('\n' + drawImage('Logo', MR - logoW - 8, PH - (72 + logoH) / 2, logoW, logoH), 'latin1'))
+      bufs.push(Buffer.from('\n' + drawImage('Logo', logoX, PH - (headerH + logoH) / 2, logoW, logoH), 'latin1'))
     }
     pageStreams.push(bufs)
     ops = []
@@ -200,7 +216,7 @@ function buildEventContactsPDF(
     pageNum++
     ops = []
     ops.push(rect(0, PH - 36, PW, 36, GREEN))
-    ops.push(tx(ML, PH - 23, 'F2', 10, WHITE, `ALATA INVESTMENT CLUB - ${headerTitle} (continua)`))
+    ops.push(tx(ML, PH - 23, 'F2', 10, WHITE, `${bannerPrefix}${bannerTitle}${bannerSuffix}`))
     curY = PH - 36 - 20
     drawTableHeaderRow()
   }
@@ -211,9 +227,10 @@ function buildEventContactsPDF(
 
   // ── Page 1 header ─────────────────────────────────────────────────────────
   pageNum++
-  const HDR_H = 72
-  ops.push(...drawBrandedHeader(headerTitle, headerSubtitle, HEADER_TEXT_X))
-  curY = PH - HDR_H - 26
+  const header = drawBrandedHeader(headerTitle, headerSubtitle, HEADER_TEXT_X, logoX)
+  ops.push(...header.ops)
+  headerH = header.height
+  curY = PH - headerH - 26
 
   // ── Document info block ──────────────────────────────────────────────────
   const infoRows: [string, string][] = [
@@ -349,12 +366,9 @@ export async function POST(request: NextRequest) {
   }
 
   const logo = loadLogoPNG(path.join(process.cwd(), 'public', 'white.png'), [26, 74, 58])
-  const logoW = logo ? Math.round((logo.width / logo.height) * LOGO_H) : 0
 
   const hasEventFilter = !!eventFilter && eventFilter.trim() !== ''
-  const headerTitle = hasEventFilter
-    ? truncateHeaderTitle(eventFilter!.toUpperCase(), logoW)
-    : 'EVENT CONTACTS'
+  const headerTitle = hasEventFilter ? eventFilter!.toUpperCase() : 'EVENT CONTACTS'
   const headerSubtitle = `${contacts.length} partecipant${contacts.length === 1 ? 'e' : 'i'} - ${italianDate()}`
   const eventLabel = hasEventFilter ? eventFilter! : 'Tutti gli eventi'
 
@@ -371,18 +385,7 @@ export async function POST(request: NextRequest) {
 
 // The header title area (drawBrandedHeader) starts at x=300 — moved in from
 // the shared 370 default since this export drops the two left-block tagline
-// lines, freeing room to shift the title block left. The logo is drawn at
-// MR - logoW - 8 (see buildEventContactsPDF) — truncate long event names so
-// the title text always stops with at least LOGO_GAP before it, regardless
-// of how wide the logo turns out to be.
+// lines, freeing room to shift the title block left. Long event names now
+// wrap onto a 2nd line (see drawBrandedHeader) instead of truncating, so this
+// only needs to mark where the title block starts.
 const HEADER_TEXT_X = 300
-const LOGO_GAP = 12
-
-function truncateHeaderTitle(s: string, logoW: number): string {
-  const logoX = MR - logoW - 8
-  const maxWidthPt = Math.max(40, logoX - LOGO_GAP - HEADER_TEXT_X)
-  const avgCharW = 13 * 0.56
-  const maxChars = Math.max(4, Math.floor(maxWidthPt / avgCharW))
-  if (s.length <= maxChars) return s
-  return s.slice(0, Math.max(1, maxChars - 3)) + '...'
-}
