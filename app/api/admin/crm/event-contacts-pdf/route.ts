@@ -312,7 +312,7 @@ function buildEventContactsPDF(
     const pn = 3 + i
     const cn = N + 3 + i
     const xobjDict = hasLogo ? `/XObject<</Logo ${logoObj} 0 R>>` : ''
-    pushStr(`${pn} 0 obj\n<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Contents ${cn} 0 R/Resources<</Font<</F1 ${f1Obj} 0 R/F2 ${f2Obj} 0 R>>${xobjDict}>>\nendobj\n`)
+    pushStr(`${pn} 0 obj\n<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Contents ${cn} 0 R/Resources<</Font<</F1 ${f1Obj} 0 R/F2 ${f2Obj} 0 R>>${xobjDict}>>>>\nendobj\n`)
   }
 
   for (let i = 0; i < N; i++) {
