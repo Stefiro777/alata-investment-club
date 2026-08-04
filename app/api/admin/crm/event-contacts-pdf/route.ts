@@ -89,6 +89,36 @@ function truncateToWidth(s: string, widthPt: number, fontSize: number): string {
   return s.slice(0, Math.max(1, maxChars - 3)) + '...'
 }
 
+// Same width approximation as truncateToWidth, but wraps onto multiple lines
+// (breaking on word boundaries) instead of truncating with an ellipsis — used
+// for the "campo" column, whose free-text answers can run well past one line.
+function wrapTextToWidth(s: string, widthPt: number, fontSize: number): string[] {
+  if (!s) return ['']
+  const avgCharW = fontSize * 0.52
+  const maxChars = Math.max(1, Math.floor(widthPt / avgCharW))
+  const words = s.split(/\s+/).filter(Boolean)
+  const lines: string[] = []
+  let current = ''
+  for (let word of words) {
+    // A single word longer than the column width has to be hard-broken —
+    // otherwise it would never fit on any line.
+    while (word.length > maxChars) {
+      if (current) { lines.push(current); current = '' }
+      lines.push(word.slice(0, maxChars))
+      word = word.slice(maxChars)
+    }
+    const candidate = current ? `${current} ${word}` : word
+    if (candidate.length > maxChars) {
+      if (current) lines.push(current)
+      current = word
+    } else {
+      current = candidate
+    }
+  }
+  if (current) lines.push(current)
+  return lines.length ? lines : ['']
+}
+
 const MONTHS_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
                    'luglio','agosto','settembre','ottobre','novembre','dicembre']
 
@@ -96,6 +126,11 @@ function italianDate(): string {
   const d = new Date()
   return `${d.getDate()} ${MONTHS_IT[d.getMonth()]} ${d.getFullYear()}`
 }
+
+// Fixed logo height used both when sizing the drawn logo and when reserving
+// space for it in the header title budget — must stay in sync with the
+// logoH used inside buildEventContactsPDF.
+const LOGO_H = 40
 
 // ── Build PDF ─────────────────────────────────────────────────────────────────
 
@@ -127,7 +162,7 @@ function buildEventContactsPDF(
   let logoW = 0, logoH = 0
   if (logo) {
     logoStream = zlib.deflateSync(logo.rgbData)
-    logoH = 40
+    logoH = LOGO_H
     logoW = Math.round((logo.width / logo.height) * logoH)
   }
 
@@ -177,13 +212,13 @@ function buildEventContactsPDF(
   // ── Page 1 header ─────────────────────────────────────────────────────────
   pageNum++
   const HDR_H = 72
-  ops.push(...drawBrandedHeader(headerTitle, headerSubtitle))
+  ops.push(...drawBrandedHeader(headerTitle, headerSubtitle, HEADER_TEXT_X))
   curY = PH - HDR_H - 26
 
   // ── Document info block ──────────────────────────────────────────────────
   const infoRows: [string, string][] = [
     ['Evento:', eventLabel],
-    ['Contatti totali:', String(contacts.length)],
+    ['Partecipanti totali:', String(contacts.length)],
     ['Generato il:', `Brescia, ${today}`],
   ]
   for (const [label, value] of infoRows) {
@@ -199,14 +234,31 @@ function buildEventContactsPDF(
   checkSpace(ROW_H + 10)
   drawTableHeaderRow()
 
+  const LINE_H = FONT_SZ * 1.2
+  const campoCol = columns.find(col => col.key === 'campo')
+
   for (let i = 0; i < contacts.length; i++) {
-    checkSpace(ROW_H + 5)
     const c = contacts[i]
-    const ry = curY - ROW_H
-    if (i % 2 === 1) ops.push(rect(ML, ry, CW, ROW_H, LGRAY))
+    const campoLines = campoCol ? wrapTextToWidth(fieldValue(c, 'campo'), campoCol.w - 8, FONT_SZ) : ['']
+    const rowLines = Math.max(1, campoLines.length)
+    const rowH = ROW_H + (rowLines - 1) * LINE_H
+
+    checkSpace(rowH + 5)
+    const ry = curY - rowH
+    if (i % 2 === 1) ops.push(rect(ML, ry, CW, rowH, LGRAY))
+    // First-line baseline matches the single-line row's 5pt-from-bottom
+    // baseline, extended upward — so short columns stay top-aligned with
+    // the first wrapped "campo" line instead of sinking to the row bottom.
+    const firstLineY = ry + rowH - 13
     for (const col of columns) {
-      const raw = fieldValue(c, col.key)
-      ops.push(tx(col.x + 6, ry + 5, 'F1', FONT_SZ, raw === '-' ? MUTED : BLACK, truncateToWidth(raw, col.w - 8, FONT_SZ)))
+      if (col.key === 'campo') {
+        campoLines.forEach((line, li) => {
+          ops.push(tx(col.x + 6, firstLineY - li * LINE_H, 'F1', FONT_SZ, line === '-' ? MUTED : BLACK, line))
+        })
+      } else {
+        const raw = fieldValue(c, col.key)
+        ops.push(tx(col.x + 6, firstLineY, 'F1', FONT_SZ, raw === '-' ? MUTED : BLACK, truncateToWidth(raw, col.w - 8, FONT_SZ)))
+      }
     }
     curY = ry
   }
@@ -296,14 +348,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing contacts or fields' }, { status: 400 })
   }
 
+  const logo = loadLogoPNG(path.join(process.cwd(), 'public', 'white.png'), [26, 74, 58])
+  const logoW = logo ? Math.round((logo.width / logo.height) * LOGO_H) : 0
+
   const hasEventFilter = !!eventFilter && eventFilter.trim() !== ''
   const headerTitle = hasEventFilter
-    ? truncateHeaderTitle(eventFilter!.toUpperCase())
+    ? truncateHeaderTitle(eventFilter!.toUpperCase(), logoW)
     : 'EVENT CONTACTS'
-  const headerSubtitle = `${contacts.length} contatt${contacts.length === 1 ? 'o' : 'i'} - ${italianDate()}`
+  const headerSubtitle = `${contacts.length} partecipant${contacts.length === 1 ? 'e' : 'i'} - ${italianDate()}`
   const eventLabel = hasEventFilter ? eventFilter! : 'Tutti gli eventi'
 
-  const logo = loadLogoPNG(path.join(process.cwd(), 'public', 'white.png'), [26, 74, 58])
   const pdf = buildEventContactsPDF(contacts, fields, headerTitle, headerSubtitle, eventLabel, logo)
 
   const safeTitle = headerTitle.replace(/[^a-zA-Z0-9\-_]/g, '-')
@@ -315,11 +369,20 @@ export async function POST(request: NextRequest) {
   })
 }
 
-// The header title area (drawBrandedHeader) has ~170pt of width at 13pt bold —
-// truncate long event names so they never overrun the header band.
-function truncateHeaderTitle(s: string): string {
+// The header title area (drawBrandedHeader) starts at x=300 — moved in from
+// the shared 370 default since this export drops the two left-block tagline
+// lines, freeing room to shift the title block left. The logo is drawn at
+// MR - logoW - 8 (see buildEventContactsPDF) — truncate long event names so
+// the title text always stops with at least LOGO_GAP before it, regardless
+// of how wide the logo turns out to be.
+const HEADER_TEXT_X = 300
+const LOGO_GAP = 12
+
+function truncateHeaderTitle(s: string, logoW: number): string {
+  const logoX = MR - logoW - 8
+  const maxWidthPt = Math.max(40, logoX - LOGO_GAP - HEADER_TEXT_X)
   const avgCharW = 13 * 0.56
-  const maxChars = Math.max(4, Math.floor(170 / avgCharW))
+  const maxChars = Math.max(4, Math.floor(maxWidthPt / avgCharW))
   if (s.length <= maxChars) return s
   return s.slice(0, Math.max(1, maxChars - 3)) + '...'
 }

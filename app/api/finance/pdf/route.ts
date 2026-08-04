@@ -8,9 +8,18 @@ import type { PNGImg } from '@/lib/quote-pdf'
 import {
   PW, PH, ML, MR, CW, FOOTER_MIN,
   GREEN, WHITE, BLACK, DARK, MUTED, LGRAY, GSUB, LGRN, SGRAY,
-  rect, hline, tx, drawImage,
+  rect, hline, tx, drawImage, textWidth,
   drawBrandedHeader, drawBrandedFooter,
 } from '@/lib/pdf-branding'
+
+// The header title area used to sit at a hardcoded x=370, which real
+// Helvetica-Bold metrics show overlaps the logo (drawn at MR - logoW - 8)
+// even for the fixed 'BUDGET REPORT' title. Guarantee a minimum gap instead,
+// moving the block left when needed — but never past where the left block
+// (now just the club name, ending around x=238) would get crowded.
+const MIN_LOGO_GAP = 12
+const RIGHT_BLOCK_DEFAULT_X = 370
+const RIGHT_BLOCK_MIN_X = 250
 
 export const dynamic = 'force-dynamic'
 
@@ -90,7 +99,14 @@ function buildPDF(payload: PDFPayload, logo: PNGImg | null): Buffer {
   // ── Page 1 header ─────────────────────────────────────────────────────────
   pageNum++
   const HDR_H = 72
-  ops.push(...drawBrandedHeader('BUDGET REPORT', payload.period))
+  const logoX = MR - logoW - 8
+  const titleW = textWidth('BUDGET REPORT', 'F2', 13)
+  const periodW = textWidth(payload.period, 'F1', 9)
+  const rightBlockX = Math.max(
+    RIGHT_BLOCK_MIN_X,
+    Math.min(RIGHT_BLOCK_DEFAULT_X, logoX - MIN_LOGO_GAP - Math.max(titleW, periodW)),
+  )
+  ops.push(...drawBrandedHeader('BUDGET REPORT', payload.period, rightBlockX))
   curY = PH - HDR_H - 26
 
   // ── Document info block ──────────────────────────────────────────────────
