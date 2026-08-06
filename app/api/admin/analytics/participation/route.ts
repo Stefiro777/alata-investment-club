@@ -1,6 +1,7 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePrivilegedAccess } from '@/lib/auth'
+import { buildMemberIndex, matchMember, normalizeEmail } from '@/lib/member-matching'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +14,7 @@ type RegistrationRow = {
   cognome: string
   created_at: string
   event_id: string
+  member_override: boolean | null
   upcoming_events: { title: string; date: string } | null
 }
 
@@ -34,9 +36,13 @@ type PersonSummary = {
 // Groups event_registrations by LOWER(email) into a per-person participation
 // summary. Query params: event_id, date_from, date_to, member_filter=('member'|'external').
 //
-// Known limitation (accepted, not a bug): matching is done purely on lower(email).
-// It does not unify the same person across different emails (typos, email
-// changes over time) — this is a deliberate heuristic, not a defect.
+// Known limitations (accepted, not bugs):
+// 1. Email grouping does not unify the same person across different emails
+//    (typos, email changes over time) — a deliberate heuristic.
+// 2. The member/external flag combines email-or-name matching (see
+//    lib/member-matching.ts) with any member_override set on the person's
+//    rows; name matching can misfire on homonyms, which is exactly what
+//    member_override exists to correct.
 export async function GET(req: NextRequest) {
   const user = await requirePrivilegedAccess()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -48,7 +54,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabaseAdmin
     .from('event_registrations')
-    .select('email, nome, cognome, created_at, event_id, upcoming_events(title, date)')
+    .select('email, nome, cognome, created_at, event_id, member_override, upcoming_events(title, date)')
 
   if (eventId) query = query.eq('event_id', eventId)
   if (dateFrom) query = query.gte('created_at', dateFrom)
@@ -56,49 +62,63 @@ export async function GET(req: NextRequest) {
 
   const [{ data: regsData, error: regsErr }, { data: membersData, error: membersErr }] = await Promise.all([
     query,
-    supabaseAdmin.from('club_members').select('email, member_id'),
+    supabaseAdmin.from('club_members').select('email, full_name, member_id'),
   ])
 
   if (regsErr) return NextResponse.json({ error: regsErr.message }, { status: 400 })
   if (membersErr) return NextResponse.json({ error: membersErr.message }, { status: 400 })
 
   const regs = (regsData ?? []) as unknown as RegistrationRow[]
+  const memberIndex = buildMemberIndex(membersData ?? [])
 
-  const memberByEmail = new Map<string, string | null>()
-  for (const m of membersData ?? []) {
-    if (m.email) memberByEmail.set(m.email.toLowerCase(), (m as { member_id: string | null }).member_id ?? null)
+  type PersonAccum = PersonSummary & {
+    _eventIds: Set<string>
+    _autoMemberId: string | null
+    _autoIsMember: boolean
+    _latestOverride: boolean | null
   }
 
-  const byEmail = new Map<string, PersonSummary & { _eventIds: Set<string> }>()
+  const byEmail = new Map<string, PersonAccum>()
 
   for (const r of regs) {
-    const key = r.email.toLowerCase()
+    const key = normalizeEmail(r.email)
     const eventTitle = r.upcoming_events?.title ?? 'Unknown'
     const eventDate = r.upcoming_events?.date ?? ''
+    const autoMatch = matchMember(memberIndex, r.email, r.nome, r.cognome)
 
     let person = byEmail.get(key)
     if (!person) {
-      const isMember = memberByEmail.has(key)
       person = {
         email: r.email,
         nome: r.nome,
         cognome: r.cognome,
-        is_member: isMember,
-        member_id: isMember ? (memberByEmail.get(key) ?? null) : null,
+        is_member: false,
+        member_id: null,
         total_participations: 0,
         events: [],
         first_participation_at: r.created_at,
         last_participation_at: r.created_at,
         _eventIds: new Set<string>(),
+        _autoMemberId: null,
+        _autoIsMember: false,
+        _latestOverride: null,
       }
       byEmail.set(key, person)
     }
 
-    // Most recent registration wins for display name.
+    // An automatic match on any of the person's rows is enough to flag them.
+    if (autoMatch) {
+      person._autoIsMember = true
+      person._autoMemberId = person._autoMemberId ?? autoMatch.member_id
+    }
+
+    // Most recent registration wins for display name and for which row's
+    // member_override applies (a later manual correction overrides an older one).
     if (r.created_at >= person.last_participation_at) {
       person.nome = r.nome
       person.cognome = r.cognome
       person.last_participation_at = r.created_at
+      person._latestOverride = r.member_override
     }
     if (r.created_at < person.first_participation_at) {
       person.first_participation_at = r.created_at
@@ -111,9 +131,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  let people: PersonSummary[] = Array.from(byEmail.values()).map(({ _eventIds, ...rest }) => {
-    void _eventIds
-    return rest
+  let people: PersonSummary[] = Array.from(byEmail.values()).map(p => {
+    const isMember = p._latestOverride !== null ? p._latestOverride : p._autoIsMember
+    const memberId = isMember ? p._autoMemberId : null
+    const { _eventIds, _autoMemberId, _autoIsMember, _latestOverride, ...rest } = p
+    void _eventIds; void _autoMemberId; void _autoIsMember; void _latestOverride
+    return { ...rest, is_member: isMember, member_id: memberId }
   })
 
   if (memberFilter === 'member') people = people.filter(p => p.is_member)

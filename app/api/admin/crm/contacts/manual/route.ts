@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
     })
     .select(`
       id,
+      event_id,
       nome,
       cognome,
       email,
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
       created_at,
       source,
       added_by,
+      member_override,
       checked_in,
       checked_in_at,
       checked_in_by,

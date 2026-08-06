@@ -1,14 +1,19 @@
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePrivilegedAccess } from '@/lib/auth'
+import { createServiceClient } from '@/lib/supabase-server'
 
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseAdmin = createServiceClient()
 
 // Shared privileged-access check (bod/director)
 const checkAuth = requirePrivilegedAccess
+
+// Fields the PATCH endpoint is allowed to touch — everything else in the
+// request body is ignored to avoid mass-assignment onto arbitrary columns
+// (e.g. source, checked_in, added_by must not be settable from this form).
+const EDITABLE_FIELDS = [
+  'nome', 'cognome', 'email', 'telefono', 'anno_di_studio',
+  'motivazione', 'questions_for_panelists', 'member_override',
+] as const
 
 export async function GET() {
   const user = await checkAuth()
@@ -29,6 +34,7 @@ export async function GET() {
       created_at,
       source,
       added_by,
+      member_override,
       checked_in,
       checked_in_at,
       checked_in_by,
@@ -54,8 +60,21 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { id, ...fields } = body
+  const { id } = body
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+  const fields: Record<string, unknown> = {}
+  for (const key of EDITABLE_FIELDS) {
+    if (key in body) fields[key] = body[key]
+  }
+
+  if ('member_override' in fields && fields.member_override !== null && typeof fields.member_override !== 'boolean') {
+    return NextResponse.json({ error: 'member_override must be true, false or null' }, { status: 400 })
+  }
+
+  if (Object.keys(fields).length === 0) {
+    return NextResponse.json({ error: 'No editable fields provided' }, { status: 400 })
+  }
 
   const { data, error } = await supabaseAdmin
     .from('event_registrations')
@@ -74,6 +93,7 @@ export async function PATCH(req: NextRequest) {
       created_at,
       source,
       added_by,
+      member_override,
       checked_in,
       checked_in_at,
       checked_in_by,

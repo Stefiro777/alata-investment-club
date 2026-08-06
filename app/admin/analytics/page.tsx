@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import AdminNavbar from '../components/AdminNavbar'
@@ -1056,6 +1056,15 @@ function ParticipationTab() {
   const [loading, setLoading]             = useState(true)
   const [memberFilter, setMemberFilter]   = useState<'all' | 'member' | 'external'>('all')
   const [sortAsc, setSortAsc]             = useState(false)
+  const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
+
+  function togglePersonExpanded(email: string) {
+    setExpandedEmails(prev => {
+      const next = new Set(prev)
+      next.has(email) ? next.delete(email) : next.add(email)
+      return next
+    })
+  }
 
   useEffect(() => {
     Promise.all([
@@ -1171,22 +1180,60 @@ function ParticipationTab() {
           <tbody className="divide-y divide-gray-100">
             {people.length === 0 ? (
               <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">No participation data.</td></tr>
-            ) : people.map(p => (
-              <tr key={p.email} className="bg-white hover:bg-[#fafaf9] transition-colors">
-                <td className="px-5 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">{p.nome} {p.cognome}</td>
-                <td className="px-5 py-3 text-sm text-gray-600">{p.email}</td>
-                <td className="px-5 py-3">
-                  <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
-                    p.is_member ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {p.is_member ? 'Member' : 'External'}
-                  </span>
-                </td>
-                <td className="px-5 py-3 font-serif text-lg font-bold text-forest">{p.total_participations}</td>
-                <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.first_participation_at)}</td>
-                <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.last_participation_at)}</td>
-              </tr>
-            ))}
+            ) : people.map(p => {
+              const isExpanded = expandedEmails.has(p.email)
+              const sortedEvents = [...p.events].sort((a, b) => (a.date < b.date ? 1 : -1))
+              return (
+                <Fragment key={p.email}>
+                  <tr className="bg-white hover:bg-[#fafaf9] transition-colors">
+                    <td className="px-5 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">{p.nome} {p.cognome}</td>
+                    <td className="px-5 py-3 text-sm text-gray-600">{p.email}</td>
+                    <td className="px-5 py-3">
+                      <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
+                        p.is_member ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {p.is_member ? 'Member' : 'External'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <button
+                        type="button"
+                        onClick={() => togglePersonExpanded(p.email)}
+                        className="flex items-center gap-1.5 font-serif text-lg font-bold text-forest hover:underline underline-offset-2"
+                        title="Show events"
+                      >
+                        {p.total_participations}
+                        <svg
+                          className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </td>
+                    <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.first_participation_at)}</td>
+                    <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.last_participation_at)}</td>
+                  </tr>
+                  {isExpanded && (
+                    <tr className="bg-[#fafaf9]">
+                      <td colSpan={6} className="px-5 py-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
+                          Events attended
+                        </p>
+                        <ul className="space-y-1.5">
+                          {sortedEvents.map(ev => (
+                            <li key={ev.event_id} className="flex items-center justify-between gap-4 text-sm">
+                              <span className="text-gray-800">{ev.title}</span>
+                              <span className="text-xs text-gray-400 whitespace-nowrap">{ev.date ? fmtDate(ev.date) : '—'}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
           </tbody>
         </table>
       </div>

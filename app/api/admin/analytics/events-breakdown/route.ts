@@ -1,6 +1,7 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { requirePrivilegedAccess } from '@/lib/auth'
+import { buildMemberIndex, resolveIsMember } from '@/lib/member-matching'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,8 +11,11 @@ const supabaseAdmin = createAdminClient(
 type RegistrationRow = {
   event_id: string
   email: string
+  nome: string
+  cognome: string
   checked_in: boolean
   source: 'self' | 'manual'
+  member_override: boolean | null
 }
 
 type EventBreakdown = {
@@ -28,8 +32,9 @@ type EventBreakdown = {
 }
 
 // GET /api/admin/analytics/events-breakdown
-// Per-event participation breakdown: member vs external (by lower(email)
-// match against club_members), checked-in vs no-show, manual vs self-service.
+// Per-event participation breakdown: member vs external (email-or-name match
+// against club_members, see lib/member-matching.ts, overridable per row via
+// member_override), checked-in vs no-show, manual vs self-service.
 export async function GET() {
   const user = await requirePrivilegedAccess()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -37,15 +42,15 @@ export async function GET() {
   const [{ data: eventsData, error: eventsErr }, { data: regsData, error: regsErr }, { data: membersData, error: membersErr }] =
     await Promise.all([
       supabaseAdmin.from('upcoming_events').select('id, title, date').order('date', { ascending: false }),
-      supabaseAdmin.from('event_registrations').select('event_id, email, checked_in, source'),
-      supabaseAdmin.from('club_members').select('email'),
+      supabaseAdmin.from('event_registrations').select('event_id, email, nome, cognome, checked_in, source, member_override'),
+      supabaseAdmin.from('club_members').select('email, full_name, member_id'),
     ])
 
   if (eventsErr) return NextResponse.json({ error: eventsErr.message }, { status: 400 })
   if (regsErr) return NextResponse.json({ error: regsErr.message }, { status: 400 })
   if (membersErr) return NextResponse.json({ error: membersErr.message }, { status: 400 })
 
-  const memberEmails = new Set((membersData ?? []).map(m => m.email?.toLowerCase()).filter(Boolean))
+  const memberIndex = buildMemberIndex(membersData ?? [])
   const regs = (regsData ?? []) as RegistrationRow[]
 
   const byEvent = new Map<string, EventBreakdown>()
@@ -69,7 +74,8 @@ export async function GET() {
     if (!ev) continue // registration references an event no longer present
 
     ev.total_registrations += 1
-    if (memberEmails.has(r.email?.toLowerCase())) ev.members_count += 1
+    const { isMember } = resolveIsMember(memberIndex, r.email, r.nome, r.cognome, r.member_override)
+    if (isMember) ev.members_count += 1
     else ev.external_count += 1
 
     if (r.checked_in) ev.checked_in_count += 1

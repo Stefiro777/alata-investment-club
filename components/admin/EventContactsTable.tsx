@@ -15,6 +15,7 @@ type Contact = {
   created_at: string
   source: 'self' | 'manual'
   added_by: string | null
+  member_override: boolean | null
   checked_in: boolean
   checked_in_at: string | null
   checked_in_by: string | null
@@ -40,6 +41,7 @@ type EditForm = {
   anno_di_studio: string
   motivazione: string
   questions_for_panelists: string
+  member_override: boolean | null
 }
 
 function truncate(str: string | null | undefined, max: number): string {
@@ -122,6 +124,7 @@ function EditModal({
     anno_di_studio: contact.anno_di_studio,
     motivazione: contact.motivazione ?? '',
     questions_for_panelists: contact.questions_for_panelists ?? '',
+    member_override: contact.member_override,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -146,6 +149,7 @@ function EditModal({
         anno_di_studio: form.anno_di_studio.trim(),
         motivazione: form.motivazione.trim() || null,
         questions_for_panelists: form.questions_for_panelists.trim() || null,
+        member_override: form.member_override,
       }),
     })
     const json = await res.json()
@@ -196,6 +200,32 @@ function EditModal({
               <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Anno di studio *</label>
               <input required value={form.anno_di_studio} onChange={e => set('anno_di_studio', e.target.value)} className={inputClass} />
             </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Socio</label>
+            <div className="flex gap-2">
+              {([
+                { value: null, label: 'Auto' },
+                { value: true, label: 'Socio' },
+                { value: false, label: 'Esterno' },
+              ] as const).map(opt => (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  onClick={() => setForm(prev => ({ ...prev, member_override: opt.value }))}
+                  className={`text-xs font-medium tracking-wide px-4 py-2 border transition-colors ${
+                    form.member_override === opt.value
+                      ? 'bg-forest text-white border-forest'
+                      : 'border-[#d1d5db] text-ink-500 hover:border-forest hover:text-forest'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-ink-500 mt-1.5">
+              &ldquo;Auto&rdquo; usa il matching automatico (email o nome). Scegli &ldquo;Socio&rdquo;/&ldquo;Esterno&rdquo; per forzare una correzione manuale.
+            </p>
           </div>
           <div>
             <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Motivazione</label>
@@ -655,6 +685,16 @@ export default function EventContactsTable() {
                         className="ml-2 inline-block text-[9px] font-semibold uppercase tracking-widest text-ink-500 border border-[#d1d5db] px-1.5 py-0.5 align-middle"
                       >
                         manuale
+                      </span>
+                    )}
+                    {c.member_override !== null && (
+                      <span
+                        title={`Stato socio forzato manualmente: ${c.member_override ? 'Socio' : 'Esterno'}`}
+                        className={`ml-2 inline-block text-[9px] font-semibold uppercase tracking-widest px-1.5 py-0.5 align-middle text-white ${
+                          c.member_override ? 'bg-forest' : 'bg-gray-500'
+                        }`}
+                      >
+                        {c.member_override ? 'socio ⚑' : 'esterno ⚑'}
                       </span>
                     )}
                   </td>
