@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo, Fragment } from 'react'
+import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import AdminNavbar from '../components/AdminNavbar'
+import { EditParticipantModal, deleteParticipant, type Contact } from '@/components/admin/EditParticipantModal'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -1011,7 +1012,9 @@ function FinanceTab() {
 
 // ── Participation Tab ────────────────────────────────────────────────────────
 
-type PersonEvent = { event_id: string; title: string; date: string }
+// Each entry is one specific event_registrations row — same shape as
+// EditParticipantModal's `Contact`, so it can be edited/deleted in place.
+type PersonEvent = Contact
 
 type PersonSummary = {
   email: string
@@ -1047,7 +1050,7 @@ type EventBreakdown = {
   self_count: number
 }
 
-const DISTRIBUTION_BUCKETS = ['1', '2', '3', '4+']
+type QuarterTrend = { label: string; sortKey: number; participations: number; eventCount: number }
 
 function ParticipationTab() {
   const [participation, setParticipation] = useState<ParticipationData | null>(null)
@@ -1055,8 +1058,12 @@ function ParticipationTab() {
   const [selectedEventId, setSelectedEventId] = useState('')
   const [loading, setLoading]             = useState(true)
   const [memberFilter, setMemberFilter]   = useState<'all' | 'member' | 'external'>('all')
+  const [nameSearch, setNameSearch]       = useState('')
   const [sortAsc, setSortAsc]             = useState(false)
   const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
+  const [editingEvent, setEditingEvent]   = useState<PersonEvent | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [deletingId, setDeletingId]       = useState<string | null>(null)
 
   function togglePersonExpanded(email: string) {
     setExpandedEmails(prev => {
@@ -1066,7 +1073,7 @@ function ParticipationTab() {
     })
   }
 
-  useEffect(() => {
+  const loadData = useCallback((keepSelectedEvent: boolean) => {
     Promise.all([
       fetch('/api/admin/analytics/participation').then(r => r.ok ? r.json() : null),
       fetch('/api/admin/analytics/events-breakdown').then(r => r.ok ? r.json() : null),
@@ -1074,22 +1081,41 @@ function ParticipationTab() {
       setParticipation(partData)
       const evs = (evData?.events ?? []) as EventBreakdown[]
       setEvents(evs)
-      const firstWithRegs = evs.find(e => e.total_registrations > 0)
-      setSelectedEventId(firstWithRegs?.event_id ?? '')
+      if (!keepSelectedEvent) {
+        const firstWithRegs = evs.find(e => e.total_registrations > 0)
+        setSelectedEventId(firstWithRegs?.event_id ?? '')
+      }
       setLoading(false)
     })
   }, [])
+
+  useEffect(() => { loadData(false) }, [loadData])
+
+  function handleEventEdited() {
+    setEditingEvent(null)
+    loadData(true)
+  }
+
+  async function handleEventDelete(id: string) {
+    setDeletingId(id)
+    const { ok } = await deleteParticipant(id)
+    setDeleteConfirmId(null)
+    setDeletingId(null)
+    if (ok) loadData(true)
+  }
 
   const people = useMemo(() => {
     let list = participation?.people ?? []
     if (memberFilter === 'member')   list = list.filter(p => p.is_member)
     if (memberFilter === 'external') list = list.filter(p => !p.is_member)
+    const q = nameSearch.trim().toLowerCase()
+    if (q) list = list.filter(p => `${p.nome} ${p.cognome}`.toLowerCase().includes(q))
     const sorted = [...list].sort((a, b) =>
       sortAsc ? a.total_participations - b.total_participations
               : b.total_participations - a.total_participations
     )
     return sorted
-  }, [participation, memberFilter, sortAsc])
+  }, [participation, memberFilter, nameSearch, sortAsc])
 
   const avgParticipations = participation && participation.total_people > 0
     ? Math.round((participation.total_participations / participation.total_people) * 10) / 10
@@ -1099,7 +1125,39 @@ function ParticipationTab() {
     ? Math.round((participation.members_count / participation.total_people) * 100)
     : 0
 
-  const maxBucket = Math.max(...DISTRIBUTION_BUCKETS.map(b => participation?.distribution[b] ?? 0), 1)
+  // Quarterly trend: groups every (person, event) participation by the real
+  // event date (upcoming_events.date), not registration date — consistent
+  // with the first/last participation fix above.
+  const quarterlyTrend = useMemo(() => {
+    const byQuarter = new Map<string, { participations: number; eventIds: Set<string>; sortKey: number }>()
+    for (const p of participation?.people ?? []) {
+      for (const ev of p.events) {
+        const dateStr = ev.upcoming_events?.date
+        if (!dateStr) continue
+        const d = new Date(dateStr)
+        if (isNaN(d.getTime())) continue
+        const q = Math.floor(d.getMonth() / 3) + 1
+        const label = `Q${q} ${d.getFullYear()}`
+        const sortKey = d.getFullYear() * 10 + q
+        let bucket = byQuarter.get(label)
+        if (!bucket) {
+          bucket = { participations: 0, eventIds: new Set(), sortKey }
+          byQuarter.set(label, bucket)
+        }
+        bucket.participations += 1
+        bucket.eventIds.add(ev.event_id)
+      }
+    }
+    const result: QuarterTrend[] = Array.from(byQuarter.entries()).map(([label, b]) => ({
+      label,
+      sortKey: b.sortKey,
+      participations: b.participations,
+      eventCount: b.eventIds.size,
+    }))
+    return result.sort((a, b) => a.sortKey - b.sortKey)
+  }, [participation])
+
+  const maxQuarterParticipations = Math.max(...quarterlyTrend.map(q => q.participations), 1)
 
   const selectedEvent = events.find(e => e.event_id === selectedEventId) ?? null
 
@@ -1114,128 +1172,6 @@ function ParticipationTab() {
         <KpiCard label="Members Share"         value={`${memberPctOfPeople}%`}
           sub={`${participation?.members_count ?? 0} members · ${participation?.external_count ?? 0} external`} />
         <KpiCard label="Avg. Participations / Person" value={avgParticipations} />
-      </div>
-
-      {/* Distribution histogram */}
-      <div className="bg-white border border-gray-200 p-6 mb-10">
-        <p className={`${labelCls} mb-5`}>Participation Distribution</p>
-        <div className="space-y-3">
-          {DISTRIBUTION_BUCKETS.map(bucket => {
-            const count = participation?.distribution[bucket] ?? 0
-            const pct = maxBucket > 0 ? (count / maxBucket) * 100 : 0
-            return (
-              <div key={bucket} className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-gray-500 w-16 flex-shrink-0">
-                  {bucket} event{bucket !== '1' ? 's' : ''}
-                </span>
-                <div className="h-4 bg-gray-100 flex-1">
-                  <div className="h-4 bg-forest transition-all duration-500" style={{ width: `${pct}%` }} />
-                </div>
-                <span className="text-xs font-bold text-forest w-8 text-right flex-shrink-0">{count}</span>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Per-person table */}
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <p className={labelCls}>Participation by Person</p>
-        <div className="flex items-center gap-2">
-          {(['all', 'member', 'external'] as const).map(f => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setMemberFilter(f)}
-              className={`text-xs font-semibold uppercase tracking-widest px-3 py-1.5 border transition-colors ${
-                memberFilter === f
-                  ? 'bg-forest text-white border-forest'
-                  : 'border-gray-300 text-gray-500 hover:border-forest hover:text-forest'
-              }`}
-            >
-              {f === 'all' ? 'All' : f === 'member' ? 'Members' : 'External'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white border border-gray-200 overflow-x-auto mb-10">
-        <table className="w-full text-left border-collapse min-w-[720px]">
-          <thead>
-            <tr className="bg-[#fafaf9] border-b border-gray-200">
-              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Name</th>
-              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Email</th>
-              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Status</th>
-              <th
-                className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 cursor-pointer select-none"
-                onClick={() => setSortAsc(v => !v)}
-                title="Click to toggle sort order"
-              >
-                Participations {sortAsc ? '▲' : '▼'}
-              </th>
-              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">First</th>
-              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Last</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {people.length === 0 ? (
-              <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">No participation data.</td></tr>
-            ) : people.map(p => {
-              const isExpanded = expandedEmails.has(p.email)
-              const sortedEvents = [...p.events].sort((a, b) => (a.date < b.date ? 1 : -1))
-              return (
-                <Fragment key={p.email}>
-                  <tr className="bg-white hover:bg-[#fafaf9] transition-colors">
-                    <td className="px-5 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">{p.nome} {p.cognome}</td>
-                    <td className="px-5 py-3 text-sm text-gray-600">{p.email}</td>
-                    <td className="px-5 py-3">
-                      <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
-                        p.is_member ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {p.is_member ? 'Member' : 'External'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <button
-                        type="button"
-                        onClick={() => togglePersonExpanded(p.email)}
-                        className="flex items-center gap-1.5 font-serif text-lg font-bold text-forest hover:underline underline-offset-2"
-                        title="Show events"
-                      >
-                        {p.total_participations}
-                        <svg
-                          className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    </td>
-                    <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.first_participation_at)}</td>
-                    <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.last_participation_at)}</td>
-                  </tr>
-                  {isExpanded && (
-                    <tr className="bg-[#fafaf9]">
-                      <td colSpan={6} className="px-5 py-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
-                          Events attended
-                        </p>
-                        <ul className="space-y-1.5">
-                          {sortedEvents.map(ev => (
-                            <li key={ev.event_id} className="flex items-center justify-between gap-4 text-sm">
-                              <span className="text-gray-800">{ev.title}</span>
-                              <span className="text-xs text-gray-400 whitespace-nowrap">{ev.date ? fmtDate(ev.date) : '—'}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              )
-            })}
-          </tbody>
-        </table>
       </div>
 
       {/* Per-event breakdown */}
@@ -1253,11 +1189,11 @@ function ParticipationTab() {
       </div>
 
       {!selectedEvent ? (
-        <div className="py-16 text-center border border-dashed border-gray-200">
+        <div className="py-16 text-center border border-dashed border-gray-200 mb-10">
           <p className="text-sm text-gray-400">No events available.</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 p-6">
+        <div className="bg-white border border-gray-200 p-6 mb-10">
           <p className="font-serif text-lg font-bold text-gray-900 mb-1">{selectedEvent.title}</p>
           <p className="text-xs text-gray-400 mb-6">{selectedEvent.date}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -1285,6 +1221,195 @@ function ParticipationTab() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Per-person table */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <p className={labelCls}>Participation by Person</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            value={nameSearch}
+            onChange={e => setNameSearch(e.target.value)}
+            placeholder="Search by name…"
+            className="border border-gray-300 px-3 py-1.5 text-xs text-gray-900 bg-white focus:outline-none focus:border-forest w-44 transition-colors"
+          />
+          {(['all', 'member', 'external'] as const).map(f => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setMemberFilter(f)}
+              className={`text-xs font-semibold uppercase tracking-widest px-3 py-1.5 border transition-colors ${
+                memberFilter === f
+                  ? 'bg-forest text-white border-forest'
+                  : 'border-gray-300 text-gray-500 hover:border-forest hover:text-forest'
+              }`}
+            >
+              {f === 'all' ? 'All' : f === 'member' ? 'Members' : 'External'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white border border-gray-200 mb-10">
+        <table className="w-full text-left border-collapse table-fixed">
+          <thead>
+            <tr className="bg-[#fafaf9] border-b border-gray-200">
+              <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-[26%]">Name</th>
+              <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-[30%]">Email</th>
+              <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-[16%]">Status</th>
+              <th
+                className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 cursor-pointer select-none w-[14%]"
+                onClick={() => setSortAsc(v => !v)}
+                title="Click to toggle sort order"
+              >
+                Events {sortAsc ? '▲' : '▼'}
+              </th>
+              <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-[14%]">Last</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {people.length === 0 ? (
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-gray-400">No participation data.</td></tr>
+            ) : people.map(p => {
+              const isExpanded = expandedEmails.has(p.email)
+              const sortedEvents = [...p.events].sort((a, b) =>
+                (a.upcoming_events?.date ?? '') < (b.upcoming_events?.date ?? '') ? 1 : -1
+              )
+              return (
+                <Fragment key={p.email}>
+                  <tr className="bg-white hover:bg-[#fafaf9] transition-colors">
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 break-words">{p.nome} {p.cognome}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600 break-words">{p.email}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
+                        p.is_member ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {p.is_member ? 'Member' : 'External'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => togglePersonExpanded(p.email)}
+                        className="flex items-center gap-1.5 font-serif text-lg font-bold text-forest hover:underline underline-offset-2"
+                        title="Show events"
+                      >
+                        {p.total_participations}
+                        <svg
+                          className={`w-3 h-3 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.last_participation_at)}</td>
+                  </tr>
+                  {isExpanded && (
+                    <tr className="bg-[#fafaf9]">
+                      <td colSpan={5} className="px-4 py-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
+                          Events attended
+                        </p>
+                        <ul className="space-y-1.5">
+                          {sortedEvents.map(ev => (
+                            <li key={ev.id} className="flex items-center justify-between gap-4 text-sm">
+                              <div className="min-w-0">
+                                <span className="text-gray-800">{ev.upcoming_events?.title ?? 'Unknown'}</span>
+                                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                                  {ev.upcoming_events?.date ? fmtDate(ev.upcoming_events.date) : '—'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3 flex-shrink-0">
+                                {deleteConfirmId === ev.id ? (
+                                  <>
+                                    <span className="text-xs text-red-600">Delete?</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEventDelete(ev.id)}
+                                      disabled={deletingId === ev.id}
+                                      className="text-xs font-semibold uppercase tracking-wide text-red-600 hover:underline disabled:opacity-40"
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeleteConfirmId(null)}
+                                      className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:underline"
+                                    >
+                                      No
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingEvent(ev)}
+                                      className="text-xs font-semibold uppercase tracking-wide text-forest hover:underline"
+                                    >
+                                      Modifica
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeleteConfirmId(ev.id)}
+                                      className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-red-600 hover:underline"
+                                    >
+                                      Elimina
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Participation trend by quarter — replaces the old fixed-bucket
+          distribution histogram with an actual time dimension, grouped by
+          the real event date (see quarterlyTrend above). */}
+      <div className="bg-white border border-gray-200 p-6 mb-10">
+        <p className={`${labelCls} mb-6`}>Participation Trend by Quarter</p>
+        {quarterlyTrend.length === 0 ? (
+          <p className="text-sm text-gray-400 py-10 text-center">No dated events yet.</p>
+        ) : (
+          <div className="flex items-end gap-5 overflow-x-auto pb-2">
+            {quarterlyTrend.map(q => {
+              const pct = maxQuarterParticipations > 0 ? (q.participations / maxQuarterParticipations) * 100 : 0
+              const avgPerEvent = q.eventCount > 0 ? Math.round((q.participations / q.eventCount) * 10) / 10 : 0
+              return (
+                <div key={q.label} className="flex flex-col items-center flex-shrink-0 w-16">
+                  <span className="text-xs font-bold text-forest mb-1">{q.participations}</span>
+                  <div className="w-8 h-32 bg-gray-100 flex items-end">
+                    <div className="w-full bg-forest transition-all duration-500" style={{ height: `${pct}%` }} />
+                  </div>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mt-2 whitespace-nowrap">
+                    {q.label}
+                  </span>
+                  <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                    {q.eventCount} event{q.eventCount !== 1 ? 's' : ''}
+                  </span>
+                  <span className="text-[9px] text-gray-300 whitespace-nowrap">~{avgPerEvent}/event</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {editingEvent && (
+        <EditParticipantModal
+          contact={editingEvent}
+          onSave={handleEventEdited}
+          onClose={() => setEditingEvent(null)}
+        />
       )}
     </div>
   )

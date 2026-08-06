@@ -9,16 +9,47 @@ const supabaseAdmin = createAdminClient(
 )
 
 type RegistrationRow = {
+  id: string
   email: string
   nome: string
   cognome: string
+  telefono: string | null
+  anno_di_studio: string
+  motivazione: string | null
+  questions_for_panelists: string | null
   created_at: string
   event_id: string
   member_override: boolean | null
+  source: 'self' | 'manual'
+  added_by: string | null
+  checked_in: boolean
+  checked_in_at: string | null
+  checked_in_by: string | null
   upcoming_events: { title: string; date: string } | null
 }
 
-type PersonEvent = { event_id: string; title: string; date: string }
+// Same shape as components/admin/EditParticipantModal.tsx's `Contact` — each
+// entry can be passed straight into EditParticipantModal / deleteParticipant
+// without transformation, since it *is* one specific event_registrations row.
+type PersonEvent = {
+  id: string
+  event_id: string
+  nome: string
+  cognome: string
+  email: string
+  telefono: string | null
+  anno_di_studio: string
+  motivazione: string | null
+  questions_for_panelists: string | null
+  created_at: string
+  source: 'self' | 'manual'
+  added_by: string | null
+  member_override: boolean | null
+  checked_in: boolean
+  checked_in_at: string | null
+  checked_in_by: string | null
+  upcoming_events: { title: string; date: string } | null
+}
 
 type PersonSummary = {
   email: string
@@ -54,7 +85,12 @@ export async function GET(req: NextRequest) {
 
   let query = supabaseAdmin
     .from('event_registrations')
-    .select('email, nome, cognome, created_at, event_id, member_override, upcoming_events(title, date)')
+    .select(`
+      id, email, nome, cognome, telefono, anno_di_studio, motivazione,
+      questions_for_panelists, created_at, event_id, member_override,
+      source, added_by, checked_in, checked_in_at, checked_in_by,
+      upcoming_events(title, date)
+    `)
 
   if (eventId) query = query.eq('event_id', eventId)
   if (dateFrom) query = query.gte('created_at', dateFrom)
@@ -76,13 +112,15 @@ export async function GET(req: NextRequest) {
     _autoMemberId: string | null
     _autoIsMember: boolean
     _latestOverride: boolean | null
+    _latestEntryAt: string
   }
 
   const byEmail = new Map<string, PersonAccum>()
 
   for (const r of regs) {
     const key = normalizeEmail(r.email)
-    const eventTitle = r.upcoming_events?.title ?? 'Unknown'
+    // The date that matters for "participation" is when the event happened,
+    // not when the person filled in the registration form.
     const eventDate = r.upcoming_events?.date ?? ''
     const autoMatch = matchMember(memberIndex, r.email, r.nome, r.cognome)
 
@@ -96,12 +134,13 @@ export async function GET(req: NextRequest) {
         member_id: null,
         total_participations: 0,
         events: [],
-        first_participation_at: r.created_at,
-        last_participation_at: r.created_at,
+        first_participation_at: eventDate,
+        last_participation_at: eventDate,
         _eventIds: new Set<string>(),
         _autoMemberId: null,
         _autoIsMember: false,
         _latestOverride: null,
+        _latestEntryAt: r.created_at,
       }
       byEmail.set(key, person)
     }
@@ -112,21 +151,49 @@ export async function GET(req: NextRequest) {
       person._autoMemberId = person._autoMemberId ?? autoMatch.member_id
     }
 
-    // Most recent registration wins for display name and for which row's
-    // member_override applies (a later manual correction overrides an older one).
-    if (r.created_at >= person.last_participation_at) {
+    // Most recently *entered* registration wins for display name and for
+    // which row's member_override applies (a later manual correction
+    // overrides an older one) — this tracks data-entry recency (created_at),
+    // independent from event chronology below.
+    if (r.created_at >= person._latestEntryAt) {
       person.nome = r.nome
       person.cognome = r.cognome
-      person.last_participation_at = r.created_at
+      person._latestEntryAt = r.created_at
       person._latestOverride = r.member_override
     }
-    if (r.created_at < person.first_participation_at) {
-      person.first_participation_at = r.created_at
+
+    // First/last participation tracks event chronology (upcoming_events.date),
+    // independent from data-entry recency above.
+    if (eventDate) {
+      if (!person.last_participation_at || eventDate >= person.last_participation_at) {
+        person.last_participation_at = eventDate
+      }
+      if (!person.first_participation_at || eventDate < person.first_participation_at) {
+        person.first_participation_at = eventDate
+      }
     }
 
     if (!person._eventIds.has(r.event_id)) {
       person._eventIds.add(r.event_id)
-      person.events.push({ event_id: r.event_id, title: eventTitle, date: eventDate })
+      person.events.push({
+        id: r.id,
+        event_id: r.event_id,
+        nome: r.nome,
+        cognome: r.cognome,
+        email: r.email,
+        telefono: r.telefono,
+        anno_di_studio: r.anno_di_studio,
+        motivazione: r.motivazione,
+        questions_for_panelists: r.questions_for_panelists,
+        created_at: r.created_at,
+        source: r.source,
+        added_by: r.added_by,
+        member_override: r.member_override,
+        checked_in: r.checked_in,
+        checked_in_at: r.checked_in_at,
+        checked_in_by: r.checked_in_by,
+        upcoming_events: r.upcoming_events,
+      })
       person.total_participations = person._eventIds.size
     }
   }
@@ -134,8 +201,8 @@ export async function GET(req: NextRequest) {
   let people: PersonSummary[] = Array.from(byEmail.values()).map(p => {
     const isMember = p._latestOverride !== null ? p._latestOverride : p._autoIsMember
     const memberId = isMember ? p._autoMemberId : null
-    const { _eventIds, _autoMemberId, _autoIsMember, _latestOverride, ...rest } = p
-    void _eventIds; void _autoMemberId; void _autoIsMember; void _latestOverride
+    const { _eventIds, _autoMemberId, _autoIsMember, _latestOverride, _latestEntryAt, ...rest } = p
+    void _eventIds; void _autoMemberId; void _autoIsMember; void _latestOverride; void _latestEntryAt
     return { ...rest, is_member: isMember, member_id: memberId }
   })
 
