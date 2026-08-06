@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 
 type Contact = {
   id: string
+  event_id: string
   nome: string
   cognome: string
   email: string
@@ -12,10 +13,23 @@ type Contact = {
   motivazione: string | null
   questions_for_panelists: string | null
   created_at: string
+  source: 'self' | 'manual'
+  added_by: string | null
+  checked_in: boolean
+  checked_in_at: string | null
+  checked_in_by: string | null
   upcoming_events: {
     title: string
     date: string
   } | null
+}
+
+type AddForm = {
+  nome: string
+  cognome: string
+  email: string
+  telefono: string
+  anno_di_studio: string
 }
 
 type EditForm = {
@@ -208,6 +222,113 @@ function EditModal({
   )
 }
 
+// ── Add Participant Modal ────────────────────────────────────────────────────
+function AddParticipantModal({
+  eventId,
+  eventTitle,
+  onAdded,
+  onClose,
+}: {
+  eventId: string
+  eventTitle: string
+  onAdded: (created: Contact) => void
+  onClose: () => void
+}) {
+  const [form, setForm] = useState<AddForm>({
+    nome: '', cognome: '', email: '', telefono: '', anno_di_studio: '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function set(key: keyof AddForm, value: string) {
+    setForm(prev => ({ ...prev, [key]: value }))
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    const res = await fetch('/api/admin/crm/contacts/manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_id: eventId,
+        nome: form.nome.trim(),
+        cognome: form.cognome.trim(),
+        email: form.email.trim(),
+        telefono: form.telefono.trim() || undefined,
+        anno_di_studio: form.anno_di_studio.trim(),
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      setError(json.error ?? 'Failed to add participant')
+      setSaving(false)
+      return
+    }
+    onAdded(json.data)
+    setSaving(false)
+  }
+
+  const inputClass =
+    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-forest text-sm text-[#1a1a1a] bg-white transition-colors'
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 9999 }}
+      onClick={e => { if (e.target === e.currentTarget && !saving) onClose() }}
+    >
+      <div className="bg-white border border-line w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+          <div>
+            <p className="font-serif text-base font-bold text-forest">Add Participant</p>
+            <p className="text-xs text-ink-500 mt-0.5">{eventTitle}</p>
+          </div>
+          <button onClick={onClose} disabled={saving} className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors -m-4 p-4 disabled:opacity-40">✕</button>
+        </div>
+        <form onSubmit={handleSave} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Nome *</label>
+              <input required value={form.nome} onChange={e => set('nome', e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Cognome *</label>
+              <input required value={form.cognome} onChange={e => set('cognome', e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Email *</label>
+            <input required type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Telefono</label>
+              <input value={form.telefono} onChange={e => set('telefono', e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Anno di studio *</label>
+              <input required value={form.anno_di_studio} onChange={e => set('anno_di_studio', e.target.value)} className={inputClass} />
+            </div>
+          </div>
+
+          {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
+            <button type="button" onClick={onClose} disabled={saving} className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {saving ? '…' : 'Add'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 type QrState = 'idle' | 'confirm' | 'sending' | 'done' | 'error'
 
 export default function EventContactsTable() {
@@ -218,6 +339,7 @@ export default function EventContactsTable() {
   const [eventFilter, setEventFilter] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editContact, setEditContact] = useState<Contact | null>(null)
+  const [showAddModal, setShowAddModal] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [qrState, setQrState] = useState<QrState>('idle')
@@ -246,9 +368,19 @@ export default function EventContactsTable() {
   useEffect(() => { loadContacts() }, [])
 
   const events = useMemo(() => {
-    const set = new Set(contacts.map(c => c.upcoming_events?.title).filter(Boolean) as string[])
-    return Array.from(set).sort()
+    const map = new Map<string, string>()
+    for (const c of contacts) {
+      if (c.event_id && c.upcoming_events?.title) map.set(c.event_id, c.upcoming_events.title)
+    }
+    return Array.from(map.entries())
+      .map(([id, title]) => ({ id, title }))
+      .sort((a, b) => a.title.localeCompare(b.title))
   }, [contacts])
+
+  const selectedEvent = useMemo(
+    () => events.find(ev => ev.id === eventFilter) ?? null,
+    [events, eventFilter]
+  )
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -257,7 +389,7 @@ export default function EventContactsTable() {
         c.nome?.toLowerCase().includes(q) ||
         c.cognome?.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q)
-      const matchEvent = !eventFilter || c.upcoming_events?.title === eventFilter
+      const matchEvent = !eventFilter || c.event_id === eventFilter
       return matchSearch && matchEvent
     })
   }, [contacts, search, eventFilter])
@@ -271,9 +403,14 @@ export default function EventContactsTable() {
   }
 
   const filteredForEvent = useMemo(
-    () => eventFilter ? contacts.filter(c => c.upcoming_events?.title === eventFilter) : [],
+    () => eventFilter ? contacts.filter(c => c.event_id === eventFilter) : [],
     [contacts, eventFilter]
   )
+
+  function handleAdded(created: Contact) {
+    setContacts(prev => [created, ...prev])
+    setShowAddModal(false)
+  }
 
   async function handleSendQr() {
     setQrState('sending')
@@ -362,7 +499,7 @@ export default function EventContactsTable() {
         >
           <option value="">All Events</option>
           {events.map(ev => (
-            <option key={ev} value={ev}>{ev}</option>
+            <option key={ev.id} value={ev.id}>{ev.title}</option>
           ))}
         </select>
 
@@ -371,6 +508,15 @@ export default function EventContactsTable() {
             <span className="font-serif text-3xl font-bold text-forest leading-none">{filtered.length}</span>
             <span className="text-xs text-ink-500 uppercase tracking-widest font-medium">Participants</span>
           </div>
+        )}
+
+        {eventFilter && selectedEvent && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
+          >
+            + Aggiungi partecipante
+          </button>
         )}
 
         <div className="relative">
@@ -435,7 +581,7 @@ export default function EventContactsTable() {
             {qrState === 'confirm' && (
               <div className="flex items-center gap-2 border border-forest px-4 py-2">
                 <span className="text-xs text-forest">
-                  Send QR to {filteredForEvent.length} registrant{filteredForEvent.length !== 1 ? 's' : ''} of &ldquo;{eventFilter}&rdquo;?
+                  Send QR to {filteredForEvent.length} registrant{filteredForEvent.length !== 1 ? 's' : ''} of &ldquo;{selectedEvent?.title ?? ''}&rdquo;?
                 </span>
                 <button
                   onClick={handleSendQr}
@@ -503,6 +649,14 @@ export default function EventContactsTable() {
                     onClick={() => setExpandedId(isExpanded ? null : c.id)}
                   >
                     {c.nome} {c.cognome}
+                    {c.source === 'manual' && (
+                      <span
+                        title={c.added_by ? `Aggiunto manualmente da ${c.added_by}` : 'Aggiunto manualmente'}
+                        className="ml-2 inline-block text-[9px] font-semibold uppercase tracking-widest text-ink-500 border border-[#d1d5db] px-1.5 py-0.5 align-middle"
+                      >
+                        manuale
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-ink-500">{c.email}</td>
                   <td className="px-4 py-3 text-ink-500 whitespace-nowrap">{c.telefono ?? '—'}</td>
@@ -573,6 +727,15 @@ export default function EventContactsTable() {
           contact={editContact}
           onSave={handleSaved}
           onClose={() => setEditContact(null)}
+        />
+      )}
+
+      {showAddModal && selectedEvent && (
+        <AddParticipantModal
+          eventId={selectedEvent.id}
+          eventTitle={selectedEvent.title}
+          onAdded={handleAdded}
+          onClose={() => setShowAddModal(false)}
         />
       )}
     </div>

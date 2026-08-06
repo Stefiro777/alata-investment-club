@@ -18,6 +18,7 @@ export async function GET() {
     .from('event_registrations')
     .select(`
       id,
+      event_id,
       nome,
       cognome,
       email,
@@ -26,6 +27,11 @@ export async function GET() {
       motivazione,
       questions_for_panelists,
       created_at,
+      source,
+      added_by,
+      checked_in,
+      checked_in_at,
+      checked_in_by,
       upcoming_events (
         title,
         date
@@ -57,6 +63,7 @@ export async function PATCH(req: NextRequest) {
     .eq('id', id)
     .select(`
       id,
+      event_id,
       nome,
       cognome,
       email,
@@ -65,6 +72,11 @@ export async function PATCH(req: NextRequest) {
       motivazione,
       questions_for_panelists,
       created_at,
+      source,
+      added_by,
+      checked_in,
+      checked_in_at,
+      checked_in_by,
       upcoming_events (
         title,
         date

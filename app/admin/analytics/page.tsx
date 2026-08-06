@@ -7,7 +7,7 @@ import AdminNavbar from '../components/AdminNavbar'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'quarter-comparison' | 'linkedin' | 'sponsors' | 'finance'
+type Tab = 'overview' | 'quarter-comparison' | 'linkedin' | 'sponsors' | 'finance' | 'participation'
 
 type Member   = { role: string; created_at: string }
 type Event    = { id: string; date: string }
@@ -1009,6 +1009,240 @@ function FinanceTab() {
   )
 }
 
+// ── Participation Tab ────────────────────────────────────────────────────────
+
+type PersonEvent = { event_id: string; title: string; date: string }
+
+type PersonSummary = {
+  email: string
+  nome: string
+  cognome: string
+  is_member: boolean
+  member_id: string | null
+  total_participations: number
+  events: PersonEvent[]
+  first_participation_at: string
+  last_participation_at: string
+}
+
+type ParticipationData = {
+  people: PersonSummary[]
+  total_people: number
+  total_participations: number
+  members_count: number
+  external_count: number
+  distribution: Record<string, number>
+}
+
+type EventBreakdown = {
+  event_id: string
+  title: string
+  date: string
+  total_registrations: number
+  members_count: number
+  external_count: number
+  checked_in_count: number
+  no_show_count: number
+  manual_count: number
+  self_count: number
+}
+
+const DISTRIBUTION_BUCKETS = ['1', '2', '3', '4+']
+
+function ParticipationTab() {
+  const [participation, setParticipation] = useState<ParticipationData | null>(null)
+  const [events, setEvents]               = useState<EventBreakdown[]>([])
+  const [selectedEventId, setSelectedEventId] = useState('')
+  const [loading, setLoading]             = useState(true)
+  const [memberFilter, setMemberFilter]   = useState<'all' | 'member' | 'external'>('all')
+  const [sortAsc, setSortAsc]             = useState(false)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/admin/analytics/participation').then(r => r.ok ? r.json() : null),
+      fetch('/api/admin/analytics/events-breakdown').then(r => r.ok ? r.json() : null),
+    ]).then(([partData, evData]) => {
+      setParticipation(partData)
+      const evs = (evData?.events ?? []) as EventBreakdown[]
+      setEvents(evs)
+      const firstWithRegs = evs.find(e => e.total_registrations > 0)
+      setSelectedEventId(firstWithRegs?.event_id ?? '')
+      setLoading(false)
+    })
+  }, [])
+
+  const people = useMemo(() => {
+    let list = participation?.people ?? []
+    if (memberFilter === 'member')   list = list.filter(p => p.is_member)
+    if (memberFilter === 'external') list = list.filter(p => !p.is_member)
+    const sorted = [...list].sort((a, b) =>
+      sortAsc ? a.total_participations - b.total_participations
+              : b.total_participations - a.total_participations
+    )
+    return sorted
+  }, [participation, memberFilter, sortAsc])
+
+  const avgParticipations = participation && participation.total_people > 0
+    ? Math.round((participation.total_participations / participation.total_people) * 10) / 10
+    : 0
+
+  const memberPctOfPeople = participation && participation.total_people > 0
+    ? Math.round((participation.members_count / participation.total_people) * 100)
+    : 0
+
+  const maxBucket = Math.max(...DISTRIBUTION_BUCKETS.map(b => participation?.distribution[b] ?? 0), 1)
+
+  const selectedEvent = events.find(e => e.event_id === selectedEventId) ?? null
+
+  if (loading) return <p className="text-sm text-gray-400">Loading…</p>
+
+  return (
+    <div>
+      {/* KPI row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <KpiCard label="Total Participations" value={participation?.total_participations ?? 0} />
+        <KpiCard label="Unique People"         value={participation?.total_people ?? 0} />
+        <KpiCard label="Members Share"         value={`${memberPctOfPeople}%`}
+          sub={`${participation?.members_count ?? 0} members · ${participation?.external_count ?? 0} external`} />
+        <KpiCard label="Avg. Participations / Person" value={avgParticipations} />
+      </div>
+
+      {/* Distribution histogram */}
+      <div className="bg-white border border-gray-200 p-6 mb-10">
+        <p className={`${labelCls} mb-5`}>Participation Distribution</p>
+        <div className="space-y-3">
+          {DISTRIBUTION_BUCKETS.map(bucket => {
+            const count = participation?.distribution[bucket] ?? 0
+            const pct = maxBucket > 0 ? (count / maxBucket) * 100 : 0
+            return (
+              <div key={bucket} className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-gray-500 w-16 flex-shrink-0">
+                  {bucket} event{bucket !== '1' ? 's' : ''}
+                </span>
+                <div className="h-4 bg-gray-100 flex-1">
+                  <div className="h-4 bg-forest transition-all duration-500" style={{ width: `${pct}%` }} />
+                </div>
+                <span className="text-xs font-bold text-forest w-8 text-right flex-shrink-0">{count}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Per-person table */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <p className={labelCls}>Participation by Person</p>
+        <div className="flex items-center gap-2">
+          {(['all', 'member', 'external'] as const).map(f => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setMemberFilter(f)}
+              className={`text-xs font-semibold uppercase tracking-widest px-3 py-1.5 border transition-colors ${
+                memberFilter === f
+                  ? 'bg-forest text-white border-forest'
+                  : 'border-gray-300 text-gray-500 hover:border-forest hover:text-forest'
+              }`}
+            >
+              {f === 'all' ? 'All' : f === 'member' ? 'Members' : 'External'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white border border-gray-200 overflow-x-auto mb-10">
+        <table className="w-full text-left border-collapse min-w-[720px]">
+          <thead>
+            <tr className="bg-[#fafaf9] border-b border-gray-200">
+              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Name</th>
+              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Email</th>
+              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Status</th>
+              <th
+                className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 cursor-pointer select-none"
+                onClick={() => setSortAsc(v => !v)}
+                title="Click to toggle sort order"
+              >
+                Participations {sortAsc ? '▲' : '▼'}
+              </th>
+              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">First</th>
+              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Last</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {people.length === 0 ? (
+              <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">No participation data.</td></tr>
+            ) : people.map(p => (
+              <tr key={p.email} className="bg-white hover:bg-[#fafaf9] transition-colors">
+                <td className="px-5 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">{p.nome} {p.cognome}</td>
+                <td className="px-5 py-3 text-sm text-gray-600">{p.email}</td>
+                <td className="px-5 py-3">
+                  <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
+                    p.is_member ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {p.is_member ? 'Member' : 'External'}
+                  </span>
+                </td>
+                <td className="px-5 py-3 font-serif text-lg font-bold text-forest">{p.total_participations}</td>
+                <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.first_participation_at)}</td>
+                <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.last_participation_at)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Per-event breakdown */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <p className={labelCls}>Breakdown by Event</p>
+        <select
+          value={selectedEventId}
+          onChange={e => setSelectedEventId(e.target.value)}
+          className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:border-forest transition-colors"
+        >
+          {events.map(ev => (
+            <option key={ev.event_id} value={ev.event_id}>{ev.title}</option>
+          ))}
+        </select>
+      </div>
+
+      {!selectedEvent ? (
+        <div className="py-16 text-center border border-dashed border-gray-200">
+          <p className="text-sm text-gray-400">No events available.</p>
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 p-6">
+          <p className="font-serif text-lg font-bold text-gray-900 mb-1">{selectedEvent.title}</p>
+          <p className="text-xs text-gray-400 mb-6">{selectedEvent.date}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className={`${labelCls} mb-1`}>Total Registrations</p>
+              <p className="font-serif text-3xl font-bold text-forest">{selectedEvent.total_registrations}</p>
+            </div>
+            <div>
+              <p className={`${labelCls} mb-1`}>Members / External</p>
+              <p className="font-serif text-3xl font-bold text-forest">
+                {selectedEvent.members_count} <span className="text-gray-300">/</span> {selectedEvent.external_count}
+              </p>
+            </div>
+            <div>
+              <p className={`${labelCls} mb-1`}>Checked-in / No-show</p>
+              <p className="font-serif text-3xl font-bold text-forest">
+                {selectedEvent.checked_in_count} <span className="text-gray-300">/</span> {selectedEvent.no_show_count}
+              </p>
+            </div>
+            <div>
+              <p className={`${labelCls} mb-1`}>Manual / Self-service</p>
+              <p className="font-serif text-3xl font-bold text-forest">
+                {selectedEvent.manual_count} <span className="text-gray-300">/</span> {selectedEvent.self_count}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 const TABS: { key: Tab; label: string }[] = [
@@ -1017,6 +1251,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'linkedin',           label: 'LinkedIn Posts' },
   { key: 'sponsors',           label: 'Sponsors' },
   { key: 'finance',            label: 'Finance' },
+  { key: 'participation',      label: 'Partecipazione' },
 ]
 
 export default function AdminAnalyticsPage() {
@@ -1106,6 +1341,7 @@ export default function AdminAnalyticsPage() {
           {tab === 'linkedin'           && <LinkedInPostsTab />}
           {tab === 'sponsors'           && <SponsorsTab />}
           {tab === 'finance'            && <FinanceTab />}
+          {tab === 'participation'      && <ParticipationTab />}
 
         </div>
       </main>
