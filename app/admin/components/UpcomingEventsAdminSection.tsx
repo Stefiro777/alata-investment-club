@@ -93,7 +93,7 @@ function formToPayload(form: FormState) {
     registration_field: form.registration_field,
     ticket_price_cents: ticketCents && ticketCents > 0 ? ticketCents : null,
     member_price_cents: memberCents && memberCents >= 0 ? memberCents : null,
-    slug: (form.slug.trim() || slugify(form.title)) || null,
+    slug: form.slug.trim() || slugify(form.title) || `event-${Date.now().toString(36)}`,
   }
 }
 
