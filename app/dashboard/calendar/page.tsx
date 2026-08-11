@@ -394,7 +394,7 @@ function TasksTab() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setPostPlans((postResult.data ?? []).map((r: any) => ({
         id: r.id, title: r.title ?? '', description: r.description ?? null,
-        team: r.team ?? null, scheduled_date: r.scheduled_date as string, status: r.status ?? 'planned', created_by: r.created_by ?? '',
+        team: r.team ?? null, scheduled_date: r.scheduled_date as string, status: r.status ?? 'draft', created_by: r.created_by ?? '',
       })))
       setLoading(false)
     }
