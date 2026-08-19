@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
+import { slugify } from '@/lib/slug'
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -67,14 +68,6 @@ function eventToForm(ev: UpcomingEvent): FormState {
     member_price_eur: ev.member_price_cents != null ? (ev.member_price_cents / 100).toFixed(2) : '',
     slug: ev.slug ?? '',
   }
-}
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 function formToPayload(form: FormState) {

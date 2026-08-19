@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
+import { uniqueSlug } from '@/lib/slug'
 
 export async function GET() {
   const service = createServiceClient()
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
   if (!date || !title) return NextResponse.json({ error: 'date e title richiesti' }, { status: 400 })
 
   const service = createServiceClient()
+  const slug = await uniqueSlug(service, title)
   const { data, error } = await service
     .from('upcoming_events')
     .insert({
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest) {
       start_time: start_time || null,
       end_time: end_time || null,
       status: 'coming_soon',
+      slug,
     })
     .select()
     .single()
