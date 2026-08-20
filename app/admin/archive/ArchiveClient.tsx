@@ -203,10 +203,10 @@ function AddDocModal({
     setSaving(true)
     setError(null)
     const tags: string[] = [category]
-    const supabase = createClient()
-    const { data, error: err } = await supabase
-      .from('admin_documents')
-      .insert({
+    const res = await fetch('/api/admin/archive-documents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         title: title.trim(),
         description: description.trim() || null,
         tags,
@@ -217,11 +217,11 @@ function AddDocModal({
         quarter: quarter ? parseInt(quarter, 10) : null,
         uploaded_by: userEmail,
         folder_id: selectedFolder,
-      })
-      .select('*')
-      .single()
-    if (err) { setError(err.message); setSaving(false); return }
-    onSave(data as Doc)
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok) { setError(json.error ?? 'Errore'); setSaving(false); return }
+    onSave(json.data as Doc)
     setSaving(false)
   }
 
@@ -1159,17 +1159,16 @@ export default function ArchiveClient({ initialDocs, userEmail }: { initialDocs:
   const [modalCategory, setModalCategory] = useState<Category | null>(null)
 
   async function handleDelete(id: string) {
-    const supabase = createClient()
-    await supabase.from('admin_documents').delete().eq('id', id)
+    await fetch(`/api/admin/archive-documents?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
     setDocs(prev => prev.filter(d => d.id !== id))
   }
 
   async function moveDocument(docId: string, folderId: string | null) {
-    const supabase = createClient()
-    await supabase
-      .from('admin_documents')
-      .update({ folder_id: folderId })
-      .eq('id', docId)
+    await fetch('/api/admin/archive-documents', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: docId, folder_id: folderId }),
+    })
     setDocs(prev => prev.map(d => d.id === docId ? { ...d, folder_id: folderId } : d))
   }
 
