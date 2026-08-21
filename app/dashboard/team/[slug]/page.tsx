@@ -1602,7 +1602,7 @@ function EventsContentTab() {
       .from('contenuti')
       .select('*')
       .eq('tipo', 'evento')
-      .order('created_at', { ascending: false })
+      .order('data_pubblicazione', { ascending: false })
       .then(({ data }) => setContenuti((data ?? []) as Contenuto[]))
     supabase
       .from('featured_events')
