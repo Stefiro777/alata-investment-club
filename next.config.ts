@@ -33,6 +33,7 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['sharp'],
   turbopack: {
     root: __dirname,
   },
