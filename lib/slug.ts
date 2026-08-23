@@ -10,11 +10,12 @@ export function slugify(s: string): string {
 
 export async function uniqueSlug(
   supabase: SupabaseClient,
-  title: string
+  title: string,
+  table: string = 'upcoming_events'
 ): Promise<string> {
-  const base = slugify(title) || `event-${Date.now().toString(36)}`
+  const base = slugify(title) || `${table}-${Date.now().toString(36)}`
   const { data } = await supabase
-    .from('upcoming_events')
+    .from(table)
     .select('slug')
     .like('slug', `${base}%`)
 
