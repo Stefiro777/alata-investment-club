@@ -46,9 +46,9 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
         </div>
 
         {/* Info — name, role and bio_short all visible without interaction */}
-        <div className="relative p-5 bg-forest flex flex-col flex-1">
+        <div className="relative p-4 bg-forest flex flex-col flex-1">
           <div className="absolute top-0 left-0 h-px bg-white/40 w-0 group-hover:w-full transition-[width] duration-slow" />
-          <h3 className="font-serif text-xl font-bold text-white leading-tight">{mentor.full_name}</h3>
+          <h3 className="font-serif text-lg font-bold text-white leading-tight">{mentor.full_name}</h3>
           {mentor.role_title && (
             <p className="text-xs uppercase tracking-widest text-white/70 mt-1">{mentor.role_title}</p>
           )}
@@ -85,13 +85,14 @@ export default function MentorSection() {
 
   if (!loaded || mentors.length === 0) return null
 
-  // Keep the grid from looking sparse/off-balance with very few mentors —
-  // cap the row width instead of letting 1-2 cards stretch across max-w-6xl.
+  // Same per-card width as MemberCard in /team (~276px: 54.75rem over 3
+  // columns with gap-6) at every mentor count, so cards match its scale
+  // instead of stretching to fill max-w-6xl.
   const gridClass = mentors.length === 1
-    ? 'grid-cols-1 max-w-sm'
+    ? 'grid-cols-1 max-w-[17.25rem]'
     : mentors.length === 2
-      ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl'
-      : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+      ? 'grid-cols-1 sm:grid-cols-2 max-w-xl'
+      : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-[54.75rem]'
 
   return (
     <section className="py-20 sm:py-28 bg-white border-t border-line">
