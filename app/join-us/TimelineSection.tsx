@@ -32,7 +32,7 @@ const steps: Step[] = [
     number: '02',
     title: 'Club',
     description:
-      "Moving from Academy into a core Club requires a membership fee that directly funds the club's activities and events. From here, members freely choose a core team — with rotation possible at any time — while Events and Media stay open in parallel to everyone.",
+      "Joining the Club as a core member starts with an annual membership fee, which directly funds the club's activities and events. From here, members freely choose a core team — with rotation possible at any time — while Events and Media stay open in parallel to everyone.",
     skills: [],
     subTeams: [
       {
@@ -122,7 +122,7 @@ function GroupTeamsPanel({ subTeams }: { subTeams: SubTeam[] }) {
     <div>
       {/* Tab row — horizontally scrollable on mobile, never wraps */}
       <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden mb-10 border-b border-line" style={{ scrollbarWidth: 'none' }}>
-        <div className="flex w-max sm:w-full">
+        <div className="flex w-max mx-auto">
           {subTeams.map((t, i) => {
             const isActive = i === active
             return (
@@ -148,8 +148,7 @@ function GroupTeamsPanel({ subTeams }: { subTeams: SubTeam[] }) {
         </div>
       </div>
 
-      {/* Active panel — centered "deck slide" treatment; the tab row above
-          stays left-aligned as-is, this is scoped to the panel only. */}
+      {/* Active panel — centered "deck slide" treatment, same as the tab row above. */}
       <AnimatePresence mode="wait">
         <motion.div
           key={team.name}
