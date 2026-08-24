@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 type SubTeam = {
   name: string
   color: string
+  description?: string
   skills: string[]
   /** Marks copy that is a generic placeholder pending refinement — surfaced
    * in the UI itself so it isn't mistaken for final content. */
@@ -50,8 +51,14 @@ const steps: Step[] = [
       {
         name: 'Macro',
         color: '#1a4a3a',
-        skills: ['Macroeconomic Analysis', 'Market Commentary'],
-        placeholder: true,
+        description:
+          'Analysis of global events and macroeconomic dynamics that move financial markets, with a practical approach oriented towards real asset classes.',
+        skills: [
+          'Reading & Interpreting Global Macro Events',
+          'Market Reports & Analysis',
+          'Investment Thesis Development on Macro Scenarios',
+          'Linking Macro Events to Market Expectations Across Asset Classes',
+        ],
       },
       {
         name: 'Events',
@@ -86,6 +93,9 @@ function SubTeamCard({ team }: { team: SubTeam }) {
       </span>
       {team.placeholder && (
         <p className="text-[10px] uppercase tracking-wide text-ink-400 italic mb-2">Placeholder copy — to refine</p>
+      )}
+      {team.description && (
+        <p className="text-xs text-ink-500 leading-relaxed mb-3">{team.description}</p>
       )}
       <div className="flex flex-wrap gap-1.5">
         {team.skills.map(skill => (
