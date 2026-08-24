@@ -7,7 +7,7 @@ import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase'
 import BookingCart, { type CartItem } from '../components/career/BookingCart'
 import { PaymentForm, type ServiceInfo } from './PaymentForm'
-import { formatDateLong } from './calendarUtils'
+import { MONTHS, WEEKDAYS, daysInMonth, firstDayOffset, toDateStr, formatDateLong } from './calendarUtils'
 
 const stripeKey     = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
 const stripePromise = stripeKey ? loadStripe(stripeKey) : null
@@ -15,27 +15,47 @@ const stripePromise = stripeKey ? loadStripe(stripeKey) : null
 const inputCls = 'w-full border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-forest bg-white'
 const labelCls = 'block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1.5'
 
-type Mentor = { id: string; full_name: string }
+type Mentor = {
+  id: string
+  full_name: string
+  role_title?: string | null
+  bio_long?: string | null
+  service_id: string | null
+}
+
+type Slot = { date: string; time: string; available: boolean }
 
 function MentorBookingOverlayInner({
   mentor,
-  service,
-  slot,
   onClose,
 }: {
   mentor: Mentor
-  service: ServiceInfo
-  slot: { date: string; time: string }
   onClose: () => void
 }) {
-  const [step, setStep]           = useState<2 | 3 | 4>(2)
+  const [step, setStep]           = useState<1 | 2 | 3 | 4>(1)
   const [confirmed, setConfirmed] = useState(false)
   const [cartExtras, setCartExtras] = useState<CartItem[]>([])
 
-  const [isMember, setIsMember]                   = useState(false)
-  const [membershipExpired, setMembershipExpired]  = useState(false)
-  const [authToken, setAuthToken]                  = useState<string | null>(null)
+  // Service discovery — resolved from the mentor's own availability rows
+  const [service, setService]           = useState<ServiceInfo | null>(null)
+  const [loadingService, setLoadingService] = useState(false)
 
+  // Auth
+  const [isMember,          setIsMember]          = useState(false)
+  const [membershipExpired, setMembershipExpired]  = useState(false)
+  const [authToken,         setAuthToken]          = useState<string | null>(null)
+
+  // Calendar / slot state
+  const today      = new Date()
+  const todayStr   = toDateStr(today.getFullYear(), today.getMonth() + 1, today.getDate())
+  const [year, setYear]   = useState(today.getFullYear())
+  const [month, setMonth] = useState(today.getMonth() + 1)
+  const [slots, setSlots]               = useState<Slot[]>([])
+  const [loadingSlots, setLoadingSlots] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [selectedTime, setSelectedTime] = useState<string | null>(null)
+
+  // Form
   const [name, setName]             = useState('')
   const [email, setEmail]           = useState('')
   const [motivation, setMotivation] = useState('')
@@ -79,6 +99,44 @@ function MentorBookingOverlayInner({
     init()
   }, [])
 
+  // Resolve the mentor's service (for price/duration) once on mount.
+  useEffect(() => {
+    if (!mentor.service_id) return
+    setLoadingService(true)
+    createClient()
+      .from('career_services')
+      .select('id, name, price_cents, duration_minutes')
+      .eq('id', mentor.service_id)
+      .single()
+      .then(({ data }) => { setService((data as ServiceInfo) ?? null); setLoadingService(false) })
+  }, [mentor.service_id])
+
+  // Fetch slots when the month changes.
+  useEffect(() => {
+    if (!mentor.service_id) return
+    setLoadingSlots(true)
+    setSelectedDate(null)
+    setSelectedTime(null)
+    fetch(`/api/career/slots?service_id=${mentor.service_id}&mentor_id=${mentor.id}&year=${year}&month=${month}`)
+      .then(r => r.json())
+      .then(data => { setSlots(data.slots ?? []); setLoadingSlots(false) })
+      .catch(() => setLoadingSlots(false))
+  }, [mentor.service_id, mentor.id, year, month])
+
+  const offset      = firstDayOffset(year, month)
+  const totalDays    = daysInMonth(year, month)
+  const availDates  = new Set(slots.filter(s => s.available).map(s => s.date))
+  const timesForDay = selectedDate ? slots.filter(s => s.date === selectedDate && s.available) : []
+  const isPrevDisabled = year === today.getFullYear() && month === today.getMonth() + 1
+
+  function prevMonth() {
+    if (isPrevDisabled) return
+    if (month === 1) { setYear(y => y - 1); setMonth(12) } else setMonth(m => m - 1)
+  }
+  function nextMonth() {
+    if (month === 12) { setYear(y => y + 1); setMonth(1) } else setMonth(m => m + 1)
+  }
+
   async function handleCvUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -98,8 +156,10 @@ function MentorBookingOverlayInner({
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  const canContinueStep1 = !!selectedDate && !!selectedTime
   const canContinueStep2 = name.trim() && email.trim() && motivation.trim() && goal.trim()
   const stepLabel = confirmed ? 'Booking Confirmed'
+    : step === 1 ? 'Pick a Slot'
     : step === 2 ? 'Your Details'
     : step === 3 ? 'Your Cart'
     : 'Confirm Booking'
@@ -115,14 +175,14 @@ function MentorBookingOverlayInner({
         <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200 flex-shrink-0">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-forest mb-0.5">
-              {mentor.full_name} — {service.name}
+              {mentor.full_name}{service ? ` — ${service.name}` : ''}
             </p>
             <h2 className="font-serif text-xl font-bold text-gray-900">{stepLabel}</h2>
           </div>
           <div className="flex items-center gap-4">
             {!confirmed && (
               <div className="flex items-center gap-1.5">
-                {([2, 3, 4] as const).map(n => (
+                {([1, 2, 3, 4] as const).map(n => (
                   <span key={n} className="w-2 h-2 rounded-full transition-colors"
                     style={{ background: step >= n ? '#1a4a3a' : '#e5e7eb' }} />
                 ))}
@@ -138,9 +198,118 @@ function MentorBookingOverlayInner({
 
         <div className="flex-1 overflow-y-auto px-7 py-6">
 
+          {/* ── STEP 1: Bio + Calendar ── */}
+          {!confirmed && step === 1 && (
+            <div>
+              {mentor.bio_long && (
+                <p className="text-sm text-gray-600 leading-relaxed mb-6">{mentor.bio_long}</p>
+              )}
+
+              {!mentor.service_id ? (
+                <p className="text-sm text-gray-400 py-8 text-center">Not yet available for online booking.</p>
+              ) : (
+                <>
+                  {/* Month navigator */}
+                  <div className="flex items-center justify-between mb-5">
+                    <button onClick={prevMonth} disabled={isPrevDisabled}
+                      className="-m-3 p-3 text-gray-400 hover:text-forest transition-colors disabled:opacity-25">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <span className="text-sm font-semibold uppercase tracking-widest text-gray-900">
+                      {MONTHS[month - 1]} {year}
+                    </span>
+                    <button onClick={nextMonth} className="-m-3 p-3 text-gray-400 hover:text-forest transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-7 -mx-3 mb-1">
+                    {WEEKDAYS.map(d => (
+                      <div key={d} className="text-center text-[10px] font-semibold uppercase tracking-widest text-gray-400 py-1">
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+
+                  {loadingSlots ? (
+                    <div className="h-44 flex items-center justify-center">
+                      <p className="text-sm text-gray-400">Loading availability…</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-7 -mx-3">
+                      {Array.from({ length: offset }).map((_, i) => <div key={`e${i}`} />)}
+                      {Array.from({ length: totalDays }).map((_, i) => {
+                        const day     = i + 1
+                        const dateStr = toDateStr(year, month, day)
+                        const isPast  = dateStr < todayStr
+                        const hasSlot = availDates.has(dateStr)
+                        const isSel   = selectedDate === dateStr
+                        return (
+                          <div key={day} className="flex flex-col items-center py-1 relative">
+                            <button
+                              type="button"
+                              disabled={isPast || !hasSlot}
+                              onClick={() => { setSelectedDate(dateStr); setSelectedTime(null) }}
+                              className="w-full max-w-11 aspect-square mx-auto text-sm transition-colors"
+                              style={{
+                                background: isSel ? '#1a4a3a' : 'transparent',
+                                color: isSel ? '#fff' : isPast || !hasSlot ? '#d1d5db' : '#111827',
+                                cursor: isPast || !hasSlot ? 'default' : 'pointer',
+                              }}
+                            >
+                              {day}
+                            </button>
+                            {hasSlot && !isPast && (
+                              <span className="absolute bottom-0 w-1 h-1 rounded-full"
+                                style={{ background: isSel ? '#fff' : 'var(--forest)' }} />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {selectedDate && !loadingSlots && (
+                    <div className="mt-5 pt-5 border-t border-gray-200">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">
+                        {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long' })}
+                      </p>
+                      {timesForDay.length === 0 ? (
+                        <p className="text-sm text-gray-400">No available times for this date.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {timesForDay.map(s => (
+                            <button
+                              key={s.time}
+                              type="button"
+                              onClick={() => setSelectedTime(s.time)}
+                              className="px-4 py-2 text-sm font-medium border transition-colors"
+                              style={{
+                                background: selectedTime === s.time ? '#1a4a3a' : '#fff',
+                                color: selectedTime === s.time ? '#fff' : '#374151',
+                                borderColor: selectedTime === s.time ? '#1a4a3a' : '#e5e7eb',
+                              }}
+                            >
+                              {s.time}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── STEP 2: Details ── */}
           {!confirmed && step === 2 && (
             <div className="space-y-4">
-              <p className="text-xs text-gray-400 mb-2">{formatDateLong(slot.date)} at {slot.time}</p>
+              <p className="text-xs text-gray-400 mb-2">{selectedDate && formatDateLong(selectedDate)} at {selectedTime}</p>
               <div>
                 <label className={labelCls}>Full Name *</label>
                 <input value={name} onChange={e => setName(e.target.value)}
@@ -191,7 +360,7 @@ function MentorBookingOverlayInner({
             </div>
           )}
 
-          {!confirmed && step === 3 && (
+          {!confirmed && step === 3 && service && selectedDate && selectedTime && (
             <>
               {isMember && membershipExpired && (
                 <div className="mb-4 flex items-center justify-between gap-3 border border-yellow-300 bg-yellow-50 px-4 py-3">
@@ -205,7 +374,7 @@ function MentorBookingOverlayInner({
                 serviceName={service.name}
                 servicePrice={service.price_cents}
                 isMember={isMember && !membershipExpired}
-                slot={slot}
+                slot={{ date: selectedDate, time: selectedTime }}
                 formatDate={formatDateLong}
                 onProceed={extras => { setCartExtras(extras); setStep(4) }}
                 onBack={() => setStep(2)}
@@ -213,12 +382,12 @@ function MentorBookingOverlayInner({
             </>
           )}
 
-          {!confirmed && step === 4 && (
+          {!confirmed && step === 4 && service && selectedDate && selectedTime && (
             stripePromise ? (
               <Elements stripe={stripePromise}>
                 <PaymentForm
                   service={service}
-                  slot={slot}
+                  slot={{ date: selectedDate, time: selectedTime }}
                   form={{ name, email, motivation, goal, cvUrl }}
                   isMember={isMember && !membershipExpired}
                   authToken={authToken}
@@ -242,8 +411,10 @@ function MentorBookingOverlayInner({
                 </svg>
               </div>
               <h3 className="font-serif text-2xl font-bold text-gray-900 mb-2">Booking Confirmed</h3>
-              <p className="text-sm font-medium text-gray-700 mb-1">{mentor.full_name} — {service.name}</p>
-              <p className="text-sm text-gray-400 mb-6">{formatDateLong(slot.date)} at {slot.time}</p>
+              <p className="text-sm font-medium text-gray-700 mb-1">{mentor.full_name}{service ? ` — ${service.name}` : ''}</p>
+              {selectedDate && selectedTime && (
+                <p className="text-sm text-gray-400 mb-6">{formatDateLong(selectedDate)} at {selectedTime}</p>
+              )}
               <p className="text-sm text-gray-500 mb-8 max-w-xs">
                 A confirmation email has been sent to <span className="font-medium text-gray-700">{email}</span>
               </p>
@@ -259,12 +430,21 @@ function MentorBookingOverlayInner({
           )}
         </div>
 
-        {!confirmed && step === 2 && (
+        {!confirmed && (step === 1 || step === 2) && (
           <div className="flex items-center justify-between px-7 py-5 border-t border-gray-200 flex-shrink-0">
-            <div />
+            {step > 1 ? (
+              <button
+                onClick={() => setStep(s => (s - 1) as 1 | 2)}
+                className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+              >
+                ← Back
+              </button>
+            ) : (
+              <div />
+            )}
             <button
-              onClick={() => setStep(3)}
-              disabled={!canContinueStep2}
+              onClick={() => setStep(s => (s + 1) as 2 | 3)}
+              disabled={(step === 1 ? !canContinueStep1 : !canContinueStep2) || loadingService}
               className="text-xs font-semibold uppercase tracking-widest px-8 py-3 transition-colors disabled:opacity-40"
               style={{ background: 'var(--forest)', color: '#fff' }}
             >
@@ -279,8 +459,6 @@ function MentorBookingOverlayInner({
 
 export default function MentorBookingOverlay(props: {
   mentor: Mentor
-  service: ServiceInfo
-  slot: { date: string; time: string }
   onClose: () => void
 }) {
   if (typeof document === 'undefined') return null
