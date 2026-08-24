@@ -30,9 +30,9 @@ const steps: Step[] = [
   },
   {
     number: '02',
-    title: 'Gruppo',
+    title: 'Club',
     description:
-      "Moving from Academy into a core Gruppo requires a membership fee that directly funds the club's activities and events. From here, members freely choose a core team — with rotation possible at any time — while Events and Media stay open in parallel to everyone.",
+      "Moving from Academy into a core Club requires a membership fee that directly funds the club's activities and events. From here, members freely choose a core team — with rotation possible at any time — while Events and Media stay open in parallel to everyone.",
     skills: [],
     subTeams: [
       {
