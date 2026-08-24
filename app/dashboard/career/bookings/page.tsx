@@ -23,6 +23,7 @@ type CareerService = {
 type CareerAvailability = {
   id: string
   service_id: string
+  mentor_id: string | null
   type: 'recurring' | 'one_time'
   day_of_week: number | null
   date: string | null
@@ -35,6 +36,8 @@ type CareerBooking = {
   id: string
   service_id: string
   service_name?: string
+  mentor_id: string | null
+  mentor_name?: string
   slot_date: string
   slot_time: string
   name: string
@@ -47,6 +50,8 @@ type CareerBooking = {
   stripe_payment_intent_id: string | null
   created_at: string
 }
+
+type MentorLite = { id: string; full_name: string }
 
 type CareerNotificationContact = {
   id: string
@@ -461,14 +466,15 @@ type AvailForm = {
   start_time: string
   end_time: string
   active: boolean
+  mentor_id: string
 }
 
 const EMPTY_AVAIL: AvailForm = {
   type: 'recurring', date: '', day_of_week: 1,
-  start_time: '', end_time: '', active: true,
+  start_time: '', end_time: '', active: true, mentor_id: '',
 }
 
-function AvailabilityTab({ services }: { services: CareerService[] }) {
+function AvailabilityTab({ services, mentors }: { services: CareerService[]; mentors: MentorLite[] }) {
   const [svcId, setSvcId]           = useState(services[0]?.id ?? '')
   const [rows, setRows]             = useState<CareerAvailability[]>([])
   const [loading, setLoading]       = useState(false)
@@ -512,6 +518,7 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
 
     const payload = {
       service_id: svcId,
+      mentor_id: form.mentor_id || null,
       type: form.type,
       start_time: form.start_time,
       end_time: form.end_time || null,
@@ -568,6 +575,11 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
                 <span className="text-sm text-gray-500">
                   {a.start_time?.slice(0, 5)}{a.end_time ? ` – ${a.end_time.slice(0, 5)}` : ''}
                 </span>
+                {a.mentor_id && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-forest/10 text-forest">
+                    {mentors.find(m => m.id === a.mentor_id)?.full_name ?? 'Mentor'}
+                  </span>
+                )}
                 <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${a.active ? 'bg-forest text-white' : 'bg-gray-200 text-gray-500'}`}>
                   {a.active ? 'Active' : 'Inactive'}
                 </span>
@@ -600,6 +612,22 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
       {/* Add Slot Form */}
       <div className="border border-forest/30 bg-[#f9f9f8] px-5 py-5">
         <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-4">Add Slot</p>
+
+        {/* Mentor (optional) */}
+        <div className="mb-4 max-w-xs">
+          <label className={labelCls}>Mentor (optional)</label>
+          <div className="relative">
+            <select value={form.mentor_id} onChange={e => setForm(f => ({ ...f, mentor_id: e.target.value }))}
+              className={`${inputCls} appearance-none pr-8`}>
+              <option value="">No mentor — generic service slot</option>
+              {mentors.map(m => <option key={m.id} value={m.id}>{m.full_name}</option>)}
+            </select>
+            <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
 
         {/* Type toggle */}
         <div className="mb-4">
@@ -668,10 +696,11 @@ function AvailabilityTab({ services }: { services: CareerService[] }) {
 
 // ── BOOKINGS TAB ──────────────────────────────────────────────────────────────
 
-function BookingsTab({ services }: { services: CareerService[] }) {
+function BookingsTab({ services, mentors }: { services: CareerService[]; mentors: MentorLite[] }) {
   const [bookings, setBookings]     = useState<CareerBooking[]>([])
   const [loading, setLoading]       = useState(true)
   const [svcFilter, setSvcFilter]   = useState('all')
+  const [mentFilter, setMentFilter] = useState('all')
   const [statFilter, setStatFilter] = useState('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -681,12 +710,14 @@ function BookingsTab({ services }: { services: CareerService[] }) {
   async function fetchBookings() {
     const { data } = await createClient()
       .from('career_bookings')
-      .select('*, career_services(name)')
+      .select('*, career_services(name), career_mentors(full_name)')
       .order('slot_date', { ascending: false })
     const rows = (data ?? []).map((r: Record<string, unknown>) => ({
       ...(r as CareerBooking),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       service_name: ((r as any).career_services as { name: string } | null)?.name ?? '—',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mentor_name: ((r as any).career_mentors as { full_name: string } | null)?.full_name,
     }))
     setBookings(rows)
     setLoading(false)
@@ -727,6 +758,10 @@ function BookingsTab({ services }: { services: CareerService[] }) {
     { key: 'all', label: 'All Services' },
     ...services.map(s => ({ key: s.id, label: s.name })),
   ]
+  const mentOptions = [
+    { key: 'all', label: 'All Mentors' },
+    ...mentors.map(m => ({ key: m.id, label: m.full_name })),
+  ]
   const statOptions = [
     { key: 'all',             label: 'All Statuses' },
     { key: 'pending_payment', label: 'Pending' },
@@ -739,6 +774,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
   const { upcoming, past } = useMemo(() => {
     const all = bookings.filter(b => {
       if (svcFilter !== 'all' && b.service_id !== svcFilter) return false
+      if (mentFilter !== 'all' && b.mentor_id !== mentFilter) return false
       if (statFilter !== 'all' && b.status !== statFilter) return false
       return true
     })
@@ -746,7 +782,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
       upcoming: all.filter(b => b.slot_date >= today).sort((a, b) => a.slot_date.localeCompare(b.slot_date) || (a.slot_time ?? '').localeCompare(b.slot_time ?? '')),
       past:     all.filter(b => b.slot_date < today).sort((a, b) => b.slot_date.localeCompare(a.slot_date) || (b.slot_time ?? '').localeCompare(a.slot_time ?? '')),
     }
-  }, [bookings, svcFilter, statFilter, today])
+  }, [bookings, svcFilter, mentFilter, statFilter, today])
 
   const [pastOpen, setPastOpen] = useState(false)
 
@@ -761,6 +797,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
           </div>
           <div className="hidden sm:block flex-shrink-0 w-28">
             <p className="text-xs text-gray-500 truncate">{b.service_name}</p>
+            {b.mentor_name && <p className="text-[10px] text-forest truncate">{b.mentor_name}</p>}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900">{b.name}</p>
@@ -793,6 +830,12 @@ function BookingsTab({ services }: { services: CareerService[] }) {
                 <p className={labelCls}>Service</p>
                 <p className="text-sm text-gray-700">{b.service_name}</p>
               </div>
+              {b.mentor_name && (
+                <div>
+                  <p className={labelCls}>Mentor</p>
+                  <p className="text-sm text-gray-700">{b.mentor_name}</p>
+                </div>
+              )}
               <div>
                 <p className={labelCls}>Email</p>
                 <a href={`mailto:${b.email}`} className="text-sm text-forest hover:underline underline-offset-2">{b.email}</a>
@@ -872,6 +915,7 @@ function BookingsTab({ services }: { services: CareerService[] }) {
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap mb-6">
         {[{ value: svcFilter, onChange: setSvcFilter, options: svcOptions },
+          { value: mentFilter, onChange: setMentFilter, options: mentOptions },
           { value: statFilter, onChange: setStatFilter, options: statOptions }].map(({ value, onChange, options }, idx) => (
           <div key={idx} className="relative">
             <select value={value} onChange={e => onChange(e.target.value)}
@@ -1294,6 +1338,7 @@ export default function CareerBookingsPage() {
 
   const [tab, setTab]                   = useState<Tab>('services')
   const [services, setServices]         = useState<CareerService[]>([])
+  const [mentors, setMentors]           = useState<MentorLite[]>([])
   const [loadingServices, setLoading]   = useState(true)
   const [accessChecked, setAccessChecked] = useState(false)
 
@@ -1321,6 +1366,14 @@ export default function CareerBookingsPage() {
       .select('*')
       .order('name')
       .then(({ data }) => { setServices((data ?? []) as CareerService[]); setLoading(false) })
+  }, [accessChecked])
+
+  // Load mentors (full admin listing) once access is confirmed
+  useEffect(() => {
+    if (!accessChecked) return
+    fetch('/api/career/mentors')
+      .then(r => r.json())
+      .then(json => setMentors(((json.data ?? []) as { id: string; full_name: string }[])))
   }, [accessChecked])
 
   if (!accessChecked) {
@@ -1372,8 +1425,8 @@ export default function CareerBookingsPage() {
         <>
           {tab === 'services'      && <ServicesTab services={services} setServices={setServices} refreshServices={refreshServices} />}
           {tab === 'mentors'       && <MentorsTab />}
-          {tab === 'availability'  && <AvailabilityTab services={services} />}
-          {tab === 'bookings'      && <BookingsTab services={services} />}
+          {tab === 'availability'  && <AvailabilityTab services={services} mentors={mentors} />}
+          {tab === 'bookings'      && <BookingsTab services={services} mentors={mentors} />}
           {tab === 'notifications' && <NotificationsTab services={services} />}
           {tab === 'suggestions'   && <SuggestionsTab services={services} />}
         </>
