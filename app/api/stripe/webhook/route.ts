@@ -721,7 +721,7 @@ export async function POST(req: NextRequest) {
     // ── Career booking handling ────────────────────────────────────────────────
     const { data: booking, error: findErr } = await supabaseAdmin
       .from('career_bookings')
-      .select('id, status, service_id, slot_date, slot_time, name, email, motivation, goal, cv_url')
+      .select('id, status, service_id, mentor_id, slot_date, slot_time, name, email, motivation, goal, cv_url')
       .eq('stripe_payment_intent_id', paymentIntent.id)
       .single()
 
@@ -742,10 +742,23 @@ export async function POST(req: NextRequest) {
 
       const serviceName = service?.name ?? 'Career Service'
 
-      const { data: contacts } = await supabaseAdmin
-        .from('career_notification_contacts')
-        .select('email')
-        .eq('service_id', booking.service_id)
+      // Mentor-scoped bookings notify the specific mentor; generic bookings
+      // keep notifying the service-level contact list (mirrors book/route.ts).
+      let notifyEmails: string[] = []
+      if (booking.mentor_id) {
+        const { data: mentor } = await supabaseAdmin
+          .from('career_mentors')
+          .select('notification_email')
+          .eq('id', booking.mentor_id)
+          .single()
+        if (mentor?.notification_email) notifyEmails = [mentor.notification_email]
+      } else {
+        const { data: contacts } = await supabaseAdmin
+          .from('career_notification_contacts')
+          .select('email')
+          .eq('service_id', booking.service_id)
+        notifyEmails = (contacts ?? []).map(c => c.email)
+      }
 
       const confirmationHtml = buildConfirmationHtml({
         name: booking.name,
@@ -774,10 +787,10 @@ export async function POST(req: NextRequest) {
           subject: `Booking Confirmed – ${serviceName} | Alata Career Service`,
           html: confirmationHtml,
         }),
-        ...(contacts ?? []).map(c =>
+        ...notifyEmails.map(email =>
           resend.emails.send({
             from: FROM,
-            to: c.email,
+            to: email,
             subject: `New Booking – ${serviceName}`,
             html: notificationHtml,
           })

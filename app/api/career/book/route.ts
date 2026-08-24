@@ -155,6 +155,7 @@ async function sendBookingEmails(params: {
   bookingId: string
   serviceId: string
   serviceName: string
+  mentorId?: string | null
   name: string
   email: string
   slotDate: string
@@ -183,10 +184,23 @@ async function sendBookingEmails(params: {
     cvUrl: params.cvUrl,
   })
 
-  const { data: contacts } = await supabaseAdmin
-    .from('career_notification_contacts')
-    .select('email')
-    .eq('service_id', params.serviceId)
+  // Mentor-scoped bookings notify the specific mentor; generic bookings keep
+  // notifying the service-level contact list as before.
+  let notifyEmails: string[] = []
+  if (params.mentorId) {
+    const { data: mentor } = await supabaseAdmin
+      .from('career_mentors')
+      .select('notification_email')
+      .eq('id', params.mentorId)
+      .single()
+    if (mentor?.notification_email) notifyEmails = [mentor.notification_email]
+  } else {
+    const { data: contacts } = await supabaseAdmin
+      .from('career_notification_contacts')
+      .select('email')
+      .eq('service_id', params.serviceId)
+    notifyEmails = (contacts ?? []).map(c => c.email)
+  }
 
   await Promise.allSettled([
     resend.emails.send({
@@ -195,10 +209,10 @@ async function sendBookingEmails(params: {
       subject: `Booking Confirmed – ${params.serviceName} | Alata Career Service`,
       html: confirmationHtml,
     }),
-    ...(contacts ?? []).map(c =>
+    ...notifyEmails.map(email =>
       resend.emails.send({
         from: FROM,
-        to: c.email,
+        to: email,
         subject: `New Booking – ${params.serviceName}`,
         html: notificationHtml,
       })
@@ -210,6 +224,7 @@ export async function POST(req: NextRequest) {
   try {
     let body: {
       service_id?: string
+      mentor_id?: string
       slot_date?: string
       slot_time?: string
       name?: string
@@ -224,7 +239,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const { service_id, slot_date, slot_time, name, email, motivation, goal, cv_url } = body
+    const { service_id, mentor_id, slot_date, slot_time, name, email, motivation, goal, cv_url } = body
     if (!service_id || !slot_date || !slot_time || !name || !email || !motivation || !goal) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -261,14 +276,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 })
     }
 
-    // Double-check slot availability
-    const { count } = await supabaseAdmin
+    // Double-check slot availability, scoped to the same mentor bucket as the
+    // booking being created (mirrors the career_bookings_enforce_capacity trigger).
+    let capacityQuery = supabaseAdmin
       .from('career_bookings')
       .select('id', { count: 'exact', head: true })
       .eq('service_id', service_id)
       .eq('slot_date', slot_date)
       .eq('slot_time', slot_time)
       .neq('status', 'cancelled')
+    capacityQuery = mentor_id ? capacityQuery.eq('mentor_id', mentor_id) : capacityQuery.is('mentor_id', null)
+    const { count } = await capacityQuery
 
     if ((count ?? 0) >= (service.max_bookings_per_slot ?? 1)) {
       return NextResponse.json({ error: 'Slot is fully booked' }, { status: 409 })
@@ -282,6 +300,7 @@ export async function POST(req: NextRequest) {
         .from('career_bookings')
         .insert({
           service_id,
+          mentor_id: mentor_id ?? null,
           slot_date,
           slot_time,
           name,
@@ -308,6 +327,7 @@ export async function POST(req: NextRequest) {
           bookingId: booking.id,
           serviceId: service_id,
           serviceName: service.name,
+          mentorId: mentor_id,
           name,
           email,
           slotDate: slot_date,

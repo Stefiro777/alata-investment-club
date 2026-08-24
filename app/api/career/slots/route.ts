@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl
     const service_id = searchParams.get('service_id')
+    const mentor_id = searchParams.get('mentor_id')
     const yearStr = searchParams.get('year')
     const monthStr = searchParams.get('month')
 
@@ -40,17 +41,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid year or month' }, { status: 400 })
     }
 
+    let availQuery = supabaseAdmin
+      .from('career_availability')
+      .select('*')
+      .eq('service_id', service_id)
+      .eq('active', true)
+    availQuery = mentor_id ? availQuery.eq('mentor_id', mentor_id) : availQuery.is('mentor_id', null)
+
     const [{ data: service, error: serviceErr }, { data: availability, error: availErr }] = await Promise.all([
       supabaseAdmin
         .from('career_services')
         .select('max_bookings_per_slot, price_cents, duration_minutes')
         .eq('id', service_id)
         .single(),
-      supabaseAdmin
-        .from('career_availability')
-        .select('*')
-        .eq('service_id', service_id)
-        .eq('active', true),
+      availQuery,
     ])
 
     if (serviceErr) return NextResponse.json({ error: serviceErr.message }, { status: 400 })
@@ -119,14 +123,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ slots: [] })
     }
 
-    // Fetch booking counts for all slots in this month in one query
-    const { data: bookings } = await supabaseAdmin
+    // Fetch booking counts for all slots in this month in one query, scoped to
+    // the same mentor bucket as the availability rows above.
+    let bookingsQuery = supabaseAdmin
       .from('career_bookings')
       .select('slot_date, slot_time')
       .eq('service_id', service_id)
       .gte('slot_date', monthStart)
       .lt('slot_date', monthEnd)
       .neq('status', 'cancelled')
+    bookingsQuery = mentor_id ? bookingsQuery.eq('mentor_id', mentor_id) : bookingsQuery.is('mentor_id', null)
+    const { data: bookings } = await bookingsQuery
 
     const countMap = new Map<string, number>()
     for (const b of bookings ?? []) {
