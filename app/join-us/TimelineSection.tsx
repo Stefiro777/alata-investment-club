@@ -199,7 +199,7 @@ function GroupTeamsPanel({ subTeams }: { subTeams: SubTeam[] }) {
   )
 }
 
-// ── Gruppo step block — breaks out of the alternating two-column layout ─────────
+// ── Gruppo step block — full-width, no timeline spine through its content ───────
 
 function GroupStepBlock({ step }: { step: Step }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -225,7 +225,7 @@ function GroupStepBlock({ step }: { step: Step }) {
 
   return (
     <div ref={ref} className="relative">
-      {/* Node on the line */}
+      {/* Node on the shared timeline axis — marker only, no line runs through this step */}
       <div
         className="absolute left-6 md:left-1/2 top-0 -translate-x-1/2 z-10"
         style={{
@@ -239,38 +239,47 @@ function GroupStepBlock({ step }: { step: Step }) {
         </div>
       </div>
 
-      {/* Header — full width, centered, below the node */}
-      <div className="pl-20 md:pl-0 md:pt-24 pt-1 text-center" style={contentStyle}>
-        <div className="max-w-2xl mx-auto">
-          <p className="text-[11px] tracking-[0.25em] uppercase mb-3" style={{ color: `${nodeColor}99` }}>Step {step.number}</p>
-          <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-5" style={{ color: nodeColor }}>{step.title}</h3>
-          <div className="w-8 h-px mb-5 mx-auto" style={{ background: nodeColor }} />
-          <p className="text-ink-500 text-base leading-relaxed">{step.description}</p>
-        </div>
+      {/* Unified full-width column — header, fee note and team panel share the same
+          left-aligned container so the step reads as one coherent block. */}
+      <div className="pl-20 pr-6 md:px-2 lg:px-4 md:pt-24 pt-1" style={contentStyle}>
+        <p className="text-[11px] tracking-[0.25em] uppercase mb-3" style={{ color: `${nodeColor}99` }}>Step {step.number}</p>
+        <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-5" style={{ color: nodeColor }}>{step.title}</h3>
+        <div className="w-8 h-px mb-5" style={{ background: nodeColor }} />
+        <p className="text-ink-500 text-base leading-relaxed max-w-2xl">{step.description}</p>
 
         {step.feeNote && (
-          <div className="mt-7 pt-5 border-t border-line inline-flex items-center gap-2 mx-auto">
+          <div className="mt-7 pt-5 border-t border-line inline-flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-forest flex-shrink-0" />
             <span className="text-[11px] tracking-wide uppercase text-ink-500">{step.feeNote}</span>
           </div>
         )}
-      </div>
 
-      {/* Teams — full width tab/panel, not constrained to the header's max-width */}
-      {step.subTeams && (
-        <div className="mt-14 pl-20 pr-6 md:px-0 text-left" style={contentStyle}>
-          <GroupTeamsPanel subTeams={step.subTeams} />
-        </div>
-      )}
+        {step.subTeams && (
+          <div className="mt-14">
+            <GroupTeamsPanel subTeams={step.subTeams} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-// ── Academy / Alumni step block — unchanged alternating two-column layout ───────
+// ── Academy / Alumni step block — alternating two-column layout, own line ───────
 
-function StepBlock({ step, index }: { step: Step; index: number }) {
+function StepBlock({
+  step,
+  index,
+  isFirst,
+  isLast,
+}: {
+  step: Step
+  index: number
+  isFirst: boolean
+  isLast: boolean
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
+  const [progress, setProgress] = useState(0)
   const left = index % 2 === 0 // content column on desktop: even → left, odd → right
   const nodeColor = step.color ?? '#1a4a3a'
 
@@ -285,6 +294,30 @@ function StepBlock({ step, index }: { step: Step; index: number }) {
     return () => obs.disconnect()
   }, [])
 
+  // Local scroll-fill for this step's own line segment — replaces the old
+  // section-wide progress line, which used to run straight through Gruppo.
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const rect = el.getBoundingClientRect()
+      const anchor = window.innerHeight * 0.65
+      const p = (anchor - rect.top) / rect.height
+      setProgress(Math.min(1, Math.max(0, p)))
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
   const contentStyle: React.CSSProperties = {
     opacity: visible ? 1 : 0,
     transform: visible ? 'none' : `translateX(${left ? -32 : 32}px)`,
@@ -293,6 +326,14 @@ function StepBlock({ step, index }: { step: Step; index: number }) {
 
   return (
     <div ref={ref} className="relative md:grid md:grid-cols-2 md:gap-0">
+      {/* This step's own line segment — extends half a gap into the space
+          toward the next/previous step, but never into Gruppo's content. */}
+      <div
+        className={`absolute left-6 md:left-1/2 w-px bg-line -translate-x-1/2 ${isFirst ? 'top-0' : '-top-12'} ${isLast ? 'bottom-0' : '-bottom-12'}`}
+      >
+        <div className="absolute top-0 left-0 w-full bg-forest" style={{ height: `${progress * 100}%` }} />
+      </div>
+
       {/* Node on the line */}
       <div
         className="absolute left-6 md:left-1/2 top-0 -translate-x-1/2 z-10"
@@ -335,32 +376,6 @@ function StepBlock({ step, index }: { step: Step; index: number }) {
 }
 
 export default function TimelineSection() {
-  const trackRef = useRef<HTMLDivElement>(null)
-  const [progress, setProgress] = useState(0)
-
-  // Progress line draws as the timeline scrolls through the viewport
-  useEffect(() => {
-    const el = trackRef.current
-    if (!el) return
-    let raf = 0
-    const update = () => {
-      raf = 0
-      const rect = el.getBoundingClientRect()
-      const anchor = window.innerHeight * 0.65
-      const p = (anchor - rect.top) / rect.height
-      setProgress(Math.min(1, Math.max(0, p)))
-    }
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [])
-
   return (
     <section className="bg-white py-24 sm:py-32 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -373,23 +388,14 @@ export default function TimelineSection() {
           <div className="w-10 h-px bg-forest mx-auto" />
         </div>
 
-        {/* Timeline track */}
-        <div ref={trackRef} className="relative">
-          {/* Base line + progress fill */}
-          <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-line -translate-x-1/2">
-            <div
-              className="absolute top-0 left-0 w-full bg-forest"
-              style={{ height: `${progress * 100}%` }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-24">
-            {steps.map((step, i) => (
-              step.subTeams
-                ? <GroupStepBlock key={step.number} step={step} />
-                : <StepBlock key={step.number} step={step} index={i} />
-            ))}
-          </div>
+        {/* Timeline track — each Academy/Alumni block draws its own line segment;
+            Gruppo (full-width) has no line running through its content. */}
+        <div className="flex flex-col gap-24">
+          {steps.map((step, i) => (
+            step.subTeams
+              ? <GroupStepBlock key={step.number} step={step} />
+              : <StepBlock key={step.number} step={step} index={i} isFirst={i === 0} isLast={i === steps.length - 1} />
+          ))}
         </div>
       </div>
     </section>
