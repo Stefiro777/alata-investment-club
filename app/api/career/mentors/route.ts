@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     if (!body.full_name?.trim()) return NextResponse.json({ error: 'full_name is required' }, { status: 400 })
+    if (!body.role_title?.trim()) return NextResponse.json({ error: 'role_title is required' }, { status: 400 })
     if (!body.notification_email?.trim()) return NextResponse.json({ error: 'notification_email is required' }, { status: 400 })
 
     const slug = await uniqueSlug(supabaseAdmin, body.full_name, 'career_mentors')

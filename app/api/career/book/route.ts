@@ -349,6 +349,7 @@ export async function POST(req: NextRequest) {
       currency: 'eur',
       metadata: {
         booking_service_id: service_id,
+        booking_mentor_id: mentor_id ?? '',
         slot_date,
         slot_time,
         name,
@@ -363,6 +364,7 @@ export async function POST(req: NextRequest) {
       .from('career_bookings')
       .insert({
         service_id,
+        mentor_id: mentor_id ?? null,
         slot_date,
         slot_time,
         name,

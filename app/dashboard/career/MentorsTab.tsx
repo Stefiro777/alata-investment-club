@@ -50,7 +50,7 @@ function mentorToForm(m: CareerMentor): MentorForm {
 function formToPayload(f: MentorForm) {
   return {
     full_name: f.full_name.trim(),
-    role_title: f.role_title.trim() || null,
+    role_title: f.role_title.trim(),
     photo_url: f.photo_url.trim() || null,
     bio_short: f.bio_short.trim() || null,
     bio_long: f.bio_long.trim() || null,
@@ -150,7 +150,7 @@ function MentorFormFields({ form, onChange }: { form: MentorForm | undefined; on
           placeholder="e.g. Marco Rossi" className={inputCls} />
       </div>
       <div>
-        <label className={labelCls}>Role</label>
+        <label className={labelCls}>Role *</label>
         <input value={form.role_title} onChange={e => onChange({ ...form, role_title: e.target.value })}
           placeholder="e.g. Head of M&A" className={inputCls} />
       </div>
@@ -217,7 +217,7 @@ export default function MentorsTab() {
 
   async function saveEdit(m: CareerMentor) {
     const form = editForms[m.id]
-    if (!form?.full_name.trim() || !form?.notification_email.trim()) return
+    if (!form?.full_name.trim() || !form?.role_title.trim() || !form?.notification_email.trim()) return
     setSaving(m.id); setError(null)
     const res = await fetch('/api/career/mentors', {
       method: 'PATCH',
@@ -238,7 +238,7 @@ export default function MentorsTab() {
   }
 
   async function saveNew() {
-    if (!addForm?.full_name.trim() || !addForm?.notification_email.trim()) return
+    if (!addForm?.full_name.trim() || !addForm?.role_title.trim() || !addForm?.notification_email.trim()) return
     setSaving('new'); setError(null)
     const res = await fetch('/api/career/mentors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formToPayload(addForm)) })
     const json = await res.json()
@@ -332,7 +332,7 @@ export default function MentorsTab() {
                   <MentorFormFields form={editForms[m.id]} onChange={f => setEditForms(prev => ({ ...prev, [m.id]: f }))} />
                   {error && <p className="mt-3 text-xs text-red-600 border-l-2 border-red-400 pl-2">{error}</p>}
                   <div className="flex items-center gap-3 mt-4">
-                    <button onClick={() => saveEdit(m)} disabled={saving === m.id || !editForms[m.id]?.full_name.trim()} className={btnPrimary}>
+                    <button onClick={() => saveEdit(m)} disabled={saving === m.id || !editForms[m.id]?.full_name.trim() || !editForms[m.id]?.role_title.trim() || !editForms[m.id]?.notification_email.trim()} className={btnPrimary}>
                       {saving === m.id ? 'Saving…' : 'Save'}
                     </button>
                     <button onClick={() => { setEditingId(null); setError(null) }} className={btnGhost}>Cancel</button>
@@ -350,7 +350,7 @@ export default function MentorsTab() {
           <MentorFormFields form={addForm} onChange={setAddForm} />
           {error && <p className="mt-3 text-xs text-red-600 border-l-2 border-red-400 pl-2">{error}</p>}
           <div className="flex items-center gap-3 mt-4">
-            <button onClick={saveNew} disabled={saving === 'new' || !addForm.full_name.trim()} className={btnPrimary}>
+            <button onClick={saveNew} disabled={saving === 'new' || !addForm.full_name.trim() || !addForm.role_title.trim() || !addForm.notification_email.trim()} className={btnPrimary}>
               {saving === 'new' ? 'Saving…' : 'Add Mentor'}
             </button>
             <button onClick={() => { setAddForm(null); setError(null) }} className={btnGhost}>Cancel</button>
