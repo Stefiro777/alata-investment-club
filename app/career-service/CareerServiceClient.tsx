@@ -1,12 +1,9 @@
 'use client'
 
 import Image from 'next/image'
-import Reveal from '../components/Reveal'
 import Parallax from '../components/Parallax'
 import { MotionReveal, MotionLine } from '../components/motion/Motion'
 import MentorSection from './MentorSection'
-
-const LINKTREE_URL = 'https://linktr.ee/alatainvestmentclub'
 
 export default function CareerServiceClient() {
   return (
@@ -39,32 +36,6 @@ export default function CareerServiceClient() {
       </section>
 
       <MentorSection />
-
-      {/* Linktree CTA */}
-      <section className="py-20 bg-white border-t border-line">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <Reveal>
-            <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">Follow us</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-4">
-              All our links in one place
-            </h2>
-            <p className="text-ink-500 text-sm leading-relaxed mb-10">
-              Follow Alata Investment Club on social media, access our resources, and stay updated on our activities.
-            </p>
-            <a
-              href={LINKTREE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-fast"
-            >
-              Visit our Linktree
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
-          </Reveal>
-        </div>
-      </section>
     </div>
   )
 }
