@@ -1,15 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { EASE } from '../components/motion/Motion'
 
 type SubTeam = {
   name: string
   color: string
   description?: string
   skills: string[]
-  /** Marks copy that is a generic placeholder pending refinement — surfaced
-   * in the UI itself so it isn't mistaken for final content. */
-  placeholder?: boolean
 }
 
 type Step = {
@@ -110,31 +109,164 @@ const steps: Step[] = [
   },
 ]
 
-function SubTeamCard({ team }: { team: SubTeam }) {
+// ── Gruppo teams: tab / accordion panel ─────────────────────────────────────────
+
+const skillListVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } },
+}
+
+function GroupTeamsPanel({ subTeams }: { subTeams: SubTeam[] }) {
+  const [active, setActive] = useState(0)
+  const reduced = useReducedMotion()
+  const team = subTeams[active]
+
   return (
-    <div className="border border-line-faint p-4">
-      <span
-        className="inline-block text-[10px] font-semibold uppercase tracking-wide px-2 py-1 mb-3"
-        style={{ background: team.color, color: '#fff' }}
-      >
-        {team.name}
-      </span>
-      {team.placeholder && (
-        <p className="text-[10px] uppercase tracking-wide text-ink-400 italic mb-2">Placeholder copy — to refine</p>
-      )}
-      {team.description && (
-        <p className="text-xs text-ink-500 leading-relaxed mb-3">{team.description}</p>
-      )}
-      <div className="flex flex-wrap gap-1.5">
-        {team.skills.map(skill => (
-          <span key={skill} className="text-[10px] tracking-wide px-2 py-0.5 border border-forest/40 text-forest">
-            {skill}
-          </span>
-        ))}
+    <div>
+      {/* Tab row — horizontally scrollable on mobile, never wraps */}
+      <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden mb-10 border-b border-line" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex w-max sm:w-full">
+          {subTeams.map((t, i) => {
+            const isActive = i === active
+            return (
+              <button
+                key={t.name}
+                type="button"
+                onClick={() => setActive(i)}
+                className="flex-shrink-0 flex items-center gap-2.5 px-5 py-4 border-b-2 -mb-px transition-colors whitespace-nowrap"
+                style={{ borderColor: isActive ? t.color : 'transparent' }}
+              >
+                <span className="text-[10px] font-serif transition-colors" style={{ color: isActive ? t.color : '#9ca3af' }}>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span
+                  className="text-xs font-semibold uppercase tracking-wide transition-colors"
+                  style={{ color: isActive ? t.color : '#9ca3af' }}
+                >
+                  {t.name}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
+
+      {/* Active panel */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={team.name}
+          initial={reduced ? false : { opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={reduced ? undefined : { opacity: 0, x: -24 }}
+          transition={{ duration: reduced ? 0 : 0.45, ease: EASE }}
+        >
+          <p className="text-xs tracking-[0.25em] uppercase mb-4" style={{ color: team.color }}>
+            Team {String(active + 1).padStart(2, '0')} / {String(subTeams.length).padStart(2, '0')}
+          </p>
+          <h3
+            className="font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold leading-[0.95] mb-6"
+            style={{ color: team.color }}
+          >
+            {team.name}
+          </h3>
+          <div className="w-16 h-1 mb-8" style={{ background: team.color }} />
+          {team.description && (
+            <p className="text-ink-500 text-base sm:text-lg leading-relaxed max-w-2xl mb-10">
+              {team.description}
+            </p>
+          )}
+          <motion.ul
+            className="flex flex-col gap-3 max-w-2xl"
+            initial="hidden"
+            animate="show"
+            variants={reduced ? undefined : skillListVariants}
+          >
+            {team.skills.map(skill => (
+              <motion.li
+                key={skill}
+                variants={reduced ? undefined : { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }}
+                transition={{ duration: reduced ? 0 : 0.4, ease: EASE }}
+                className="flex items-center gap-3 text-sm sm:text-base text-ink-700"
+              >
+                <span className="w-1.5 h-1.5 flex-shrink-0" style={{ background: team.color }} />
+                {skill}
+              </motion.li>
+            ))}
+          </motion.ul>
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 }
+
+// ── Gruppo step block — breaks out of the alternating two-column layout ─────────
+
+function GroupStepBlock({ step }: { step: Step }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  const nodeColor = step.color ?? '#1a4a3a'
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.1 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const contentStyle: React.CSSProperties = {
+    opacity: visible ? 1 : 0,
+    transform: visible ? 'none' : 'translateY(24px)',
+    transition: 'opacity 700ms cubic-bezier(0.22,1,0.36,1) 120ms, transform 700ms cubic-bezier(0.22,1,0.36,1) 120ms',
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      {/* Node on the line */}
+      <div
+        className="absolute left-6 md:left-1/2 top-0 -translate-x-1/2 z-10"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: `translateX(-50%) scale(${visible ? 1 : 0.6})`,
+          transition: 'opacity 500ms ease, transform 500ms cubic-bezier(0.22,1,0.36,1)',
+        }}
+      >
+        <div className="w-14 h-14 bg-white border flex items-center justify-center" style={{ borderColor: nodeColor }}>
+          <span className="font-serif text-xl font-semibold" style={{ color: nodeColor }}>{step.number}</span>
+        </div>
+      </div>
+
+      {/* Header — full width, centered, below the node */}
+      <div className="pl-20 md:pl-0 md:pt-24 pt-1 text-center" style={contentStyle}>
+        <div className="max-w-2xl mx-auto">
+          <p className="text-[11px] tracking-[0.25em] uppercase mb-3" style={{ color: `${nodeColor}99` }}>Step {step.number}</p>
+          <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-5" style={{ color: nodeColor }}>{step.title}</h3>
+          <div className="w-8 h-px mb-5 mx-auto" style={{ background: nodeColor }} />
+          <p className="text-ink-500 text-base leading-relaxed">{step.description}</p>
+        </div>
+
+        {step.feeNote && (
+          <div className="mt-7 pt-5 border-t border-line inline-flex items-center gap-2 mx-auto">
+            <span className="w-1.5 h-1.5 rounded-full bg-forest flex-shrink-0" />
+            <span className="text-[11px] tracking-wide uppercase text-ink-500">{step.feeNote}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Teams — full width tab/panel, not constrained to the header's max-width */}
+      {step.subTeams && (
+        <div className="mt-14 pl-20 pr-6 md:px-0 text-left" style={contentStyle}>
+          <GroupTeamsPanel subTeams={step.subTeams} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Academy / Alumni step block — unchanged alternating two-column layout ───────
 
 function StepBlock({ step, index }: { step: Step; index: number }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -197,19 +329,6 @@ function StepBlock({ step, index }: { step: Step; index: number }) {
             ))}
           </div>
         )}
-
-        {step.feeNote && (
-          <div className={`mt-7 pt-5 border-t border-line inline-flex items-center gap-2 ${left ? 'md:ml-auto' : ''}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-forest flex-shrink-0" />
-            <span className="text-[11px] tracking-wide uppercase text-ink-500">{step.feeNote}</span>
-          </div>
-        )}
-
-        {step.subTeams && (
-          <div className="grid sm:grid-cols-2 gap-3 mt-6 text-left">
-            {step.subTeams.map(team => <SubTeamCard key={team.name} team={team} />)}
-          </div>
-        )}
       </div>
     </div>
   )
@@ -266,7 +385,9 @@ export default function TimelineSection() {
 
           <div className="flex flex-col gap-24">
             {steps.map((step, i) => (
-              <StepBlock key={step.number} step={step} index={i} />
+              step.subTeams
+                ? <GroupStepBlock key={step.number} step={step} />
+                : <StepBlock key={step.number} step={step} index={i} />
             ))}
           </div>
         </div>
