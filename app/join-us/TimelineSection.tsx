@@ -41,12 +41,26 @@ const steps: Step[] = [
       {
         name: 'Equity Research',
         color: '#1a4a3a',
-        skills: ['Company Analysis', 'Equity Reports', 'Valuation', 'Learning by Doing'],
+        description:
+          'Building practical experience in company analysis and financial research, turning academic theory into real market insight through a learning-by-doing approach.',
+        skills: [
+          'Company Analysis & Equity Research Methodology',
+          'Financial Content Creation on Listed Companies & Market Trends',
+          'Report Writing & Financial Disclosure',
+          'Company Valuation Fundamentals',
+        ],
       },
       {
         name: 'M&A',
         color: '#1a4a3a',
-        skills: ['Investment Banking Standards', 'PowerPoint Decks', 'Comps / DCF / Precedent Transactions in Excel', 'Precision & Method'],
+        description:
+          'Closing the gap between academic analysis and investment banking standards, operating as a real in-house investment bank for the club.',
+        skills: [
+          'M&A Deal Analysis & Interpretation',
+          'Investment Banking-Grade PowerPoint Deliverables (Fairness Opinions, Board Materials)',
+          'Financial Modeling in Excel (Comps, DCF, Premium Analysis)',
+          'Structured, Replicable Deal Methodology',
+        ],
       },
       {
         name: 'Macro',
@@ -63,12 +77,26 @@ const steps: Step[] = [
       {
         name: 'Events',
         color: '#1d4ed8',
-        skills: ['End-to-End Event Management', 'Sponsor Relations', 'Guest Relations'],
+        description:
+          "Strengthening the club community through shared experiences, and building partnerships that give members access to top-tier networks and resources.",
+        skills: [
+          'End-to-End Event Management & Execution',
+          'Partner, Sponsor & University Relations',
+          'Organizational Planning & On-Site Delivery',
+          'Community Building & Networking',
+        ],
       },
       {
         name: 'Media',
         color: '#4b5320',
-        skills: ['Content Creation', 'Social Media Management'],
+        description:
+          "Shaping the club's brand and voice across social platforms, turning the club's growth and identity into content that builds a genuine community.",
+        skills: [
+          'Content Creation (Canva/CapCut)',
+          'Social Media Management (LinkedIn, Instagram, TikTok)',
+          'Brand Storytelling',
+          'Financial Content Divulgation for a General Audience',
+        ],
       },
     ],
   },
