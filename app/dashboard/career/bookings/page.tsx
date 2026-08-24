@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../../DashboardProfileContext'
+import MentorsTab from '../MentorsTab'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ type CareerNotificationContact = {
 
 const TABS = [
   { key: 'services' as const,      label: 'Services' },
+  { key: 'mentors' as const,       label: 'Mentors' },
   { key: 'availability' as const,  label: 'Availability' },
   { key: 'bookings' as const,      label: 'Bookings' },
   { key: 'notifications' as const, label: 'Notifications' },
@@ -1369,6 +1371,7 @@ export default function CareerBookingsPage() {
       ) : (
         <>
           {tab === 'services'      && <ServicesTab services={services} setServices={setServices} refreshServices={refreshServices} />}
+          {tab === 'mentors'       && <MentorsTab />}
           {tab === 'availability'  && <AvailabilityTab services={services} />}
           {tab === 'bookings'      && <BookingsTab services={services} />}
           {tab === 'notifications' && <NotificationsTab services={services} />}

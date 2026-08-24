@@ -13,12 +13,24 @@ function forbidden() {
 }
 
 /**
- * Public listing — active mentors with their resolved service_id (taken from
+ * GET is shared between the public career-service page and the dashboard
+ * Mentors tab: team career / bod / director callers (cookie session) get the
+ * full admin listing (all mentors, all columns); everyone else gets the
+ * public reduced view (active mentors only) with service_id resolved from
  * their own career_availability rows, since career_mentors has no service
- * column of its own). A mentor with no availability rows yet has service_id
+ * column of its own. A mentor with no availability rows yet has service_id
  * null and is not bookable until the team adds one.
  */
 export async function GET() {
+  if (await requireTeamAccess('career')) {
+    const { data, error } = await supabaseAdmin
+      .from('career_mentors')
+      .select('*')
+      .order('display_order', { ascending: true })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ data: data ?? [] })
+  }
+
   const { data: mentors, error } = await supabaseAdmin
     .from('career_mentors')
     .select('id, slug, full_name, role_title, photo_url, bio_short, bio_long, display_order')
