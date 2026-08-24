@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { EASE } from '../components/motion/Motion'
 
@@ -17,7 +17,6 @@ type Step = {
   description: string
   skills: string[]
   color?: string
-  feeNote?: string
   subTeams?: SubTeam[]
 }
 
@@ -35,7 +34,6 @@ const steps: Step[] = [
     description:
       "Moving from Academy into a core Gruppo requires a membership fee that directly funds the club's activities and events. From here, members freely choose a core team — with rotation possible at any time — while Events and Media stay open in parallel to everyone.",
     skills: [],
-    feeNote: '€15 membership fee — funds Club activities and events',
     subTeams: [
       {
         name: 'Equity Research',
@@ -105,7 +103,6 @@ const steps: Step[] = [
     description:
       'Alumni is reserved for the most deserving members, evaluated on both their path within the club and their achievements beyond it. It is an internal community and network of excellence that lasts well beyond a member\'s time at Alata.',
     skills: ['Internal & External Excellence Evaluation', 'Alumni Network', 'Lifelong Community'],
-    color: '#6ca0dc',
   },
 ]
 
@@ -199,9 +196,9 @@ function GroupTeamsPanel({ subTeams }: { subTeams: SubTeam[] }) {
   )
 }
 
-// ── Gruppo step block — full-width, no timeline spine through its content ───────
+// ── Step block — single shared layout for Academy, Gruppo and Alumni ────────────
 
-function GroupStepBlock({ step }: { step: Step }) {
+function StepBlock({ step }: { step: Step }) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
   const nodeColor = step.color ?? '#1a4a3a'
@@ -211,7 +208,7 @@ function GroupStepBlock({ step }: { step: Step }) {
     if (!el) return
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.1 }
+      { threshold: 0.15 }
     )
     obs.observe(el)
     return () => obs.disconnect()
@@ -224,153 +221,40 @@ function GroupStepBlock({ step }: { step: Step }) {
   }
 
   return (
-    <div ref={ref} className="relative">
-      {/* Node on the shared timeline axis — marker only, no line runs through this step */}
-      <div
-        className="absolute left-6 md:left-1/2 top-0 -translate-x-1/2 z-10"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: `translateX(-50%) scale(${visible ? 1 : 0.6})`,
-          transition: 'opacity 500ms ease, transform 500ms cubic-bezier(0.22,1,0.36,1)',
-        }}
+    <div ref={ref} className="w-full text-center" style={contentStyle}>
+      {/* Numbered node — in normal flow, no longer anchored to a side axis */}
+      <div className="w-14 h-14 mx-auto mb-6 bg-white border flex items-center justify-center" style={{ borderColor: nodeColor }}>
+        <span className="font-serif text-xl font-semibold" style={{ color: nodeColor }}>{step.number}</span>
+      </div>
+
+      <p className="text-[11px] tracking-[0.25em] uppercase mb-3" style={{ color: `${nodeColor}99` }}>Step {step.number}</p>
+      <h3
+        className="font-serif text-6xl sm:text-7xl lg:text-8xl font-semibold leading-[0.95] mb-6"
+        style={{ color: nodeColor }}
       >
-        <div className="w-14 h-14 bg-white border flex items-center justify-center" style={{ borderColor: nodeColor }}>
-          <span className="font-serif text-xl font-semibold" style={{ color: nodeColor }}>{step.number}</span>
+        {step.title}
+      </h3>
+      <div className="w-16 h-1 mx-auto mb-8" style={{ background: nodeColor }} />
+      <p className="text-ink-500 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">{step.description}</p>
+
+      {step.skills.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2 mt-8">
+          {step.skills.map(skill => (
+            <span
+              key={skill}
+              className="text-[11px] tracking-wide px-3 py-1 border border-forest text-forest bg-transparent"
+            >
+              {skill}
+            </span>
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Unified full-width column — header, fee note and team panel share the same
-          left-aligned container so the step reads as one coherent block. */}
-      <div className="pl-20 pr-6 md:px-2 lg:px-4 md:pt-24 pt-1" style={contentStyle}>
-        <p className="text-[11px] tracking-[0.25em] uppercase mb-3" style={{ color: `${nodeColor}99` }}>Step {step.number}</p>
-        <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-5" style={{ color: nodeColor }}>{step.title}</h3>
-        <div className="w-8 h-px mb-5" style={{ background: nodeColor }} />
-        <p className="text-ink-500 text-base leading-relaxed max-w-2xl">{step.description}</p>
-
-        {step.feeNote && (
-          <div className="mt-7 pt-5 border-t border-line inline-flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-forest flex-shrink-0" />
-            <span className="text-[11px] tracking-wide uppercase text-ink-500">{step.feeNote}</span>
-          </div>
-        )}
-
-        {step.subTeams && (
-          <div className="mt-14">
-            <GroupTeamsPanel subTeams={step.subTeams} />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── Academy / Alumni step block — alternating two-column layout, own line ───────
-
-function StepBlock({
-  step,
-  index,
-  isFirst,
-  isLast,
-}: {
-  step: Step
-  index: number
-  isFirst: boolean
-  isLast: boolean
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const left = index % 2 === 0 // content column on desktop: even → left, odd → right
-  const nodeColor = step.color ?? '#1a4a3a'
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.2 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-
-  // Local scroll-fill for this step's own line segment — replaces the old
-  // section-wide progress line, which used to run straight through Gruppo.
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    let raf = 0
-    const update = () => {
-      raf = 0
-      const rect = el.getBoundingClientRect()
-      const anchor = window.innerHeight * 0.65
-      const p = (anchor - rect.top) / rect.height
-      setProgress(Math.min(1, Math.max(0, p)))
-    }
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [])
-
-  const contentStyle: React.CSSProperties = {
-    opacity: visible ? 1 : 0,
-    transform: visible ? 'none' : `translateX(${left ? -32 : 32}px)`,
-    transition: 'opacity 700ms cubic-bezier(0.22,1,0.36,1) 120ms, transform 700ms cubic-bezier(0.22,1,0.36,1) 120ms',
-  }
-
-  return (
-    <div ref={ref} className="relative md:grid md:grid-cols-2 md:gap-0">
-      {/* This step's own line segment — extends half a gap into the space
-          toward the next/previous step, but never into Gruppo's content. */}
-      <div
-        className={`absolute left-6 md:left-1/2 w-px bg-line -translate-x-1/2 ${isFirst ? 'top-0' : '-top-12'} ${isLast ? 'bottom-0' : '-bottom-12'}`}
-      >
-        <div className="absolute top-0 left-0 w-full bg-forest" style={{ height: `${progress * 100}%` }} />
-      </div>
-
-      {/* Node on the line */}
-      <div
-        className="absolute left-6 md:left-1/2 top-0 -translate-x-1/2 z-10"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: `translateX(-50%) scale(${visible ? 1 : 0.6})`,
-          transition: 'opacity 500ms ease, transform 500ms cubic-bezier(0.22,1,0.36,1)',
-        }}
-      >
-        <div className="w-14 h-14 bg-white border flex items-center justify-center" style={{ borderColor: nodeColor }}>
-          <span className="font-serif text-xl font-semibold" style={{ color: nodeColor }}>{step.number}</span>
+      {step.subTeams && (
+        <div className="mt-14 text-left">
+          <GroupTeamsPanel subTeams={step.subTeams} />
         </div>
-      </div>
-
-      {/* Content */}
-      <div
-        className={`pl-20 pr-6 md:px-0 pt-1 ${left ? 'md:col-start-1 md:pr-20 md:text-right' : 'md:col-start-2 md:pl-20'}`}
-        style={contentStyle}
-      >
-        <p className="text-[11px] tracking-[0.25em] uppercase mb-3" style={{ color: `${nodeColor}99` }}>Step {step.number}</p>
-        <h3 className="font-serif text-3xl sm:text-4xl font-bold leading-tight mb-5" style={{ color: nodeColor }}>{step.title}</h3>
-        <div className={`w-8 h-px mb-5 ${left ? 'md:ml-auto' : ''}`} style={{ background: nodeColor }} />
-        <p className="text-ink-500 text-base leading-relaxed">{step.description}</p>
-
-        {step.skills.length > 0 && (
-          <div className={`flex flex-wrap gap-2 mt-6 ${left ? 'md:justify-end' : ''}`}>
-            {step.skills.map(skill => (
-              <span
-                key={skill}
-                className="text-[11px] tracking-wide px-3 py-1 border border-forest text-forest bg-transparent"
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }
@@ -388,13 +272,14 @@ export default function TimelineSection() {
           <div className="w-10 h-px bg-forest mx-auto" />
         </div>
 
-        {/* Timeline track — each Academy/Alumni block draws its own line segment;
-            Gruppo (full-width) has no line running through its content. */}
-        <div className="flex flex-col gap-24">
+        {/* Steps — a short static connector sits only in the gap between steps,
+            never behind a step's own content, so it can't cross any text/panel. */}
+        <div className="flex flex-col items-center">
           {steps.map((step, i) => (
-            step.subTeams
-              ? <GroupStepBlock key={step.number} step={step} />
-              : <StepBlock key={step.number} step={step} index={i} isFirst={i === 0} isLast={i === steps.length - 1} />
+            <Fragment key={step.number}>
+              {i > 0 && <div className="w-px h-16 my-20 bg-line flex-shrink-0" aria-hidden="true" />}
+              <StepBlock step={step} />
+            </Fragment>
           ))}
         </div>
       </div>
