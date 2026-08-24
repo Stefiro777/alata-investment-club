@@ -12,6 +12,14 @@ const YEAR_OPTIONS = [
   "Master's 2nd year",
 ]
 
+const TEAM_OPTIONS = [
+  { value: 'equity_research', label: 'Equity Research' },
+  { value: 'ma',              label: 'M&A' },
+  { value: 'macro',           label: 'Macro' },
+  { value: 'events',          label: 'Events' },
+  { value: 'media',           label: 'Media' },
+]
+
 export default function ApplySection({ applicationsOpen }: { applicationsOpen: boolean }) {
   const [showModal, setShowModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -24,6 +32,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
   const [telephoneNumber, setTelephoneNumber] = useState('')
   const [yearOfStudy, setYearOfStudy] = useState('')
   const [degreeProgramme, setDegreeProgramme] = useState('')
+  const [team, setTeam] = useState('')
   const [motivation, setMotivation] = useState('')
   const [privacyConsent, setPrivacyConsent] = useState(false)
 
@@ -36,6 +45,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
     setTelephoneNumber('')
     setYearOfStudy('')
     setDegreeProgramme('')
+    setTeam('')
     setMotivation('')
     setPrivacyConsent(false)
     setError(null)
@@ -64,6 +74,7 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
       telephone_number: telephoneNumber,
       anno_di_studio: yearOfStudy,
       degree_programme: degreeProgramme,
+      team: team || null,
       motivazione: motivation,
     })
 
@@ -238,6 +249,23 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                         className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
                       />
                     </div>
+                  </div>
+
+                  {/* Team of interest (optional — actual placement happens after Academy) */}
+                  <div>
+                    <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
+                      Team of Interest <span className="text-ink-400 normal-case">(optional)</span>
+                    </label>
+                    <select
+                      value={team}
+                      onChange={e => setTeam(e.target.value)}
+                      className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors appearance-none"
+                    >
+                      <option value="">No preference yet</option>
+                      {TEAM_OPTIONS.map(t => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* Motivation */}
