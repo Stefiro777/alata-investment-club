@@ -148,10 +148,12 @@ function GroupTeamsPanel({ subTeams }: { subTeams: SubTeam[] }) {
         </div>
       </div>
 
-      {/* Active panel */}
+      {/* Active panel — centered "deck slide" treatment; the tab row above
+          stays left-aligned as-is, this is scoped to the panel only. */}
       <AnimatePresence mode="wait">
         <motion.div
           key={team.name}
+          className="text-center"
           initial={reduced ? false : { opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           exit={reduced ? undefined : { opacity: 0, x: -24 }}
@@ -166,14 +168,17 @@ function GroupTeamsPanel({ subTeams }: { subTeams: SubTeam[] }) {
           >
             {team.name}
           </h3>
-          <div className="w-16 h-1 mb-8" style={{ background: team.color }} />
+          <div className="w-16 h-1 mx-auto mb-8" style={{ background: team.color }} />
           {team.description && (
-            <p className="text-ink-500 text-base sm:text-lg leading-relaxed max-w-2xl mb-10">
+            <p className="text-ink-500 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-10">
               {team.description}
             </p>
           )}
+          {/* Skill list: the block itself is centered, but each line stays
+              left-aligned internally (bullet + text) so longer skills don't
+              break awkwardly under a plain text-align: center. */}
           <motion.ul
-            className="flex flex-col gap-3 max-w-2xl"
+            className="flex flex-col gap-3 max-w-2xl mx-auto text-left"
             initial="hidden"
             animate="show"
             variants={reduced ? undefined : skillListVariants}
