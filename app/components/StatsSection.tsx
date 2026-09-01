@@ -6,7 +6,7 @@ const stats = [
   { value: 100, label: 'Members' },
   { value: 20,  label: 'Calls with IB, PE & Consulting professionals' },
   { value: 500, label: 'Analyses published' },
-  { value: 800, label: 'LinkedIn followers' },
+  { value: 950, label: 'LinkedIn followers' },
 ]
 
 const STAGGER = 220 // ms between each stat starting
