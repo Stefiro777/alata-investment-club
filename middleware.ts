@@ -4,15 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const MEMBERSHIP_EXEMPT_EMAIL = 'finullistefano@gmail.com'
 
-// Routes that must never go through session-cookie handling: called without
-// browser cookies (cron secret, Stripe signature) or latency/signature sensitive.
-const MIDDLEWARE_BYPASS_PATHS = ['/api/sync-notion-calendar', '/api/stripe/webhook']
-
 export async function middleware(request: NextRequest) {
-  if (MIDDLEWARE_BYPASS_PATHS.includes(request.nextUrl.pathname)) {
-    return NextResponse.next()
-  }
-
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -106,5 +98,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/login', '/api/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/login'],
 }
