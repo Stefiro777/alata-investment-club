@@ -22,7 +22,12 @@ const MEMBER_COLUMNS = 'id, user_id, email, full_name, role, teams'
  */
 export async function getSessionMember(): Promise<AuthMember | null> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error } = await supabase.auth.getUser()
+  // AuthSessionMissingError just means "not logged in" — expected and noisy;
+  // anything else (e.g. a failed token refresh) is worth seeing in logs.
+  if (error && error.name !== 'AuthSessionMissingError') {
+    console.error('[getSessionMember] supabase.auth.getUser() failed:', error.name, error.message)
+  }
   if (!user) return null
 
   const service = createServiceClient()

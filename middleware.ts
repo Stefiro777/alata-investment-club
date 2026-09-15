@@ -4,8 +4,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const MEMBERSHIP_EXEMPT_EMAIL = 'finullistefano@gmail.com'
 
+// Routes that must never go through session-cookie handling: called without
+// browser cookies (cron secret, Stripe signature) or latency/signature sensitive.
+const MIDDLEWARE_BYPASS_PATHS = ['/api/sync-notion-calendar', '/api/stripe/webhook']
+
 export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname === '/api/sync-notion-calendar') {
+  if (MIDDLEWARE_BYPASS_PATHS.includes(request.nextUrl.pathname)) {
     return NextResponse.next()
   }
 
@@ -102,5 +106,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/login', '/api/:path*'],
 }
