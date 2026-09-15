@@ -977,6 +977,7 @@ export default function CheckoutClient() {
         return
       }
       if (data.url) {
+        completing.current = true
         clearCart()
         window.location.href = data.url
       } else {
