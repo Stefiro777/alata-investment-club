@@ -62,15 +62,33 @@ function safeJson(obj: unknown): string {
 }
 
 function safeEventRegs(regs: EventRegistrationPayload[]): string {
-  return JSON.stringify(regs.map(r => ({
-    eventId:               r.eventId,
-    firstName:             r.firstName?.slice(0, 50),
-    lastName:              r.lastName?.slice(0, 50),
-    email:                 r.email,
-    annoStudio:            r.annoStudio,
-    motivation:            r.motivation?.slice(0, 100),
-    questionsForPanelists: r.questionsForPanelists?.slice(0, 100),
-  })))
+  const build = (name: number, email: number, anno: number, free: number) =>
+    JSON.stringify(regs.map(r => ({
+      eventId:               r.eventId,
+      firstName:             r.firstName?.slice(0, name),
+      lastName:              r.lastName?.slice(0, name),
+      email:                 r.email?.slice(0, email),
+      annoStudio:            r.annoStudio?.slice(0, anno),
+      motivation:            r.motivation?.slice(0, free),
+      questionsForPanelists: r.questionsForPanelists?.slice(0, free),
+    })))
+
+  let str = build(50, 200, 50, 100)
+  if (str.length <= 500) return str
+
+  // Multiple registrations (or long free-text answers) pushed the array past
+  // Stripe's 500-char metadata limit — shrink every field further first,
+  // same idea as safeJson's fallback.
+  str = build(30, 100, 30, 30)
+  if (str.length <= 500) return str
+
+  // Still too long: drop the least essential registrations (from the end)
+  // rather than let Stripe reject session creation outright. Each remaining
+  // entry is already bounded by the slice caps above, so this always
+  // converges to valid JSON under the limit.
+  const parsed = JSON.parse(str) as Record<string, unknown>[]
+  while (parsed.length > 1 && JSON.stringify(parsed).length > 500) parsed.pop()
+  return JSON.stringify(parsed)
 }
 
 export async function POST(req: NextRequest) {
