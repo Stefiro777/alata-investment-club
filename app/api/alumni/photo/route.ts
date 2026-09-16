@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 
 const ALUMNI_PHOTOS_BUCKET = 'alumni-photos'
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 
 export async function POST(req: NextRequest) {
   try {
-    if (!(await requirePrivilegedAccess())) {
+    if (!(await requireTeamAccess('alumni'))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

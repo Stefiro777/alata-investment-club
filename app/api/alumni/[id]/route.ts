@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 
 const ALUMNI_COLUMNS = 'id, name, role, graduation_year, linkedin_url, current_company, industry, photo_url, order_index, created_at'
 
@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!(await requirePrivilegedAccess())) {
+    if (!(await requireTeamAccess('alumni'))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -51,7 +51,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!(await requirePrivilegedAccess())) {
+    if (!(await requireTeamAccess('alumni'))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
