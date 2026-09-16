@@ -1,7 +1,7 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -16,7 +16,7 @@ function sleep(ms: number) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await requirePrivilegedAccess())) {
+  if (!(await requireTeamAccess('events'))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

@@ -1,12 +1,12 @@
 import { createServiceClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 
 const ALLOWED_TABLES = ['featured_events', 'featured_partners']
 
 export async function POST(req: NextRequest) {
   try {
-    if (!(await requirePrivilegedAccess())) return NextResponse.json({ error: 'not admin' }, { status: 403 })
+    if (!(await requireTeamAccess('events'))) return NextResponse.json({ error: 'not admin' }, { status: 403 })
 
     const { table, items } = await req.json() as { table: string; items: { id: string; display_order: number }[] }
 

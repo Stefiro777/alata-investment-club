@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  if (!(await requirePrivilegedAccess())) {
+  if (!(await requireTeamAccess('events'))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
