@@ -1,14 +1,14 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Shared privileged-access check (bod/director)
-const isAdmin = async () => !!(await requirePrivilegedAccess())
+// Shared access check (bod/director, or media team)
+const isAdmin = async () => !!(await requireTeamAccess('media'))
 
 export async function GET() {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

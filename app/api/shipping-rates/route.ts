@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabaseAdmin = createAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,9 +18,9 @@ export async function GET() {
   return NextResponse.json({ rates: data ?? [] })
 }
 
-// PATCH /api/shipping-rates — privileged only { zone, price_cents }
+// PATCH /api/shipping-rates — privileged or media team { zone, price_cents }
 export async function PATCH(req: NextRequest) {
-  if (!(await requirePrivilegedAccess())) {
+  if (!(await requireTeamAccess('media'))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
