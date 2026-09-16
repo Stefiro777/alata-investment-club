@@ -1,6 +1,6 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 import AdminNavbar from '../components/AdminNavbar'
 import JobApplicationsClient from './JobApplicationsClient'
 
@@ -27,7 +27,7 @@ export type JobApplication = {
 }
 
 export default async function AdminJobsPage() {
-  const member = await requirePrivilegedAccess()
+  const member = await requireTeamAccess('career')
   if (!member) redirect('/dashboard')
 
   const { data: applications } = await supabaseAdmin

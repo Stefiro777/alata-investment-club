@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { requirePrivilegedAccess } from '@/lib/auth'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +8,7 @@ const supabaseAdmin = createAdminClient(
 )
 
 export async function PATCH(req: NextRequest) {
-  if (!(await requirePrivilegedAccess())) {
+  if (!(await requireTeamAccess('career'))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   const { id, archived } = await req.json()
