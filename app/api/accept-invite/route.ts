@@ -18,16 +18,20 @@ export async function GET(req: NextRequest) {
 
   const { data: invite, error } = await supabaseAdmin
     .from('invites')
-    .select('email, team, lab_subdivision')
+    .select('email, team, lab_subdivision, used_at')
     .eq('token', token)
-    .is('used_at', null)
     .maybeSingle()
 
   if (error || !invite) {
     return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
   }
 
-  return NextResponse.json(invite)
+  if (invite.used_at) {
+    return NextResponse.json({ error: 'Invite already used' }, { status: 410 })
+  }
+
+  const { email, team, lab_subdivision } = invite
+  return NextResponse.json({ email, team, lab_subdivision })
 }
 
 export async function POST(req: NextRequest) {
