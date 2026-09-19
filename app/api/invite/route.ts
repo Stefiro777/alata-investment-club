@@ -5,8 +5,12 @@ import { requirePrivilegedAccess } from '@/lib/auth'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+const VALID_TEAMS = ['lab', 'events', 'media', 'alumni'] as const
+const VALID_LAB_SUBDIVISIONS = ['macro_markets', 'equity_valuation', 'ma'] as const
+
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alatainvestmentclub.com'
 
 function buildInviteEmail(inviteLink: string): string {
   return `<!DOCTYPE html>
@@ -49,11 +53,11 @@ function buildInviteEmail(inviteLink: string): string {
           </td>
         </tr>
 
-        <!-- Expiry notice -->
+        <!-- Notice -->
         <tr>
           <td style="padding:0 24px 24px;text-align:center;">
             <p style="font-size:12px;color:#a0a0a0;text-align:center;margin-top:16px;">
-              This link is valid for <strong>24 hours</strong>. If it has expired, please contact an administrator to receive a new one.
+              This link does not expire. If you did not expect this invitation, please contact an administrator.
             </p>
           </td>
         </tr>
@@ -76,13 +80,32 @@ function buildInviteEmail(inviteLink: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    if (!(await requirePrivilegedAccess())) {
+    const requester = await requirePrivilegedAccess()
+    if (!requester) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { email } = await req.json()
+    const body = await req.json()
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+    const team = body.team
+    const rawLabSubdivision = body.lab_subdivision
+
     if (!email || !emailRegex.test(email)) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
+    }
+
+    if (!VALID_TEAMS.includes(team)) {
+      return NextResponse.json({ error: 'Invalid team' }, { status: 400 })
+    }
+
+    let labSubdivision: string | null = null
+    if (team === 'lab') {
+      if (!VALID_LAB_SUBDIVISIONS.includes(rawLabSubdivision)) {
+        return NextResponse.json({ error: 'lab_subdivision required for team lab' }, { status: 400 })
+      }
+      labSubdivision = rawLabSubdivision
+    } else if (rawLabSubdivision) {
+      return NextResponse.json({ error: 'lab_subdivision must be omitted unless team is lab' }, { status: 400 })
     }
 
     const supabaseAdmin = createSupabaseAdmin(
@@ -90,27 +113,63 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Generate a signed invite link with 24-hour expiry
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'invite',
-      email,
-      options: {
-        redirectTo: 'https://alatainvestmentclub.com/accept-invite',
-      },
-    })
+    // Already a registered member — nothing to invite.
+    const { data: existingMember } = await supabaseAdmin
+      .from('club_members')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Supabase generateLink response:', JSON.stringify({ data, error }))
+    if (existingMember) {
+      return NextResponse.json({ error: 'membro già registrato' }, { status: 400 })
     }
 
-    if (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('INVITE ERROR:', error.message)
+    // Reuse a pending invite for this email if one exists, instead of
+    // creating a second row.
+    const { data: pendingInvites, error: pendingError } = await supabaseAdmin
+      .from('invites')
+      .select('id, token')
+      .eq('email', email)
+      .is('used_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (pendingError) {
+      return NextResponse.json({ error: pendingError.message }, { status: 500 })
+    }
+
+    const pendingInvite = pendingInvites?.[0] ?? null
+    let token: string
+
+    if (pendingInvite) {
+      token = pendingInvite.token
+      const { error: updateError } = await supabaseAdmin
+        .from('invites')
+        .update({ team, lab_subdivision: labSubdivision })
+        .eq('id', pendingInvite.id)
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 })
       }
-      return NextResponse.json({ error: error.message }, { status: 400 })
+    } else {
+      const { data: inserted, error: insertError } = await supabaseAdmin
+        .from('invites')
+        .insert({
+          email,
+          team,
+          lab_subdivision: labSubdivision,
+          invited_by: requester.user_id,
+        })
+        .select('token')
+        .single()
+
+      if (insertError || !inserted) {
+        return NextResponse.json({ error: insertError?.message ?? 'Failed to create invite' }, { status: 500 })
+      }
+      token = inserted.token
     }
 
-    const inviteLink = data.properties.action_link
+    const inviteLink = `${SITE_URL}/accept-invite?token=${token}`
 
     // Send the invite email via Resend
     const { error: sendError } = await resend.emails.send({
