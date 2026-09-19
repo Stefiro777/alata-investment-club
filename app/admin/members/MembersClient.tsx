@@ -13,6 +13,19 @@ const INDUSTRY_OPTIONS = [
   'Public Sector', 'Other',
 ]
 
+const INVITE_TEAM_OPTIONS = [
+  { value: 'lab',    label: 'Lab' },
+  { value: 'events', label: 'Events' },
+  { value: 'media',  label: 'Media' },
+  { value: 'alumni', label: 'Alumni' },
+]
+
+const INVITE_LAB_SUBDIVISION_OPTIONS = [
+  { value: 'ma',               label: 'M&A' },
+  { value: 'macro_markets',    label: 'Macro & Markets' },
+  { value: 'equity_valuation', label: 'Equity & Valuation' },
+]
+
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-8">
@@ -757,6 +770,8 @@ export default function MembersClient({
 
   // Invite member state
   const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteTeam, setInviteTeam] = useState('')
+  const [inviteLabSubdivision, setInviteLabSubdivision] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState(false)
@@ -765,18 +780,40 @@ export default function MembersClient({
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  function handleInviteTeamChange(value: string) {
+    setInviteTeam(value)
+    if (value !== 'lab') setInviteLabSubdivision('')
+  }
+
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault()
-    const email = inviteEmail.trim().toLowerCase()
-    if (!email) return
-    setInviting(true)
     setInviteError(null)
     setInviteSuccess(false)
+
+    const email = inviteEmail.trim().toLowerCase()
+    if (!email) {
+      setInviteError('Email is required.')
+      return
+    }
+    if (!inviteTeam) {
+      setInviteError('Team is required.')
+      return
+    }
+    if (inviteTeam === 'lab' && !inviteLabSubdivision) {
+      setInviteError('Lab Subdivision is required for team Lab.')
+      return
+    }
+
+    setInviting(true)
 
     const res = await fetch('/api/invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({
+        email,
+        team: inviteTeam,
+        lab_subdivision: inviteTeam === 'lab' ? inviteLabSubdivision : null,
+      }),
     })
     const text = await res.text()
     let json: any = {}
@@ -786,6 +823,8 @@ export default function MembersClient({
       setInviteError(json.error ?? 'Unknown error')
     } else {
       setInviteEmail('')
+      setInviteTeam('')
+      setInviteLabSubdivision('')
       setInviteSuccess(true)
     }
     setInviting(false)
@@ -1005,15 +1044,52 @@ export default function MembersClient({
             Send an invitation link by email. The new member will set their password by clicking the link.
           </p>
 
-          <form onSubmit={handleInvite} className="flex gap-3">
+          <form onSubmit={handleInvite} className="space-y-4">
             <input
               type="email"
               required
               value={inviteEmail}
               onChange={e => setInviteEmail(e.target.value)}
               placeholder="member@email.com"
-              className="flex-1 px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
+              className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
             />
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <select
+                value={inviteTeam}
+                onChange={e => handleInviteTeamChange(e.target.value)}
+                className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-forest focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors"
+                style={{ accentColor: 'var(--forest)' }}
+              >
+                <option value="" disabled className="text-gray-400">Select team…</option>
+                {INVITE_TEAM_OPTIONS.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+
+              <select
+                value={inviteLabSubdivision}
+                onChange={e => setInviteLabSubdivision(e.target.value)}
+                disabled={inviteTeam !== 'lab'}
+                className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-forest focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-black/5"
+                style={{ accentColor: 'var(--forest)' }}
+              >
+                <option value="" disabled className="text-gray-400">
+                  {inviteTeam === 'lab' ? 'Select subdivision…' : 'Only for team Lab'}
+                </option>
+                {INVITE_LAB_SUBDIVISION_OPTIONS.map(s => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {inviteError && (
+              <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{inviteError}</p>
+            )}
+            {inviteSuccess && (
+              <p className="text-forest text-xs border-l-2 border-forest pl-3 py-1">Invite sent!</p>
+            )}
+
             <button
               type="submit"
               disabled={inviting}
@@ -1022,13 +1098,6 @@ export default function MembersClient({
               {inviting ? '…' : 'Send Invite'}
             </button>
           </form>
-
-          {inviteError && (
-            <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1 mt-4">{inviteError}</p>
-          )}
-          {inviteSuccess && (
-            <p className="text-forest text-xs border-l-2 border-forest pl-3 py-1 mt-4">Invite sent!</p>
-          )}
         </div>
       </section>
 
