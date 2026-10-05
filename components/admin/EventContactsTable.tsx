@@ -188,6 +188,8 @@ export default function EventContactsTable() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [eventFilter, setEventFilter] = useState('')
+  const [eventList, setEventList] = useState<{ id: string; title: string; date: string }[]>([])
+  const [memberFilter, setMemberFilter] = useState<'all' | 'members' | 'external'>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editContact, setEditContact] = useState<Contact | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -201,13 +203,16 @@ export default function EventContactsTable() {
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
 
-  function loadContacts() {
-    setLoading(true)
+  function loadContacts(silent = false) {
+    if (!silent) setLoading(true)
     fetch('/api/admin/crm/contacts')
       .then(r => r.json())
-      .then(({ data, error: err }) => {
+      .then(({ data, events: evs, error: err }) => {
         if (err) setError(err)
-        else setContacts(data ?? [])
+        else {
+          setContacts(data ?? [])
+          setEventList(evs ?? [])
+        }
         setLoading(false)
       })
       .catch(err => {
@@ -218,15 +223,13 @@ export default function EventContactsTable() {
 
   useEffect(() => { loadContacts() }, [])
 
-  const events = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const c of contacts) {
-      if (c.event_id && c.upcoming_events?.title) map.set(c.event_id, c.upcoming_events.title)
-    }
-    return Array.from(map.entries())
-      .map(([id, title]) => ({ id, title }))
-      .sort((a, b) => a.title.localeCompare(b.title))
-  }, [contacts])
+  // Every event (newest first), including those without registrations yet.
+  // The date is part of the label so two events with the same title are
+  // distinguishable.
+  const events = useMemo(
+    () => eventList.map(ev => ({ id: ev.id, title: ev.title, label: `${ev.title} — ${ev.date}` })),
+    [eventList]
+  )
 
   const selectedEvent = useMemo(
     () => events.find(ev => ev.id === eventFilter) ?? null,
@@ -241,9 +244,12 @@ export default function EventContactsTable() {
         c.cognome?.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q)
       const matchEvent = !eventFilter || c.event_id === eventFilter
-      return matchSearch && matchEvent
+      const matchMember =
+        memberFilter === 'all' ||
+        (memberFilter === 'members' ? !!c.is_member : !c.is_member)
+      return matchSearch && matchEvent && matchMember
     })
-  }, [contacts, search, eventFilter])
+  }, [contacts, search, eventFilter, memberFilter])
 
   const uniqueEmails = useMemo(() => new Set(contacts.map(c => c.email)).size, [contacts])
   const eventsWithRegs = useMemo(() => new Set(contacts.map(c => c.upcoming_events?.title).filter(Boolean)).size, [contacts])
@@ -251,6 +257,7 @@ export default function EventContactsTable() {
   function handleSaved(updated: Contact) {
     setContacts(prev => prev.map(c => c.id === updated.id ? { ...updated, upcoming_events: c.upcoming_events } : c))
     setEditContact(null)
+    loadContacts(true) // refresh is_member (the PATCH response does not carry it)
   }
 
   const filteredForEvent = useMemo(
@@ -261,6 +268,7 @@ export default function EventContactsTable() {
   function handleAdded(created: Contact) {
     setContacts(prev => [created, ...prev])
     setShowAddModal(false)
+    loadContacts(true)
   }
 
   async function handleSendQr() {
@@ -350,8 +358,18 @@ export default function EventContactsTable() {
         >
           <option value="">All Events</option>
           {events.map(ev => (
-            <option key={ev.id} value={ev.id}>{ev.title}</option>
+            <option key={ev.id} value={ev.id}>{ev.label}</option>
           ))}
+        </select>
+        <select
+          value={memberFilter}
+          onChange={e => setMemberFilter(e.target.value as 'all' | 'members' | 'external')}
+          aria-label="Filtra per soci"
+          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest transition-colors"
+        >
+          <option value="all">Soci e non soci</option>
+          <option value="members">Solo soci</option>
+          <option value="external">Solo non soci</option>
         </select>
 
         {eventFilter && (

@@ -16,6 +16,8 @@ export type Contact = {
   source: 'self' | 'manual'
   added_by: string | null
   member_override: boolean | null
+  /** Computed server-side by GET /api/admin/crm/contacts (email/name match + override). */
+  is_member?: boolean
   checked_in: boolean
   checked_in_at: string | null
   checked_in_by: string | null

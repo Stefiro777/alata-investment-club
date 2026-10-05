@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePrivilegedAccess } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase-server'
+import { buildMemberIndex, resolveIsMember } from '@/lib/member-matching'
 
 const supabaseAdmin = createServiceClient()
 
@@ -19,7 +20,8 @@ export async function GET() {
   const user = await checkAuth()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data, error } = await supabaseAdmin
+  const [regsRes, eventsRes, membersRes] = await Promise.all([
+    supabaseAdmin
     .from('event_registrations')
     .select(`
       id,
@@ -43,10 +45,28 @@ export async function GET() {
         date
       )
     `)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }),
+    // All events, not only the ones that already have registrations, so the
+    // event dropdown (and "add participant") works for events with no sign-ups yet.
+    supabaseAdmin
+      .from('upcoming_events')
+      .select('id, title, date')
+      .order('date', { ascending: false }),
+    supabaseAdmin.from('club_members').select('email, full_name, member_id'),
+  ])
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ data })
+  if (regsRes.error) return NextResponse.json({ error: regsRes.error.message }, { status: 500 })
+  if (eventsRes.error) return NextResponse.json({ error: eventsRes.error.message }, { status: 500 })
+  if (membersRes.error) return NextResponse.json({ error: membersRes.error.message }, { status: 500 })
+
+  // Same heuristic as the analytics routes (email, then name; member_override wins).
+  const memberIndex = buildMemberIndex(membersRes.data ?? [])
+  const data = (regsRes.data ?? []).map(r => ({
+    ...r,
+    is_member: resolveIsMember(memberIndex, r.email ?? '', r.nome ?? '', r.cognome ?? '', r.member_override ?? null).isMember,
+  }))
+
+  return NextResponse.json({ data, events: eventsRes.data ?? [] })
 }
 
 export async function PATCH(req: NextRequest) {
