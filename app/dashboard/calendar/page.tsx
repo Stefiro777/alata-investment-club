@@ -98,6 +98,7 @@ type PedPost = {
   assigned_to: string | null
   notes: string | null
   attachment_url: string | null
+  posted: boolean
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -976,9 +977,24 @@ function EventiTab() {
 
 // ── PedTab ────────────────────────────────────────────────────────────────────
 
+function PostedCheckbox({
+  posted, disabled, onChange,
+}: { posted: boolean; disabled?: boolean; onChange: (next: boolean) => void }) {
+  return (
+    <input
+      type="checkbox"
+      checked={posted}
+      disabled={disabled}
+      onChange={e => onChange(e.target.checked)}
+      aria-label={posted ? 'Segna come non postato' : 'Segna come postato'}
+      className="w-4 h-4 accent-forest cursor-pointer disabled:opacity-50"
+    />
+  )
+}
+
 function PedDetailModal({
-  post, onClose,
-}: { post: PedPost; onClose: () => void }) {
+  post, onClose, onTogglePosted, togglingPosted,
+}: { post: PedPost; onClose: () => void; onTogglePosted: (id: string, next: boolean) => void; togglingPosted: boolean }) {
   const platformColor = post.platform ? (PLATFORM_COLORS[post.platform] ?? '#1a4a3a') : 'var(--forest)'
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
@@ -1005,6 +1021,12 @@ function PedDetailModal({
             <div>
               <p className="text-[10px] uppercase tracking-widest text-ink-400 mb-0.5">Status</p>
               <p className="text-ink-900">{post.status}</p>
+            </div>
+            <div className="col-span-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <PostedCheckbox posted={post.posted} disabled={togglingPosted} onChange={next => onTogglePosted(post.id, next)} />
+                <span className="text-[10px] uppercase tracking-widest text-ink-400">{post.posted ? 'Postato' : 'Non postato'}</span>
+              </label>
             </div>
             {post.assigned_to && (
               <div>
@@ -1200,6 +1222,7 @@ function PedTab() {
   const [showCreate, setShowCreate]   = useState(false)
   const [dayPopover, setDayPopover]   = useState<string | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [togglingPosted, setTogglingPosted] = useState<string | null>(null)
   const [confirmDel, setConfirmDel]   = useState<string | null>(null)
   const [deleting, setDeleting]       = useState<string | null>(null)
 
@@ -1239,6 +1262,17 @@ function PedTab() {
     })
     if (res.ok) setPosts(prev => prev.map(p => p.id === id ? { ...p, status } : p))
     setUpdatingStatus(null)
+  }
+
+  async function handleTogglePosted(id: string, next: boolean) {
+    setTogglingPosted(id)
+    const res = await fetch(`/api/ped/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ posted: next }),
+    })
+    if (res.ok) setPosts(prev => prev.map(p => p.id === id ? { ...p, posted: next } : p))
+    setTogglingPosted(null)
   }
 
   async function handleDelete(id: string) {
@@ -1298,7 +1332,7 @@ function PedTab() {
                         const label = p.title.length > 20 ? p.title.slice(0, 20) + '…' : p.title
                         return (
                           <button key={p.id} type="button" onClick={e => { e.stopPropagation(); setSelectedPost(p) }}
-                            className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 truncate"
+                            className={`w-full text-left text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 truncate ${p.posted ? 'opacity-50 line-through' : ''}`}
                             style={{ backgroundColor: color, color: '#fff' }}>
                             {label}
                           </button>
@@ -1364,15 +1398,15 @@ function PedTab() {
           ) : (
             <div className="border border-[#e5e7eb]">
               {/* Header row */}
-              <div className="grid grid-cols-[120px_1fr_110px_110px_130px_110px_80px] border-b border-[#e5e7eb] bg-[#f9f9f9]">
-                {['Date', 'Title', 'Platform', 'Type', 'Assigned to', 'Status', ''].map(h => (
+              <div className="grid grid-cols-[120px_1fr_110px_110px_130px_110px_80px_80px] border-b border-[#e5e7eb] bg-[#f9f9f9]">
+                {['Date', 'Title', 'Platform', 'Type', 'Assigned to', 'Status', 'Posted', ''].map(h => (
                   <div key={h} className="px-3 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-ink-400">{h}</div>
                 ))}
               </div>
               {posts.map(p => {
                 const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : 'var(--forest)'
                 return (
-                  <div key={p.id} className="grid grid-cols-[120px_1fr_110px_110px_130px_110px_80px] border-b border-[#e5e7eb] last:border-b-0 hover:bg-paper-cool items-center">
+                  <div key={p.id} className="grid grid-cols-[120px_1fr_110px_110px_130px_110px_80px_80px] border-b border-[#e5e7eb] last:border-b-0 hover:bg-paper-cool items-center">
                     <div className="px-3 py-3 text-xs text-ink-600">{fmtDate(p.scheduled_date)}</div>
                     <button type="button" onClick={() => setSelectedPost(p)} className="px-3 py-3 text-sm font-medium text-ink-900 text-left hover:text-forest transition-colors truncate">
                       {p.title}
@@ -1399,6 +1433,9 @@ function PedTab() {
                         </div>
                       </div>
                     </div>
+                    <div className="px-3 py-3 flex items-center">
+                      <PostedCheckbox posted={p.posted} disabled={togglingPosted === p.id} onChange={next => handleTogglePosted(p.id, next)} />
+                    </div>
                     <div className="px-3 py-3 flex items-center justify-end">
                       {confirmDel === p.id ? (
                         <div className="flex items-center gap-1">
@@ -1424,7 +1461,17 @@ function PedTab() {
         </div>
       )}
 
-      {selectedPost && <PedDetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />}
+      {selectedPost && (() => {
+        const current = posts.find(p => p.id === selectedPost.id) ?? selectedPost
+        return (
+          <PedDetailModal
+            post={current}
+            onClose={() => setSelectedPost(null)}
+            onTogglePosted={handleTogglePosted}
+            togglingPosted={togglingPosted === current.id}
+          />
+        )
+      })()}
       {showCreate && (
         <NewPedModal
           existingAssignees={existingAssignees}

@@ -5,7 +5,7 @@ export async function GET() {
   const service = createServiceClient()
   const { data, error } = await service
     .from('post_plans')
-    .select('id, title, description, team, scheduled_date, status, platform, content_type, assigned_to, notes, attachment_url')
+    .select('id, title, description, team, scheduled_date, status, platform, content_type, assigned_to, notes, attachment_url, posted')
     .order('scheduled_date', { ascending: true })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ data })
