@@ -10,9 +10,11 @@ export type AuthMember = {
   full_name: string
   role: string
   teams: string[] | null
+  /** Set when the member was removed from the membership (row, role and teams are kept). */
+  membership_removed_at: string | null
 }
 
-const MEMBER_COLUMNS = 'id, user_id, email, full_name, role, teams'
+const MEMBER_COLUMNS = 'id, user_id, email, full_name, role, teams, membership_removed_at'
 
 /**
  * Resolves the club_members row for the current session user (cookie-based
@@ -73,6 +75,8 @@ export async function requireTeamAccess(...teamSlugs: string[]): Promise<AuthMem
   const member = await getSessionMember()
   if (!member) return null
   if (isPrivileged(member)) return member
+  // A member removed from the membership has no team access, whatever their teams array says.
+  if (member.membership_removed_at) return null
   const teams = member.teams ?? []
   if (teamSlugs.some(slug => teams.includes(slug))) return member
   return null

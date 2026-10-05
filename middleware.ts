@@ -71,11 +71,17 @@ export async function middleware(request: NextRequest) {
         )
         const { data: member } = await adminClient
           .from('club_members')
-          .select('membership_expires_at')
+          .select('membership_expires_at, membership_removed_at')
           .eq('email', user.email ?? '')
           .maybeSingle()
 
         if (member) {
+          // Removed from the membership: no grace period, straight to the dashboard home.
+          if (member.membership_removed_at) {
+            const url = new URL('/dashboard', request.url)
+            url.searchParams.set('membership', 'removed')
+            return NextResponse.redirect(url)
+          }
           if (!member.membership_expires_at) {
             // Never set — new member, needs to activate
             const url = new URL('/dashboard/membership', request.url)

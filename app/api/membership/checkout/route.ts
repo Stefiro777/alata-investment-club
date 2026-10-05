@@ -21,11 +21,14 @@ export async function POST(req: NextRequest) {
   // Fetch member record
   const { data: member } = await supabaseAdmin
     .from('club_members')
-    .select('id, email, full_name')
+    .select('id, email, full_name, membership_removed_at')
     .eq('email', user.email ?? '')
     .maybeSingle()
 
   if (!member) return NextResponse.json({ error: 'Member not found' }, { status: 404 })
+  if (member.membership_removed_at) {
+    return NextResponse.json({ error: 'Your membership was removed. Please contact the board.' }, { status: 403 })
+  }
 
   // Fetch price from membership_settings
   const { data: settings } = await supabaseAdmin

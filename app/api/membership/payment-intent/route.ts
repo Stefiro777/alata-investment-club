@@ -19,10 +19,13 @@ export async function POST(req: NextRequest) {
     // Step 2: member lookup
     const { data: member, error: memberErr } = await supabaseAdmin
       .from('club_members')
-      .select('id, full_name, email')
+      .select('id, full_name, email, membership_removed_at')
       .eq('email', user.email ?? '')
       .maybeSingle()
     if (memberErr || !member) return NextResponse.json({ error: 'Member not found' }, { status: 404 })
+    if (member.membership_removed_at) {
+      return NextResponse.json({ error: 'Your membership was removed. Please contact the board.' }, { status: 403 })
+    }
 
     // Step 3: membership_settings
     const { data: settings } = await supabaseAdmin
