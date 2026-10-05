@@ -490,12 +490,10 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
 
 export default function TeamClient({ members }: { members: TeamMember[] }) {
   const bod = members.filter(m => m.type === 'bod')
-  const management = members.filter(m => m.type === 'management')
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-8 py-10 space-y-16">
       <MembersSection title="Board of Directors" type="bod" initialMembers={bod} />
-      <MembersSection title="Management" type="management" initialMembers={management} />
     </div>
   )
 }
