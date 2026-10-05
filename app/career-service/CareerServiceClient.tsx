@@ -3,7 +3,149 @@
 import Image from 'next/image'
 import Parallax from '../components/Parallax'
 import { MotionReveal, MotionLine } from '../components/motion/Motion'
+import Link from 'next/link'
+import Reveal from '../components/Reveal'
 import MentorSection from './MentorSection'
+
+// How the service works — mirrors the real booking flow (MentorBookingOverlay):
+// pick a mentor, choose a slot from their availability, pay online (free for
+// active members). Sessions are 30 minutes (career_services.duration_minutes).
+const STEPS = [
+  {
+    title: 'Choose your mentor',
+    body: 'Each mentor is a former or current member of the club working in the industry. Read their profile and pick the one closest to the path you want to follow.',
+  },
+  {
+    title: 'Book a 30-minute session',
+    body: 'See the mentor’s real availability, select a slot and tell us what you want to work on, so the session starts from your goals and not from scratch.',
+  },
+  {
+    title: 'Get specific, actionable feedback',
+    body: 'A one-to-one conversation with practical next steps: what to fix in your CV, how to approach an interview, which master or role fits your profile.',
+  },
+]
+
+const AREAS = [
+  'Career orientation',
+  'Master orientation',
+  'CV & cover letter review',
+  'Interview preparation',
+  'OCF exam preparation',
+  'GMAT / IELTS preparation',
+]
+
+// What members can access — taken from the member dashboard (/dashboard):
+// resources library categories, job offers board, member pricing, digital card.
+const MEMBER_ACCESS = [
+  {
+    title: 'Resources library',
+    body: 'Curated folders and documents, organised by category: Masters, Career & Recruiting, Education, Forbes Next Leaders and Alata documents.',
+  },
+  {
+    title: 'Mentor sessions at no cost',
+    body: 'Active members book Career Service sessions free of charge; everyone else pays per session.',
+  },
+  {
+    title: 'Job offers board',
+    body: 'Opportunities selected by the club and shared by members, with in-platform applications and optional email alerts for new listings.',
+  },
+  {
+    title: 'Member rates on events',
+    body: 'Reduced ticket prices for club events, with registration and entry managed from your account.',
+  },
+  {
+    title: 'Digital membership card',
+    body: 'A personal card with your member ID, verifiable online, valid for the membership year.',
+  },
+]
+
+function HowItWorks() {
+  return (
+    <section className="py-20 sm:py-28 bg-white">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+        <Reveal>
+          <div className="mb-14 max-w-2xl">
+            <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">How it works</p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-4">
+              One-to-one guidance from people who have done it
+            </h2>
+            <div className="w-10 h-px bg-forest mb-6" />
+            <p className="text-ink-500 text-sm leading-relaxed">
+              Career Service connects students and young professionals with club alumni and members already working in finance.
+              Sessions are short and focused on a single objective, so you leave with concrete steps instead of general advice.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="grid md:grid-cols-3 gap-px bg-line border border-line">
+          {STEPS.map((step, i) => (
+            <Reveal key={step.title} delay={i * 80} direction="up" className="bg-white">
+              <div className="p-8 h-full">
+                <p className="font-serif text-5xl font-semibold text-forest/30 leading-none mb-6">0{i + 1}</p>
+                <h3 className="font-serif text-xl font-bold text-ink-900 mb-3">{step.title}</h3>
+                <p className="text-sm text-ink-500 leading-relaxed">{step.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={120}>
+          <div className="mt-12">
+            <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">Areas of support</p>
+            <ul className="flex flex-wrap gap-2">
+              {AREAS.map(area => (
+                <li key={area} className="px-4 py-1.5 text-xs font-medium tracking-wide border border-forest text-forest">
+                  {area}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
+function MemberSnapshot() {
+  return (
+    <section className="py-20 sm:py-28 bg-forest text-white">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+        <Reveal>
+          <div className="mb-14 max-w-2xl">
+            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Member access</p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">What members get</h2>
+            <div className="w-10 h-px bg-white/30 mb-6" />
+            <p className="text-white/70 text-sm leading-relaxed">
+              Career Service is one part of the club. Members also get access to the reserved area, where the following is available.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/20 border border-white/20">
+          {MEMBER_ACCESS.map((item, i) => (
+            <Reveal key={item.title} delay={i * 60} direction="up" className="bg-forest">
+              <div className="p-8 h-full">
+                <h3 className="font-serif text-lg font-bold text-white mb-3">{item.title}</h3>
+                <p className="text-sm text-white/70 leading-relaxed">{item.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={120}>
+          <div className="mt-12">
+            <Link
+              href="/join-us"
+              className="inline-block bg-white text-forest text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white/90 transition-colors duration-fast"
+            >
+              Join the Club
+            </Link>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
 
 export default function CareerServiceClient() {
   return (
@@ -35,7 +177,9 @@ export default function CareerServiceClient() {
         </div>
       </section>
 
+      <HowItWorks />
       <MentorSection />
+      <MemberSnapshot />
     </div>
   )
 }
