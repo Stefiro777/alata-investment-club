@@ -81,6 +81,15 @@ export type UpcomingEvent = {
   start_time?: string | null
   end_time?: string | null
   slug?: string | null
+  capacity?: number | null            // null = unlimited
+}
+
+// Result of the public RPC get_event_availability()
+export type EventAvailability = {
+  event_id: string
+  capacity: number | null
+  taken: number
+  sold_out: boolean
 }
 
 export type EventRegistration = {

@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent } from '@/lib/types'
 import EventRegistrationModal from './EventRegistrationModal'
+import EventWaitlistModal from './EventWaitlistModal'
+import { useEventAvailability } from './useEventAvailability'
 import { useCart } from '@/app/components/CartContext'
 
 function formatDate(dateStr: string) {
@@ -51,17 +53,21 @@ function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
 function UpcomingEventRow({
   event,
   isLast,
+  soldOut,
   onOpenModal,
+  onOpenWaitlist,
 }: {
   event: UpcomingEvent
   isLast: boolean
+  soldOut: boolean
   onOpenModal: (event: UpcomingEvent) => void
+  onOpenWaitlist: (event: UpcomingEvent) => void
 }) {
   const [added, setAdded] = useState(false)
   const { month, day } = formatDate(event.date)
   const { addItem } = useCart()
   const router = useRouter()
-  const hasTicket    = event.status === 'open' && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
+  const hasTicket    = event.status === 'open' && !soldOut && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
   const isPaidTicket = hasTicket && (event.ticket_price_cents ?? 0) > 0
   const isFreeTicket = hasTicket && event.ticket_price_cents === 0
 
@@ -124,6 +130,16 @@ function UpcomingEventRow({
                   ? 'Add ticket — Free'
                   : `Add ticket — ${fmtEur(event.ticket_price_cents ?? 0)}`}
             </button>
+          ) : soldOut ? (
+            <>
+              <span className={BADGE_CLASS}>Sold out</span>
+              <button
+                onClick={e => { e.stopPropagation(); onOpenWaitlist(event) }}
+                className="inline-block border border-white/60 text-white hover:bg-white hover:text-forest text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors"
+              >
+                Join waitlist
+              </button>
+            </>
           ) : event.status === 'open' ? (
             event.action_type === 'link' && event.action_link ? (
               <a href={event.action_link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className={BADGE_CLASS}>
@@ -151,7 +167,22 @@ export default function UpcomingEvents() {
   const [events, setEvents] = useState<UpcomingEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [modalEvent, setModalEvent] = useState<UpcomingEvent | null>(null)
-  const openModal = useCallback((ev: UpcomingEvent) => setModalEvent(ev), [])
+  const [waitlistEvent, setWaitlistEvent] = useState<UpcomingEvent | null>(null)
+  const availability = useEventAvailability()
+  const today = new Date().toISOString().split('T')[0]
+
+  // Sold out only matters for events that have not happened yet: past events
+  // keep showing "Completed" as before. Coming-soon events are not open for
+  // registration, so they keep their own badge.
+  const isSoldOut = useCallback(
+    (ev: UpcomingEvent) => !!availability[ev.id]?.sold_out && ev.date >= today && ev.status !== 'coming_soon',
+    [availability, today],
+  )
+
+  const openModal = useCallback(
+    (ev: UpcomingEvent) => (isSoldOut(ev) ? setWaitlistEvent(ev) : setModalEvent(ev)),
+    [isSoldOut],
+  )
 
   useEffect(() => {
     const supabase = createClient()
@@ -195,12 +226,22 @@ export default function UpcomingEvents() {
                 key={event.id}
                 event={event}
                 isLast={i === events.length - 1}
-                onOpenModal={setModalEvent}
+                soldOut={isSoldOut(event)}
+                onOpenModal={openModal}
+                onOpenWaitlist={setWaitlistEvent}
               />
             ))}
           </div>
         </div>
       </section>
+
+      {/* Waitlist modal (replaces the registration form for sold-out events) */}
+      {waitlistEvent && (
+        <EventWaitlistModal
+          event={{ id: waitlistEvent.id, title: waitlistEvent.title, date: waitlistEvent.date }}
+          onClose={() => setWaitlistEvent(null)}
+        />
+      )}
 
       {/* Registration modal */}
       {modalEvent && (

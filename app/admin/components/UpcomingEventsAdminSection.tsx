@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import EventWaitlistAdmin from './EventWaitlistAdmin'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
@@ -33,6 +34,7 @@ type FormState = {
   registration_field: 'motivation' | 'panelists' | null
   ticket_price_eur: string
   member_price_eur: string
+  capacity: string // empty = unlimited
   slug: string
 }
 
@@ -49,6 +51,7 @@ const EMPTY_FORM: FormState = {
   registration_field: null,
   ticket_price_eur: '',
   member_price_eur: '',
+  capacity: '',
   slug: '',
 }
 
@@ -66,6 +69,7 @@ function eventToForm(ev: UpcomingEvent): FormState {
     registration_field: ev.registration_field ?? null,
     ticket_price_eur: ev.ticket_price_cents != null ? (ev.ticket_price_cents / 100).toFixed(2) : '',
     member_price_eur: ev.member_price_cents != null ? (ev.member_price_cents / 100).toFixed(2) : '',
+    capacity: ev.capacity != null ? String(ev.capacity) : '',
     slug: ev.slug ?? '',
   }
 }
@@ -73,6 +77,7 @@ function eventToForm(ev: UpcomingEvent): FormState {
 function formToPayload(form: FormState) {
   const ticketCents = form.ticket_price_eur ? Math.round(parseFloat(form.ticket_price_eur) * 100) : null
   const memberCents = form.member_price_eur ? Math.round(parseFloat(form.member_price_eur) * 100) : null
+  const capacityNum = form.capacity.trim() ? Math.floor(Number(form.capacity)) : null
   return {
     title: form.title.trim(),
     date: form.date,
@@ -86,6 +91,7 @@ function formToPayload(form: FormState) {
     registration_field: form.registration_field,
     ticket_price_cents: ticketCents && ticketCents > 0 ? ticketCents : null,
     member_price_cents: memberCents && memberCents >= 0 ? memberCents : null,
+    capacity: capacityNum !== null && Number.isFinite(capacityNum) && capacityNum > 0 ? capacityNum : null,
     slug: form.slug.trim() || slugify(form.title) || `event-${Date.now().toString(36)}`,
   }
 }
@@ -540,6 +546,9 @@ function EventAccordion({
   onSendEmail,
   onSendQr,
   onCopyLink,
+  taken,
+  waitlistCount,
+  onShowWaitlist,
 }: {
   event: UpcomingEvent
   regCount: number
@@ -549,6 +558,10 @@ function EventAccordion({
   onSendEmail: () => void
   onSendQr: () => void
   onCopyLink: () => void
+  /** Seats taken now (registrations + active holds); null while loading. */
+  taken: number | null
+  waitlistCount: number
+  onShowWaitlist: () => void
 }) {
   const [form, setForm] = useState<FormState>(() => eventToForm(event))
   const [saving, setSaving] = useState(false)
@@ -633,6 +646,12 @@ function EventAccordion({
             </button>
           )
         )}
+        <button
+          onClick={onShowWaitlist}
+          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors"
+        >
+          Waitlist ({waitlistCount})
+        </button>
         <button
           onClick={handleCopyLink}
           className="border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors"
@@ -736,6 +755,16 @@ function EventAccordion({
         </div>
 
         <div className="sm:col-span-2">
+          <label className={labelClass}>Capienza (posti)</label>
+          <input type="number" min="1" step="1" value={form.capacity}
+            onChange={e => set('capacity', e.target.value)} placeholder="vuoto = illimitata" className={inputClass} />
+          <p className="text-[11px] text-ink-400 mt-1">
+            {taken === null ? '' : `Posti occupati ora: ${taken}${form.capacity ? ` / ${form.capacity}` : ''} (iscrizioni + checkout in corso). `}
+            Con la capienza raggiunta le iscrizioni si bloccano e l&apos;evento mostra &ldquo;Sold out&rdquo; con la waitlist; se aumenti la capienza o si libera un posto torna disponibile.
+          </p>
+        </div>
+
+        <div className="sm:col-span-2">
           <label className={labelClass}>Slug</label>
           <input value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="generato automaticamente dal titolo se vuoto" className={inputClass} />
           <p className="text-[11px] text-ink-400 mt-1">/events/{previewSlug}</p>
@@ -775,6 +804,25 @@ export default function UpcomingEventsAdminSection({
   const [completedOpen, setCompletedOpen] = useState(false)
   const [regCounts, setRegCounts] = useState<Record<string, number>>({})
   const [regIds, setRegIds] = useState<Record<string, string[]>>({})
+  const [takenByEvent, setTakenByEvent] = useState<Record<string, number>>({})
+  const [waitlistCounts, setWaitlistCounts] = useState<Record<string, number>>({})
+  const [waitlistModal, setWaitlistModal] = useState<UpcomingEvent | null>(null)
+
+  const loadSeatInfo = useCallback(async () => {
+    const supabase = createClient()
+    const [{ data: avail }, { data: wl }] = await Promise.all([
+      supabase.rpc('get_event_availability'),
+      supabase.from('event_waitlist').select('event_id').eq('status', 'waiting'),
+    ])
+    const taken: Record<string, number> = {}
+    for (const a of (avail ?? []) as { event_id: string; taken: number }[]) taken[a.event_id] = a.taken
+    setTakenByEvent(taken)
+    const counts: Record<string, number> = {}
+    for (const w of (wl ?? []) as { event_id: string }[]) counts[w.event_id] = (counts[w.event_id] ?? 0) + 1
+    setWaitlistCounts(counts)
+  }, [])
+
+  useEffect(() => { void loadSeatInfo() }, [loadSeatInfo])
 
   const today = new Date(new Date().toDateString())
   const activeEvents = events.filter(ev => new Date(ev.date) >= today)
@@ -894,6 +942,9 @@ export default function UpcomingEventsAdminSection({
               onSendEmail={() => openEmailCompose(ev)}
               onSendQr={() => sendQr(ev)}
               onCopyLink={() => copyLink(ev)}
+              taken={takenByEvent[ev.id] ?? null}
+              waitlistCount={waitlistCounts[ev.id] ?? 0}
+              onShowWaitlist={() => setWaitlistModal(ev)}
             />
           )}
         </div>
@@ -951,6 +1002,19 @@ export default function UpcomingEventsAdminSection({
           event={regsModal}
           onClose={() => setRegsModal(null)}
           onSendEmail={(count) => setEmailEventTarget({ event: regsModal, recipientCount: count })}
+        />
+      )}
+
+      {waitlistModal && (
+        <EventWaitlistAdmin
+          event={waitlistModal}
+          seatsLeft={
+            waitlistModal.capacity == null
+              ? null
+              : Math.max(0, waitlistModal.capacity - (takenByEvent[waitlistModal.id] ?? 0))
+          }
+          onClose={() => setWaitlistModal(null)}
+          onChanged={() => void loadSeatInfo()}
         />
       )}
 

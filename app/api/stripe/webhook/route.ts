@@ -5,6 +5,7 @@ import Stripe from 'stripe'
 import { getStripeBreakdown, recordStripeRevenue } from '@/lib/stripe-finance'
 import { PAYMENT_TX_COLUMNS, recordRefund, type PaymentTransaction } from '@/lib/refunds'
 import { computeMembershipExpiry, loadRenewalRule } from '@/lib/membership'
+import { releaseSessionReservations } from '@/lib/event-seats'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -806,6 +807,13 @@ export async function POST(req: NextRequest) {
     } catch (txErr) {
       console.error('Failed to record transaction for payment intent:', paymentIntent.id, txErr)
     }
+  }
+
+  // ── Seat holds: released when the session completes (the registrations were
+  // inserted above and count on their own) or expires without payment.
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.expired') {
+    const sessionObj = event.data.object as Stripe.Checkout.Session
+    await releaseSessionReservations(supabaseAdmin, sessionObj.id)
   }
 
   // ── Refunds (made from this app or from the Stripe dashboard) ────────────────

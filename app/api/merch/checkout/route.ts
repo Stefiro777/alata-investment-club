@@ -94,6 +94,13 @@ export async function POST(req: NextRequest) {
 
   const merchItems  = items.filter(i => i.type === 'product')
   const ticketItems = items.filter(i => i.type === 'event')
+
+  // Legacy route (the checkout now uses /api/checkout). It has no seat
+  // reservation, so it must not sell event tickets: that would bypass the
+  // event capacity.
+  if (ticketItems.length > 0) {
+    return NextResponse.json({ error: 'Event tickets are sold through /api/checkout' }, { status: 410 })
+  }
   const upsellItems = items.filter(i => i.type !== 'product' && i.type !== 'event')
   const main = merchItems[0] ?? items[0]  // fallback to first item if no merch
 

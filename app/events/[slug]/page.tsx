@@ -32,5 +32,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     .eq('event_id', event.id)
     .order('display_order', { ascending: true })
 
-  return <EventDetailClient event={event} images={images ?? []} />
+  // Sold out only matters for events that have not happened yet.
+  const today = new Date().toISOString().split('T')[0]
+  const { data: availability } = await supabase.rpc('get_event_availability')
+  const row = (availability as { event_id: string; sold_out: boolean }[] | null)?.find(a => a.event_id === event.id)
+  const soldOut = !!row?.sold_out && event.date >= today && event.status !== 'coming_soon'
+
+  return <EventDetailClient event={event} images={images ?? []} soldOut={soldOut} />
 }

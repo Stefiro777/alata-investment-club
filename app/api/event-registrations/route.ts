@@ -2,6 +2,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { requireTeamAccess } from '@/lib/auth'
+import { isEventFullError } from '@/lib/event-capacity'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -86,18 +87,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Questions for panelists is required' }, { status: 400 })
     }
 
-    const { error } = await supabase.from('event_registrations').insert({
-      event_id,
-      nome,
-      cognome,
-      email,
-      telefono: telefono ?? null,
-      anno_di_studio,
-      motivazione: motivazione ?? null,
-      questions_for_panelists: questions_for_panelists ?? null,
+    // Capacity check + insert in one transaction (row lock on the event), so two
+    // simultaneous sign-ups can never both take the last seat.
+    const { error } = await supabase.rpc('register_event_seats', {
+      p_event_id: event_id,
+      p_rows: [{
+        nome,
+        cognome,
+        email,
+        telefono: telefono ?? null,
+        anno_di_studio,
+        motivazione: motivazione ?? null,
+        questions_for_panelists: questions_for_panelists ?? null,
+      }],
     })
 
     if (error) {
+      if (isEventFullError(error)) {
+        return NextResponse.json({ error: 'This event is sold out.', code: 'event_full' }, { status: 409 })
+      }
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 

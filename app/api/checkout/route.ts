@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendOrderConfirmation, sendRegistrationConfirmation } from '@/lib/confirmation-emails'
+import { seatsByEvent } from '@/lib/event-capacity'
+import {
+  reserveSeats, releaseReservations, attachReservationsToSession, type SeatReservation,
+} from '@/lib/event-seats'
+
+// Stripe requires a Checkout Session to live at least 30 minutes; 32 leaves
+// margin for the round trip between the hold and the session creation.
+const SEAT_HOLD_MINUTES = 32
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const supabaseAdmin = createSupabaseAdmin(
@@ -139,8 +147,8 @@ export async function POST(req: NextRequest) {
 
   const [{ data: eventsData, error: eventsErr }, { data: productsData, error: productsErr }] = await Promise.all([
     ticketEventIds.length
-      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents').in('id', ticketEventIds)
-      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null }[], error: null }),
+      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents, capacity').in('id', ticketEventIds)
+      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null; capacity: number | null }[], error: null }),
     merchProductIds.length
       ? supabaseAdmin.from('products').select('id, price_cents').in('id', merchProductIds)
       : Promise.resolve({ data: [] as { id: string; price_cents: number }[], error: null }),
@@ -175,6 +183,29 @@ export async function POST(req: NextRequest) {
   // order records and confirmation emails) — the client only redirects.
   const itemsTotal = items_.reduce((sum, i) => sum + (i.priceCents * (i.quantity ?? 1)), 0)
   const grandTotal = itemsTotal + actualShippingCents - actualDiscountCents
+
+  // ── Seats: hold them atomically BEFORE anything is charged or inserted.
+  // Only events with a capacity need a hold. For a paid cart the hold lasts as
+  // long as the Checkout Session (SEAT_HOLD_MINUTES, Stripe's minimum is 30);
+  // for a free cart it only covers the inserts below.
+  const ticketLines = items_.filter(i => i.type === 'ticket')
+  const seatRequests = seatsByEvent(ticketLines, eventRegistrations)
+    .filter(r => eventMap.get(r.eventId)?.capacity != null)
+  let reservations: SeatReservation[] = []
+  if (seatRequests.length > 0) {
+    const reserved = await reserveSeats(supabaseAdmin, seatRequests, grandTotal === 0 ? 5 : SEAT_HOLD_MINUTES)
+    if (!reserved.ok) {
+      if (reserved.reason === 'event_full') {
+        const name = ticketLines.find(t => t.referenceId === reserved.eventId)?.name ?? 'This event'
+        return NextResponse.json({ error: `Sorry, "${name}" is sold out.`, code: 'event_full', eventId: reserved.eventId }, { status: 409 })
+      }
+      console.error('Seat reservation failed:', reserved.message)
+      return NextResponse.json({ error: 'Could not reserve your seats. Please try again.' }, { status: 500 })
+    }
+    reservations = reserved.reservations
+  }
+  const reservationIds = reservations.map(r => r.id)
+
   if (grandTotal === 0) {
     // 1. Event registrations
     if (eventRegistrations?.length) {
@@ -191,10 +222,14 @@ export async function POST(req: NextRequest) {
         })
         if (error) {
           console.error('Free order: registration insert failed:', error)
+          await releaseReservations(supabaseAdmin, reservationIds)
           return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
         }
       }
     }
+
+    // The registrations now count on their own: drop the temporary hold.
+    await releaseReservations(supabaseAdmin, reservationIds)
 
     // 2. Merch order records + CRM
     const freeMerch = items_.filter(i => i.type === 'merch' || !i.type)
@@ -356,12 +391,21 @@ export async function POST(req: NextRequest) {
     sessionParams.discounts = [{ coupon: couponId }]
   }
 
+  // The session expires exactly when the earliest seat hold does, so nobody can
+  // pay for a seat that is no longer held. (checkout.session.expired releases it.)
+  if (reservations.length > 0) {
+    const earliest = Math.min(...reservations.map(r => Date.parse(r.expiresAt)))
+    sessionParams.expires_at = Math.floor(earliest / 1000)
+  }
+
   // FIX 3 — wrap session creation in try/catch
   try {
     const session = await stripe.checkout.sessions.create(sessionParams)
+    await attachReservationsToSession(supabaseAdmin, reservationIds, session.id)
     return NextResponse.json({ url: session.url })
   } catch (err) {
     console.error('Stripe session creation failed:', err)
+    await releaseReservations(supabaseAdmin, reservationIds)
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
   }
 }
