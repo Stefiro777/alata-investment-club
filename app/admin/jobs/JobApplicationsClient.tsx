@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase'
 import type { JobApplication } from './page'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -278,9 +277,12 @@ export default function JobApplicationsClient({ applications: initial }: { appli
   })
 
   async function handleStatusChange(id: string, newStatus: string) {
-    const supabase = createClient()
-    const { error } = await supabase.from('job_applications').update({ status: newStatus }).eq('id', id)
-    if (!error) setApplications(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a))
+    const res = await fetch('/api/admin/update-job-application', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: newStatus }),
+    })
+    if (res.ok) setApplications(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a))
   }
 
   async function handleArchive(id: string) {
@@ -313,7 +315,7 @@ export default function JobApplicationsClient({ applications: initial }: { appli
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
       <SectionHeading
-        title="Candidature"
+        title="Job Offers"
         subtitle={`${active.length} candidatur${active.length === 1 ? 'a' : 'e'} attiv${active.length === 1 ? 'a' : 'e'}`}
       />
 

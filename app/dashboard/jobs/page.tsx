@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../DashboardProfileContext'
+import ReceivedApplications from './ReceivedApplications'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ type JobOffer = {
   created_at: string
   creator_name?: string | null
   apply_mode?: 'link' | 'form'
+  application_email?: string | null
 }
 
 type ModalState = {
@@ -54,12 +56,14 @@ function JobModal({
   mode,
   offer,
   userId,
+  userEmail,
   onClose,
   onSaved,
 }: {
   mode: 'add-official' | 'add-member' | 'edit'
   offer?: JobOffer
   userId: string
+  userEmail: string
   onClose: () => void
   onSaved: (job: JobOffer, isNew: boolean) => void
 }) {
@@ -68,6 +72,7 @@ function JobModal({
   const [link, setLink]           = useState(offer?.link ?? '')
   const [description, setDesc]    = useState(offer?.description ?? '')
   const [applyMode, setApplyMode] = useState<'link' | 'form'>(offer?.apply_mode ?? 'link')
+  const [applicationEmail, setApplicationEmail] = useState(offer?.application_email ?? userEmail)
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState<string | null>(null)
 
@@ -80,6 +85,10 @@ function JobModal({
     e.preventDefault()
     if (!title.trim() || !company.trim() || saving) return
     if (applyMode === 'link' && !link.trim()) return
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(applicationEmail.trim())) {
+      setError('Inserisci un\'email valida per le candidature.')
+      return
+    }
     setSaving(true); setError(null)
 
     const supabase = createClient()
@@ -93,10 +102,11 @@ function JobModal({
           link: link.trim(),
           description: description || null,
           apply_mode: applyMode,
+          application_email: applicationEmail.trim(),
         })
         .eq('id', offer.id)
       if (err) { setError(err.message); setSaving(false); return }
-      onSaved({ ...offer, title: title.trim(), company: company.trim(), link: link.trim(), description: description || null, apply_mode: applyMode }, false)
+      onSaved({ ...offer, title: title.trim(), company: company.trim(), link: link.trim(), description: description || null, apply_mode: applyMode, application_email: applicationEmail.trim() }, false)
     } else {
       const { data, error: err } = await supabase
         .from('job_offers')
@@ -108,8 +118,9 @@ function JobModal({
           type: jobType,
           created_by: userId,
           apply_mode: applyMode,
+          application_email: applicationEmail.trim(),
         })
-        .select('id, title, company, link, description, type, created_by, created_at, apply_mode')
+        .select('id, title, company, link, description, type, created_by, created_at, apply_mode, application_email')
         .single()
       if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return }
       const newJob = data as JobOffer
@@ -183,6 +194,17 @@ function JobModal({
               onChange={e => setLink(e.target.value)}
               placeholder="https://…"
               className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-forest text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email per le candidature *</label>
+            <input
+              required
+              type="email"
+              value={applicationEmail}
+              onChange={e => setApplicationEmail(e.target.value)}
+              placeholder="nome@esempio.it"
+              className="w-full px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-forest text-sm" />
+            <p className="text-xs text-gray-400 mt-1">Qui arriva una notifica a ogni nuova candidatura ricevuta tramite il form interno.</p>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Descrizione</label>
@@ -262,7 +284,11 @@ export function JobApplicationModal({
     const cvUrl = publicData?.publicUrl
 
     // Insert application
+    // The id is generated here: the applicant has no SELECT policy on
+    // job_applications, so .select() after the insert cannot return it.
+    const applicationId = crypto.randomUUID()
     const { error: insertErr } = await supabase.from('job_applications').insert({
+      id: applicationId,
       job_offer_id: job.id,
       job_title: job.title,
       first_name: firstName.trim(),
@@ -280,6 +306,13 @@ export function JobApplicationModal({
       setSubmitting(false)
       return
     }
+
+    // Fire-and-forget: notifies the offer's application email (server-side).
+    fetch('/api/jobs/applications/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ applicationId }),
+    }).catch(() => {})
 
     setSuccess(true)
     setSubmitting(false)
@@ -610,9 +643,9 @@ export default function JobsPage() {
     setUserId(user.id)
 
     const [{ data: official }, { data: member }, { data: sub }] = await Promise.all([
-      supabase.from('job_offers').select('id, title, company, link, description, type, created_by, created_at, apply_mode')
+      supabase.from('job_offers').select('id, title, company, link, description, type, created_by, created_at, apply_mode, application_email')
         .eq('type', 'official').order('created_at', { ascending: false }),
-      supabase.from('job_offers').select('id, title, company, link, description, type, created_by, created_at, apply_mode')
+      supabase.from('job_offers').select('id, title, company, link, description, type, created_by, created_at, apply_mode, application_email')
         .eq('type', 'member').order('created_at', { ascending: false }),
       supabase.from('job_offer_subscriptions').select('id, subscribed').eq('user_id', user.id).maybeSingle(),
     ])
@@ -705,6 +738,9 @@ export default function JobsPage() {
         </div>
       </div>
 
+      {/* ── Candidature ricevute (solo per chi gestisce almeno un'offerta) ── */}
+      <ReceivedApplications />
+
       {/* ── Offerte ufficiali ── */}
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
@@ -790,6 +826,7 @@ export default function JobsPage() {
           mode={modal.mode}
           offer={modal.offer}
           userId={userId}
+          userEmail={profile?.email ?? ''}
           onClose={() => setModal(null)}
           onSaved={handleJobSaved}
         />

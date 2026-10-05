@@ -7,7 +7,7 @@ const NAV = [
   { label: 'Resources',   href: '/admin/dashboard'   },
   { label: 'People',      href: '/admin/people'      },
   { label: 'Archive',     href: '/admin/archive'     },
-  { label: 'Candidature', href: '/admin/jobs'        },
+  { label: 'Job Offers',  href: '/admin/jobs'        },
   { label: 'Finance',     href: '/admin/finance'     },
   { label: 'CRM',         href: '/admin/crm'         },
   { label: 'Analytics',   href: '/admin/analytics'   },
