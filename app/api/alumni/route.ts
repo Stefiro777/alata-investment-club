@@ -18,11 +18,24 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceClient()
+
+    // The column defaults to 0, so without an explicit value every new alumnus
+    // would tie with the others at 0 and jump to the top of the public list.
+    // Append at the end instead.
+    const { data: last } = await supabase
+      .from('alumni')
+      .select('order_index')
+      .order('order_index', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle()
+    const nextOrder = (last?.order_index ?? -1) + 1
+
     const { data, error } = await supabase
       .from('alumni')
       .insert({
         name,
         role,
+        order_index: nextOrder,
         graduation_year: body.graduation_year ? String(body.graduation_year).trim() || null : null,
         linkedin_url: body.linkedin_url ? String(body.linkedin_url).trim() || null : null,
         current_company: body.current_company ? String(body.current_company).trim() || null : null,

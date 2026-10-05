@@ -37,7 +37,10 @@ export default async function AlumniPage() {
     supabase
       .from('alumni')
       .select('id, name, role, graduation_year, linkedin_url, current_company, industry, photo_url, order_index')
-      .order('created_at', { ascending: false }),
+      // Same ordering as the admin list (order_index, then created_at) so both
+      // views agree even when two rows share an order_index.
+      .order('order_index', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
     supabase
       .from('alumni_companies')
       .select('id, name, logo_url, website_url')
