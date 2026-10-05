@@ -1,6 +1,8 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { getSessionMember, PRIVILEGED_ROLES } from '@/lib/auth'
+import { createClient } from '@/lib/supabase-server'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -118,7 +120,17 @@ function buildJobEmail({
 </html>`
 }
 
+// Only a freshly created offer can be announced, and only once.
+const NOTIFY_WINDOW_MS = 15 * 60 * 1000
+const SUPERADMIN_EMAIL = 'finullistefano@gmail.com'
+
 export async function POST(req: NextRequest) {
+  // Session required: this endpoint mails every subscriber, so it must not be
+  // callable anonymously.
+  const authClient = await createClient()
+  const { data: { user } } = await authClient.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   let jobId: string
   try {
     const body = await req.json()
@@ -133,12 +145,35 @@ export async function POST(req: NextRequest) {
   // 1. Fetch job offer
   const { data: job, error: jobErr } = await supabase
     .from('job_offers')
-    .select('id, title, company, link, description')
+    .select('id, title, company, link, description, created_by, created_at')
     .eq('id', jobId)
     .single()
 
   if (jobErr || !job) {
     return NextResponse.json({ error: 'Job not found' }, { status: 404 })
+  }
+
+  // Only the offer's creator, bod/director or the superadmin.
+  const member = await getSessionMember()
+  const allowed =
+    user.email === SUPERADMIN_EMAIL ||
+    job.created_by === user.id ||
+    (!!member && (PRIVILEGED_ROLES as readonly string[]).includes(member.role))
+  if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  if (Date.now() - new Date(job.created_at).getTime() > NOTIFY_WINDOW_MS) {
+    return NextResponse.json({ error: 'Offer too old to announce' }, { status: 410 })
+  }
+
+  // Claim the one-time announcement atomically (job_offers.notified_at).
+  const { data: claimed } = await supabase
+    .from('job_offers')
+    .update({ notified_at: new Date().toISOString() })
+    .eq('id', job.id)
+    .is('notified_at', null)
+    .select('id')
+  if (!claimed || claimed.length === 0) {
+    return NextResponse.json({ sent: 0, reason: 'already_notified' })
   }
 
   // 2. Fetch all subscribers
