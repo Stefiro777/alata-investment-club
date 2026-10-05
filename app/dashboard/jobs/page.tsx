@@ -443,8 +443,9 @@ function OfficialJobCard({
             </span>
           </div>
           {canManage && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-forest transition-colors">
+            // gap-2 (was gap-1) so the enlarged 44px buttons keep >=8px real clearance
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button onClick={onEdit} className="p-3.5 text-gray-400 hover:text-forest transition-colors">
                 <PencilIcon />
               </button>
               {confirmDelete ? (
@@ -459,7 +460,7 @@ function OfficialJobCard({
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setConfirmDelete(true)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                <button onClick={() => setConfirmDelete(true)} className="p-3.5 text-gray-400 hover:text-red-500 transition-colors">
                   <TrashIcon />
                 </button>
               )}
@@ -473,7 +474,7 @@ function OfficialJobCard({
             </p>
             <button
               onClick={() => setCollapsed(c => !c)}
-              className="mt-1 text-xs text-forest hover:underline underline-offset-2"
+              className="mt-1 text-xs text-forest hover:underline underline-offset-2 py-3.5"
             >
               {collapsed ? 'Leggi di più ↓' : 'Chiudi ↑'}
             </button>
@@ -551,7 +552,7 @@ function MemberJobCard({
                 </button>
               </div>
             ) : (
-              <button onClick={() => setConfirmDelete(true)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+              <button onClick={() => setConfirmDelete(true)} className="p-3.5 text-gray-400 hover:text-red-500 transition-colors">
                 <TrashIcon />
               </button>
             )}
@@ -565,7 +566,7 @@ function MemberJobCard({
           </p>
           <button
             onClick={() => setCollapsed(c => !c)}
-            className="mt-1 text-xs text-forest hover:underline underline-offset-2"
+            className="mt-1 text-xs text-forest hover:underline underline-offset-2 py-3.5"
           >
             {collapsed ? 'Leggi di più ↓' : 'Chiudi ↑'}
           </button>
@@ -680,9 +681,11 @@ export default function JobsPage() {
           <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 mb-3">Job Offers</h1>
           <div className="w-8 h-px bg-forest" />
         </div>
-        {/* Subscription toggle */}
-        <div className="flex items-center gap-3 flex-shrink-0 pt-1">
-          <span className="text-sm text-gray-500">Ricevi notifiche per nuove offerte</span>
+        {/* Subscription toggle — no longer flex-shrink-0: min-w-0 lets the text
+            wrap onto a second line under space pressure instead of the whole
+            row (text + switch) refusing to shrink and overflowing the page. */}
+        <div className="flex items-center gap-3 min-w-0 pt-1">
+          <span className="text-sm text-gray-500 min-w-0">Ricevi notifiche per nuove offerte</span>
           <button
             onClick={handleToggleSubscription}
             disabled={togglingSubscription}
