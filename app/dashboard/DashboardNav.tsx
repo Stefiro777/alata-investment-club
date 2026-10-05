@@ -47,7 +47,6 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
   }, [mobileOpen])
 
   const isBoD = profile.role === 'bod' || profile.role === 'director' || profile.email === 'finullistefano@gmail.com'
-  const canScan = isBoD || (profile.teams ?? []).some(t => t === 'events' || t === 'media')
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -145,11 +144,6 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
             Resources
           </Link>
 
-          {canScan && (
-            <Link href="/dashboard/scanner" className={`${linkClass('/dashboard/scanner')} whitespace-nowrap flex-shrink-0`}>
-              Scanner
-            </Link>
-          )}
         </div>
 
         {/* User + logout — unchanged, hidden on mobile (moved into the drawer there) */}
@@ -259,12 +253,6 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
             <Link href="/dashboard/resources" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard/resources')}>
               Resources
             </Link>
-
-            {canScan && (
-              <Link href="/dashboard/scanner" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard/scanner')}>
-                Scanner
-              </Link>
-            )}
 
             {isBoD && (
               <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/admin')}>
