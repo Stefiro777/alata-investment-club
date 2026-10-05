@@ -127,10 +127,10 @@ export default function AboutHero() {
                 Join the Club
               </Link>
               <Link
-                href="/reports"
+                href="/career-service"
                 className="inline-block border border-white/40 text-white text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white hover:text-forest hover:border-white transition-colors duration-base"
               >
-                Our Research
+                Career Service
               </Link>
             </HeroBeat>
           </div>
