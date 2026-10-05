@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import Stripe from 'stripe'
 import { getStripeBreakdown, recordStripeRevenue } from '@/lib/stripe-finance'
+import { PAYMENT_TX_COLUMNS, recordRefund, type PaymentTransaction } from '@/lib/refunds'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -216,6 +217,8 @@ export async function POST(req: NextRequest) {
               anno_di_studio:         'N/A',
               motivazione:            'Paid ticket via checkout',
               questions_for_panelists: null,
+              stripe_session_id:      session.id,
+              status:                 'paid',
             })
           ))
         }
@@ -338,6 +341,8 @@ export async function POST(req: NextRequest) {
               anno_di_studio:          r.annoStudio,
               motivazione:             r.motivation             ?? null,
               questions_for_panelists: r.questionsForPanelists ?? null,
+              stripe_session_id:       session.id,
+              status:                  'paid',
             })
           ))
         } catch (e) { console.error('Failed to register event attendees (unified):', e) }
@@ -354,6 +359,8 @@ export async function POST(req: NextRequest) {
               anno_di_studio:         'N/A',
               motivazione:            'Paid ticket via checkout',
               questions_for_panelists: null,
+              stripe_session_id:      session.id,
+              status:                 'paid',
             })
           ))
         } catch (e) { console.error('Failed to register tickets (unified):', e) }
@@ -798,6 +805,58 @@ export async function POST(req: NextRequest) {
       }
     } catch (txErr) {
       console.error('Failed to record transaction for payment intent:', paymentIntent.id, txErr)
+    }
+  }
+
+  // ── Refunds (made from this app or from the Stripe dashboard) ────────────────
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge
+    const piId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id
+
+    try {
+      if (!piId) return NextResponse.json({ received: true })
+
+      const { data: tx } = await supabaseAdmin
+        .from('transactions')
+        .select(`type, ${PAYMENT_TX_COLUMNS}`)
+        .eq('stripe_payment_intent_id', piId)
+        .is('stripe_refund_id', null)
+        .maybeSingle()
+      if (!tx) {
+        console.warn('charge.refunded for a payment with no transaction on record:', piId)
+        return NextResponse.json({ received: true })
+      }
+      const payment = tx as unknown as PaymentTransaction
+
+      const fully = charge.amount_refunded >= charge.amount
+      const refunds = await stripe.refunds.list({ charge: charge.id, limit: 100 })
+
+      for (const refund of refunds.data) {
+        if (refund.status === 'failed' || refund.status === 'canceled') continue
+        // Already recorded (e.g. created from the app) -> false, nothing to do.
+        const recorded = await recordRefund(supabaseAdmin, { tx: payment, refund, fullyRefunded: fully })
+
+        // Membership refunds made on the Stripe dashboard: only the negative
+        // transaction is recorded (recordRefund never touches club_members);
+        // flag it so somebody checks the member's access by hand.
+        if (recorded && payment.source_type === 'membership') {
+          try {
+            await resend.emails.send({
+              from: 'Alata Investment Club <noreply@alatainvestmentclub.com>',
+              to: 'info@alatainvestmentclub.com',
+              subject: 'Rimborso membership registrato da Stripe: verifica necessaria',
+              html: `<p>È stato effettuato dalla dashboard Stripe un rimborso di €${(refund.amount / 100).toFixed(2)} su un pagamento di membership.</p>
+<p><strong>${payment.description.replace(/</g, '&lt;')}</strong><br/>PaymentIntent: ${piId}<br/>Rimborso: ${refund.id}</p>
+<p>È stata registrata solo la transazione negativa. La scadenza della membership (membership_expires_at) <strong>non</strong> è stata modificata: se l'accesso va revocato, farlo manualmente da /admin/membership.</p>`,
+            })
+          } catch (mailErr) { console.error('Failed to send membership refund alert:', mailErr) }
+          console.warn('MEMBERSHIP REFUND from Stripe dashboard, expiry NOT changed:', piId, refund.id)
+        }
+      }
+    } catch (e) {
+      console.error('Failed to process charge.refunded:', charge.id, e)
+      // 500 so Stripe retries; recordRefund is idempotent per refund id.
+      return NextResponse.json({ error: 'refund processing failed' }, { status: 500 })
     }
   }
 

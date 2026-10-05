@@ -18,6 +18,10 @@ type Transaction = {
   // Stripe payments: amount is NET (gross - fee); gross/fee are stored separately.
   gross_amount?: number | null
   stripe_fee?: number | null
+  stripe_payment_intent_id?: string | null
+  stripe_refund_id?: string | null
+  refund_of?: string | null
+  source_type?: 'membership' | 'event' | 'merch' | 'career' | null
 }
 
 type BudgetCategory = {
@@ -413,6 +417,43 @@ export default function TransactionManager() {
   const [modalData, setModalData] = useState<(typeof EMPTY_FORM & { id?: string }) | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [refundTx, setRefundTx] = useState<Transaction | null>(null)
+  const [refunding, setRefunding] = useState(false)
+  const [refundError, setRefundError] = useState<string | null>(null)
+
+  // Ids of payments that already have a refund row. Membership payments are
+  // never refundable from here (the button is not rendered for them).
+  const refundedIds = new Set(transactions.map(t => t.refund_of).filter(Boolean) as string[])
+  const canRefund = (t: Transaction) =>
+    t.type === 'revenue' &&
+    !!t.stripe_payment_intent_id &&
+    !t.stripe_refund_id &&
+    (t.source_type === 'event' || t.source_type === 'merch' || t.source_type === 'career') &&
+    !refundedIds.has(t.id)
+
+  async function handleRefund() {
+    if (!refundTx) return
+    setRefunding(true)
+    setRefundError(null)
+    const res = await fetch('/api/finance/refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transactionId: refundTx.id, confirm: true }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setRefundError(json.error ?? 'Rimborso non riuscito')
+      setRefunding(false)
+      return
+    }
+    // Reload: the refund adds a new row and flips the payment to "rimborsata".
+    const supabase = createClient()
+    const { data: txs } = await supabase
+      .from('transactions').select('*').order('date', { ascending: false }).order('created_at', { ascending: false })
+    setTransactions((txs ?? []) as Transaction[])
+    setRefundTx(null)
+    setRefunding(false)
+  }
 
   useEffect(() => {
     const supabase = createClient()
@@ -633,6 +674,20 @@ export default function TransactionManager() {
                           </svg>
                         </a>
                       )}
+                      {refundedIds.has(tx.id) && (
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-orange-700 border border-orange-300 px-1.5 py-0.5">
+                          rimborsata
+                        </span>
+                      )}
+                      {canRefund(tx) && (
+                        <button
+                          onClick={() => { setRefundError(null); setRefundTx(tx) }}
+                          className="text-[10px] font-semibold uppercase tracking-widest text-ink-500 border border-[#d1d5db] hover:border-orange-500 hover:text-orange-700 px-2 py-1 transition-colors"
+                          title="Rimborsa su Stripe"
+                        >
+                          Rimborsa
+                        </button>
+                      )}
                       <button
                         onClick={() => openEdit(tx)}
                         className="p-1.5 text-ink-400 hover:text-forest transition-colors"
@@ -680,6 +735,48 @@ export default function TransactionManager() {
           onSave={handleSaved}
           onClose={() => setModalData(null)}
         />
+      )}
+
+      {refundTx && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={e => { if (e.target === e.currentTarget && !refunding) setRefundTx(null) }}
+        >
+          <div className="bg-white w-full max-w-md shadow-2xl p-7">
+            <h3 className="font-serif text-xl font-bold text-ink-900 mb-3">Rimborsare questo pagamento?</h3>
+            <p className="text-sm text-ink-700 mb-1">{refundTx.description}</p>
+            <p className="text-sm text-ink-500 mb-4">
+              Verrà rimborsato al cliente l&apos;importo lordo di{' '}
+              <span className="font-semibold text-ink-900">
+                {fmtAmt(Number(refundTx.gross_amount ?? refundTx.amount))}
+              </span>{' '}
+              su Stripe.
+              {refundTx.source_type === 'event' && ' L’iscrizione all’evento verrà segnata come rimborsata e il posto tornerà disponibile.'}
+              {refundTx.source_type === 'merch' && ' L’ordine merch verrà segnato come rimborsato.'}
+              {refundTx.source_type === 'career' && ' La prenotazione verrà annullata e lo slot tornerà libero.'}
+            </p>
+            <p className="text-xs text-ink-500 mb-5">
+              Le commissioni Stripe non vengono restituite: a bilancio resta una perdita pari alla fee. L&apos;operazione non è reversibile.
+            </p>
+            {refundError && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1 mb-4">{refundError}</p>}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setRefundTx(null)}
+                disabled={refunding}
+                className="border border-[#d1d5db] px-5 py-2 text-sm text-ink-600 hover:border-ink-400 disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleRefund}
+                disabled={refunding}
+                className="bg-orange-700 hover:bg-orange-800 text-white text-sm font-medium px-5 py-2 transition-colors disabled:opacity-50"
+              >
+                {refunding ? 'Rimborso in corso…' : 'Conferma rimborso'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {deleteId && (
