@@ -10,7 +10,7 @@ const TEAM_ITEMS = [
   { label: 'Events',        slug: 'events' },
   { label: 'Media',         slug: 'media' },
   { label: 'Career',        slug: 'career' },
-  { label: 'Lab & Research', slug: 'lab' },
+  { label: 'Lab', slug: 'lab' },
 ]
 
 export default function DashboardNav({ profile }: { profile: MemberProfile }) {

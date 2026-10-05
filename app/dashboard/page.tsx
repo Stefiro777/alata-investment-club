@@ -31,7 +31,7 @@ const TEAM_NAMES: Record<string, string> = {
   career:  'Career',
   academy: 'Academy',
   syrto:   'Syrto',
-  lab:     'Lab & Research',
+  lab:     'Lab',
   alumni:  'Alumni',
 }
 

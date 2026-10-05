@@ -81,7 +81,7 @@ const TEAM_NAMES: Record<string, string> = {
   education: 'Education',
   academy: 'Academy',
   syrto: 'Syrto',
-  lab: 'Lab & Research',
+  lab: 'Lab',
   alumni: 'Alumni',
 }
 

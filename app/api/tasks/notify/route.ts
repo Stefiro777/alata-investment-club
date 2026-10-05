@@ -29,7 +29,7 @@ function teamLabel(t: string | null): string {
   if (!t) return '—'
   const map: Record<string, string> = {
     events: 'Events', media: 'Media', career: 'Career',
-    academy: 'Academy', syrto: 'Syrto', lab: 'Lab & Research', alumni: 'Alumni',
+    academy: 'Academy', syrto: 'Syrto', lab: 'Lab', alumni: 'Alumni',
   }
   return map[t] ?? t
 }
