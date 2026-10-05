@@ -13,9 +13,14 @@ interface MembershipCardProps {
 
 const MONTHS_UP = ['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT','NOV','DIC']
 
+// Expiry is 31/12 23:59:59 Europe/Rome: format in that zone so the card never
+// shows 1 January to a viewer in a timezone east of Rome.
 function fmtDate(iso: string) {
-  const d = new Date(iso)
-  return `${d.getDate()} ${MONTHS_UP[d.getMonth()]} ${d.getFullYear()}`
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Rome', day: 'numeric', month: 'numeric', year: 'numeric',
+  }).formatToParts(new Date(iso))
+  const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value ?? '0', 10)
+  return `${get('day')} ${MONTHS_UP[get('month') - 1]} ${get('year')}`
 }
 
 export default function MembershipCard({ name, role, memberId, memberSince, expiresAt }: MembershipCardProps) {

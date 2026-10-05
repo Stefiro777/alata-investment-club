@@ -15,6 +15,7 @@ function supabase() {
 
 function buildReminderEmail(name: string, expiresAt: string): string {
   const formatted = new Date(expiresAt).toLocaleDateString('it-IT', {
+    timeZone: 'Europe/Rome',
     day: '2-digit', month: 'long', year: 'numeric',
   })
   return `<!DOCTYPE html>
@@ -31,7 +32,7 @@ function buildReminderEmail(name: string, expiresAt: string): string {
               Alata Investment Club
             </p>
             <h1 style="margin:0;font-size:20px;color:#ffffff;font-weight:700;letter-spacing:-0.3px;">
-              La tua membership scade tra 7 giorni
+              La tua membership sta per scadere
             </h1>
           </td>
         </tr>
@@ -68,6 +69,17 @@ function buildReminderEmail(name: string, expiresAt: string): string {
 </html>`
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000
+const REMINDER_WINDOW_DAYS = 31 // reminders start 31 days before the expiry (1 December for 31/12)
+const REMINDER_SPREAD_DAYS = 24 // ...and are spread over the first 24 of those days (1-24 December)
+
+/** Small stable hash of a member id, used to spread reminders over days. */
+function hashId(id: string): number {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return h
+}
+
 export async function GET(req: NextRequest) {
   const auth   = req.headers.get('authorization') ?? ''
   const secret = process.env.CRON_SECRET
@@ -77,31 +89,49 @@ export async function GET(req: NextRequest) {
 
   const db = supabase()
 
-  // Members expiring within the next 7 days
+  // Everybody's membership now expires on the same day (31/12), so a single
+  // "7 days before" reminder would mail every member at once. Instead each
+  // member gets ONE reminder on a day spread over the first REMINDER_SPREAD_DAYS
+  // days of the REMINDER_WINDOW_DAYS before their expiry (i.e. from 1 December),
+  // picked deterministically from the member id.
+  const now = Date.now()
   const { data: members, error } = await db
     .from('club_members')
-    .select('id, full_name, email, membership_expires_at')
-    .gte('membership_expires_at', new Date().toISOString())
-    .lte('membership_expires_at', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
+    .select('id, full_name, email, membership_expires_at, membership_reminder_sent_for')
+    .gte('membership_expires_at', new Date(now).toISOString())
+    .lte('membership_expires_at', new Date(now + REMINDER_WINDOW_DAYS * DAY_MS).toISOString())
     .not('email', 'is', null)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  const due = (members ?? []).filter(m => {
+    if (!m.email || !m.membership_expires_at) return false
+    // Already reminded for this very expiry date.
+    if (m.membership_reminder_sent_for &&
+        new Date(m.membership_reminder_sent_for).getTime() === new Date(m.membership_expires_at).getTime()) return false
+    const windowStart = new Date(m.membership_expires_at).getTime() - REMINDER_WINDOW_DAYS * DAY_MS
+    const scheduledAt = windowStart + (hashId(m.id) % REMINDER_SPREAD_DAYS) * DAY_MS
+    return now >= scheduledAt
+  })
+
   let sent = 0
-  for (const m of (members ?? [])) {
-    if (!m.email || !m.membership_expires_at) continue
+  for (const m of due) {
     try {
       await resend.emails.send({
         from:    FROM,
-        to:      m.email,
-        subject: 'La tua membership Alata scade tra 7 giorni',
-        html:    buildReminderEmail(m.full_name ?? 'Membro', m.membership_expires_at),
+        to:      m.email!,
+        subject: 'La tua membership Alata sta per scadere',
+        html:    buildReminderEmail(m.full_name ?? 'Membro', m.membership_expires_at!),
       })
+      await db.from('club_members')
+        .update({ membership_reminder_sent_for: m.membership_expires_at })
+        .eq('id', m.id)
       sent++
     } catch (err) {
       console.error('membership-reminder send error:', m.email, err)
     }
+    await new Promise(resolve => setTimeout(resolve, 600)) // stay under Resend's rate limit
   }
 
-  return NextResponse.json({ sent, total: (members ?? []).length })
+  return NextResponse.json({ sent, due: due.length, inWindow: (members ?? []).length })
 }

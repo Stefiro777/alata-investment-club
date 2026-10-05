@@ -37,6 +37,21 @@ export async function PATCH(req: NextRequest) {
   if (stripe_price_id !== undefined) payload.stripe_price_id = stripe_price_id
   if (description !== undefined) payload.description = description
 
+  // Renewal cutoff (fees paid from this day cover the following year too).
+  const { renewal_cutoff_month, renewal_cutoff_day } = body
+  if (renewal_cutoff_month !== undefined) {
+    if (!Number.isInteger(renewal_cutoff_month) || renewal_cutoff_month < 1 || renewal_cutoff_month > 12) {
+      return NextResponse.json({ error: 'renewal_cutoff_month must be 1-12' }, { status: 400 })
+    }
+    payload.renewal_cutoff_month = renewal_cutoff_month
+  }
+  if (renewal_cutoff_day !== undefined) {
+    if (!Number.isInteger(renewal_cutoff_day) || renewal_cutoff_day < 1 || renewal_cutoff_day > 31) {
+      return NextResponse.json({ error: 'renewal_cutoff_day must be 1-31' }, { status: 400 })
+    }
+    payload.renewal_cutoff_day = renewal_cutoff_day
+  }
+
   if (existing?.id) {
     const { data, error } = await supabaseAdmin
       .from('membership_settings')

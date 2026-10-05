@@ -4,6 +4,7 @@ import { Resend } from 'resend'
 import Stripe from 'stripe'
 import { getStripeBreakdown, recordStripeRevenue } from '@/lib/stripe-finance'
 import { PAYMENT_TX_COLUMNS, recordRefund, type PaymentTransaction } from '@/lib/refunds'
+import { computeMembershipExpiry, loadRenewalRule } from '@/lib/membership'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -501,9 +502,9 @@ export async function POST(req: NextRequest) {
       const email    = session.metadata.email ?? ''
       const name     = session.metadata.name ?? ''
 
-      // Extend membership by 1 year from today
-      const expiresAt = new Date()
-      expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+      // Fees expire on 31/12 (Europe/Rome); paying from the cutoff (default 1 Oct)
+      // covers the following year too — see lib/membership.ts.
+      const expiresAt = computeMembershipExpiry(new Date(), await loadRenewalRule(supabaseAdmin))
 
       await supabaseAdmin
         .from('club_members')
@@ -542,8 +543,7 @@ export async function POST(req: NextRequest) {
     if (paymentIntent.metadata?.type === 'membership') {
       const userEmail  = paymentIntent.metadata.user_email ?? ''
       const memberName = paymentIntent.metadata.name ?? userEmail
-      const expiresAt  = new Date()
-      expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+      const expiresAt  = computeMembershipExpiry(new Date(), await loadRenewalRule(supabaseAdmin))
 
       // Fetch member_id for the email
       const { data: memberRow } = await supabaseAdmin

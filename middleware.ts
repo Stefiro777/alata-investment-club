@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
+import { MEMBERSHIP_GRACE_DAYS } from '@/lib/membership'
 
 const MEMBERSHIP_EXEMPT_EMAIL = 'finullistefano@gmail.com'
 
@@ -81,8 +82,11 @@ export async function middleware(request: NextRequest) {
             url.searchParams.set('new', 'true')
             return NextResponse.redirect(url)
           }
-          if (new Date(member.membership_expires_at) < new Date()) {
-            // Expired
+          // Grace period: the dashboard stays reachable for MEMBERSHIP_GRACE_DAYS
+          // after the expiry (31/12), to let members renew without being locked out.
+          const graceEndsAt = new Date(member.membership_expires_at).getTime() + MEMBERSHIP_GRACE_DAYS * 86_400_000
+          if (graceEndsAt < Date.now()) {
+            // Expired beyond the grace period
             const url = new URL('/dashboard', request.url)
             url.searchParams.set('membership', 'expired')
             return NextResponse.redirect(url)

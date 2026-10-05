@@ -1,5 +1,6 @@
 'use client'
 
+import { computeMembershipExpiry, renewalRuleFromSettings, MEMBERSHIP_TIMEZONE } from '@/lib/membership'
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -15,7 +16,12 @@ import {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
-type Settings   = { price_cents: number; description: string | null }
+type Settings   = {
+  price_cents: number
+  description: string | null
+  renewal_cutoff_month?: number | null
+  renewal_cutoff_day?: number | null
+}
 type MemberData = { full_name: string; email: string; membership_expires_at: string | null }
 type View = 'main' | 'summary' | 'payment' | 'success'
 
@@ -25,10 +31,10 @@ function formatDate(iso: string): string {
 function formatEuros(cents: number): string {
   return `€${(cents / 100).toFixed(2).replace('.', ',')}`
 }
-function nextYearDate(): string {
-  const d = new Date()
-  d.setFullYear(d.getFullYear() + 1)
-  return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
+// Fees expire on 31/12 (Europe/Rome); see lib/membership.ts for the cutoff rule.
+function coverageEndDate(settings: Settings | null): string {
+  const end = computeMembershipExpiry(new Date(), renewalRuleFromSettings(settings))
+  return end.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric', timeZone: MEMBERSHIP_TIMEZONE })
 }
 
 // ── Stripe Elements payment form ──────────────────────────────────────────────
@@ -315,7 +321,7 @@ export default function MembershipPage() {
           <h1 className="font-serif text-3xl font-bold text-gray-900 mb-3">Pagamento completato</h1>
           <div className="w-8 h-px bg-forest mb-5" />
           <p className="text-sm text-gray-600 mb-2">La tua membership è stata rinnovata con successo.</p>
-          <p className="text-sm font-semibold text-forest mb-8">Valida fino al {nextYearDate()}</p>
+          <p className="text-sm font-semibold text-forest mb-8">Valida fino al {coverageEndDate(settings)}</p>
           <button
             onClick={() => router.push('/dashboard')}
             className="bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest px-8 py-4 transition-colors"
@@ -384,7 +390,7 @@ export default function MembershipPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Periodo</span>
-              <span className="font-semibold text-gray-900">Valida fino al {nextYearDate()}</span>
+              <span className="font-semibold text-gray-900">Valida fino al {coverageEndDate(settings)}</span>
             </div>
             {member && (
               <div className="flex justify-between">
