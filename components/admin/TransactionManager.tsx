@@ -15,6 +15,9 @@ type Transaction = {
   note: string | null
   receipt_url: string | null
   created_at: string
+  // Stripe payments: amount is NET (gross - fee); gross/fee are stored separately.
+  gross_amount?: number | null
+  stripe_fee?: number | null
 }
 
 type BudgetCategory = {
@@ -609,6 +612,11 @@ export default function TransactionManager() {
                     tx.type === 'revenue' ? 'text-green-700' : tx.type === 'rimborso' ? 'text-orange-700' : 'text-red-700'
                   }`}>
                     {tx.type === 'revenue' ? '+' : '-'}{fmtAmt(tx.amount)}
+                    {tx.gross_amount != null && (
+                      <span className="block text-[10px] font-normal text-ink-400">
+                        lordo {fmtAmt(Number(tx.gross_amount))}{tx.stripe_fee != null ? ` · fee ${fmtAmt(Number(tx.stripe_fee))}` : ''}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2">

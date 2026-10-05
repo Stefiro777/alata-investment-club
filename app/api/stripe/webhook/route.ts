@@ -2,6 +2,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import Stripe from 'stripe'
+import { getStripeBreakdown, recordStripeRevenue } from '@/lib/stripe-finance'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -173,27 +174,14 @@ export async function POST(req: NextRequest) {
     if (session.metadata?.type === 'merch') {
       // Record merch sale as transaction
       try {
-        const amountCents = session.amount_total ?? 0
-        const net = amountCents / 100
-
-        let categoryId: string | null = null
-        const { data: cat } = await supabaseAdmin
-          .from('budget_categories').select('id').eq('name', 'Merch').maybeSingle()
-        if (cat) {
-          categoryId = cat.id
-        } else {
-          const { data: nc } = await supabaseAdmin
-            .from('budget_categories').insert({ name: 'Merch', type: 'revenue' }).select('id').single()
-          categoryId = nc?.id ?? null
-        }
-        await supabaseAdmin.from('transactions').insert({
-          type:        'revenue',
-          date:        new Date().toISOString().slice(0, 10),
-          amount:      net,
-          description: `Vendita merch: ${(session.metadata.product_names ?? '').slice(0, 200)}`,
-          category_id: categoryId,
-          note:        `Stripe Session: ${session.id}`,
-          receipt_url: null,
+        const breakdown = await getStripeBreakdown(stripe, session.payment_intent, session.amount_total ?? 0)
+        const net = breakdown.gross // CRM shows what the customer paid
+        await recordStripeRevenue(supabaseAdmin, {
+          categoryName: 'Merch',
+          source:       'merch',
+          description:  `Vendita merch: ${(session.metadata.product_names ?? '').slice(0, 200)}`,
+          breakdown,
+          sessionId:    session.id,
         })
 
         // CRM: record customer
@@ -273,25 +261,38 @@ export async function POST(req: NextRequest) {
       try { merchItems  = JSON.parse(meta.merchItems  || '[]') } catch { /* skip */ }
       try { ticketItems = JSON.parse(meta.ticketItems || '[]') } catch { /* skip */ }
 
+      // Finance: one transaction per paid Checkout Session, recorded NET of the
+      // Stripe fee (gross + fee in their own columns). A cart with merch is booked
+      // under "Merch" (as before); a tickets-only cart under "Evento" — event
+      // tickets used to leave no transaction at all.
+      const sessionBreakdown = (session.amount_total ?? 0) > 0
+        ? await getStripeBreakdown(stripe, session.payment_intent, session.amount_total ?? 0)
+        : null
+      if (sessionBreakdown && merchItems.length === 0 && ticketItems.length > 0) {
+        try {
+          await recordStripeRevenue(supabaseAdmin, {
+            categoryName: 'Evento',
+            source:       'event',
+            description:  `Biglietti: ${ticketItems.map(t => t.name).join(', ').slice(0, 200)}`,
+            breakdown:    sessionBreakdown,
+            sessionId:    session.id,
+          })
+        } catch (e) { console.error('Failed to record event ticket transaction:', e) }
+      }
+
       // Record merch items
       if (merchItems.length > 0) {
         try {
-          const amountCents = session.amount_total ?? 0
-          const net = amountCents / 100
-
-          let categoryId: string | null = null
-          const { data: cat } = await supabaseAdmin
-            .from('budget_categories').select('id').eq('name', 'Merch').maybeSingle()
-          if (cat) { categoryId = cat.id } else {
-            const { data: nc } = await supabaseAdmin
-              .from('budget_categories').insert({ name: 'Merch', type: 'revenue' }).select('id').single()
-            categoryId = nc?.id ?? null
+          const net = (session.amount_total ?? 0) / 100 // CRM shows what the customer paid
+          if (sessionBreakdown) {
+            await recordStripeRevenue(supabaseAdmin, {
+              categoryName: 'Merch',
+              source:       'merch',
+              description:  `Vendita merch: ${(meta.product_names ?? '').slice(0, 200)}`,
+              breakdown:    sessionBreakdown,
+              sessionId:    session.id,
+            })
           }
-          await supabaseAdmin.from('transactions').insert({
-            type: 'revenue', date: new Date().toISOString().slice(0, 10), amount: net,
-            description: `Vendita merch: ${(meta.product_names ?? '').slice(0, 200)}`,
-            category_id: categoryId, note: `Stripe Session: ${session.id}`, receipt_url: null,
-          })
           if (custEmail) {
             await supabaseAdmin.from('crm_customers').insert({
               name: custName || custEmail, email: custEmail, type: 'merch',
@@ -504,34 +505,15 @@ export async function POST(req: NextRequest) {
 
       // Record transaction
       try {
-        const amountCents = session.amount_total ?? 0
-        const net = amountCents / 100
-
-        let categoryId: string | null = null
-        const { data: cat } = await supabaseAdmin
-          .from('budget_categories')
-          .select('id')
-          .eq('name', 'Membership')
-          .maybeSingle()
-        if (cat) {
-          categoryId = cat.id
-        } else {
-          const { data: newCat } = await supabaseAdmin
-            .from('budget_categories')
-            .insert({ name: 'Membership', type: 'revenue' })
-            .select('id')
-            .single()
-          categoryId = newCat?.id ?? null
-        }
-
-        await supabaseAdmin.from('transactions').insert({
-          type:        'revenue',
-          date:        new Date().toISOString().slice(0, 10),
-          amount:      net,
-          description: `Quota membership ${email}`,
-          category_id: categoryId,
-          note:        `Stripe Session: ${session.id} | User: ${userId}`,
-          receipt_url: null,
+        const breakdown = await getStripeBreakdown(stripe, session.payment_intent, session.amount_total ?? 0)
+        const net = breakdown.gross // CRM shows what the member paid
+        await recordStripeRevenue(supabaseAdmin, {
+          categoryName: 'Membership',
+          source:       'membership',
+          description:  `Quota membership ${email}`,
+          breakdown,
+          sessionId:    session.id,
+          note:         `User: ${userId}`,
         })
         // CRM: record customer
         if (email) {
@@ -682,27 +664,15 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        const net = paymentIntent.amount / 100
+        const breakdown = await getStripeBreakdown(stripe, paymentIntent, paymentIntent.amount)
+        const net = breakdown.gross // CRM shows what the member paid
 
-        let categoryId: string | null = null
-        const { data: cat } = await supabaseAdmin
-          .from('budget_categories').select('id').eq('name', 'Membership').maybeSingle()
-        if (cat) {
-          categoryId = cat.id
-        } else {
-          const { data: newCat } = await supabaseAdmin
-            .from('budget_categories').insert({ name: 'Membership', type: 'revenue' }).select('id').single()
-          categoryId = newCat?.id ?? null
-        }
-
-        await supabaseAdmin.from('transactions').insert({
-          type:        'revenue',
-          date:        new Date().toISOString().slice(0, 10),
-          amount:      net,
-          description: `Quota membership ${userEmail}`,
-          category_id: categoryId,
-          note:        `PaymentIntent: ${paymentIntent.id} | User: ${paymentIntent.metadata.user_id}`,
-          receipt_url: null,
+        await recordStripeRevenue(supabaseAdmin, {
+          categoryName: 'Membership',
+          source:       'membership',
+          description:  `Quota membership ${userEmail}`,
+          breakdown,
+          note:         `User: ${paymentIntent.metadata.user_id}`,
         })
 
         if (userEmail) {
@@ -797,57 +767,33 @@ export async function POST(req: NextRequest) {
         ),
       ])
     } else {
-      console.error('Booking not found for payment intent:', paymentIntent.id)
+      // Not a career booking: PaymentIntents of Checkout Sessions (merch, event
+      // tickets, membership) are recorded by the checkout.session.completed
+      // handler above. Recording them here as well used to double-count them
+      // under "Career Service".
+      console.log('payment_intent.succeeded without a career booking, skipping finance record:', paymentIntent.id)
+      return NextResponse.json({ received: true })
     }
 
-    // ── Auto-record finance transaction ───────────────────────────────────────
+    // ── Auto-record finance transaction (career bookings) ──────────────────────
     try {
-      const gross = paymentIntent.amount / 100
-      const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string)
-      const balanceTx = await stripe.balanceTransactions.retrieve(charge.balance_transaction as string)
-      const net = balanceTx.net / 100
-      const fee = balanceTx.fee / 100
-
+      const breakdown = await getStripeBreakdown(stripe, paymentIntent, paymentIntent.amount)
       const description = (paymentIntent.metadata?.service_name as string | undefined)
         ?? paymentIntent.description
         ?? 'Stripe Payment'
-      const date = new Date().toISOString().slice(0, 10)
 
-      // Look up or create the 'Career Service' revenue category
-      let categoryId: string | null = null
-      const { data: existingCat } = await supabaseAdmin
-        .from('budget_categories')
-        .select('id')
-        .eq('name', 'Career Service')
-        .eq('type', 'revenue')
-        .maybeSingle()
-
-      if (existingCat) {
-        categoryId = existingCat.id
-      } else {
-        const { data: newCat } = await supabaseAdmin
-          .from('budget_categories')
-          .insert({ name: 'Career Service', type: 'revenue' })
-          .select('id')
-          .single()
-        categoryId = newCat?.id ?? null
-      }
-
-      await supabaseAdmin.from('transactions').insert({
-        type:        'revenue',
-        date,
-        amount:      net,
+      await recordStripeRevenue(supabaseAdmin, {
+        categoryName: 'Career Service',
+        source:       'career',
         description,
-        category_id: categoryId,
-        note:        `Netto: €${net.toFixed(2)} | Lordo: €${gross.toFixed(2)} | Commissioni Stripe: €${fee.toFixed(2)} | ${paymentIntent.id}`,
-        receipt_url: null,
+        breakdown,
       })
 
       // CRM: record career service customer
       if (booking?.email) {
         await supabaseAdmin.from('crm_customers').insert({
           name: booking.name || booking.email, email: booking.email, type: 'career_service',
-          reference: description, amount: net, purchased_at: new Date().toISOString(),
+          reference: description, amount: breakdown.net, purchased_at: new Date().toISOString(),
         }).then(() => {})
       }
     } catch (txErr) {
