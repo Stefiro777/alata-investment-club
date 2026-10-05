@@ -30,7 +30,7 @@ export default async function AdminTeamPage() {
       <div className="bg-forest text-white">
         <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="font-serif text-xl font-medium">Admin — Team Management</h1>
+            <h1 className="font-serif text-xl font-medium">Board panel — Team Management</h1>
             <p className="text-white/50 text-xs mt-0.5">{member.email}</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">

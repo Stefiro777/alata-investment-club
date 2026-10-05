@@ -1080,7 +1080,7 @@ export default function AdminClient({
     <div className="max-w-5xl mx-auto px-6 lg:px-8 py-10 space-y-16">
 
       <nav className="flex flex-wrap gap-2">
-        {[{ label: 'News & Events', id: 'news-events' }, { label: 'Risorse Dashboard', id: 'resources' }, { label: 'Partners', id: 'partners' }].map(({ label, id }) => (
+        {[{ label: 'News & Events', id: 'news-events' }, { label: 'Resources', id: 'resources' }, { label: 'Partners', id: 'partners' }].map(({ label, id }) => (
           <button key={id} onClick={() => scrollTo(id)} className="px-5 py-2 text-xs font-medium tracking-wide border border-forest text-forest hover:bg-forest hover:text-white transition-colors duration-fast rounded-full">
             {label}
           </button>
@@ -1101,9 +1101,9 @@ export default function AdminClient({
         </div>
       </section>
 
-      {/* ── Risorse Dashboard ── */}
+      {/* ── Resources ── */}
       <section id="resources">
-        <SectionHeading title="Risorse Dashboard" />
+        <SectionHeading title="Resources" />
         <div className="bg-white border border-line-faint p-8 space-y-8">
 
           {/* Category tabs */}

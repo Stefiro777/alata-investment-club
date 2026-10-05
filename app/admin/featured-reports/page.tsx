@@ -20,7 +20,7 @@ export default async function FeaturedReportsAdminPage() {
       <div className="bg-forest text-white" style={{ animation: 'heroFadeIn 0.5s ease both' }}>
         <div className="max-w-5xl mx-auto px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.1s both' }}>
-            <h1 className="font-serif text-xl font-medium">Admin — Featured Reports</h1>
+            <h1 className="font-serif text-xl font-medium">Board panel — Featured Reports</h1>
             <p className="text-white/50 text-xs mt-0.5">{member.email}</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto" style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.2s both' }}>

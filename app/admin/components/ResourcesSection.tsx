@@ -479,7 +479,7 @@ export default function ResourcesSection({ initialResources }: { initialResource
 
   return (
     <section id="resources">
-      <SectionHeading title="Risorse Dashboard" />
+      <SectionHeading title="Resources" />
       <div className="bg-white border border-line-faint p-8 space-y-8">
         {/* Category tabs */}
         <div className="flex flex-wrap gap-2">

@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 const NAV = [
   { href: '/admin/settings', label: 'Settings' },
   { href: '/admin/content',  label: 'Content'  },
-  { href: '/admin/dashboard', label: 'Dashboard' },
+  { href: '/admin/dashboard', label: 'Resources' },
   { href: '/admin/people',   label: 'People'   },
   { href: '/admin/partners', label: 'Partners'  },
 ] as const
@@ -23,7 +23,7 @@ export default function AdminShell({ userEmail, children }: { userEmail: string;
 
         {/* Brand header */}
         <div className="bg-forest text-white px-4 py-5 flex-shrink-0">
-          <p className="font-serif text-[15px] font-medium leading-tight">Admin Panel</p>
+          <p className="font-serif text-[15px] font-medium leading-tight">Board panel</p>
           <p className="text-white/50 text-[11px] mt-1 truncate">{userEmail}</p>
         </div>
 
@@ -67,7 +67,7 @@ export default function AdminShell({ userEmail, children }: { userEmail: string;
         {/* Mobile: green top bar */}
         <div className="lg:hidden bg-forest text-white px-4 py-4 flex items-center justify-between flex-shrink-0">
           <div>
-            <p className="font-serif text-base font-medium">Admin Panel</p>
+            <p className="font-serif text-base font-medium">Board panel</p>
             <p className="text-white/50 text-xs mt-0.5 truncate max-w-[200px]">{userEmail}</p>
           </div>
           <a
