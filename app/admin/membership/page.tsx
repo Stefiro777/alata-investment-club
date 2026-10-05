@@ -12,6 +12,7 @@ type MemberRow = {
   email: string
   role: string
   membership_expires_at: string | null
+  membership_removed_at?: string | null
 }
 
 type MSettings = {
@@ -153,6 +154,29 @@ function MembersTable({ token }: { token: string }) {
   const editDateRef               = useRef('')
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState<string | null>(null)
+  const [removal,   setRemoval]   = useState<{ member: MemberRow; action: 'remove' | 'restore' } | null>(null)
+  const [removing,  setRemoving]  = useState(false)
+  const [removalError, setRemovalError] = useState<string | null>(null)
+
+  // BoD / Management and the superadmin cannot be removed (the API enforces it too).
+  const isProtected = (m: MemberRow) =>
+    m.role === 'bod' || m.role === 'director' || m.email === 'finullistefano@gmail.com'
+
+  async function confirmRemoval() {
+    if (!removal) return
+    setRemoving(true); setRemovalError(null)
+    const res = await fetch('/api/membership/removal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: removal.member.id, action: removal.action, confirm: true }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) { setRemovalError(data.error ?? 'Errore'); setRemoving(false); return }
+    setMembers(prev => prev.map(m => m.id === removal.member.id
+      ? { ...m, membership_expires_at: data.member.membership_expires_at, membership_removed_at: data.member.membership_removed_at }
+      : m))
+    setRemoval(null); setRemoving(false)
+  }
 
   useEffect(() => {
     fetch('/api/membership/members', { headers: { Authorization: `Bearer ${token}` } })
@@ -195,17 +219,20 @@ function MembersTable({ token }: { token: string }) {
         <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           <div className="min-w-[640px]">
             {/* Header */}
-            <div className="grid grid-cols-[1fr_1fr_120px_200px_100px] gap-0 bg-gray-50 border-b border-gray-200 px-4 py-2">
-              {['Nome', 'Email', 'Ruolo', 'Scadenza', 'Stato'].map(h => (
+            <div className="grid grid-cols-[1fr_1fr_120px_200px_100px_110px] gap-0 bg-gray-50 border-b border-gray-200 px-4 py-2">
+              {['Nome', 'Email', 'Ruolo', 'Scadenza', 'Stato', ''].map((h, i) => (
                 <p key={h} className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">{h}</p>
               ))}
             </div>
             {members.map((m, i) => {
-              const status = memberStatus(m.membership_expires_at)
+              const removed = !!m.membership_removed_at
+              const status = removed
+                ? { label: 'RIMOSSO', cls: 'bg-gray-200 text-gray-700' }
+                : memberStatus(m.membership_expires_at)
               const isEdit = editId === m.id
               return (
                 <div key={m.id}
-                  className={`grid grid-cols-[1fr_1fr_120px_200px_100px] gap-0 items-center px-4 py-3 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
+                  className={`grid grid-cols-[1fr_1fr_120px_200px_100px_110px] gap-0 items-center px-4 py-3 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
                   <p className="text-sm font-semibold text-gray-900 pr-3 truncate">{m.full_name}</p>
                   <p className="text-xs text-gray-500 pr-3 truncate">{m.email}</p>
                   <p className="text-xs text-gray-500 uppercase tracking-widest pr-3">{m.role}</p>
@@ -231,12 +258,59 @@ function MembersTable({ token }: { token: string }) {
                   <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-1 ${status.cls}`}>
                     {status.label}
                   </span>
+                  <div className="text-right">
+                    {removed ? (
+                      <button onClick={() => { setRemovalError(null); setRemoval({ member: m, action: 'restore' }) }}
+                        className="text-xs font-semibold text-forest hover:underline">
+                        Ripristina
+                      </button>
+                    ) : !isProtected(m) && (
+                      <button onClick={() => { setRemovalError(null); setRemoval({ member: m, action: 'remove' }) }}
+                        className="text-xs text-gray-400 hover:text-red-600 transition-colors">
+                        Rimuovi
+                      </button>
+                    )}
+                  </div>
                 </div>
               )
             })}
           </div>
         </div>
       </div>
+
+      {removal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={e => { if (e.target === e.currentTarget && !removing) setRemoval(null) }}>
+          <div className="bg-white w-full max-w-md shadow-2xl p-7">
+            <h3 className="font-serif text-xl font-bold text-gray-900 mb-3">
+              {removal.action === 'remove' ? 'Rimuovere dalla membership?' : 'Ripristinare la membership?'}
+            </h3>
+            <p className="text-sm text-gray-700 mb-1 font-semibold">{removal.member.full_name}</p>
+            <p className="text-xs text-gray-500 mb-4">{removal.member.email}</p>
+            {removal.action === 'remove' ? (
+              <p className="text-sm text-gray-600 mb-5">
+                La scadenza viene azzerata e l&apos;accesso alle aree riservate revocato subito (senza grace period);
+                non riceverà più reminder e non potrà pagare la quota. Il record, il ruolo, i team, i pagamenti
+                e le transazioni non vengono toccati. Puoi ripristinarlo in qualsiasi momento.
+              </p>
+            ) : (
+              <p className="text-sm text-gray-600 mb-5">
+                La scadenza viene riportata al 31 dicembre previsto dalla regola per oggi e la rimozione annullata.
+              </p>
+            )}
+            {removalError && <p className="text-xs text-red-600 border-l-2 border-red-400 pl-3 py-1 mb-4">{removalError}</p>}
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setRemoval(null)} disabled={removing} className={btnGhost}>Annulla</button>
+              <button onClick={confirmRemoval} disabled={removing}
+                className={removal.action === 'remove'
+                  ? 'bg-red-700 hover:bg-red-800 text-white text-xs font-semibold uppercase tracking-widest px-5 py-2 transition-colors disabled:opacity-40'
+                  : btnPrimary}>
+                {removing ? '…' : removal.action === 'remove' ? 'Conferma rimozione' : 'Conferma ripristino'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

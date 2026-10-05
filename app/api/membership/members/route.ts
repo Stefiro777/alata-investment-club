@@ -15,7 +15,7 @@ export async function GET() {
 
   const { data, error } = await supabaseAdmin
     .from('club_members')
-    .select('id, full_name, email, role, membership_expires_at')
+    .select('id, full_name, email, role, membership_expires_at, membership_removed_at')
     .order('full_name')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ members: data ?? [] })

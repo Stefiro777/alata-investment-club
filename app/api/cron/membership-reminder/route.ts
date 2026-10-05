@@ -101,6 +101,7 @@ export async function GET(req: NextRequest) {
     .gte('membership_expires_at', new Date(now).toISOString())
     .lte('membership_expires_at', new Date(now + REMINDER_WINDOW_DAYS * DAY_MS).toISOString())
     .not('email', 'is', null)
+    .is('membership_removed_at', null) // removed members get no reminders
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
