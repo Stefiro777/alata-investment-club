@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { isHiddenTeam } from '@/lib/hidden-teams'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../../DashboardProfileContext'
 import MemberAutocomplete from '../../MemberAutocomplete'
@@ -1677,6 +1678,10 @@ export default function TeamPage() {
   const params = useParams()
   const router = useRouter()
   const slug = (params.slug as string) ?? ''
+  const hiddenTeam = isHiddenTeam(slug)
+  useEffect(() => {
+    if (hiddenTeam) router.replace('/dashboard')
+  }, [hiddenTeam, router])
   const profile  = useProfile()
 
   const [tasks, setTasks]               = useState<Task[]>([])
@@ -1798,6 +1803,8 @@ export default function TeamPage() {
   }
 
   // ── Guards ───────────────────────────────────────────────────────────────────
+
+  if (hiddenTeam) return null
 
   if (profile && !canView) {
     return (

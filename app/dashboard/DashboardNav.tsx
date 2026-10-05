@@ -10,11 +10,7 @@ const TEAM_ITEMS = [
   { label: 'Events',        slug: 'events' },
   { label: 'Media',         slug: 'media' },
   { label: 'Career',        slug: 'career' },
-  { label: 'Education',     slug: 'education' },
-  { label: 'Academy',       slug: 'academy' },
-  { label: 'Syrto',         slug: 'syrto' },
   { label: 'Lab & Research', slug: 'lab' },
-  { label: 'Alumni',        slug: 'alumni' },
 ]
 
 export default function DashboardNav({ profile }: { profile: MemberProfile }) {
@@ -85,10 +81,6 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
         <div className="hidden md:flex items-center gap-6 flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden md:overflow-visible">
           <Link href="/dashboard" className={`${linkClass('/dashboard', true)} whitespace-nowrap flex-shrink-0`}>
             Dashboard
-          </Link>
-
-          <Link href="/dashboard/ideas" className={`${linkClass('/dashboard/ideas')} whitespace-nowrap flex-shrink-0`}>
-            Idee
           </Link>
 
           {/* Team dropdown */}
@@ -196,10 +188,6 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
           <div className="fixed top-14 right-0 bottom-0 w-[80%] max-w-xs bg-forest z-50 overflow-y-auto md:hidden shadow-2xl flex flex-col">
             <Link href="/dashboard" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard', true)}>
               Dashboard
-            </Link>
-
-            <Link href="/dashboard/ideas" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard/ideas')}>
-              Idee
             </Link>
 
             {/* Team accordion */}

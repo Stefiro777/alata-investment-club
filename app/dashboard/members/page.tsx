@@ -1,5 +1,6 @@
 'use client'
 
+import { isHiddenTeam } from '@/lib/hidden-teams'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../DashboardProfileContext'
@@ -16,6 +17,10 @@ const TEAM_OPTIONS = [
   { key: 'lab',       label: 'Lab' },
   { key: 'alumni',    label: 'Alumni' },
 ]
+
+// Hidden teams keep their label (existing members may still carry them) but
+// can no longer be assigned or used as a filter.
+const VISIBLE_TEAM_OPTIONS = TEAM_OPTIONS.filter(t => !isHiddenTeam(t.key))
 
 const LAB_SUBDIVISIONS = [
   { key: 'macro_markets',    label: 'Macro & Markets' },
@@ -444,7 +449,7 @@ function MemberFormModal({
               Team ({form.teams.length} selezionati)
             </label>
             <div className="grid grid-cols-2 gap-1 border border-line p-3">
-              {TEAM_OPTIONS.map(t => (
+              {VISIBLE_TEAM_OPTIONS.map(t => (
                 <label key={t.key} className="flex items-center gap-2 py-1 cursor-pointer">
                   <input
                     type="checkbox"
@@ -876,7 +881,7 @@ export default function MembersPage() {
         <FilterDropdown
           value={teamFilter}
           onChange={setTeamFilter}
-          options={[{ key: 'all', label: 'Tutti i team' }, ...TEAM_OPTIONS]}
+          options={[{ key: 'all', label: 'Tutti i team' }, ...VISIBLE_TEAM_OPTIONS]}
         />
 
         {/* Role filter */}

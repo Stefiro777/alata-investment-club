@@ -11,14 +11,10 @@ const FILTER_OPTIONS = [
   { key: 'events',    label: 'Events' },
   { key: 'media',     label: 'Media' },
   { key: 'career',    label: 'Career' },
-  { key: 'education', label: 'Education' },
-  { key: 'academy',   label: 'Academy' },
-  { key: 'syrto',     label: 'Syrto' },
   { key: 'lab',       label: 'Lab' },
-  { key: 'alumni',    label: 'Alumni' },
 ] as const
 
-type CalFilter = 'all' | 'events' | 'media' | 'career' | 'education' | 'academy' | 'syrto' | 'lab' | 'alumni' | 'posts'
+type CalFilter = 'all' | 'events' | 'media' | 'career' | 'lab' | 'posts'
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 

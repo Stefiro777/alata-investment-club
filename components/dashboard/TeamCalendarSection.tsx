@@ -1,5 +1,6 @@
 'use client'
 
+import { isHiddenTeam } from '@/lib/hidden-teams'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import TeamCalendarModal, { TeamCalendarEvent } from './TeamCalendarModal'
@@ -28,7 +29,7 @@ const TEAM_LABELS: Record<string, string> = {
   alumni:    'Alumni',
 }
 
-const ALL_TEAMS = Object.keys(TEAM_LABELS)
+const ALL_TEAMS = Object.keys(TEAM_LABELS).filter(t => !isHiddenTeam(t))
 
 const WEEK_DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 8) // 08–22
