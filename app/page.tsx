@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import Image from 'next/image'
 import Link from 'next/link'
 import StatsSection from './components/StatsSection'
+import { ABOUT_STATS_KEY, parseAboutStats } from '@/lib/about-stats'
 import NewsCard, { type NewsItem } from './components/NewsCard'
 import PartnersMarquee from './components/PartnersMarquee'
 import { MotionReveal, MotionLine, MotionWipe } from './components/motion/Motion'
@@ -42,7 +43,7 @@ function MailIcon() {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const [{ data: eventi }, { data: partnersData }] = await Promise.all([
+  const [{ data: eventi }, { data: partnersData }, { data: statsRow }] = await Promise.all([
     supabase
       .from('contenuti')
       .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
@@ -54,7 +55,9 @@ export default async function HomePage() {
       .select('id, name, logo_url, website_url, order_index')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
+    supabase.from('settings').select('value').eq('key', ABOUT_STATS_KEY).maybeSingle(),
   ])
+  const aboutStats = parseAboutStats(statsRow?.value)
 
   return (
     <div>
@@ -110,7 +113,7 @@ export default async function HomePage() {
       </section>
 
       {/* Stats */}
-      <StatsSection />
+      <StatsSection stats={aboutStats} />
 
       {/* About — Vision + Mission, unified white panels; the hairline draws itself */}
       <div className="relative bg-white grid md:grid-cols-2 divide-y md:divide-y-0 divide-line border-b border-line">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { ABOUT_STATS_KEY, ABOUT_STATS_COUNT, type AboutStat } from '@/lib/about-stats'
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -21,6 +22,7 @@ export default function SettingsClient({
   showAlumni,
   showAlumniReviews,
   showEventsReviews,
+  aboutStats,
 }: {
   applicationsOpen: boolean
   showPrices: boolean
@@ -30,7 +32,42 @@ export default function SettingsClient({
   showAlumni: boolean
   showAlumniReviews: boolean
   showEventsReviews: boolean
+  aboutStats: AboutStat[]
 }) {
+  // About page metrics (fixed number of slots, padded with empty rows)
+  const [stats, setStats] = useState<AboutStat[]>(
+    Array.from({ length: ABOUT_STATS_COUNT }, (_, i) => aboutStats[i] ?? { value: '', label: '' })
+  )
+  const [savingStats, setSavingStats] = useState(false)
+  const [statsSaved, setStatsSaved] = useState(false)
+  const [statsError, setStatsError] = useState<string | null>(null)
+
+  async function handleSaveStats(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingStats(true)
+    setStatsSaved(false)
+    setStatsError(null)
+    const cleaned = stats
+      .map(s => ({ value: s.value.trim(), label: s.label.trim() }))
+      .filter(s => s.value && s.label)
+    if (cleaned.length === 0) {
+      setStatsError('Inserisci almeno una metrica (valore ed etichetta).')
+      setSavingStats(false)
+      return
+    }
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('settings')
+      .upsert({ key: ABOUT_STATS_KEY, value: JSON.stringify(cleaned) }, { onConflict: 'key' })
+    if (error) {
+      setStatsError(error.message)
+    } else {
+      setStatsSaved(true)
+      setTimeout(() => setStatsSaved(false), 3000)
+    }
+    setSavingStats(false)
+  }
+
   // Settings toggles state
   const [appsOpen, setAppsOpen] = useState(applicationsOpen)
   const [togglingApps, setTogglingApps] = useState(false)
@@ -287,6 +324,50 @@ export default function SettingsClient({
       </section>
 
       {/* â•â• Invite Member â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <section id="about-stats">
+        <SectionHeading title="About Metrics" />
+
+        <div className="bg-white border border-line-faint p-8">
+          <p className="text-sm text-ink-500 mb-6">
+            Le metriche della fascia numeri nella homepage (About). Il valore può includere un suffisso, ad esempio{' '}
+            <span className="font-medium">50+</span> o <span className="font-medium">190K+</span>. Le righe vuote non vengono mostrate.
+          </p>
+          <form onSubmit={handleSaveStats} className="space-y-3">
+            {stats.map((s, i) => (
+              <div key={i} className="grid grid-cols-[120px_1fr] gap-3">
+                <input
+                  value={s.value}
+                  onChange={e => setStats(prev => prev.map((x, j) => j === i ? { ...x, value: e.target.value } : x))}
+                  placeholder="50+"
+                  maxLength={16}
+                  aria-label={`Valore metrica ${i + 1}`}
+                  className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors"
+                />
+                <input
+                  value={s.label}
+                  onChange={e => setStats(prev => prev.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
+                  placeholder="Speaker sessions"
+                  maxLength={60}
+                  aria-label={`Etichetta metrica ${i + 1}`}
+                  className="px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white transition-colors"
+                />
+              </div>
+            ))}
+            {statsError && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{statsError}</p>}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={savingStats}
+                className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50"
+              >
+                {savingStats ? '…' : 'Save'}
+              </button>
+              {statsSaved && <span className="text-xs text-forest font-medium">Saved</span>}
+            </div>
+          </form>
+        </div>
+      </section>
+
       <section id="invite-member">
         <SectionHeading title="Invite Member" />
 

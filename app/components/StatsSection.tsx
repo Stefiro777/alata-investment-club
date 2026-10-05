@@ -1,13 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-
-const stats = [
-  { value: 100, label: 'Members' },
-  { value: 20,  label: 'Calls with IB, PE & Consulting professionals' },
-  { value: 500, label: 'Analyses published' },
-  { value: 950, label: 'LinkedIn followers' },
-]
+import { splitStatValue, type AboutStat } from '@/lib/about-stats'
 
 const STAGGER = 220 // ms between each stat starting
 
@@ -39,11 +33,12 @@ function StatItem({
   active,
   index,
 }: {
-  value: number
+  value: string
   label: string
   active: boolean
   index: number
 }) {
+  const { target, suffix } = splitStatValue(value)
   // Each stat reveals AND starts counting on its own beat
   const [started, setStarted] = useState(false)
   useEffect(() => {
@@ -52,8 +47,8 @@ function StatItem({
     return () => clearTimeout(t)
   }, [active, index])
 
-  const count = useCountUp(value, 1800, started)
-  const done = count === value
+  const count = useCountUp(target ?? 0, 1800, started)
+  const done = target === null || count === target
 
   return (
     <div
@@ -66,17 +61,19 @@ function StatItem({
       }}
     >
       <span className="font-serif text-6xl font-semibold text-white leading-none tabular-nums">
-        {count}
-        <span
-          className="inline-block"
-          style={{
-            opacity: done ? 1 : 0,
-            transform: done ? 'translateX(0)' : 'translateX(-4px)',
-            transition: 'opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)',
-          }}
-        >
-          +
-        </span>
+        {target === null ? value : count}
+        {target !== null && suffix && (
+          <span
+            className="inline-block"
+            style={{
+              opacity: done ? 1 : 0,
+              transform: done ? 'translateX(0)' : 'translateX(-4px)',
+              transition: 'opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)',
+            }}
+          >
+            {suffix}
+          </span>
+        )}
       </span>
       <div
         className="h-px bg-white/30"
@@ -92,7 +89,7 @@ function StatItem({
   )
 }
 
-export default function StatsSection() {
+export default function StatsSection({ stats }: { stats: AboutStat[] }) {
   const ref = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(false)
 
