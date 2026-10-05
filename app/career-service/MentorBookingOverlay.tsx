@@ -146,7 +146,7 @@ function MentorBookingOverlayInner({
     const res = await fetch('/api/career/upload-cv', { method: 'POST', body: fd })
     const data = await res.json()
     if (!res.ok) { setUploadError(data.error ?? 'Upload failed'); setUploading(false); return }
-    setCvUrl(data.url)
+    setCvUrl(data.path)
     setCvFilename(file.name)
     setUploading(false)
   }

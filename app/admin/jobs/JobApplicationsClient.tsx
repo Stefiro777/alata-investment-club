@@ -195,7 +195,7 @@ function AppTable({
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   {app.cv_url ? (
-                    <a href={app.cv_url} target="_blank" rel="noopener noreferrer"
+                    <a href={`/api/jobs/applications/${app.id}/cv`} target="_blank" rel="noopener noreferrer"
                       className={`inline-block text-xs font-medium uppercase tracking-wide px-3 py-1 transition-colors border ${muted ? 'border-gray-300 text-gray-400 hover:bg-gray-300 hover:text-white' : 'border-forest text-forest hover:bg-forest hover:text-white'}`}>
                       Scarica CV
                     </a>

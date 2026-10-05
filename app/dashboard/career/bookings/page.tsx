@@ -810,7 +810,7 @@ function BookingsTab({ services, mentors }: { services: CareerService[]; mentors
               </span>
             )}
             {b.cv_url && (
-              <a href={b.cv_url} target="_blank" rel="noopener noreferrer"
+              <a href={`/api/career/bookings/${b.id}/cv`} target="_blank" rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
                 className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
                 CV
@@ -851,7 +851,7 @@ function BookingsTab({ services, mentors }: { services: CareerService[]; mentors
               {b.cv_url && (
                 <div>
                   <p className={labelCls}>CV</p>
-                  <a href={b.cv_url} target="_blank" rel="noopener noreferrer"
+                  <a href={`/api/career/bookings/${b.id}/cv`} target="_blank" rel="noopener noreferrer"
                     className="text-sm text-forest hover:underline underline-offset-2">
                     Download CV →
                   </a>

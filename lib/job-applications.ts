@@ -1,9 +1,9 @@
 import { createClient, createServiceClient } from '@/lib/supabase-server'
 import { PRIVILEGED_ROLES } from '@/lib/auth'
+import { CV_BUCKET, cvStoragePath } from '@/lib/cv-path'
 
 export const SUPERADMIN_EMAIL = 'finullistefano@gmail.com'
 export const FALLBACK_APPLICATION_EMAIL = 'info@alatainvestmentclub.com'
-const CV_BUCKET = 'cv-uploads'
 
 export type JobApplicationRow = {
   id: string
@@ -58,22 +58,8 @@ export async function getManageableApplication(applicationId: string): Promise<J
   return null
 }
 
-/** Storage path of a CV inside the cv-uploads bucket, from its stored public URL. */
-function cvStoragePath(cvUrl: string): string | null {
-  const marker = `/${CV_BUCKET}/`
-  const idx = cvUrl.indexOf(marker)
-  if (idx === -1) return null
-  const path = cvUrl.slice(idx + marker.length).split('?')[0]
-  try {
-    return decodeURIComponent(path)
-  } catch {
-    return path
-  }
-}
-
 /** Time-limited signed URL for a CV (the bucket may be public, but links we hand out expire). */
-export async function signedCvUrl(cvUrl: string | null, expiresInSeconds: number): Promise<string | null> {
-  if (!cvUrl) return null
+export async function signedCvUrl(cvUrl: string | null | undefined, expiresInSeconds: number): Promise<string | null> {
   const path = cvStoragePath(cvUrl)
   if (!path) return null
   const service = createServiceClient()

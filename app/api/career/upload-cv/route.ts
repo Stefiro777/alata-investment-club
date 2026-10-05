@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('cv-uploads').getPublicUrl(data.path)
-    return NextResponse.json({ url: publicUrl })
+    // Return the storage path, not a public URL: CVs are served through signed URLs.
+    return NextResponse.json({ path: data.path })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: message }, { status: 500 })

@@ -6,6 +6,7 @@ import { getStripeBreakdown, recordStripeRevenue } from '@/lib/stripe-finance'
 import { PAYMENT_TX_COLUMNS, recordRefund, type PaymentTransaction } from '@/lib/refunds'
 import { computeMembershipExpiry, loadRenewalRule } from '@/lib/membership'
 import { releaseSessionReservations } from '@/lib/event-seats'
+import { signedCvUrl } from '@/lib/job-applications'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -755,7 +756,7 @@ export async function POST(req: NextRequest) {
         slotTime: booking.slot_time,
         motivation: booking.motivation,
         goal: booking.goal,
-        cvUrl: booking.cv_url ?? undefined,
+        cvUrl: (await signedCvUrl(booking.cv_url, 7 * 24 * 60 * 60)) ?? undefined,
       })
 
       await Promise.allSettled([

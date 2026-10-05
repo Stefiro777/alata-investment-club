@@ -277,11 +277,9 @@ export function JobApplicationModal({
       return
     }
 
-    // Public URL
-    const { data: publicData } = supabase.storage
-      .from('cv-uploads')
-      .getPublicUrl(path)
-    const cvUrl = publicData?.publicUrl
+    // Store the storage PATH, not a public URL: CVs are served via signed URLs
+    // generated server-side (see lib/cv-path.ts).
+    const cvUrl = path
 
     // Insert application
     // The id is generated here: the applicant has no SELECT policy on
