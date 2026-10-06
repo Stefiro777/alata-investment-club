@@ -13,6 +13,8 @@ export type CartSuggestion = {
   description: string | null
   price_cents: number
   image_url: string | null
+  /** Set on a Career session suggestion: it leads to booking that mentor. */
+  mentor_id?: string
 }
 
 export type CartItem = {
@@ -22,9 +24,15 @@ export type CartItem = {
 }
 
 type Props = {
-  serviceName: string
-  servicePrice: number
+  sessionName: string
+  /** List price of the session, in cents. */
+  sessionPrice: number
   isMember: boolean
+  /** Mentor being booked now: left out of the suggestions. */
+  mentorId: string
+  authToken: string | null
+  /** A Career suggestion was chosen: switch the booking flow to that mentor. */
+  onSelectMentor: (mentorId: string) => void
   slot: { date: string; time: string }
   formatDate: (d: string) => string
   onProceed: (extras: CartItem[]) => void
@@ -40,9 +48,12 @@ function formatEuros(cents: number) {
 // ── BookingCart ───────────────────────────────────────────────────────────────
 
 export default function BookingCart({
-  serviceName,
-  servicePrice,
+  sessionName,
+  sessionPrice,
   isMember,
+  mentorId,
+  authToken,
+  onSelectMentor,
   slot,
   formatDate,
   onProceed,
@@ -53,11 +64,13 @@ export default function BookingCart({
   const [added, setAdded]               = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    fetch('/api/cart-suggestions')
+    fetch(`/api/cart-suggestions?exclude_mentor_id=${encodeURIComponent(mentorId)}`, {
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+    })
       .then(r => r.json())
       .then(d => { setSuggestions((d.suggestions ?? []).slice(0, 3)); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
+  }, [mentorId, authToken])
 
   function toggle(s: CartSuggestion) {
     setAdded(prev => {
@@ -68,8 +81,8 @@ export default function BookingCart({
     })
   }
 
-  const isFree     = isMember || servicePrice === 0
-  const baseAmount = isFree ? 0 : servicePrice
+  const isFree     = isMember || sessionPrice === 0
+  const baseAmount = isFree ? 0 : sessionPrice
   const extras     = suggestions.filter(s => added.has(s.id))
   const extrasTotal = extras.reduce((sum, s) => sum + s.price_cents, 0)
   const total      = baseAmount + extrasTotal
@@ -88,7 +101,7 @@ export default function BookingCart({
         </p>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-gray-900">{serviceName}</p>
+            <p className="text-sm font-semibold text-gray-900">{sessionName}</p>
             <p className="text-xs text-gray-400 mt-0.5">
               {formatDate(slot.date)} — {slot.time}
             </p>
@@ -96,12 +109,12 @@ export default function BookingCart({
           <div className="text-right flex-shrink-0">
             {isMember ? (
               <div>
-                <p className="text-sm line-through text-gray-300">{formatEuros(servicePrice)}</p>
+                <p className="text-sm line-through text-gray-300">{formatEuros(sessionPrice)}</p>
                 <p className="text-xs font-semibold text-forest uppercase tracking-widest">Member Free</p>
               </div>
             ) : (
               <p className="text-sm font-semibold text-gray-900">
-                {servicePrice === 0 ? 'Free' : formatEuros(servicePrice)}
+                {sessionPrice === 0 ? 'Free' : formatEuros(sessionPrice)}
               </p>
             )}
           </div>
@@ -119,7 +132,7 @@ export default function BookingCart({
           ) : (
             <div className="space-y-3">
               {suggestions.map(s => {
-                const isAdded = added.has(s.id)
+                const isAdded = !s.mentor_id && added.has(s.id)
                 return (
                   <div
                     key={s.id}
@@ -142,7 +155,7 @@ export default function BookingCart({
                     </div>
                     <button
                       type="button"
-                      onClick={() => toggle(s)}
+                      onClick={() => (s.mentor_id ? onSelectMentor(s.mentor_id) : toggle(s))}
                       className="flex-shrink-0 text-xs font-semibold uppercase tracking-widest px-4 py-2 border transition-colors"
                       style={{
                         background: isAdded ? '#1a4a3a' : 'transparent',
@@ -150,7 +163,7 @@ export default function BookingCart({
                         borderColor: 'var(--forest)',
                       }}
                     >
-                      {isAdded ? 'Rimosso ✓' : 'Aggiungi'}
+                      {s.mentor_id ? 'Prenota' : isAdded ? 'Rimosso ✓' : 'Aggiungi'}
                     </button>
                   </div>
                 )
