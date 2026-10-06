@@ -6,8 +6,8 @@ import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase'
 import BookingCart, { type CartItem } from '../components/career/BookingCart'
-import { PaymentForm, type ServiceInfo } from './PaymentForm'
-import { MONTHS, WEEKDAYS, daysInMonth, firstDayOffset, toDateStr, formatDateLong } from './calendarUtils'
+import { PaymentForm } from './PaymentForm'
+import { MONTHS, WEEKDAYS, daysInMonth, firstDayOffset, toDateStr, formatDateLong, formatEuros } from './calendarUtils'
 
 const stripeKey     = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
 const stripePromise = stripeKey ? loadStripe(stripeKey) : null
@@ -20,30 +20,44 @@ type Mentor = {
   full_name: string
   role_title?: string | null
   bio_long?: string | null
-  service_id: string | null
+  /** The mentor has availability: only then can a session be booked online. */
+  bookable: boolean
 }
 
 type Slot = { date: string; time: string; available: boolean }
 
+/** Answer of /api/career/pricing: what THIS visitor pays, computed server-side. */
+type Pricing = {
+  price_cents: number
+  duration_minutes: number
+  is_member: boolean
+  membership_inactive: boolean
+  effective_price_cents: number
+}
+
 function MentorBookingOverlayInner({
   mentor,
   onClose,
+  onSwitchMentor,
 }: {
   mentor: Mentor
   onClose: () => void
+  onSwitchMentor?: (mentorId: string) => void
 }) {
   const [step, setStep]           = useState<1 | 2 | 3 | 4>(1)
   const [confirmed, setConfirmed] = useState(false)
   const [cartExtras, setCartExtras] = useState<CartItem[]>([])
 
-  // Service discovery — resolved from the mentor's own availability rows
-  const [service, setService]           = useState<ServiceInfo | null>(null)
-  const [loadingService, setLoadingService] = useState(false)
+  // Price/duration for this visitor — one price for every session, free for active members
+  const [pricing, setPricing]               = useState<Pricing | null>(null)
+  const [loadingPricing, setLoadingPricing] = useState(true)
 
   // Auth
-  const [isMember,          setIsMember]          = useState(false)
-  const [membershipExpired, setMembershipExpired]  = useState(false)
-  const [authToken,         setAuthToken]          = useState<string | null>(null)
+  const [authToken, setAuthToken] = useState<string | null>(null)
+  const [authReady, setAuthReady] = useState(false)
+  const isMember          = !!pricing && pricing.is_member && !pricing.membership_inactive
+  const membershipExpired = !!pricing?.membership_inactive
+  const sessionName       = `Career session with ${mentor.full_name}`
 
   // Calendar / slot state
   const today      = new Date()
@@ -81,47 +95,33 @@ function MentorBookingOverlayInner({
     async function init() {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-      setAuthToken(session.access_token)
-      const { data: member } = await supabase
-        .from('club_members')
-        .select('id, membership_expires_at')
-        .eq('email', session.user.email ?? '')
-        .maybeSingle()
-      if (member) {
-        setIsMember(true)
-        const expired = member.membership_expires_at
-          ? new Date(member.membership_expires_at) < new Date()
-          : true
-        if (expired) setMembershipExpired(true)
-      }
+      setAuthToken(session?.access_token ?? null)
+      setAuthReady(true)
     }
     init()
   }, [])
 
-  // Resolve the mentor's service (for price/duration) once on mount.
+  // The member price is computed on the server from the visitor's session.
   useEffect(() => {
-    if (!mentor.service_id) return
-    setLoadingService(true)
-    createClient()
-      .from('career_services')
-      .select('id, name, price_cents, duration_minutes')
-      .eq('id', mentor.service_id)
-      .single()
-      .then(({ data }) => { setService((data as ServiceInfo) ?? null); setLoadingService(false) })
-  }, [mentor.service_id])
+    if (!authReady) return
+    setLoadingPricing(true)
+    fetch('/api/career/pricing', { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} })
+      .then(r => r.json())
+      .then(data => { setPricing(data.error ? null : (data as Pricing)); setLoadingPricing(false) })
+      .catch(() => setLoadingPricing(false))
+  }, [authReady, authToken])
 
   // Fetch slots when the month changes.
   useEffect(() => {
-    if (!mentor.service_id) return
+    if (!mentor.bookable) return
     setLoadingSlots(true)
     setSelectedDate(null)
     setSelectedTime(null)
-    fetch(`/api/career/slots?service_id=${mentor.service_id}&mentor_id=${mentor.id}&year=${year}&month=${month}`)
+    fetch(`/api/career/slots?mentor_id=${mentor.id}&year=${year}&month=${month}`)
       .then(r => r.json())
       .then(data => { setSlots(data.slots ?? []); setLoadingSlots(false) })
       .catch(() => setLoadingSlots(false))
-  }, [mentor.service_id, mentor.id, year, month])
+  }, [mentor.bookable, mentor.id, year, month])
 
   const offset      = firstDayOffset(year, month)
   const totalDays    = daysInMonth(year, month)
@@ -175,7 +175,7 @@ function MentorBookingOverlayInner({
         <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200 flex-shrink-0">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-forest mb-0.5">
-              {mentor.full_name}{service ? ` — ${service.name}` : ''}
+              {mentor.full_name}{pricing ? ` — ${pricing.duration_minutes}-minute session` : ''}
             </p>
             <h2 className="font-serif text-xl font-bold text-gray-900">{stepLabel}</h2>
           </div>
@@ -205,10 +205,18 @@ function MentorBookingOverlayInner({
                 <p className="text-sm text-gray-600 leading-relaxed mb-6">{mentor.bio_long}</p>
               )}
 
-              {!mentor.service_id ? (
+              {!mentor.bookable ? (
                 <p className="text-sm text-gray-400 py-8 text-center">Not yet available for online booking.</p>
               ) : (
                 <>
+                  {pricing && (
+                    <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-5">
+                      {pricing.duration_minutes} minutes ·{' '}
+                      {pricing.effective_price_cents === 0
+                        ? (pricing.price_cents > 0 ? 'Free — member benefit' : 'Free')
+                        : formatEuros(pricing.effective_price_cents)}
+                    </p>
+                  )}
                   {/* Month navigator */}
                   <div className="flex items-center justify-between mb-5">
                     <button onClick={prevMonth} disabled={isPrevDisabled}
@@ -360,7 +368,7 @@ function MentorBookingOverlayInner({
             </div>
           )}
 
-          {!confirmed && step === 3 && service && selectedDate && selectedTime && (
+          {!confirmed && step === 3 && pricing && selectedDate && selectedTime && (
             <>
               {isMember && membershipExpired && (
                 <div className="mb-4 flex items-center justify-between gap-3 border border-yellow-300 bg-yellow-50 px-4 py-3">
@@ -371,9 +379,12 @@ function MentorBookingOverlayInner({
                 </div>
               )}
               <BookingCart
-                serviceName={service.name}
-                servicePrice={service.price_cents}
-                isMember={isMember && !membershipExpired}
+                sessionName={sessionName}
+                sessionPrice={pricing.price_cents}
+                isMember={isMember}
+                mentorId={mentor.id}
+                authToken={authToken}
+                onSelectMentor={id => onSwitchMentor?.(id)}
                 slot={{ date: selectedDate, time: selectedTime }}
                 formatDate={formatDateLong}
                 onProceed={extras => { setCartExtras(extras); setStep(4) }}
@@ -382,14 +393,14 @@ function MentorBookingOverlayInner({
             </>
           )}
 
-          {!confirmed && step === 4 && service && selectedDate && selectedTime && (
+          {!confirmed && step === 4 && pricing && selectedDate && selectedTime && (
             stripePromise ? (
               <Elements stripe={stripePromise}>
                 <PaymentForm
-                  service={service}
+                  session={{ name: sessionName, price_cents: pricing.price_cents, effective_price_cents: pricing.effective_price_cents }}
                   slot={{ date: selectedDate, time: selectedTime }}
                   form={{ name, email, motivation, goal, cvUrl }}
-                  isMember={isMember && !membershipExpired}
+                  isMember={isMember}
                   authToken={authToken}
                   extraItems={cartExtras}
                   mentorId={mentor.id}
@@ -411,7 +422,7 @@ function MentorBookingOverlayInner({
                 </svg>
               </div>
               <h3 className="font-serif text-2xl font-bold text-gray-900 mb-2">Booking Confirmed</h3>
-              <p className="text-sm font-medium text-gray-700 mb-1">{mentor.full_name}{service ? ` — ${service.name}` : ''}</p>
+              <p className="text-sm font-medium text-gray-700 mb-1">{sessionName}</p>
               {selectedDate && selectedTime && (
                 <p className="text-sm text-gray-400 mb-6">{formatDateLong(selectedDate)} at {selectedTime}</p>
               )}
@@ -444,7 +455,7 @@ function MentorBookingOverlayInner({
             )}
             <button
               onClick={() => setStep(s => (s + 1) as 2 | 3)}
-              disabled={(step === 1 ? !canContinueStep1 : !canContinueStep2) || loadingService}
+              disabled={(step === 1 ? !canContinueStep1 : !canContinueStep2) || loadingPricing || !pricing}
               className="text-xs font-semibold uppercase tracking-widest px-8 py-3 transition-colors disabled:opacity-40"
               style={{ background: 'var(--forest)', color: '#fff' }}
             >
@@ -460,6 +471,7 @@ function MentorBookingOverlayInner({
 export default function MentorBookingOverlay(props: {
   mentor: Mentor
   onClose: () => void
+  onSwitchMentor?: (mentorId: string) => void
 }) {
   if (typeof document === 'undefined') return null
   return createPortal(<MentorBookingOverlayInner {...props} />, document.body)

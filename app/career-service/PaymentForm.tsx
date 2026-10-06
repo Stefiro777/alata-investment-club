@@ -9,7 +9,14 @@ const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
 
 const labelCls = 'block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1.5'
 
-export type ServiceInfo = { id: string; name: string; price_cents: number; duration_minutes: number | null }
+/** What the booking summary shows; the amount actually charged is decided by /api/career/book. */
+export type SessionInfo = {
+  name: string
+  /** List price of the session, in cents. */
+  price_cents: number
+  /** What this visitor pays: 0 for active members. */
+  effective_price_cents: number
+}
 
 export type BookingForm = {
   name: string
@@ -21,7 +28,7 @@ export type BookingForm = {
 
 /** Payment step of the booking flow — must be rendered inside <Elements>. */
 export function PaymentForm({
-  service,
+  session,
   slot,
   form,
   isMember,
@@ -30,13 +37,13 @@ export function PaymentForm({
   mentorId,
   onSuccess,
 }: {
-  service: ServiceInfo
+  session: SessionInfo
   slot: { date: string; time: string }
   form: BookingForm
   isMember: boolean
   authToken: string | null
   extraItems: CartItem[]
-  mentorId?: string | null
+  mentorId: string
   onSuccess: () => void
 }) {
   const stripe   = useStripe()
@@ -49,9 +56,9 @@ export function PaymentForm({
     console.log('[Stripe] stripe instance:', stripe)
   }, [stripe])
 
-  const isFree      = isMember || service.price_cents === 0
+  const isFree      = session.effective_price_cents === 0
   const extrasTotal = extraItems.reduce((s, e) => s + e.price_cents, 0)
-  const totalCents  = (isFree ? 0 : service.price_cents) + extrasTotal
+  const totalCents  = session.effective_price_cents + extrasTotal
 
   async function handleConfirm() {
     if (processing) return
@@ -65,8 +72,7 @@ export function PaymentForm({
         method: 'POST',
         headers,
         body: JSON.stringify({
-          service_id:  service.id,
-          mentor_id:   mentorId ?? undefined,
+          mentor_id:   mentorId,
           slot_date:   slot.date,
           slot_time:   slot.time,
           name:        form.name,
@@ -81,7 +87,8 @@ export function PaymentForm({
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Booking failed'); setProcessing(false); return }
 
-      if (isFree) { onSuccess(); return }
+      // The server decides the price: no client secret means nothing to pay.
+      if (!data.client_secret) { onSuccess(); return }
 
       // Paid path — confirm card payment with Stripe
       if (!stripe || !elements) { setError('Stripe not loaded'); setProcessing(false); return }
@@ -107,9 +114,9 @@ export function PaymentForm({
         <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Booking Summary</p>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">{service.name}</span>
+            <span className="text-gray-600">{session.name}</span>
             <span className={`font-semibold ${isMember ? 'line-through text-gray-300' : 'text-gray-900'}`}>
-              {service.price_cents === 0 ? 'Free' : formatEuros(service.price_cents)}
+              {session.price_cents === 0 ? 'Free' : formatEuros(session.price_cents)}
             </span>
           </div>
           <p className="text-xs text-gray-400">{formatDateLong(slot.date)} at {slot.time}</p>

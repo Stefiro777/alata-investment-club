@@ -14,16 +14,14 @@ type Mentor = {
   bio_short: string | null
   bio_long: string | null
   display_order: number
-  service_id: string | null
+  bookable: boolean
 }
 
 function initials(name: string) {
   return name.split(' ').map(n => n[0]).join('')
 }
 
-function MentorCard({ mentor }: { mentor: Mentor }) {
-  const [overlayOpen, setOverlayOpen] = useState(false)
-
+function MentorCard({ mentor, onOpen }: { mentor: Mentor; onOpen: () => void }) {
   return (
     <>
       <div className="group bg-white overflow-hidden flex flex-col h-full" style={{ border: '1px solid var(--forest)' }}>
@@ -57,17 +55,13 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
           )}
           <button
             type="button"
-            onClick={() => setOverlayOpen(true)}
+            onClick={onOpen}
             className="mt-5 inline-flex items-center justify-center gap-2 border border-white/40 text-white text-xs font-semibold uppercase tracking-widest py-3 hover:bg-white hover:text-forest hover:border-white transition-colors duration-base"
           >
             View Availability
           </button>
         </div>
       </div>
-
-      {overlayOpen && (
-        <MentorBookingOverlay mentor={mentor} onClose={() => setOverlayOpen(false)} />
-      )}
     </>
   )
 }
@@ -75,6 +69,8 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
 export default function MentorSection() {
   const [mentors, setMentors] = useState<Mentor[]>([])
   const [loaded, setLoaded]   = useState(false)
+  // The overlay lives here, not in the card, so a cart suggestion can switch it to another mentor.
+  const [openMentorId, setOpenMentorId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/career/mentors')
@@ -84,6 +80,8 @@ export default function MentorSection() {
   }, [])
 
   if (!loaded || mentors.length === 0) return null
+
+  const openMentor = mentors.find(m => m.id === openMentorId) ?? null
 
   // Same per-card width as MemberCard in /team (~276px: 54.75rem over 3
   // columns with gap-6) at every mentor count, so cards match its scale
@@ -109,11 +107,19 @@ export default function MentorSection() {
         <div className={`grid ${gridClass} gap-6 mx-auto`}>
           {mentors.map((m, i) => (
             <Reveal key={m.id} delay={i * 80} direction="up">
-              <MentorCard mentor={m} />
+              <MentorCard mentor={m} onOpen={() => setOpenMentorId(m.id)} />
             </Reveal>
           ))}
         </div>
       </div>
+      {openMentor && (
+        <MentorBookingOverlay
+          key={openMentor.id}
+          mentor={openMentor}
+          onClose={() => setOpenMentorId(null)}
+          onSwitchMentor={setOpenMentorId}
+        />
+      )}
     </section>
   )
 }
