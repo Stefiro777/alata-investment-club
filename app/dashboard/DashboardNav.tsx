@@ -21,6 +21,17 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileTeamOpen, setMobileTeamOpen] = useState(false)
   const teamMenuRef = useRef<HTMLDivElement>(null)
+  // The account is linked to a mentor profile: show the mentor's own page.
+  const [isMentor, setIsMentor] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/career/me')
+      .then(r => r.json())
+      .then(json => { if (!cancelled) setIsMentor(!!json.linked) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     if (!teamOpen) return
@@ -136,6 +147,12 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
             Resources
           </Link>
 
+          {isMentor && (
+            <Link href="/dashboard/career/me" className={`${linkClass('/dashboard/career/me')} whitespace-nowrap flex-shrink-0`}>
+              I miei orari
+            </Link>
+          )}
+
         </div>
 
         {/* User + logout — unchanged, hidden on mobile (moved into the drawer there) */}
@@ -241,6 +258,12 @@ export default function DashboardNav({ profile }: { profile: MemberProfile }) {
             <Link href="/dashboard/resources" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard/resources')}>
               Resources
             </Link>
+
+            {isMentor && (
+              <Link href="/dashboard/career/me" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/dashboard/career/me')}>
+                I miei orari
+              </Link>
+            )}
 
             {isBoD && (
               <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileLinkClass('/admin')}>
