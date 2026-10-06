@@ -15,6 +15,9 @@ type CareerMentor = {
   notification_email: string
   active: boolean
   display_order: number
+  member_id: string | null
+  /** The club account this mentor logs in with (career_mentors.member_id). */
+  linked_member?: { id: string; full_name: string; email: string } | null
 }
 
 type MentorForm = {
@@ -26,12 +29,14 @@ type MentorForm = {
   notification_email: string
   active: boolean
   display_order: string
+  /** Email of the club member whose account manages this mentor (empty = not linked). */
+  link_member_email: string
 }
 
 const EMPTY_FORM: MentorForm = {
   full_name: '', role_title: '', photo_url: '',
   bio_short: '', bio_long: '', notification_email: '',
-  active: true, display_order: '1',
+  active: true, display_order: '1', link_member_email: '',
 }
 
 function mentorToForm(m: CareerMentor): MentorForm {
@@ -44,6 +49,7 @@ function mentorToForm(m: CareerMentor): MentorForm {
     notification_email: m.notification_email,
     active: m.active,
     display_order: String(m.display_order ?? 1),
+    link_member_email: m.linked_member?.email ?? '',
   }
 }
 
@@ -57,6 +63,7 @@ function formToPayload(f: MentorForm) {
     notification_email: f.notification_email.trim(),
     active: f.active,
     display_order: parseInt(f.display_order, 10) || 1,
+    link_member_email: f.link_member_email.trim(),
   }
 }
 
@@ -171,6 +178,15 @@ function MentorFormFields({ form, onChange }: { form: MentorForm | undefined; on
         <label className={labelCls}>Notification Email *</label>
         <input type="email" value={form.notification_email} onChange={e => onChange({ ...form, notification_email: e.target.value })}
           placeholder="mentor@example.com" className={inputCls} />
+      </div>
+      <div className="col-span-2">
+        <label className={labelCls}>Account collegato (email del membro)</label>
+        <input type="email" value={form.link_member_email} onChange={e => onChange({ ...form, link_member_email: e.target.value })}
+          placeholder="Lascia vuoto per non collegare" className={inputCls} />
+        <p className="text-xs text-gray-400 mt-1">
+          Il membro con questa email vede e gestisce i propri orari e le proprie prenotazioni da «I miei orari».
+          Se vuoi cambiare solo l&apos;email di notifica, lascia questo campo com&apos;è.
+        </p>
       </div>
       <div>
         <label className={labelCls}>Display order</label>
@@ -300,6 +316,12 @@ export default function MentorsTab() {
                     <span className="text-sm font-semibold text-gray-900">{m.full_name}</span>
                     <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${m.active ? 'bg-forest text-white' : 'bg-gray-200 text-gray-500'}`}>
                       {m.active ? 'Active' : 'Inactive'}
+                    </span>
+                    <span
+                      title={m.linked_member ? `Account: ${m.linked_member.full_name} (${m.linked_member.email})` : 'Nessun account collegato: il mentor non vede la pagina I miei orari'}
+                      className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px ${m.linked_member ? 'bg-forest/10 text-forest' : 'bg-yellow-100 text-yellow-800'}`}
+                    >
+                      {m.linked_member ? 'Account collegato' : 'Non collegato'}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 mt-1 flex-wrap">

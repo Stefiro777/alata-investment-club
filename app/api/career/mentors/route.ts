@@ -113,10 +113,10 @@ export async function POST(req: NextRequest) {
     // Link the account by email when the notification address belongs to a member
     // (or to the explicitly given link_member_email); a missing member is not an
     // error, the team can link later from the Mentors tab.
-    const linkEmail = typeof body.link_member_email === 'string' ? body.link_member_email : fields.notification_email
-    const link = await resolveMemberLink(linkEmail, null)
+    const explicitLink = typeof body.link_member_email === 'string' ? body.link_member_email.trim() : ''
+    const link = await resolveMemberLink(explicitLink || fields.notification_email, null)
     const memberId = 'memberId' in link ? link.memberId : null
-    if ('error' in link && typeof body.link_member_email === 'string' && body.link_member_email.trim()) {
+    if ('error' in link && explicitLink) {
       return NextResponse.json({ error: link.error }, { status: link.status })
     }
 
