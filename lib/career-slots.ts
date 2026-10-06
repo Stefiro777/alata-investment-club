@@ -3,6 +3,27 @@ import { CAREER_SESSION_MINUTES } from '@/lib/career-session'
 
 export type MentorSlot = { date: string; time: string; available: boolean }
 
+/**
+ * A booking in 'pending_payment' (card form opened, not paid) holds its slot for this
+ * long; after that the slot is free again. Keep in sync with the 32-minute interval of
+ * the career_bookings_enforce_capacity trigger (migration 20261007_career_pending_hold_32min).
+ */
+export const PENDING_HOLD_MINUTES = 32
+
+/** ISO timestamp before which a pending_payment booking no longer holds its slot. */
+export function pendingHoldCutoffIso(now: number = Date.now()): string {
+  return new Date(now - PENDING_HOLD_MINUTES * 60_000).toISOString()
+}
+
+/** Whether a booking still occupies its slot. */
+export function holdsSlot(b: { status: string; created_at: string | null }, now: number = Date.now()): boolean {
+  if (b.status === 'cancelled') return false
+  if (b.status === 'pending_payment' && b.created_at) {
+    return new Date(b.created_at).getTime() >= now - PENDING_HOLD_MINUTES * 60_000
+  }
+  return true
+}
+
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** Slot dates/times are stored as naive local (Rome) values, so "now" must be Rome time too. */
@@ -46,7 +67,8 @@ function occurrencesOfWeekday(year: number, month: number, dow: number): string[
 /**
  * Bookable 30-minute slots of one mentor for a month, built from the mentor's own
  * availability rows. A slot is `available` when it is in the future (Rome time) and
- * the mentor has no live booking on it (capacity is 1 per mentor slot).
+ * the mentor has no live booking on it (capacity is 1 per mentor slot). A
+ * pending_payment booking older than PENDING_HOLD_MINUTES no longer counts.
  */
 export async function getMentorSlots(
   supabase: SupabaseClient,
@@ -61,7 +83,7 @@ export async function getMentorSlots(
     supabase.from('career_availability').select('*').eq('mentor_id', mentorId).eq('active', true),
     supabase
       .from('career_bookings')
-      .select('slot_date, slot_time')
+      .select('slot_date, slot_time, status, created_at')
       .eq('mentor_id', mentorId)
       .gte('slot_date', monthStart)
       .lt('slot_date', monthEnd)
@@ -83,7 +105,9 @@ export async function getMentorSlots(
     }
   }
 
-  const booked = new Set((bookings ?? []).map(b => `${b.slot_date}|${String(b.slot_time).slice(0, 5)}`))
+  const booked = new Set(
+    (bookings ?? []).filter(b => holdsSlot(b)).map(b => `${b.slot_date}|${String(b.slot_time).slice(0, 5)}`)
+  )
   const now = romeNow()
 
   return [...slots.values()]

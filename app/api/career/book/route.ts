@@ -5,7 +5,7 @@ import Stripe from 'stripe'
 import { isCareerCvPath } from '@/lib/cv-path'
 import { signedCvUrl } from '@/lib/job-applications'
 import { getSessionPricing } from '@/lib/career-session'
-import { isSlotBookable } from '@/lib/career-slots'
+import { isSlotBookable, pendingHoldCutoffIso } from '@/lib/career-slots'
 
 // Signed CV links in emails stay valid for a week.
 const CV_LINK_TTL_SECONDS = 7 * 24 * 60 * 60
@@ -158,6 +158,36 @@ function buildNotificationHtml(params: {
 </html>`
 }
 
+/**
+ * Frees a slot held by an abandoned checkout (pending_payment older than the hold).
+ * The stale PaymentIntent is cancelled first so a late payment cannot book the slot
+ * a second time; if Stripe says it was in fact paid, the slot is NOT released.
+ * Returns false when the slot must be treated as taken.
+ */
+async function releaseStaleHolds(mentorId: string, slotDate: string, slotTime: string): Promise<boolean> {
+  const { data: stale } = await supabaseAdmin
+    .from('career_bookings')
+    .select('id, stripe_payment_intent_id')
+    .eq('mentor_id', mentorId)
+    .eq('slot_date', slotDate)
+    .eq('slot_time', slotTime)
+    .eq('status', 'pending_payment')
+    .lt('created_at', pendingHoldCutoffIso())
+
+  for (const b of stale ?? []) {
+    if (b.stripe_payment_intent_id) {
+      try {
+        await stripe.paymentIntents.cancel(b.stripe_payment_intent_id)
+      } catch {
+        const pi = await stripe.paymentIntents.retrieve(b.stripe_payment_intent_id).catch(() => null)
+        if (!pi || pi.status !== 'canceled') return false // paid (or unknown): the webhook will confirm it
+      }
+    }
+    await supabaseAdmin.from('career_bookings').update({ status: 'cancelled' }).eq('id', b.id)
+  }
+  return true
+}
+
 async function sendBookingEmails(params: {
   sessionName: string
   mentorId: string
@@ -252,6 +282,10 @@ export async function POST(req: NextRequest) {
     // The slot must be one this mentor really offers, still free and in the future.
     if (!(await isSlotBookable(supabaseAdmin, mentor_id, slot_date, slot_time))) {
       return NextResponse.json({ error: 'Slot is not available' }, { status: 409 })
+    }
+
+    if (!(await releaseStaleHolds(mentor_id, slot_date, slot_time))) {
+      return NextResponse.json({ error: 'Slot is fully booked' }, { status: 409 })
     }
 
     // Price and member status are decided here, never taken from the client.
