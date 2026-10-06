@@ -118,7 +118,7 @@ function buildNotificationHtml(params: {
                 <td style="padding:8px 12px;font-size:13px;color:#1a1a1a;">${params.email}</td>
               </tr>
               <tr>
-                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#555;font-weight:600;">Service</td>
+                <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#555;font-weight:600;">Session</td>
                 <td style="padding:8px 12px;background:#f4f7f4;font-size:13px;color:#1a1a1a;">${params.serviceName}</td>
               </tr>
               <tr>
@@ -700,7 +700,7 @@ export async function POST(req: NextRequest) {
     // ── Career booking handling ────────────────────────────────────────────────
     const { data: booking, error: findErr } = await supabaseAdmin
       .from('career_bookings')
-      .select('id, status, service_id, mentor_id, slot_date, slot_time, name, email, motivation, goal, cv_url')
+      .select('id, status, mentor_id, slot_date, slot_time, name, email, motivation, goal, cv_url')
       .eq('stripe_payment_intent_id', paymentIntent.id)
       .single()
 
@@ -713,31 +713,20 @@ export async function POST(req: NextRequest) {
         .update({ status: 'confirmed' })
         .eq('id', booking.id)
 
-      const { data: service } = await supabaseAdmin
-        .from('career_services')
-        .select('name')
-        .eq('id', booking.service_id)
-        .single()
-
-      const serviceName = service?.name ?? 'Career Service'
-
-      // Mentor-scoped bookings notify the specific mentor; generic bookings
-      // keep notifying the service-level contact list (mirrors book/route.ts).
+      // Single mentor-centric session: the label names the mentor, and the mentor is
+      // notified at their own address (mirrors book/route.ts).
+      let mentorName: string | null = null
       let notifyEmails: string[] = []
       if (booking.mentor_id) {
         const { data: mentor } = await supabaseAdmin
           .from('career_mentors')
-          .select('notification_email')
+          .select('full_name, notification_email')
           .eq('id', booking.mentor_id)
           .single()
+        mentorName = mentor?.full_name ?? null
         if (mentor?.notification_email) notifyEmails = [mentor.notification_email]
-      } else {
-        const { data: contacts } = await supabaseAdmin
-          .from('career_notification_contacts')
-          .select('email')
-          .eq('service_id', booking.service_id)
-        notifyEmails = (contacts ?? []).map(c => c.email)
       }
+      const serviceName = mentorName ? `Career session with ${mentorName}` : 'Career session'
 
       const confirmationHtml = buildConfirmationHtml({
         name: booking.name,
