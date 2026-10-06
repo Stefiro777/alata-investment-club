@@ -10,6 +10,7 @@ const TEAM_LABELS: Record<string, string> = {
   events: 'Events',
   media: 'Media',
   alumni: 'Alumni',
+  member: 'Membro',
 }
 
 const LAB_SUBDIVISION_LABELS: Record<string, string> = {
