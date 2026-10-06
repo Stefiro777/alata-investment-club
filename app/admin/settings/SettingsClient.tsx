@@ -16,9 +16,7 @@ function SectionHeading({ title }: { title: string }) {
 export default function SettingsClient({
   applicationsOpen,
   showPrices,
-  priceCV: initialPriceCV,
-  priceMaster: initialPriceMaster,
-  priceCareer: initialPriceCareer,
+  careerSessionPriceCents,
   showAlumni,
   showAlumniReviews,
   showEventsReviews,
@@ -26,9 +24,8 @@ export default function SettingsClient({
 }: {
   applicationsOpen: boolean
   showPrices: boolean
-  priceCV: string
-  priceMaster: string
-  priceCareer: string
+  /** settings.career_session_price_cents (text): single price of a 30-minute Career session. */
+  careerSessionPriceCents: string
   showAlumni: boolean
   showAlumniReviews: boolean
   showEventsReviews: boolean
@@ -89,12 +86,42 @@ export default function SettingsClient({
   const [togglingEventsReviews, setTogglingEventsReviews] = useState(false)
   const [eventsReviewsSaved, setEventsReviewsSaved] = useState(false)
 
-  const [priceCV, setPriceCV] = useState(initialPriceCV)
-  const [priceMaster, setPriceMaster] = useState(initialPriceMaster)
-  const [priceCareer, setPriceCareer] = useState(initialPriceCareer)
+  const [sessionPrice, setSessionPrice] = useState(() => {
+    const cents = Number(careerSessionPriceCents)
+    return Number.isInteger(cents) && cents >= 0 ? (cents / 100).toFixed(2).replace('.', ',') : '30,00'
+  })
   const [savingPrices, setSavingPrices] = useState(false)
   const [pricesSaved, setPricesSaved] = useState(false)
   const [pricesError, setPricesError] = useState<string | null>(null)
+
+  async function handleSaveSessionPrice(e: React.FormEvent) {
+    e.preventDefault()
+    setPricesSaved(false)
+    setPricesError(null)
+    const normalized = sessionPrice.trim().replace(/^€\s*/, '').replace(',', '.')
+    if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+      setPricesError('Inserisci un importo valido, ad esempio 30 o 30,50.')
+      return
+    }
+    const cents = Math.round(parseFloat(normalized) * 100)
+    if (cents > 100_000) {
+      setPricesError('Importo troppo alto (massimo 1.000 €).')
+      return
+    }
+    setSavingPrices(true)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('settings')
+      .upsert({ key: 'career_session_price_cents', value: String(cents) }, { onConflict: 'key' })
+    if (error) {
+      setPricesError(error.message)
+    } else {
+      setSessionPrice((cents / 100).toFixed(2).replace('.', ','))
+      setPricesSaved(true)
+      setTimeout(() => setPricesSaved(false), 3000)
+    }
+    setSavingPrices(false)
+  }
 
   // Invite member state
   const [inviteEmail, setInviteEmail] = useState('')
@@ -169,26 +196,6 @@ export default function SettingsClient({
     setEventsReviewsSaved(true)
   }
 
-  async function handleSavePrices(e: React.FormEvent) {
-    e.preventDefault()
-    setSavingPrices(true)
-    setPricesSaved(false)
-    setPricesError(null)
-    const supabase = createClient()
-    const rows = [
-      { key: 'price_cv_review', value: priceCV },
-      { key: 'price_master_orientation', value: priceMaster },
-      { key: 'price_career_orientation', value: priceCareer },
-    ]
-    const { error } = await supabase.from('settings').upsert(rows, { onConflict: 'key' })
-    if (error) {
-      setPricesError(error.message)
-    } else {
-      setPricesSaved(true)
-      setTimeout(() => setPricesSaved(false), 3000)
-    }
-    setSavingPrices(false)
-  }
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault()
@@ -330,6 +337,41 @@ export default function SettingsClient({
       </section>
 
       {/* â•â• Invite Member â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <section id="career-service">
+        <SectionHeading title="Career Service" />
+
+        <div className="bg-white border border-line-faint p-8">
+          <p className="text-sm font-medium text-ink-900 mb-1">Prezzo sessione (30 minuti)</p>
+          <p className="text-xs text-ink-500 mb-4">
+            Un solo prezzo per tutte le sessioni con i mentor. Le sessioni sono gratuite per i membri con
+            membership attiva; il prezzo viene sempre calcolato dal server al momento della prenotazione.
+          </p>
+          <form onSubmit={handleSaveSessionPrice} className="flex items-center gap-3">
+            <span className="text-sm text-ink-500">€</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={sessionPrice}
+              onChange={e => setSessionPrice(e.target.value)}
+              aria-label="Prezzo sessione Career in euro"
+              placeholder="30,00"
+              className="w-32 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={savingPrices}
+              className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingPrices ? '…' : 'Save'}
+            </button>
+            {pricesSaved && <span className="text-xs text-forest font-medium">Saved</span>}
+          </form>
+          {pricesError && (
+            <p className="mt-3 text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{pricesError}</p>
+          )}
+        </div>
+      </section>
+
       <section id="about-stats">
         <SectionHeading title="About Metrics" />
 

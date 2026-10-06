@@ -14,9 +14,7 @@ export default async function AdminSettingsPage() {
   const [
     { data: appSettings },
     { data: showPricesRow },
-    { data: priceCVRow },
-    { data: priceMasterRow },
-    { data: priceCareerRow },
+    { data: careerSessionPriceRow },
     { data: showAlumniRow },
     { data: showAlumniReviewsRow },
     { data: showEventsReviewsRow },
@@ -24,9 +22,7 @@ export default async function AdminSettingsPage() {
   ] = await Promise.all([
     supabase.from('settings').select('value').eq('key', 'applications_open').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'show_prices').maybeSingle(),
-    supabase.from('settings').select('value').eq('key', 'price_cv_review').maybeSingle(),
-    supabase.from('settings').select('value').eq('key', 'price_master_orientation').maybeSingle(),
-    supabase.from('settings').select('value').eq('key', 'price_career_orientation').maybeSingle(),
+    supabase.from('settings').select('value').eq('key', 'career_session_price_cents').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'show_alumni').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'show_alumni_reviews').maybeSingle(),
     supabase.from('settings').select('value').eq('key', 'show_events_reviews').maybeSingle(),
@@ -40,9 +36,7 @@ export default async function AdminSettingsPage() {
         <SettingsClient
           applicationsOpen={appSettings?.value === 'true'}
           showPrices={showPricesRow ? showPricesRow.value === 'true' : true}
-          priceCV={priceCVRow?.value ?? '€29,99'}
-          priceMaster={priceMasterRow?.value ?? '€49,99'}
-          priceCareer={priceCareerRow?.value ?? '€49,99'}
+          careerSessionPriceCents={careerSessionPriceRow?.value ?? '3000'}
           showAlumni={showAlumniRow?.value === 'true'}
           showAlumniReviews={showAlumniReviewsRow?.value === 'true'}
           showEventsReviews={showEventsReviewsRow?.value === 'true'}

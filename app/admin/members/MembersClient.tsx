@@ -665,18 +665,12 @@ function AlumniCompanyRow({
 export default function MembersClient({
   applicationsOpen,
   showPrices,
-  priceCV: initialPriceCV,
-  priceMaster: initialPriceMaster,
-  priceCareer: initialPriceCareer,
   showAlumni,
   alumni: initialAlumni,
   alumniCompanies: initialAlumniCompanies,
 }: {
   applicationsOpen: boolean
   showPrices: boolean
-  priceCV: string
-  priceMaster: string
-  priceCareer: string
   showAlumni: boolean
   alumni: Alumni[]
   alumniCompanies: AlumniCompany[]
@@ -697,12 +691,6 @@ export default function MembersClient({
   const [togglingAlumni, setTogglingAlumni] = useState(false)
   const [alumniToggleSaved, setAlumniToggleSaved] = useState(false)
 
-  const [priceCV, setPriceCV] = useState(initialPriceCV)
-  const [priceMaster, setPriceMaster] = useState(initialPriceMaster)
-  const [priceCareer, setPriceCareer] = useState(initialPriceCareer)
-  const [savingPrices, setSavingPrices] = useState(false)
-  const [pricesSaved, setPricesSaved] = useState(false)
-  const [pricesError, setPricesError] = useState<string | null>(null)
 
   // Alumni companies state
   const [companiesList, setCompaniesList] = useState<AlumniCompany[]>(initialAlumniCompanies)
@@ -745,27 +733,6 @@ export default function MembersClient({
     setAlumniVisible(newValue)
     setTogglingAlumni(false)
     setAlumniToggleSaved(true)
-  }
-
-  async function handleSavePrices(e: React.FormEvent) {
-    e.preventDefault()
-    setSavingPrices(true)
-    setPricesSaved(false)
-    setPricesError(null)
-    const supabase = createClient()
-    const rows = [
-      { key: 'price_cv_review', value: priceCV },
-      { key: 'price_master_orientation', value: priceMaster },
-      { key: 'price_career_orientation', value: priceCareer },
-    ]
-    const { error } = await supabase.from('settings').upsert(rows, { onConflict: 'key' })
-    if (error) {
-      setPricesError(error.message)
-    } else {
-      setPricesSaved(true)
-      setTimeout(() => setPricesSaved(false), 3000)
-    }
-    setSavingPrices(false)
   }
 
   // Invite member state
@@ -934,46 +901,6 @@ export default function MembersClient({
             </div>
           </div>
 
-          <div className="border-t border-black/5" />
-
-          {/* Prezzi Career Service */}
-          <div>
-            <p className="text-sm font-medium text-ink-900 mb-1">Prezzi Career Service</p>
-            <p className="text-xs text-ink-500 mb-4">
-              Valori mostrati nella pagina <span className="font-medium">/career-service</span>.
-            </p>
-            <form onSubmit={handleSavePrices} className="space-y-3">
-              {[
-                { label: 'CV Review', value: priceCV, setter: setPriceCV },
-                { label: 'Master Orientation', value: priceMaster, setter: setPriceMaster },
-                { label: 'Career Orientation', value: priceCareer, setter: setPriceCareer },
-              ].map(({ label, value, setter }) => (
-                <div key={label} className="flex items-center gap-4">
-                  <span className="text-xs text-ink-500 w-40 flex-shrink-0">{label}</span>
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={e => setter(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
-                    placeholder="€29,99"
-                  />
-                </div>
-              ))}
-              {pricesError && (
-                <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{pricesError}</p>
-              )}
-              <div className="flex items-center gap-4 pt-1">
-                <button
-                  type="submit"
-                  disabled={savingPrices}
-                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {savingPrices ? '…' : 'Save Prices'}
-                </button>
-                {pricesSaved && <span className="text-xs text-forest font-medium">Saved</span>}
-              </div>
-            </form>
-          </div>
         </div>
       </section>
 
