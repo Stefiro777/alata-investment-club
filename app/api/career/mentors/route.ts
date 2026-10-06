@@ -101,6 +101,25 @@ export async function DELETE(req: NextRequest) {
   try {
     const { id } = await req.json() as { id: string }
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+    // career_bookings.mentor_id has no ON DELETE: a mentor with bookings keeps
+    // its history and can only be deactivated.
+    const { count: bookingCount, error: countError } = await supabaseAdmin
+      .from('career_bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('mentor_id', id)
+    if (countError) return NextResponse.json({ error: countError.message }, { status: 500 })
+    if ((bookingCount ?? 0) > 0) {
+      return NextResponse.json(
+        { error: 'Questo mentor ha prenotazioni: non si può eliminare, disattivalo.' },
+        { status: 409 }
+      )
+    }
+
+    // career_availability.mentor_id has no ON DELETE either: remove its slots first.
+    const { error: availError } = await supabaseAdmin.from('career_availability').delete().eq('mentor_id', id)
+    if (availError) return NextResponse.json({ error: availError.message }, { status: 500 })
+
     const { error } = await supabaseAdmin.from('career_mentors').delete().eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })

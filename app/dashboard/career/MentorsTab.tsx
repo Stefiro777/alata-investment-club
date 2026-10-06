@@ -231,8 +231,14 @@ export default function MentorsTab() {
   }
 
   async function handleDelete(id: string) {
-    setDeleting(true)
-    await fetch('/api/career/mentors', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+    setDeleting(true); setError(null)
+    const res = await fetch('/api/career/mentors', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      setError(json.error ?? 'Eliminazione non riuscita')
+      setConfirmDel(null); setDeleting(false)
+      return
+    }
     setMentors(prev => prev.filter(x => x.id !== id))
     setConfirmDel(null); setDeleting(false)
   }
