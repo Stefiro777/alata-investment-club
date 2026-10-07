@@ -93,14 +93,14 @@ export default function MentorSection() {
       : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-[54.75rem]'
 
   return (
-    <section className="py-20 sm:py-28 bg-white border-t border-line">
+    <section className="py-20 sm:py-28 bg-paper-warm border-t border-line">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <Reveal>
           <div className="mb-14 text-center">
             <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">One-on-one</p>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-4">Meet Our Mentors</h2>
             <p className="text-ink-500 text-sm leading-relaxed max-w-xl mx-auto">
-              Book a session directly with one of our mentors — view their profile and check availability.
+              Book a session directly with one of our mentors. View their profile and check availability.
             </p>
           </div>
         </Reveal>

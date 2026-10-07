@@ -9,7 +9,7 @@ import MentorSection from './MentorSection'
 
 // How the service works — mirrors the real booking flow (MentorBookingOverlay):
 // pick a mentor, choose a slot from their availability, pay online (free for
-// active members). Sessions are 30 minutes (career_services.duration_minutes).
+// active members). Sessions are 30 minutes.
 const STEPS = [
   {
     title: 'Choose your mentor',
@@ -23,15 +23,6 @@ const STEPS = [
     title: 'Get specific, actionable feedback',
     body: 'A one-to-one conversation with practical next steps: what to fix in your CV, how to approach an interview, which master or role fits your profile.',
   },
-]
-
-const AREAS = [
-  'Career orientation',
-  'Master orientation',
-  'CV & cover letter review',
-  'Interview preparation',
-  'OCF exam preparation',
-  'GMAT / IELTS preparation',
 ]
 
 // What members get: only what matters to someone looking for a career in finance.
@@ -56,12 +47,12 @@ function HowItWorks() {
     <section className="py-20 sm:py-28 bg-white">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <Reveal>
-          <div className="mb-14 max-w-2xl">
+          <div className="mb-14 max-w-2xl mx-auto text-center">
             <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">How it works</p>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-4">
               One-to-one guidance from people who have done it
             </h2>
-            <div className="w-10 h-px bg-forest mb-6" />
+            <div className="w-10 h-px bg-forest mx-auto mb-6" />
             <p className="text-ink-500 text-sm leading-relaxed">
               Career Service connects students and young professionals with club alumni and members already working in finance.
               Sessions are short and focused on a single objective, so you leave with concrete steps instead of general advice.
@@ -69,10 +60,10 @@ function HowItWorks() {
           </div>
         </Reveal>
 
-        <div className="grid md:grid-cols-3 gap-px bg-line border border-line">
+        <div className="grid md:grid-cols-3 gap-6">
           {STEPS.map((step, i) => (
-            <Reveal key={step.title} delay={i * 80} direction="up" className="bg-white">
-              <div className="p-8 h-full">
+            <Reveal key={step.title} delay={i * 80} direction="up" className="h-full">
+              <div className="h-full bg-white border border-forest p-8 text-center">
                 <p className="font-serif text-5xl font-semibold text-forest/30 leading-none mb-6">0{i + 1}</p>
                 <h3 className="font-serif text-xl font-bold text-ink-900 mb-3">{step.title}</h3>
                 <p className="text-sm text-ink-500 leading-relaxed">{step.body}</p>
@@ -80,19 +71,6 @@ function HowItWorks() {
             </Reveal>
           ))}
         </div>
-
-        <Reveal delay={120}>
-          <div className="mt-12">
-            <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">Areas of support</p>
-            <ul className="flex flex-wrap gap-2">
-              {AREAS.map(area => (
-                <li key={area} className="px-4 py-1.5 text-xs font-medium tracking-wide border border-forest text-forest">
-                  {area}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Reveal>
       </div>
     </section>
   )
@@ -100,35 +78,36 @@ function HowItWorks() {
 
 function MemberSnapshot() {
   return (
-    <section className="py-20 sm:py-28 bg-forest text-white">
+    <section className="py-20 sm:py-28 bg-white border-t border-line">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <Reveal>
-          <div className="mb-14 max-w-2xl">
-            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Member access</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">What members get</h2>
-            <div className="w-10 h-px bg-white/30 mb-6" />
-            <p className="text-white/70 text-sm leading-relaxed">
+          <div className="mb-14 max-w-2xl mx-auto text-center">
+            <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">Member access</p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-4">What members get</h2>
+            <div className="w-10 h-px bg-forest mx-auto mb-6" />
+            <p className="text-ink-500 text-sm leading-relaxed">
               Career Service is one part of the club. Membership adds three things that help you move faster.
             </p>
           </div>
         </Reveal>
 
-        <div className="grid md:grid-cols-3 gap-px bg-white/20 border border-white/20">
+        <div className="grid md:grid-cols-3 gap-6">
           {MEMBER_ACCESS.map((item, i) => (
-            <Reveal key={item.title} delay={i * 60} direction="up" className="bg-forest">
-              <div className="p-8 h-full">
-                <h3 className="font-serif text-lg font-bold text-white mb-3">{item.title}</h3>
-                <p className="text-sm text-white/70 leading-relaxed">{item.body}</p>
+            <Reveal key={item.title} delay={i * 60} direction="up" className="h-full">
+              <div className="h-full bg-white border border-forest border-t-4 p-8 text-center">
+                <h3 className="font-serif text-xl font-bold text-ink-900 mb-3">{item.title}</h3>
+                <div className="w-8 h-px bg-forest/40 mx-auto mb-4" />
+                <p className="text-sm text-ink-500 leading-relaxed">{item.body}</p>
               </div>
             </Reveal>
           ))}
         </div>
 
         <Reveal delay={120}>
-          <div className="mt-12">
+          <div className="mt-12 text-center">
             <Link
               href="/join-us"
-              className="inline-block bg-white text-forest text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-white/90 transition-colors duration-fast"
+              className="inline-block bg-forest text-white text-xs font-semibold tracking-[0.2em] uppercase px-10 py-4 hover:bg-forest-deep transition-colors duration-fast"
             >
               Join the Club
             </Link>
