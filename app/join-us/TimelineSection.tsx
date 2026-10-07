@@ -32,7 +32,7 @@ const steps: Step[] = [
     number: '02',
     title: 'Club',
     description:
-      "Joining the Club as a core member starts with an annual membership fee, which directly funds the club's activities and events. From here, members join the Lab, the club's research group, with rotation possible at any time, while Events and Media stay open in parallel to everyone.",
+      "Membership is the core of the club. An annual fee funds our events and activities and gives you a place in the Lab, our research group, where you work on real equity research, M&A and macro projects. Events and Media are open to every member alongside it.",
     skills: [],
     subTeams: [
       {
