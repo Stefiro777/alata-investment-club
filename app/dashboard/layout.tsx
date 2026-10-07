@@ -66,7 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const { data: profileData, error } = await supabase
       .from('club_members')
-      .select('full_name, role, teams, membership_expires_at, member_id, created_at')
+      .select('full_name, role, teams, membership_expires_at, member_id, created_at, user_id')
       .eq('email', user?.email ?? '')
       .maybeSingle()
 
@@ -77,12 +77,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return
     }
 
-    // Collega user_id se non ancora collegato
-    await supabase
-      .from('club_members')
-      .update({ user_id: user.id })
-      .eq('email', user.email!)
-      .is('user_id', null)
+    // Collega user_id se non ancora collegato: lo fa il server (il browser non puo' piu'
+    // scrivere user_id su club_members). Una sola chiamata, errori ignorati: l'app
+    // ricade comunque sul match per email.
+    if (!(profileData as { user_id?: string | null }).user_id) {
+      fetch('/api/me/link-account', { method: 'POST' }).catch(() => {})
+    }
 
     setProfile({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
