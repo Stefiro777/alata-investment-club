@@ -13,9 +13,7 @@ const YEAR_OPTIONS = [
 ]
 
 const TEAM_OPTIONS = [
-  { value: 'equity_research', label: 'Equity Research' },
-  { value: 'ma',              label: 'M&A' },
-  { value: 'macro',           label: 'Macro' },
+  { value: 'lab',             label: 'Lab' },
   { value: 'events',          label: 'Events' },
   { value: 'media',           label: 'Media' },
 ]

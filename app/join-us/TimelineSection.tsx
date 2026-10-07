@@ -32,43 +32,21 @@ const steps: Step[] = [
     number: '02',
     title: 'Club',
     description:
-      "Joining the Club as a core member starts with an annual membership fee, which directly funds the club's activities and events. From here, members freely choose a core team — with rotation possible at any time — while Events and Media stay open in parallel to everyone.",
+      "Joining the Club as a core member starts with an annual membership fee, which directly funds the club's activities and events. From here, members join the Lab, the club's research group, with rotation possible at any time, while Events and Media stay open in parallel to everyone.",
     skills: [],
     subTeams: [
       {
-        name: 'Equity Research',
+        name: 'Lab',
         color: '#1a4a3a',
         description:
-          'Building practical experience in company analysis and financial research, turning academic theory into real market insight through a learning-by-doing approach.',
+          "The club's research group. Equity Research, M&A and Macro work side by side, closing the gap between academic theory and real market practice through a learning-by-doing approach.",
         skills: [
-          'Company Analysis & Equity Research Methodology',
-          'Financial Content Creation on Listed Companies & Market Trends',
+          'Company Analysis, Valuation & Equity Research Methodology',
           'Report Writing & Financial Disclosure',
-          'Company Valuation Fundamentals',
-        ],
-      },
-      {
-        name: 'M&A',
-        color: '#1a4a3a',
-        description:
-          'Closing the gap between academic analysis and investment banking standards, operating as a real in-house investment bank for the club.',
-        skills: [
-          'M&A Deal Analysis & Interpretation',
+          'M&A Deal Analysis & Financial Modeling in Excel (Comps, DCF, Premium Analysis)',
           'Investment Banking-Grade PowerPoint Deliverables (Fairness Opinions, Board Materials)',
-          'Financial Modeling in Excel (Comps, DCF, Premium Analysis)',
-          'Structured, Replicable Deal Methodology',
-        ],
-      },
-      {
-        name: 'Macro',
-        color: '#1a4a3a',
-        description:
-          'Analysis of global events and macroeconomic dynamics that move financial markets, with a practical approach oriented towards real asset classes.',
-        skills: [
-          'Reading & Interpreting Global Macro Events',
-          'Market Reports & Analysis',
-          'Investment Thesis Development on Macro Scenarios',
-          'Linking Macro Events to Market Expectations Across Asset Classes',
+          'Reading & Interpreting Global Macro Events Across Asset Classes',
+          'Investment Thesis Development & Market Reports',
         ],
       },
       {
