@@ -73,7 +73,7 @@ export default function MentorSection() {
   const [openMentorId, setOpenMentorId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/career/mentors')
+    fetch('/api/career/mentors?view=public')
       .then(r => r.json())
       .then(json => { setMentors((json.data ?? []) as Mentor[]); setLoaded(true) })
       .catch(() => setLoaded(true))

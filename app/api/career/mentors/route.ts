@@ -56,8 +56,11 @@ async function resolveMemberLink(email: string, mentorId: string | null): Promis
  * else gets the public reduced view (active mentors only) with `bookable`: the
  * mentor has at least one active availability row.
  */
-export async function GET() {
-  if (await requireTeamAccess('career')) {
+export async function GET(req: NextRequest) {
+  // ?view=public forces the reduced public listing even for logged-in staff, so the public
+  // career-service page never shows inactive mentors or loses the `bookable` flag.
+  const publicView = req.nextUrl.searchParams.get('view') === 'public'
+  if (!publicView && (await requireTeamAccess('career'))) {
     const { data, error } = await supabaseAdmin
       .from('career_mentors')
       .select('*')
