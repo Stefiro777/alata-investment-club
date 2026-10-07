@@ -107,41 +107,47 @@ export default function AlumniGrid({ alumni }: { alumni: Alumni[] }) {
 
   return (
     <div>
-      {/* Industry tag filter */}
+      {/* Industry filter: one compact dropdown instead of a wall of tags */}
       {presentIndustries.length > 0 && (
         <Reveal direction="down" className="mb-10">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedIndustry(null)}
-              className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast"
-              style={
-                selectedIndustry === null
-                  ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' }
-                  : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }
-              }
-            >
-              All
-            </button>
-            {presentIndustries.map(ind => (
-              <button
-                key={ind}
-                onClick={() => setSelectedIndustry(ind)}
-                className="px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast"
-                style={
-                  selectedIndustry === ind
-                    ? { background: 'var(--forest)', color: 'white', borderColor: 'var(--forest)' }
-                    : { background: 'white', color: 'var(--forest)', borderColor: 'var(--forest)' }
-                }
-              >
-                {ind}
-              </button>
-            ))}
-          </div>
-          {selectedIndustry && (
-            <p className="text-xs text-ink-400 mt-3">
-              {filtered.length} {filtered.length === 1 ? 'alumni' : 'alumni'} in {selectedIndustry}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-y border-line py-4">
+            <p className="text-xs tracking-[0.2em] uppercase text-ink-500">
+              {filtered.length} {filtered.length === 1 ? 'alumnus' : 'alumni'}
+              {selectedIndustry ? <span className="text-ink-400"> in {selectedIndustry}</span> : null}
             </p>
-          )}
+            <div className="flex items-center gap-4">
+              {selectedIndustry && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedIndustry(null)}
+                  className="text-xs tracking-wide text-ink-500 underline underline-offset-4 hover:text-ink-900 transition-colors duration-fast"
+                >
+                  Clear
+                </button>
+              )}
+              <label className="relative block">
+                <span className="sr-only">Filter by industry</span>
+                <select
+                  value={selectedIndustry ?? ''}
+                  onChange={e => setSelectedIndustry(e.target.value || null)}
+                  className="appearance-none bg-white text-forest text-xs font-medium tracking-wide border border-forest pl-4 pr-10 py-2.5 min-w-[15rem] w-full sm:w-auto cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-forest"
+                >
+                  <option value="">All industries</option>
+                  {presentIndustries.map(ind => (
+                    <option key={ind} value={ind}>
+                      {ind} ({sorted.filter(a => a.industry === ind).length})
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-forest"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </label>
+            </div>
+          </div>
         </Reveal>
       )}
 
