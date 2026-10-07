@@ -126,7 +126,6 @@ export default function SettingsClient({
   // Invite member state
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteTeam, setInviteTeam] = useState('')
-  const [inviteLabSubdivision, setInviteLabSubdivision] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState(false)
@@ -202,7 +201,6 @@ export default function SettingsClient({
     const email = inviteEmail.trim().toLowerCase()
     if (!email) return
     if (!inviteTeam) { setInviteError('Team is required.'); return }
-    if (inviteTeam === 'lab' && !inviteLabSubdivision) { setInviteError('Lab Subdivision is required for team Lab.'); return }
     setInviting(true)
     setInviteError(null)
     setInviteSuccess(false)
@@ -210,7 +208,7 @@ export default function SettingsClient({
     const res = await fetch('/api/invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, team: inviteTeam, lab_subdivision: inviteTeam === 'lab' ? inviteLabSubdivision : null }),
+      body: JSON.stringify({ email, team: inviteTeam }),
     })
     const text = await res.text()
     let json: { error?: string } = {}
@@ -221,7 +219,6 @@ export default function SettingsClient({
     } else {
       setInviteEmail('')
       setInviteTeam('')
-      setInviteLabSubdivision('')
       setInviteSuccess(true)
     }
     setInviting(false)
@@ -436,26 +433,14 @@ export default function SettingsClient({
             <select
               required
               value={inviteTeam}
-              onChange={e => { setInviteTeam(e.target.value); if (e.target.value !== 'lab') setInviteLabSubdivision('') }}
+              onChange={e => setInviteTeam(e.target.value)}
               className="px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors rounded-none"
             >
               <option value="" disabled>Team…</option>
-              <option value="lab">Lab</option>
               <option value="events">Events</option>
               <option value="media">Media</option>
-              <option value="alumni">Alumni</option>
-            </select>
-            <select
-              value={inviteLabSubdivision}
-              onChange={e => setInviteLabSubdivision(e.target.value)}
-              disabled={inviteTeam !== 'lab'}
-              required={inviteTeam === 'lab'}
-              className="px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors rounded-none disabled:opacity-50"
-            >
-              <option value="">{inviteTeam === 'lab' ? 'Subdivision…' : 'Only for Lab'}</option>
-              <option value="ma">M&amp;A</option>
-              <option value="macro_markets">Macro &amp; Markets</option>
-              <option value="equity_valuation">Equity &amp; Valuation</option>
+              <option value="lab">Lab</option>
+              <option value="member">Membro</option>
             </select>
             <button
               type="submit"

@@ -34,28 +34,20 @@ const AREAS = [
   'GMAT / IELTS preparation',
 ]
 
-// What members can access — taken from the member dashboard (/dashboard):
-// resources library categories, job offers board, member pricing, digital card.
+// What members get: only what matters to someone looking for a career in finance.
+// Internal material (documents, partner programmes) is intentionally left out.
 const MEMBER_ACCESS = [
   {
-    title: 'Resources library',
-    body: 'Curated folders and documents, organised by category: Masters, Career & Recruiting, Education, Forbes Next Leaders and Alata documents.',
+    title: 'Free career sessions',
+    body: 'Active members book 30-minute one-to-one sessions with club mentors at no cost. Everyone else pays per session.',
   },
   {
-    title: 'Mentor sessions at no cost',
-    body: 'Active members book Career Service sessions free of charge; everyone else pays per session.',
+    title: 'A job board for finance students',
+    body: 'Internships and entry-level roles from the club network, plus openings shared by members. Apply on the platform and get an email when something new is posted.',
   },
   {
-    title: 'Job offers board',
-    body: 'Opportunities selected by the club and shared by members, with in-platform applications and optional email alerts for new listings.',
-  },
-  {
-    title: 'Member rates on events',
-    body: 'Reduced ticket prices for club events, with registration and entry managed from your account.',
-  },
-  {
-    title: 'Digital membership card',
-    body: 'A personal card with your member ID, verifiable online, valid for the membership year.',
+    title: 'Master and recruiting resources',
+    body: 'Curated folders to choose the right master and prepare for recruiting processes, organised by topic and always one click away.',
   },
 ]
 
@@ -116,12 +108,12 @@ function MemberSnapshot() {
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">What members get</h2>
             <div className="w-10 h-px bg-white/30 mb-6" />
             <p className="text-white/70 text-sm leading-relaxed">
-              Career Service is one part of the club. Members also get access to the reserved area, where the following is available.
+              Career Service is one part of the club. Membership adds three things that help you move faster.
             </p>
           </div>
         </Reveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/20 border border-white/20">
+        <div className="grid md:grid-cols-3 gap-px bg-white/20 border border-white/20">
           {MEMBER_ACCESS.map((item, i) => (
             <Reveal key={item.title} delay={i * 60} direction="up" className="bg-forest">
               <div className="p-8 h-full">
@@ -170,7 +162,7 @@ export default function CareerServiceClient() {
             <MotionLine delay={0.35} duration={0.8} className="w-12 h-px bg-white/30 mb-6" />
             <MotionReveal delay={0.45}>
               <p className="text-white/70 text-base max-w-2xl leading-relaxed">
-                Services designed to accelerate your career in finance — from university orientation to landing your first role in the industry.
+                Services designed to accelerate your career in finance, from university orientation to landing your first role in the industry.
               </p>
             </MotionReveal>
           </div>

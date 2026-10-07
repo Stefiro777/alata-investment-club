@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       full_name: fullName,
       phone,
       role: 'member',
-      teams: [invite.team],
+      teams: invite.team === 'member' ? [] : [invite.team],
       lab_subdivision: invite.lab_subdivision ?? null,
     })
 

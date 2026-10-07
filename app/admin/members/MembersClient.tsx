@@ -14,16 +14,10 @@ const INDUSTRY_OPTIONS = [
 ]
 
 const INVITE_TEAM_OPTIONS = [
-  { value: 'lab',    label: 'Lab' },
   { value: 'events', label: 'Events' },
   { value: 'media',  label: 'Media' },
-  { value: 'alumni', label: 'Alumni' },
-]
-
-const INVITE_LAB_SUBDIVISION_OPTIONS = [
-  { value: 'ma',               label: 'M&A' },
-  { value: 'macro_markets',    label: 'Macro & Markets' },
-  { value: 'equity_valuation', label: 'Equity & Valuation' },
+  { value: 'lab',    label: 'Lab' },
+  { value: 'member', label: 'Membro' },
 ]
 
 function SectionHeading({ title }: { title: string }) {
@@ -738,7 +732,6 @@ export default function MembersClient({
   // Invite member state
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteTeam, setInviteTeam] = useState('')
-  const [inviteLabSubdivision, setInviteLabSubdivision] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState(false)
@@ -749,7 +742,6 @@ export default function MembersClient({
 
   function handleInviteTeamChange(value: string) {
     setInviteTeam(value)
-    if (value !== 'lab') setInviteLabSubdivision('')
   }
 
   async function handleInvite(e: React.FormEvent) {
@@ -766,10 +758,6 @@ export default function MembersClient({
       setInviteError('Team is required.')
       return
     }
-    if (inviteTeam === 'lab' && !inviteLabSubdivision) {
-      setInviteError('Lab Subdivision is required for team Lab.')
-      return
-    }
 
     setInviting(true)
 
@@ -779,7 +767,6 @@ export default function MembersClient({
       body: JSON.stringify({
         email,
         team: inviteTeam,
-        lab_subdivision: inviteTeam === 'lab' ? inviteLabSubdivision : null,
       }),
     })
     const text = await res.text()
@@ -791,7 +778,6 @@ export default function MembersClient({
     } else {
       setInviteEmail('')
       setInviteTeam('')
-      setInviteLabSubdivision('')
       setInviteSuccess(true)
     }
     setInviting(false)
@@ -981,7 +967,7 @@ export default function MembersClient({
               className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors"
             />
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid gap-4">
               <select
                 value={inviteTeam}
                 onChange={e => handleInviteTeamChange(e.target.value)}
@@ -991,21 +977,6 @@ export default function MembersClient({
                 <option value="" disabled className="text-gray-400">Select team…</option>
                 {INVITE_TEAM_OPTIONS.map(t => (
                   <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-
-              <select
-                value={inviteLabSubdivision}
-                onChange={e => setInviteLabSubdivision(e.target.value)}
-                disabled={inviteTeam !== 'lab'}
-                className="w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-forest focus:border-forest text-sm text-gray-900 bg-white rounded-none cursor-pointer appearance-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-black/5"
-                style={{ accentColor: 'var(--forest)' }}
-              >
-                <option value="" disabled className="text-gray-400">
-                  {inviteTeam === 'lab' ? 'Select subdivision…' : 'Only for team Lab'}
-                </option>
-                {INVITE_LAB_SUBDIVISION_OPTIONS.map(s => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
             </div>

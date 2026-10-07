@@ -4,14 +4,14 @@ import { usePathname } from 'next/navigation'
 
 const NAV = [
   { label: 'Settings',    href: '/admin/settings'    },
+  { label: 'Membership',  href: '/admin/membership'  },
   { label: 'Resources',   href: '/admin/dashboard'   },
   { label: 'People',      href: '/admin/people'      },
-  { label: 'Archive',     href: '/admin/archive'     },
   { label: 'Job Offers',  href: '/admin/jobs'        },
-  { label: 'Finance',     href: '/admin/finance'     },
   { label: 'CRM',         href: '/admin/crm'         },
   { label: 'Analytics',   href: '/admin/analytics'   },
-  { label: 'Membership',  href: '/admin/membership'  },
+  { label: 'Finance',     href: '/admin/finance'     },
+  { label: 'Archive',     href: '/admin/archive'     },
   { label: 'Hackathon',   href: '/admin/hackathon'   },
 ] as const
 

@@ -5,8 +5,8 @@ import { requirePrivilegedAccess } from '@/lib/auth'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const VALID_TEAMS = ['lab', 'events', 'media', 'alumni'] as const
-const VALID_LAB_SUBDIVISIONS = ['macro_markets', 'equity_valuation', 'ma'] as const
+// 'member' = plain member, no team. The Lab subdivision is no longer asked.
+const VALID_TEAMS = ['events', 'media', 'lab', 'member'] as const
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -88,7 +88,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
     const team = body.team
-    const rawLabSubdivision = body.lab_subdivision
 
     if (!email || !emailRegex.test(email)) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
@@ -98,15 +97,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid team' }, { status: 400 })
     }
 
-    let labSubdivision: string | null = null
-    if (team === 'lab') {
-      if (!VALID_LAB_SUBDIVISIONS.includes(rawLabSubdivision)) {
-        return NextResponse.json({ error: 'lab_subdivision required for team lab' }, { status: 400 })
-      }
-      labSubdivision = rawLabSubdivision
-    } else if (rawLabSubdivision) {
-      return NextResponse.json({ error: 'lab_subdivision must be omitted unless team is lab' }, { status: 400 })
-    }
+
+    const labSubdivision: string | null = null
 
     const supabaseAdmin = createSupabaseAdmin(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
