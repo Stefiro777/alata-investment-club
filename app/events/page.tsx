@@ -5,7 +5,6 @@ import EventsGrid from './EventsGrid'
 import EventsReviewsWrapper from './EventsReviewsWrapper'
 import UpcomingEvents from '@/app/components/UpcomingEvents'
 import FeaturedGallery from '@/app/components/FeaturedGallery'
-import LifeAtAlata from '@/app/components/LifeAtAlata'
 import Parallax from '@/app/components/Parallax'
 import { MotionReveal, MotionLine } from '@/app/components/motion/Motion'
 import type { FeaturedGalleryItem } from '@/lib/types'
@@ -76,9 +75,6 @@ export default async function EventsPage() {
           )}
         </div>
       </section>
-
-      {/* Life at Alata — real photos and clips from club events */}
-      <LifeAtAlata />
 
       {/* Featured Events Gallery */}
       <FeaturedGallery
