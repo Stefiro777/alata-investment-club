@@ -58,7 +58,7 @@ export default async function HomePage() {
       <AboutHero />
 
       {/* Who We Are — editorial split with photo */}
-      <section className="bg-white py-24 sm:py-32 border-b border-line overflow-hidden">
+      <section className="bg-white py-24 sm:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid md:grid-cols-12 gap-14 lg:gap-20 items-center">
             <div className="md:col-span-7">
@@ -105,14 +105,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Partners & Sponsors — right under Who We Are */}
-      <PartnersMarquee title="Partners & Sponsors" partners={partnersData ?? []} />
-
       {/* Stats */}
       <StatsSection stats={aboutStats} />
 
+      {/* Partners & Sponsors — right under the stats band */}
+      <PartnersMarquee title="Partners & Sponsors" partners={partnersData ?? []} />
+
       {/* About — Vision + Mission, unified white panels; the hairline draws itself */}
-      <div className="relative bg-white grid md:grid-cols-2 divide-y md:divide-y-0 divide-line border-b border-line">
+      <div className="relative bg-white grid md:grid-cols-2 divide-y md:divide-y-0 divide-line border-y border-line">
         {/* Center hairline — draws top→bottom on scroll (desktop only) */}
         <MotionLine
           orientation="vertical"
