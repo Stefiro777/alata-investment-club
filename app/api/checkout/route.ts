@@ -4,6 +4,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendOrderConfirmation, sendRegistrationConfirmation } from '@/lib/confirmation-emails'
 import { seatsByEvent } from '@/lib/event-capacity'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
+import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
 import {
   reserveSeats, releaseReservations, attachReservationsToSession, type SeatReservation,
 } from '@/lib/event-seats'
@@ -157,8 +158,8 @@ export async function POST(req: NextRequest) {
 
   const [{ data: eventsData, error: eventsErr }, { data: productsData, error: productsErr }] = await Promise.all([
     ticketEventIds.length
-      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents, capacity').in('id', ticketEventIds)
-      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null; capacity: number | null }[], error: null }),
+      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents, capacity, members_only').in('id', ticketEventIds)
+      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null; capacity: number | null; members_only: boolean | null }[], error: null }),
     merchProductIds.length
       ? supabaseAdmin.from('products').select('id, price_cents').in('id', merchProductIds)
       : Promise.resolve({ data: [] as { id: string; price_cents: number }[], error: null }),
@@ -168,6 +169,20 @@ export async function POST(req: NextRequest) {
   if (productsErr) return NextResponse.json({ error: 'Failed to verify product prices' }, { status: 500 })
 
   const eventMap   = new Map((eventsData ?? []).map(e => [e.id, e]))
+
+  // ── Members-only events: verified server-side (cookie session or bearer token),
+  // so hiding the button in the UI is never the only protection.
+  const membersOnlyEvent = (eventsData ?? []).find(e => e.members_only)
+  if (membersOnlyEvent && !isActiveMember) {
+    const access = await getMemberAccess()
+    if (!access.active) {
+      return NextResponse.json(
+        { error: MEMBERS_ONLY_ERROR, code: 'members_only', eventId: membersOnlyEvent.id },
+        { status: access.authenticated ? 403 : 401 },
+      )
+    }
+    isActiveMember = true
+  }
   const productMap = new Map((productsData ?? []).map(p => [p.id, p]))
 
   const items_: UnifiedLineItem[] = []

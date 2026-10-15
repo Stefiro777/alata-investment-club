@@ -82,6 +82,7 @@ export type UpcomingEvent = {
   end_time?: string | null
   slug?: string | null
   capacity?: number | null            // null = unlimited
+  members_only?: boolean              // only verified active members can register
 }
 
 // Result of the public RPC get_event_availability()

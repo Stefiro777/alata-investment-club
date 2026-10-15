@@ -7,6 +7,7 @@ import type { UpcomingEvent } from '@/lib/types'
 import EventRegistrationModal from '@/app/components/EventRegistrationModal'
 import EventWaitlistModal from '@/app/components/EventWaitlistModal'
 import { useCart } from '@/app/components/CartContext'
+import { useMemberAccess } from '@/app/components/useMemberAccess'
 
 type GalleryImage = { id: string; url: string; display_order: number }
 
@@ -106,8 +107,10 @@ export default function EventDetailClient({
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [added, setAdded] = useState(false)
   const { addItem } = useCart()
+  const access = useMemberAccess()
+  const membersLocked = !!event.members_only && !access.active
 
-  const hasTicket = event.status === 'open' && !soldOut && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
+  const hasTicket = event.status === 'open' && !soldOut && !membersLocked && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
   const isPaidTicket = hasTicket && (event.ticket_price_cents ?? 0) > 0
   const isFreeTicket = hasTicket && event.ticket_price_cents === 0
 
@@ -139,6 +142,11 @@ export default function EventDetailClient({
             {(event.status !== 'open' || soldOut) && (
               <span className="inline-block bg-white/15 border border-white/30 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 mb-4">
                 {soldOut ? 'Sold out' : event.status === 'coming_soon' ? 'Coming Soon' : 'Completed'}
+              </span>
+            )}
+            {event.members_only && (
+              <span className="inline-block bg-white/15 border border-white/30 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 mb-4 mr-2">
+                Members only
               </span>
             )}
             <h1 className="font-serif text-3xl sm:text-5xl font-bold leading-tight mb-3">
@@ -182,7 +190,7 @@ export default function EventDetailClient({
           </div>
         )}
 
-        {soldOut && (
+        {soldOut && !membersLocked && (
           <div className="bg-[#f3f4f6] border border-[#e5e7eb] px-6 py-8 mb-12 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
             <p className="text-sm text-ink-500">
               This event is sold out. Join the waitlist and we will get in touch if a seat becomes available.
@@ -196,7 +204,27 @@ export default function EventDetailClient({
           </div>
         )}
 
-        {event.status === 'open' && !soldOut && (
+        {event.status === 'open' && membersLocked && (
+          <div className="bg-[#f3f4f6] border border-[#e5e7eb] px-6 py-8 mb-12 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
+            <p className="text-sm text-ink-500">
+              This event is reserved for verified club members.
+            </p>
+            {access.authenticated ? (
+              <span className="inline-block border border-forest text-forest text-xs font-medium tracking-[0.2em] uppercase px-6 py-3 flex-shrink-0">
+                Members only
+              </span>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-block bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-[0.2em] uppercase px-6 py-3 transition-colors flex-shrink-0"
+              >
+                Login to register
+              </Link>
+            )}
+          </div>
+        )}
+
+        {event.status === 'open' && !soldOut && !membersLocked && (
           <div className="mb-12">
             {isPaidTicket || isFreeTicket ? (
               <button

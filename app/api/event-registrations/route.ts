@@ -4,6 +4,7 @@ import { Resend } from 'resend'
 import { requireTeamAccess } from '@/lib/auth'
 import { isEventFullError } from '@/lib/event-capacity'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
+import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -76,12 +77,22 @@ export async function POST(req: NextRequest) {
 
     const { data: eventRowForValidation, error: eventFetchErr } = await supabase
       .from('upcoming_events')
-      .select('registration_field, title')
+      .select('registration_field, title, members_only')
       .eq('id', event_id)
       .single()
 
     if (eventFetchErr) {
       return NextResponse.json({ error: 'Event not found' }, { status: 400 })
+    }
+
+    if (eventRowForValidation.members_only) {
+      const access = await getMemberAccess()
+      if (!access.active) {
+        return NextResponse.json(
+          { error: MEMBERS_ONLY_ERROR, code: 'members_only', authenticated: access.authenticated },
+          { status: access.authenticated ? 403 : 401 },
+        )
+      }
     }
 
     if (eventRowForValidation.registration_field === 'motivation' && !motivazione?.trim()) {
