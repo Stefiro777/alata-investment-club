@@ -95,14 +95,14 @@ export default async function HomePage() {
             </div>
             <div className="md:col-span-5">
               <MotionWipe delay={0.2}>
-                <div className="frame-double">
-                  <div className="relative w-full aspect-[4/5] overflow-hidden bg-paper-stone">
+                <div className="frame-double max-w-xs sm:max-w-sm mx-auto md:max-w-none">
+                  <div className="relative w-full aspect-square overflow-hidden bg-[#f5f5f5]">
                     <Image
-                      src="/redesign/evento-platea.jpeg"
-                      alt="Alata members at a club event"
+                      src="/white-black.png"
+                      alt="Alata Investment Club logo"
                       fill
                       className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 40vw"
+                      sizes="(max-width: 768px) 80vw, 40vw"
                     />
                   </div>
                 </div>
@@ -111,6 +111,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Partners & Sponsors — right under Who We Are */}
+      <PartnersMarquee title="Partners & Sponsors" partners={partnersData ?? []} />
 
       {/* Stats */}
       <StatsSection stats={aboutStats} />
@@ -211,9 +214,6 @@ export default async function HomePage() {
           )}
         </div>
       </section>
-
-      {/* Partners & Sponsors */}
-      <PartnersMarquee title="Partners & Sponsors" partners={partnersData ?? []} />
 
       {/* Contact Us */}
       <section className="py-20 sm:py-28 bg-forest text-white">
