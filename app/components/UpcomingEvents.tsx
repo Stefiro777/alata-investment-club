@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useEffect, useState, useCallback, useMemo, Suspense } from 'react'
 import Link from 'next/link'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent } from '@/lib/types'
 import EventRegistrationModal from './EventRegistrationModal'
@@ -11,11 +11,15 @@ import { useEventAvailability } from './useEventAvailability'
 import { useMemberAccess } from './useMemberAccess'
 import { useCart } from '@/app/components/CartContext'
 
-function formatDate(dateStr: string) {
+// Parsed with T00:00:00 (local) so the weekday/day never slide with the timezone.
+function parseDate(dateStr: string) {
   const d = new Date(dateStr + 'T00:00:00')
   return {
-    month: d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
+    year: d.getFullYear(),
+    monthKey: dateStr.slice(0, 7),
+    monthName: d.toLocaleDateString('en-US', { month: 'long' }),
     day: String(d.getDate()).padStart(2, '0'),
+    weekday: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
   }
 }
 
@@ -23,7 +27,27 @@ function fmtEur(cents: number) {
   return `€${(cents / 100).toFixed(2).replace('.', ',')}`
 }
 
-const BADGE_CLASS = "inline-block bg-forest text-white border border-white/20 text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1"
+type MonthGroup = { key: string; monthName: string; year: number; events: UpcomingEvent[] }
+
+function groupByMonth(events: UpcomingEvent[]): MonthGroup[] {
+  const groups: MonthGroup[] = []
+  for (const ev of events) {
+    const { monthKey, monthName, year } = parseDate(ev.date)
+    const last = groups[groups.length - 1]
+    if (last && last.key === monthKey) last.events.push(ev)
+    else groups.push({ key: monthKey, monthName, year, events: [ev] })
+  }
+  return groups
+}
+
+// All pills share one footprint; only the fill changes.
+const PILL = 'inline-flex items-center text-[10px] font-medium tracking-[0.2em] uppercase px-3.5 py-2 leading-none whitespace-nowrap'
+const PILL_OUTLINE = `${PILL} border border-forest text-forest`
+const PILL_SOLID = `${PILL} border border-forest bg-forest text-white`
+const PILL_TINT = `${PILL} border border-transparent bg-forest/[0.12] text-forest`
+// The action cluster sits above the row-wide link but lets clicks through; only real controls catch them.
+const BUTTON = `${PILL_SOLID} pointer-events-auto transition-colors duration-fast hover:bg-forest-deep hover:border-forest-deep`
+const LINK_TEXT = 'pointer-events-auto text-[10px] font-semibold tracking-[0.2em] uppercase text-forest border-b border-forest pb-[3px] leading-none transition-colors hover:text-forest-deep'
 
 // Reads ?register= and auto-opens the modal. Must be wrapped in <Suspense>.
 function RegisterDeepLink({
@@ -45,16 +69,26 @@ function RegisterDeepLink({
   return null
 }
 
-function StatusBadge({ status }: { status: UpcomingEvent['status'] }) {
-  if (status === 'completed') {
-    return <span className={BADGE_CLASS}>Completed</span>
-  }
-  return <span className={BADGE_CLASS}>Coming Soon</span>
+function StatusPill({ status }: { status: UpcomingEvent['status'] }) {
+  return <span className={PILL_OUTLINE}>{status === 'completed' ? 'Completed' : 'Coming Soon'}</span>
+}
+
+// "Name w/ Guest": the guest goes in italic forest, the prefix "w/ " is kept.
+function EventTitle({ title }: { title: string }) {
+  const m = /\s*w\/\s*/i.exec(title)
+  if (!m) return <>{title}</>
+  const before = title.slice(0, m.index)
+  const after = title.slice(m.index + m[0].length)
+  return (
+    <>
+      {before}{before ? ' ' : ''}
+      <span className="italic font-medium text-forest">w/ {after}</span>
+    </>
+  )
 }
 
 function UpcomingEventRow({
   event,
-  isLast,
   soldOut,
   membersLocked,
   authenticated,
@@ -62,7 +96,6 @@ function UpcomingEventRow({
   onOpenWaitlist,
 }: {
   event: UpcomingEvent
-  isLast: boolean
   soldOut: boolean
   membersLocked: boolean
   authenticated: boolean
@@ -70,9 +103,8 @@ function UpcomingEventRow({
   onOpenWaitlist: (event: UpcomingEvent) => void
 }) {
   const [added, setAdded] = useState(false)
-  const { month, day } = formatDate(event.date)
+  const { day, weekday } = parseDate(event.date)
   const { addItem } = useCart()
-  const router = useRouter()
   const hasTicket    = event.status === 'open' && !soldOut && !membersLocked && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
   const isPaidTicket = hasTicket && (event.ticket_price_cents ?? 0) > 0
   const isFreeTicket = hasTicket && event.ticket_price_cents === 0
@@ -91,93 +123,144 @@ function UpcomingEventRow({
     setTimeout(() => setAdded(false), 2000)
   }
 
-  function goToDetail() {
-    if (event.slug) router.push(`/events/${event.slug}`)
+  const membersBadge = event.members_only ? <span className={PILL_TINT}>Members only</span> : null
+
+  let action: React.ReactNode
+  if (event.status === 'open' && membersLocked) {
+    action = authenticated ? (
+      <span className={PILL_TINT}>Members only</span>
+    ) : (
+      <Link href="/login" className={`${PILL_TINT} pointer-events-auto transition-colors hover:bg-forest/20`}>
+        Login to register
+      </Link>
+    )
+  } else if (isPaidTicket || isFreeTicket) {
+    action = (
+      <>
+        {membersBadge}
+        <button type="button" onClick={handleAddTicket} className={BUTTON}>
+          {added
+            ? 'Added ✓'
+            : isFreeTicket
+              ? 'Add ticket — Free'
+              : `Add ticket — ${fmtEur(event.ticket_price_cents ?? 0)}`}
+        </button>
+      </>
+    )
+  } else if (soldOut) {
+    action = (
+      <>
+        {membersBadge}
+        <span className={PILL_SOLID}>Sold out</span>
+        <button type="button" onClick={() => onOpenWaitlist(event)} className={LINK_TEXT}>
+          Join waitlist
+        </button>
+      </>
+    )
+  } else if (event.status === 'open') {
+    action = (
+      <>
+        {membersBadge}
+        {event.action_type === 'link' && event.action_link ? (
+          <a href={event.action_link} target="_blank" rel="noopener noreferrer" className={BUTTON}>
+            Register Now
+          </a>
+        ) : event.action_type === 'form' ? (
+          <button type="button" onClick={() => onOpenModal(event)} className={BUTTON}>
+            Register Now
+          </button>
+        ) : (
+          <span className={PILL_SOLID}>Register Now</span>
+        )}
+      </>
+    )
+  } else {
+    action = (
+      <>
+        {membersBadge}
+        <StatusPill status={event.status} />
+      </>
+    )
   }
 
   return (
-    <div>
-      <div
-        onClick={goToDetail}
-        className={`flex flex-col sm:flex-row sm:items-start gap-6 py-8 bg-forest hover:bg-[#153d30] transition-colors duration-fast px-6 ${event.slug ? 'cursor-pointer' : ''}`}
-      >
-
-        {/* Date block */}
-        <div className="flex-shrink-0 w-16 sm:w-20">
-          <p className="text-[10px] tracking-[0.25em] uppercase text-white font-medium leading-none mb-1">
-            {month}
-          </p>
-          <p className="font-serif text-5xl font-bold text-white leading-none">
-            {day}
-          </p>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-serif text-xl text-white font-bold leading-snug">
-            {event.title}
-          </h3>
-          {event.members_only && (
-            <span className="inline-block mt-2 border border-white/40 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-2 py-0.5">
-              Members only
-            </span>
-          )}
-        </div>
-
-        {/* Action — always visible */}
-        <div className="flex-shrink-0 flex items-start pt-1 gap-2 flex-col sm:flex-row">
-          {event.status === 'open' && membersLocked ? (
-            authenticated ? (
-              <span className={BADGE_CLASS}>Members only</span>
-            ) : (
-              <Link href="/login" onClick={e => e.stopPropagation()} className={BADGE_CLASS}>
-                Login to register
-              </Link>
-            )
-          ) : (isPaidTicket || isFreeTicket) ? (
-            <button
-              onClick={e => { e.stopPropagation(); handleAddTicket() }}
-              className={`inline-block border text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors ${
-                added
-                  ? 'border-forest bg-forest text-white'
-                  : 'border-forest bg-forest text-white hover:bg-[#143d30]'
-              }`}
-            >
-              {added
-                ? 'Added ✓'
-                : isFreeTicket
-                  ? 'Add ticket — Free'
-                  : `Add ticket — ${fmtEur(event.ticket_price_cents ?? 0)}`}
-            </button>
-          ) : soldOut ? (
-            <>
-              <span className={BADGE_CLASS}>Sold out</span>
-              <button
-                onClick={e => { e.stopPropagation(); onOpenWaitlist(event) }}
-                className="inline-block border border-white/60 text-white hover:bg-white hover:text-forest text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors"
-              >
-                Join waitlist
-              </button>
-            </>
-          ) : event.status === 'open' ? (
-            event.action_type === 'link' && event.action_link ? (
-              <a href={event.action_link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className={BADGE_CLASS}>
-                Register Now
-              </a>
-            ) : event.action_type === 'form' ? (
-              <button onClick={e => { e.stopPropagation(); onOpenModal(event) }} className={BADGE_CLASS}>
-                Register Now
-              </button>
-            ) : (
-              <span className={BADGE_CLASS}>Register Now</span>
-            )
-          ) : (
-            <StatusBadge status={event.status} />
-          )}
-        </div>
+    <div
+      className="group relative grid grid-cols-[3.5rem_1fr] sm:grid-cols-[88px_1fr] gap-x-4 sm:gap-x-6 gap-y-3 lg:flex lg:items-center lg:gap-9 py-7 border-b border-forest/[0.22] pl-0 hover:pl-5 focus-within:pl-5 hover:bg-forest/[0.07] focus-within:bg-forest/[0.07] transition-[padding,background-color] duration-[250ms] ease-out"
+    >
+      {/* Date */}
+      <div className="row-span-2 lg:row-span-1 lg:w-[88px] flex-shrink-0">
+        <p className="font-serif text-[44px] sm:text-[56px] font-semibold text-ink-900 leading-none tabular-nums">{day}</p>
+        <p className="text-[10px] tracking-[0.25em] uppercase text-ink-500 mt-2 leading-none">{weekday}</p>
       </div>
 
-      {!isLast && <div className="h-px bg-white/10" />}
+      {/* Title — the link is stretched over the whole row; buttons sit above it */}
+      <div className="min-w-0 lg:flex-1">
+        <h3 className="font-serif text-[28px] sm:text-[34px] font-semibold text-ink-900 leading-[1.1]">
+          {event.slug ? (
+            <Link
+              href={`/events/${event.slug}`}
+              className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-forest"
+            >
+              <EventTitle title={event.title} />
+            </Link>
+          ) : (
+            <EventTitle title={event.title} />
+          )}
+        </h3>
+      </div>
+
+      {/* Action */}
+      <div className="pointer-events-none relative z-10 col-start-2 lg:col-start-auto flex flex-wrap items-center gap-3 lg:flex-shrink-0 lg:justify-end">
+        {action}
+      </div>
+    </div>
+  )
+}
+
+function MonthGroupBlock({
+  group,
+  currentYear,
+  isSoldOut,
+  membersLocked,
+  authenticated,
+  onOpenModal,
+  onOpenWaitlist,
+}: {
+  group: MonthGroup
+  currentYear: number
+  isSoldOut: (ev: UpcomingEvent) => boolean
+  membersLocked: (ev: UpcomingEvent) => boolean
+  authenticated: boolean
+  onOpenModal: (event: UpcomingEvent) => void
+  onOpenWaitlist: (event: UpcomingEvent) => void
+}) {
+  const count = group.events.length
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] lg:grid-cols-[240px_1fr] border-t border-forest">
+      <div className="pt-6 sm:pt-7 pb-2 sm:pb-0 sm:pr-4 flex items-baseline gap-4 sm:block">
+        <h3 className="font-serif italic font-medium text-forest leading-none text-[40px] sm:text-[48px] lg:text-[60px]">
+          {group.monthName}
+          {group.year !== currentYear && (
+            <span className="not-italic ml-2 text-[0.55em] sm:block sm:ml-0 sm:mt-2">{group.year}</span>
+          )}
+        </h3>
+        <p className="text-[11px] tracking-[0.25em] uppercase text-forest/70 sm:mt-3">
+          {count} {count === 1 ? 'Event' : 'Events'}
+        </p>
+      </div>
+      <div>
+        {group.events.map(event => (
+          <UpcomingEventRow
+            key={event.id}
+            event={event}
+            soldOut={isSoldOut(event)}
+            membersLocked={membersLocked(event)}
+            authenticated={authenticated}
+            onOpenModal={onOpenModal}
+            onOpenWaitlist={onOpenWaitlist}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -197,6 +280,11 @@ export default function UpcomingEvents() {
   const isSoldOut = useCallback(
     (ev: UpcomingEvent) => !!availability[ev.id]?.sold_out && ev.date >= today && ev.status !== 'coming_soon',
     [availability, today],
+  )
+
+  const membersLocked = useCallback(
+    (ev: UpcomingEvent) => !!ev.members_only && !access.active,
+    [access.active],
   )
 
   const openModal = useCallback(
@@ -222,6 +310,9 @@ export default function UpcomingEvents() {
       })
   }, [])
 
+  const groups = useMemo(() => groupByMonth(events), [events])
+  const currentYear = new Date().getFullYear()
+
   if (loading || events.length === 0) return null
 
   return (
@@ -243,15 +334,15 @@ export default function UpcomingEvents() {
             <div className="w-10 h-px bg-forest mt-5" />
           </div>
 
-          {/* Event rows */}
-          <div>
-            {events.map((event, i) => (
-              <UpcomingEventRow
-                key={event.id}
-                event={event}
-                isLast={i === events.length - 1}
-                soldOut={isSoldOut(event)}
-                membersLocked={!!event.members_only && !access.active}
+          {/* One block per month, chronological */}
+          <div className="flex flex-col gap-10">
+            {groups.map(group => (
+              <MonthGroupBlock
+                key={group.key}
+                group={group}
+                currentYear={currentYear}
+                isSoldOut={isSoldOut}
+                membersLocked={membersLocked}
                 authenticated={access.authenticated}
                 onOpenModal={openModal}
                 onOpenWaitlist={setWaitlistEvent}
