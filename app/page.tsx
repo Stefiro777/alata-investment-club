@@ -4,7 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import StatsSection from './components/StatsSection'
 import { ABOUT_STATS_KEY, parseAboutStats } from '@/lib/about-stats'
-import NewsCard, { type NewsItem } from './components/NewsCard'
 import PartnersMarquee from './components/PartnersMarquee'
 import { MotionReveal, MotionLine, MotionWipe } from './components/motion/Motion'
 import AboutHero from './components/about/AboutHero'
@@ -43,13 +42,7 @@ function MailIcon() {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const [{ data: eventi }, { data: partnersData }, { data: statsRow }] = await Promise.all([
-    supabase
-      .from('contenuti')
-      .select('id, titolo, descrizione, short_description, full_description, immagine_url, photos, tag, tipo, data_pubblicazione, link')
-      .in('tipo', ['evento', 'aggiornamento', 'news'])
-      .order('data_pubblicazione', { ascending: false })
-      .limit(3),
+  const [{ data: partnersData }, { data: statsRow }] = await Promise.all([
     supabase
       .from('partners')
       .select('id, name, logo_url, website_url, order_index')
@@ -95,14 +88,14 @@ export default async function HomePage() {
             </div>
             <div className="md:col-span-5">
               <MotionWipe delay={0.2}>
-                <div className="frame-double">
-                  <div className="relative w-full aspect-[4/5] overflow-hidden bg-paper-stone">
+                <div className="frame-double max-w-xs sm:max-w-sm mx-auto md:max-w-none">
+                  <div className="relative w-full aspect-square overflow-hidden bg-[#f5f5f5]">
                     <Image
-                      src="/redesign/evento-platea.jpeg"
-                      alt="Alata members at a club event"
+                      src="/white-black.png"
+                      alt="Alata Investment Club logo"
                       fill
                       className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 40vw"
+                      sizes="(max-width: 768px) 80vw, 40vw"
                     />
                   </div>
                 </div>
@@ -111,6 +104,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Partners & Sponsors — right under Who We Are */}
+      <PartnersMarquee title="Partners & Sponsors" partners={partnersData ?? []} />
 
       {/* Stats */}
       <StatsSection stats={aboutStats} />
@@ -176,44 +172,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* News & Events */}
-      <section className="py-20 sm:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <MotionReveal className="mb-12 border-b border-line pb-6 flex items-end justify-between gap-6">
-            <div>
-              <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-2">Latest</p>
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900">News &amp; Events</h2>
-            </div>
-            <Link
-              href="/events"
-              className="shrink-0 inline-flex items-center gap-2 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-semibold tracking-wide uppercase px-6 py-2.5 transition-colors duration-fast"
-            >
-              See all events
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </MotionReveal>
-
-          {!eventi || eventi.length === 0 ? (
-            <div className="py-20 text-center text-ink-500">
-              <p className="text-sm tracking-wide">No events or updates available at the moment.</p>
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {eventi.map((item, i) => (
-                <MotionReveal key={item.id} delay={i * 0.15} className="h-full">
-                  <NewsCard item={item as NewsItem} />
-                </MotionReveal>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Partners & Sponsors */}
-      <PartnersMarquee title="Partners & Sponsors" partners={partnersData ?? []} />
 
       {/* Contact Us */}
       <section className="py-20 sm:py-28 bg-forest text-white">

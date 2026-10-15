@@ -35,6 +35,7 @@ type FormState = {
   ticket_price_eur: string
   member_price_eur: string
   capacity: string // empty = unlimited
+  members_only: boolean
   slug: string
 }
 
@@ -52,6 +53,7 @@ const EMPTY_FORM: FormState = {
   ticket_price_eur: '',
   member_price_eur: '',
   capacity: '',
+  members_only: false,
   slug: '',
 }
 
@@ -70,6 +72,7 @@ function eventToForm(ev: UpcomingEvent): FormState {
     ticket_price_eur: ev.ticket_price_cents != null ? (ev.ticket_price_cents / 100).toFixed(2) : '',
     member_price_eur: ev.member_price_cents != null ? (ev.member_price_cents / 100).toFixed(2) : '',
     capacity: ev.capacity != null ? String(ev.capacity) : '',
+    members_only: !!ev.members_only,
     slug: ev.slug ?? '',
   }
 }
@@ -92,6 +95,7 @@ function formToPayload(form: FormState) {
     ticket_price_cents: ticketCents && ticketCents > 0 ? ticketCents : null,
     member_price_cents: memberCents && memberCents >= 0 ? memberCents : null,
     capacity: capacityNum !== null && Number.isFinite(capacityNum) && capacityNum > 0 ? capacityNum : null,
+    members_only: form.members_only,
     slug: form.slug.trim() || slugify(form.title) || `event-${Date.now().toString(36)}`,
   }
 }
@@ -762,6 +766,23 @@ function EventAccordion({
             {taken === null ? '' : `Posti occupati ora: ${taken}${form.capacity ? ` / ${form.capacity}` : ''} (iscrizioni + checkout in corso). `}
             Con la capienza raggiunta le iscrizioni si bloccano e l&apos;evento mostra &ldquo;Sold out&rdquo; con la waitlist; se aumenti la capienza o si libera un posto torna disponibile.
           </p>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.members_only}
+              onChange={e => setForm(prev => ({ ...prev, members_only: e.target.checked }))}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-forest"
+            />
+            <span>
+              <span className="block text-xs font-medium text-ink-900 uppercase tracking-widest">Members only</span>
+              <span className="block text-[11px] text-ink-400 mt-1">
+                Solo i membri verificati (iscrizione attiva) possono registrarsi; gli altri vedono &ldquo;Login to register&rdquo; / &ldquo;Members only&rdquo;. Il controllo è anche lato server.
+              </span>
+            </span>
+          </label>
         </div>
 
         <div className="sm:col-span-2">

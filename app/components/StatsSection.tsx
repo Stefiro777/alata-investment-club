@@ -52,15 +52,15 @@ function StatItem({
 
   return (
     <div
-      className="flex flex-col items-center gap-4 text-center"
+      className="flex flex-col items-center gap-2 text-center"
       style={{
         opacity: started ? 1 : 0,
-        transform: started ? 'translateY(0)' : 'translateY(24px)',
+        transform: started ? 'translateY(0)' : 'translateY(14px)',
         filter: started ? 'blur(0px)' : 'blur(8px)',
         transition: 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1)',
       }}
     >
-      <span className="font-serif text-6xl font-semibold text-white leading-none tabular-nums">
+      <span className="font-serif text-4xl font-semibold text-white leading-none tabular-nums">
         {target === null ? value : count}
         {target !== null && suffix && (
           <span
@@ -105,21 +105,13 @@ export default function StatsSection({ stats }: { stats: AboutStat[] }) {
   }, [])
 
   return (
-    <section className="bg-forest py-20 overflow-hidden">
+    <section className="bg-forest py-7 overflow-hidden">
       <div ref={ref} className="max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Hairline that draws itself before the numbers appear */}
-        <div
-          className="h-px bg-white/20 mb-14 origin-left"
-          style={{
-            transform: active ? 'scaleX(1)' : 'scaleX(0)',
-            transition: 'transform 1.2s cubic-bezier(0.22,1,0.36,1)',
-          }}
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-12 lg:grid-cols-4 lg:gap-y-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 lg:grid-cols-4 lg:gap-y-0">
           {stats.map(({ value, label }, i) => (
             <div
               key={label}
-              className={`px-8 py-4 ${i > 0 ? 'lg:border-l lg:border-white/20' : ''} ${i % 2 === 1 ? 'sm:border-l sm:border-white/20' : ''}`}
+              className={`px-6 py-1 ${i > 0 ? 'lg:border-l lg:border-white/20' : ''} ${i % 2 === 1 ? 'sm:border-l sm:border-white/20' : ''}`}
             >
               <StatItem value={value} label={label} active={active} index={i} />
             </div>

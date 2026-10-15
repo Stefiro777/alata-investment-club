@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
+import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent } from '@/lib/types'
 import EventRegistrationModal from './EventRegistrationModal'
 import EventWaitlistModal from './EventWaitlistModal'
 import { useEventAvailability } from './useEventAvailability'
+import { useMemberAccess } from './useMemberAccess'
 import { useCart } from '@/app/components/CartContext'
 
 function formatDate(dateStr: string) {
@@ -54,12 +56,16 @@ function UpcomingEventRow({
   event,
   isLast,
   soldOut,
+  membersLocked,
+  authenticated,
   onOpenModal,
   onOpenWaitlist,
 }: {
   event: UpcomingEvent
   isLast: boolean
   soldOut: boolean
+  membersLocked: boolean
+  authenticated: boolean
   onOpenModal: (event: UpcomingEvent) => void
   onOpenWaitlist: (event: UpcomingEvent) => void
 }) {
@@ -67,7 +73,7 @@ function UpcomingEventRow({
   const { month, day } = formatDate(event.date)
   const { addItem } = useCart()
   const router = useRouter()
-  const hasTicket    = event.status === 'open' && !soldOut && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
+  const hasTicket    = event.status === 'open' && !soldOut && !membersLocked && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
   const isPaidTicket = hasTicket && (event.ticket_price_cents ?? 0) > 0
   const isFreeTicket = hasTicket && event.ticket_price_cents === 0
 
@@ -111,11 +117,24 @@ function UpcomingEventRow({
           <h3 className="font-serif text-xl text-white font-bold leading-snug">
             {event.title}
           </h3>
+          {event.members_only && (
+            <span className="inline-block mt-2 border border-white/40 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-2 py-0.5">
+              Members only
+            </span>
+          )}
         </div>
 
         {/* Action — always visible */}
         <div className="flex-shrink-0 flex items-start pt-1 gap-2 flex-col sm:flex-row">
-          {(isPaidTicket || isFreeTicket) ? (
+          {event.status === 'open' && membersLocked ? (
+            authenticated ? (
+              <span className={BADGE_CLASS}>Members only</span>
+            ) : (
+              <Link href="/login" onClick={e => e.stopPropagation()} className={BADGE_CLASS}>
+                Login to register
+              </Link>
+            )
+          ) : (isPaidTicket || isFreeTicket) ? (
             <button
               onClick={e => { e.stopPropagation(); handleAddTicket() }}
               className={`inline-block border text-[10px] font-medium tracking-[0.2em] uppercase px-3 py-1 transition-colors ${
@@ -169,6 +188,7 @@ export default function UpcomingEvents() {
   const [modalEvent, setModalEvent] = useState<UpcomingEvent | null>(null)
   const [waitlistEvent, setWaitlistEvent] = useState<UpcomingEvent | null>(null)
   const availability = useEventAvailability()
+  const access = useMemberAccess()
   const today = new Date().toISOString().split('T')[0]
 
   // Sold out only matters for events that have not happened yet: past events
@@ -180,8 +200,12 @@ export default function UpcomingEvents() {
   )
 
   const openModal = useCallback(
-    (ev: UpcomingEvent) => (isSoldOut(ev) ? setWaitlistEvent(ev) : setModalEvent(ev)),
-    [isSoldOut],
+    (ev: UpcomingEvent) => {
+      if (ev.members_only && !access.active) return // members-only: the server enforces this too
+      if (isSoldOut(ev)) setWaitlistEvent(ev)
+      else setModalEvent(ev)
+    },
+    [isSoldOut, access.active],
   )
 
   useEffect(() => {
@@ -227,6 +251,8 @@ export default function UpcomingEvents() {
                 event={event}
                 isLast={i === events.length - 1}
                 soldOut={isSoldOut(event)}
+                membersLocked={!!event.members_only && !access.active}
+                authenticated={access.authenticated}
                 onOpenModal={openModal}
                 onOpenWaitlist={setWaitlistEvent}
               />

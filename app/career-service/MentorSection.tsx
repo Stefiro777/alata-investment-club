@@ -26,7 +26,8 @@ function MentorCard({ mentor, onOpen }: { mentor: Mentor; onOpen: () => void }) 
     <>
       <div className="group bg-white overflow-hidden flex flex-col h-full" style={{ border: '1px solid var(--forest)' }}>
         {/* Portrait — full-bleed, sharp corners, same treatment as /team */}
-        <div className="relative aspect-[4/5] overflow-hidden bg-paper-stone">
+        {/* Dark backing when there is a photo: the 4/5 box has a fractional height, and a light background would show as a grey hairline under the image */}
+        <div className={`relative aspect-[4/5] overflow-hidden ${mentor.photo_url ? "bg-forest" : "bg-paper-stone"}`}>
           {mentor.photo_url ? (
             <Image
               src={mentor.photo_url}
@@ -83,15 +84,6 @@ export default function MentorSection() {
 
   const openMentor = mentors.find(m => m.id === openMentorId) ?? null
 
-  // Same per-card width as MemberCard in /team (~276px: 54.75rem over 3
-  // columns with gap-6) at every mentor count, so cards match its scale
-  // instead of stretching to fill max-w-6xl.
-  const gridClass = mentors.length === 1
-    ? 'grid-cols-1 max-w-[17.25rem]'
-    : mentors.length === 2
-      ? 'grid-cols-1 sm:grid-cols-2 max-w-xl'
-      : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-[54.75rem]'
-
   return (
     <section className="py-20 sm:py-28 bg-paper-warm border-t border-line">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
@@ -104,9 +96,11 @@ export default function MentorSection() {
             </p>
           </div>
         </Reveal>
-        <div className={`grid ${gridClass} gap-6 mx-auto`}>
+        {/* Fixed card width (same as MemberCard in /team, ~276px), wrapped rows are
+            centered, so any mentor count (1, 2, 4, 5...) stays symmetric. */}
+        <div className="flex flex-wrap justify-center gap-6">
           {mentors.map((m, i) => (
-            <Reveal key={m.id} delay={i * 80} direction="up">
+            <Reveal key={m.id} delay={i * 80} direction="up" className="w-full max-w-[17.25rem]">
               <MentorCard mentor={m} onOpen={() => setOpenMentorId(m.id)} />
             </Reveal>
           ))}

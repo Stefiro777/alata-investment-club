@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { isValidPhone, PHONE_ERROR } from '@/lib/phone'
 
 const ANNI = [
   '1st year Bachelor',
@@ -32,6 +33,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!nome.trim() || !cognome.trim() || !email.trim() || !anno) return
+    if (!isValidPhone(telefono)) { setError(PHONE_ERROR); return }
     if (showFieldPrompt && !fieldValue.trim()) return
     setLoading(true)
     setError(null)
@@ -44,7 +46,7 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
         nome: nome.trim(),
         cognome: cognome.trim(),
         email: email.trim(),
-        telefono: telefono.trim() || null,
+        telefono: telefono.trim(),
         anno_di_studio: anno,
         ...(showFieldPrompt
           ? isPanelists
@@ -147,9 +149,11 @@ export default function EventRegistrationModal({ event, onClose }: EventRegistra
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Phone</label>
+                  <label className={labelClass}>Phone *</label>
                   <input
+                    required
                     type="tel"
+                    autoComplete="tel"
                     value={telefono}
                     onChange={e => setTelefono(e.target.value)}
                     placeholder="+39 333 000 0000"

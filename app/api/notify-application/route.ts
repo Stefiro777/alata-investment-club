@@ -28,6 +28,7 @@ interface ApplicationRecord {
   nome?: string
   cognome?: string
   email?: string
+  telephone_number?: string
   anno_di_studio?: string
   degree_programme?: string
   motivazione?: string
@@ -40,6 +41,7 @@ function buildHtml(record: ApplicationRecord): string {
     ['Nome', record.nome ?? '—'],
     ['Cognome', record.cognome ?? '—'],
     ['Email', record.email ?? '—'],
+    ['Telefono', record.telephone_number ?? '—'],
     ['Anno di studio', record.anno_di_studio ?? '—'],
     ['Corso di laurea', record.degree_programme ?? '—'],
     ['Motivazione', record.motivazione ?? '—'],

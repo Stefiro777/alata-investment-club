@@ -1,5 +1,6 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { isMerchPagePublished } from '@/lib/merch-visibility'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +18,9 @@ export async function GET() {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!items?.length) return NextResponse.json({ items: [] })
 
-  const productIds = items.filter(i => i.type === 'product').map(i => i.reference_id)
+  // Merch products are only offered while the shop page is published.
+  const merchOpen = await isMerchPagePublished(supabase)
+  const productIds = merchOpen ? items.filter(i => i.type === 'product').map(i => i.reference_id) : []
   const eventIds   = items.filter(i => i.type === 'event').map(i => i.reference_id)
 
   const [productsRes, eventsRes] = await Promise.all([
@@ -26,6 +29,7 @@ export async function GET() {
           .from('products')
           .select('id, name, price_cents, product_variants(images, sort_order)')
           .in('id', productIds)
+          .eq('visible', true)
       : Promise.resolve({ data: [] }),
     eventIds.length
       ? supabase

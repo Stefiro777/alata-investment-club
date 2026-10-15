@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase'
+import { isValidPhone, PHONE_ERROR } from '@/lib/phone'
 
 const YEAR_OPTIONS = [
   '1st year',
@@ -61,23 +61,31 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
       setError('Motivation must not exceed 200 words.')
       return
     }
+    if (!isValidPhone(telephoneNumber)) {
+      setError(PHONE_ERROR)
+      return
+    }
     setError(null)
     setSubmitting(true)
 
-    const supabase = createClient()
-    const { error: insertError } = await supabase.from('applications').insert({
-      nome: firstName,
-      cognome: lastName,
-      email,
-      telephone_number: telephoneNumber,
-      anno_di_studio: yearOfStudy,
-      degree_programme: degreeProgramme,
-      team: team || null,
-      motivazione: motivation,
+    const res = await fetch('/api/applications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome: firstName,
+        cognome: lastName,
+        email,
+        telephone_number: telephoneNumber,
+        anno_di_studio: yearOfStudy,
+        degree_programme: degreeProgramme,
+        team: team || null,
+        motivazione: motivation,
+      }),
     })
 
-    if (insertError) {
-      setError(insertError.message)
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      setError(json.error ?? 'Something went wrong. Please try again.')
       setSubmitting(false)
       return
     }
@@ -204,10 +212,12 @@ export default function ApplySection({ applicationsOpen }: { applicationsOpen: b
                     </div>
                     <div>
                       <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
-                        Telephone Number
+                        Telephone Number <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="tel"
+                        required
+                        autoComplete="tel"
                         value={telephoneNumber}
                         onChange={e => setTelephoneNumber(e.target.value)}
                         placeholder="e.g. +39 333 123 4567"

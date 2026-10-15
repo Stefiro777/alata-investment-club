@@ -3,6 +3,10 @@ import Stripe from 'stripe'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendOrderConfirmation, sendRegistrationConfirmation } from '@/lib/confirmation-emails'
 import { seatsByEvent } from '@/lib/event-capacity'
+import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
+import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
+import { checkStock, decrementMerchStock, type StockCheckProduct } from '@/lib/merch-stock'
+import { isMerchPagePublished } from '@/lib/merch-visibility'
 import {
   reserveSeats, releaseReservations, attachReservationsToSession, type SeatReservation,
 } from '@/lib/event-seats'
@@ -46,6 +50,7 @@ type EventRegistrationPayload = {
   firstName:             string
   lastName:              string
   email:                 string
+  telefono:              string
   annoStudio:            string
   motivation?:           string
   questionsForPanelists?: string
@@ -70,12 +75,13 @@ function safeJson(obj: unknown): string {
 }
 
 function safeEventRegs(regs: EventRegistrationPayload[]): string {
-  const build = (name: number, email: number, anno: number, free: number) =>
+  const build = (name: number, email: number, anno: number, free: number, tel = 20) =>
     JSON.stringify(regs.map(r => ({
       eventId:               r.eventId,
       firstName:             r.firstName?.slice(0, name),
       lastName:              r.lastName?.slice(0, name),
       email:                 r.email?.slice(0, email),
+      telefono:              r.telefono?.slice(0, tel),
       annoStudio:            r.annoStudio?.slice(0, anno),
       motivation:            r.motivation?.slice(0, free),
       questionsForPanelists: r.questionsForPanelists?.slice(0, free),
@@ -118,6 +124,13 @@ export async function POST(req: NextRequest) {
   if (!items?.length)   return NextResponse.json({ error: 'Cart is empty' },   { status: 400 })
   if (!customerEmail)   return NextResponse.json({ error: 'Email required' },   { status: 400 })
 
+  // Every event registration needs a valid phone number (normalised here).
+  for (const r of eventRegistrations ?? []) {
+    const phone = normalizePhone(r.telefono)
+    if (!phone) return NextResponse.json({ error: PHONE_ERROR }, { status: 400 })
+    r.telefono = phone
+  }
+
   // ── Determine active membership from the verified session token — never
   // trust a client-asserted "isMember" flag. Same pattern as career/book.
   let isActiveMember = false
@@ -147,17 +160,31 @@ export async function POST(req: NextRequest) {
 
   const [{ data: eventsData, error: eventsErr }, { data: productsData, error: productsErr }] = await Promise.all([
     ticketEventIds.length
-      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents, capacity').in('id', ticketEventIds)
-      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null; capacity: number | null }[], error: null }),
+      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents, capacity, members_only').in('id', ticketEventIds)
+      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null; capacity: number | null; members_only: boolean | null }[], error: null }),
     merchProductIds.length
-      ? supabaseAdmin.from('products').select('id, price_cents').in('id', merchProductIds)
-      : Promise.resolve({ data: [] as { id: string; price_cents: number }[], error: null }),
+      ? supabaseAdmin.from('products').select('id, name, price_cents, visible').in('id', merchProductIds)
+      : Promise.resolve({ data: [] as { id: string; name: string; price_cents: number; visible: boolean | null }[], error: null }),
   ])
 
   if (eventsErr)   return NextResponse.json({ error: 'Failed to verify event prices' },   { status: 500 })
   if (productsErr) return NextResponse.json({ error: 'Failed to verify product prices' }, { status: 500 })
 
   const eventMap   = new Map((eventsData ?? []).map(e => [e.id, e]))
+
+  // ── Members-only events: verified server-side (cookie session or bearer token),
+  // so hiding the button in the UI is never the only protection.
+  const membersOnlyEvent = (eventsData ?? []).find(e => e.members_only)
+  if (membersOnlyEvent && !isActiveMember) {
+    const access = await getMemberAccess()
+    if (!access.active) {
+      return NextResponse.json(
+        { error: MEMBERS_ONLY_ERROR, code: 'members_only', eventId: membersOnlyEvent.id },
+        { status: access.authenticated ? 403 : 401 },
+      )
+    }
+    isActiveMember = true
+  }
   const productMap = new Map((productsData ?? []).map(p => [p.id, p]))
 
   const items_: UnifiedLineItem[] = []
@@ -171,9 +198,44 @@ export async function POST(req: NextRequest) {
       items_.push({ ...item, priceCents: realPriceCents })
     } else {
       const product = productMap.get(item.referenceId)
-      if (!product) return NextResponse.json({ error: `Product not found: ${item.referenceId}` }, { status: 400 })
+      if (!product) return NextResponse.json({ error: `Product not found: ${item.referenceId}`, code: 'product_unavailable' }, { status: 400 })
+      // A product hidden after it went into someone's cart (the cart lives in localStorage).
+      if (product.visible === false) {
+        return NextResponse.json({
+          error: `"${product.name}" is no longer available. Please remove it from your cart and try again.`,
+          code: 'product_unavailable',
+          productId: product.id,
+        }, { status: 400 })
+      }
       items_.push({ ...item, priceCents: product.price_cents ?? 0 })
     }
+  }
+
+  // ── Merch stock: never sell more than what is available (sold-out products,
+  // and the whole cart summed per product / colour / size).
+  const merchRequests = items
+    .filter(i => i.type === 'merch' || !i.type)
+    .map(i => ({ productId: i.referenceId, variantColor: i.variantColor ?? null, size: i.size ?? null, quantity: i.quantity ?? 1 }))
+  if (merchRequests.length > 0) {
+    const { data: stockData, error: stockErr } = await supabaseAdmin
+      .from('products')
+      .select('id, name, stock, size_stock, product_variants (id, color, stock)')
+      .in('id', merchProductIds)
+    // 42703 = stock columns not migrated yet: behave as unlimited.
+    if (stockErr && stockErr.code !== '42703') {
+      return NextResponse.json({ error: 'Failed to verify stock' }, { status: 500 })
+    }
+    if (!stockErr) {
+      const stockError = checkStock((stockData ?? []) as unknown as StockCheckProduct[], merchRequests)
+      if (stockError) return NextResponse.json({ error: stockError, code: 'out_of_stock' }, { status: 409 })
+    }
+  }
+
+  if (merchProductIds.length > 0 && !(await isMerchPagePublished(supabaseAdmin))) {
+    return NextResponse.json({
+      error: 'The merch shop is currently closed. Please remove the merch items from your cart.',
+      code: 'merch_unavailable',
+    }, { status: 400 })
   }
 
   const actualShippingCents = shippingCents ?? 0
@@ -215,7 +277,7 @@ export async function POST(req: NextRequest) {
           nome:                    r.firstName,
           cognome:                 r.lastName,
           email:                   r.email,
-          telefono:                null,
+          telefono:                r.telefono,
           anno_di_studio:          r.annoStudio,
           motivazione:             r.motivation ?? null,
           questions_for_panelists: r.questionsForPanelists ?? null,
@@ -230,6 +292,17 @@ export async function POST(req: NextRequest) {
 
     // The registrations now count on their own: drop the temporary hold.
     await releaseReservations(supabaseAdmin, reservationIds)
+
+    // CRM: event contacts (with phone) in crm_customers — never blocks the order
+    for (const r of eventRegistrations ?? []) {
+      const title = ticketLines.find(t => t.referenceId === r.eventId)?.name ?? ''
+      const { error: crmError } = await supabaseAdmin.from('crm_customers').insert({
+        name: `${r.firstName} ${r.lastName}`.trim(), email: r.email, phone: r.telefono,
+        type: 'event', reference: title.slice(0, 255), amount: 0,
+        purchased_at: new Date().toISOString(),
+      })
+      if (crmError) console.error('crm_customers insert failed:', crmError.message)
+    }
 
     // 2. Merch order records + CRM
     const freeMerch = items_.filter(i => i.type === 'merch' || !i.type)
@@ -246,6 +319,7 @@ export async function POST(req: NextRequest) {
           amount:       0,
           purchased_at: new Date().toISOString(),
         }, { onConflict: 'email' })
+        await decrementMerchStock(supabaseAdmin, freeOrderId, freeMerch)
         for (const item of freeMerch) {
           await supabaseAdmin.from('merch_orders').insert({
             stripe_session_id: freeOrderId,

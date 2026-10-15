@@ -12,10 +12,10 @@ const isAdmin = async () => !!(await requireTeamAccess('media'))
 
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  const { product_id, color, color_hex, images, sort_order } = await req.json()
+  const { product_id, color, color_hex, images, sort_order, stock } = await req.json()
   if (!product_id || !color) return NextResponse.json({ error: 'product_id and color required' }, { status: 400 })
   const { data, error } = await supabase.from('product_variants')
-    .insert({ product_id, color, color_hex: color_hex || null, images: images || [], sort_order: sort_order ?? 0 })
+    .insert({ product_id, color, color_hex: color_hex || null, images: images || [], sort_order: sort_order ?? 0, stock: stock ?? null })
     .select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ variant: data })

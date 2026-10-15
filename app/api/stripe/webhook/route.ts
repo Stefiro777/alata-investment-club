@@ -7,6 +7,7 @@ import { PAYMENT_TX_COLUMNS, recordRefund, type PaymentTransaction } from '@/lib
 import { computeMembershipExpiry, loadRenewalRule } from '@/lib/membership'
 import { releaseSessionReservations } from '@/lib/event-seats'
 import { signedCvUrl } from '@/lib/job-applications'
+import { decrementMerchStock } from '@/lib/merch-stock'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -286,6 +287,11 @@ export async function POST(req: NextRequest) {
         } catch (e) { console.error('Failed to record event ticket transaction:', e) }
       }
 
+      // Merch stock: atomic and idempotent per session id (webhook retries are safe)
+      if (merchItems.length > 0) {
+        await decrementMerchStock(supabaseAdmin, session.id, merchItems)
+      }
+
       // Record merch items
       if (merchItems.length > 0) {
         try {
@@ -331,7 +337,7 @@ export async function POST(req: NextRequest) {
       if (rawEventRegs) {
         try {
           const regs = JSON.parse(rawEventRegs) as Array<{
-            eventId: string; firstName: string; lastName: string; email: string
+            eventId: string; firstName: string; lastName: string; email: string; telefono?: string
             annoStudio: string; motivation?: string; questionsForPanelists?: string
           }>
           await Promise.allSettled(regs.map(r =>
@@ -340,7 +346,7 @@ export async function POST(req: NextRequest) {
               nome:                    r.firstName,
               cognome:                 r.lastName,
               email:                   r.email,
-              telefono:                null,
+              telefono:                r.telefono ?? null,
               anno_di_studio:          r.annoStudio,
               motivazione:             r.motivation             ?? null,
               questions_for_panelists: r.questionsForPanelists ?? null,
@@ -348,6 +354,16 @@ export async function POST(req: NextRequest) {
               status:                  'paid',
             })
           ))
+          // CRM: event contacts (with phone) — never blocks the registration
+          await Promise.allSettled(regs.map(r => supabaseAdmin.from('crm_customers').insert({
+            name:         `${r.firstName} ${r.lastName}`.trim() || r.email,
+            email:        r.email,
+            phone:        r.telefono ?? null,
+            type:         'event',
+            reference:    (ticketItems.find(t => t.referenceId === r.eventId)?.name ?? '').slice(0, 255),
+            amount:       null,
+            purchased_at: new Date().toISOString(),
+          })))
         } catch (e) { console.error('Failed to register event attendees (unified):', e) }
       } else if (ticketItems.length > 0) {
         // Legacy fallback — no registration data in metadata

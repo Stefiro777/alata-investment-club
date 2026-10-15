@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
 import { getSessionPricing } from '@/lib/career-session'
 import { getMentorSlots, romeNow } from '@/lib/career-slots'
+import { isMerchPagePublished } from '@/lib/merch-visibility'
 
 type SupabaseService = ReturnType<typeof createServiceClient>
 
@@ -77,6 +78,10 @@ export async function GET(req: NextRequest) {
   const dayIndex = Math.floor(Date.now() / 86_400_000)
   const picked = new Set<string>()
 
+  // The shop switch is read once per request, and only when a merch suggestion needs it.
+  let merchOpenPromise: Promise<boolean> | null = null
+  const merchOpen = () => (merchOpenPromise ??= isMerchPagePublished(supabase))
+
   // Enrich each suggestion with price + image from the referenced table
   const enriched = await Promise.all(
     (suggestions ?? []).map(async (s) => {
@@ -102,17 +107,22 @@ export async function GET(req: NextRequest) {
       }
 
       if (s.type === 'merch_product') {
-        // products table — handled when merch is introduced
+        // Hidden products, deleted products and a hidden shop page are never suggested.
+        if (!(await merchOpen())) return null
         const { data: prod } = await supabase
           .from('products')
-          .select('name, price_cents, image_url')
+          .select('name, price_cents, product_variants(images, sort_order)')
           .eq('id', s.reference_id)
+          .eq('visible', true)
           .maybeSingle()
+        if (!prod) return null
+        const firstVariant = [...(prod.product_variants ?? [])]
+          .sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order)[0]
         return {
           ...s,
-          price_cents: prod?.price_cents ?? 0,
-          image_url: prod?.image_url ?? null,
-          ref_name: prod?.name ?? s.label,
+          price_cents: prod.price_cents ?? 0,
+          image_url: firstVariant?.images?.[0] ?? null,
+          ref_name: prod.name ?? s.label,
         }
       }
 

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Parallax from '@/app/components/Parallax'
 import Reveal from '@/app/components/Reveal'
 import { MotionReveal, MotionLine } from '@/app/components/motion/Motion'
+import { isSoldOut, effectiveStock, stockLabel } from '@/lib/merch-stock'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,9 +15,10 @@ function fmtEur(cents: number) {
   return `€${(cents / 100).toFixed(2).replace('.', ',')}`
 }
 
-type Variant = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number }
+type Variant = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number; stock: number | null }
 type Product = {
   id: string; slug: string; name: string; price_cents: number; description: string | null
+  stock: number | null; size_stock: Record<string, number> | null; sizes: string[] | null
   product_variants: Variant[]
 }
 
@@ -51,7 +53,7 @@ export default async function MerchPage({
   // Fetch products
   const { data: products } = await supabase
     .from('products')
-    .select('id, slug, name, price_cents, description, product_variants (id, color, color_hex, images, sort_order)')
+    .select('id, slug, name, price_cents, description, sizes, stock, size_stock, product_variants (id, color, color_hex, images, sort_order, stock)')
     .eq('visible', true)
     .order('created_at', { ascending: false })
 
@@ -113,6 +115,8 @@ export default async function MerchPage({
             {items.map((product, i) => {
               const variants = [...(product.product_variants ?? [])].sort((a, b) => a.sort_order - b.sort_order)
               const firstImg = variants[0]?.images?.[0] ?? null
+              const soldOut = isSoldOut(product)
+              const lowLabel = soldOut ? 'Out of stock' : stockLabel(effectiveStock({ stock: product.stock }))
               return (
                 <Reveal key={product.id} direction="up" delay={(i % 3) * 120}>
                   <Link
@@ -133,6 +137,11 @@ export default async function MerchPage({
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="text-gray-300 text-xs uppercase tracking-widest">No image</span>
                         </div>
+                      )}
+                      {lowLabel && (
+                        <span className={`absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-[0.2em] px-3 py-1.5 ${soldOut ? 'bg-ink-900 text-white' : 'bg-white text-forest border border-forest'}`}>
+                          {lowLabel}
+                        </span>
                       )}
                       {/* Subtle green veil on hover */}
                       <div className="absolute inset-0 bg-forest/0 group-hover:bg-forest/5 transition-colors duration-base pointer-events-none" />
