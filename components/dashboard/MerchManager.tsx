@@ -20,7 +20,18 @@ async function authedFetch(method: string, path: string, body?: unknown) {
     headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}),
   }
-  return fetch(path, opts).then(r => r.json())
+  const res = await fetch(path, opts)
+  const json = await res.json().catch(() => ({}))
+  // Never swallow a failed request: callers (and reportError) look at `error`.
+  if (!res.ok) return { ...json, error: json?.error ?? `Request failed (${res.status})` }
+  return json
+}
+
+/** Shows the error of a failed authedFetch result; returns true when there was one. */
+function reportError(res: { error?: string } | null | undefined, what: string): boolean {
+  if (!res?.error) return false
+  alert(`${what}: ${res.error}`)
+  return true
 }
 
 async function authedPost(path: string, body: unknown)  { return authedFetch('POST',   path, body) }
@@ -134,8 +145,9 @@ function VisibilityToggle() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ visible: !visible }),
-    }).then(r => r.json())
+    }).then(async r => (r.ok ? r.json() : { ...(await r.json().catch(() => ({}))), ok: false }))
     if (res.ok) setVisible(v => !v)
+    else alert(`Could not update the merch page visibility: ${res.error ?? 'request failed'}`)
     setSaving(false)
   }
 
@@ -192,7 +204,8 @@ function VariantEditor({ productId, variants, onRefresh }: {
   async function saveVariantStock(v: Variant) {
     const next = parseStock(stockDraft[v.id] ?? '')
     if (next === (v.stock ?? null)) return
-    await authedPatch('/api/admin/merch/variants', { id: v.id, stock: next })
+    const res = await authedPatch('/api/admin/merch/variants', { id: v.id, stock: next })
+    if (reportError(res, 'Could not save the stock')) return
     onRefresh()
   }
 
@@ -209,8 +222,9 @@ function VariantEditor({ productId, variants, onRefresh }: {
   }
 
   async function deleteVariant(id: string) {
-    await authedDelete(`/api/admin/merch/variants?id=${id}`)
+    const res = await authedDelete(`/api/admin/merch/variants?id=${id}`)
     setConfirmDelete(null)
+    if (reportError(res, 'Could not remove the variant')) return
     onRefresh()
   }
 
@@ -371,7 +385,7 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
 
   async function save() {
     setSaving(true)
-    await authedPatch('/api/admin/merch/products', {
+    const saveRes = await authedPatch('/api/admin/merch/products', {
       id: product.id, name: name.trim(), description: desc.trim() || null,
       price_cents: Math.round(parseFloat(priceEur || '0') * 100),
       sizes: sizes.length ? sizes : null, visible,
@@ -379,12 +393,23 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
       size_stock: buildSizeStock(sizes, sizeStock),
     })
     setSaving(false)
+    if (reportError(saveRes, 'Could not save the product')) return
+    onRefresh()
+  }
+
+  // Visibility is saved immediately (no need to press "Save changes").
+  async function toggleVisible() {
+    const next = !visible
+    setVisible(next)
+    const res = await authedPatch('/api/admin/merch/products', { id: product.id, visible: next })
+    if (reportError(res, 'Could not update visibility')) { setVisible(!next); return }
     onRefresh()
   }
 
   async function del() {
     setDeleting(true)
-    await authedDelete(`/api/admin/merch/products?id=${product.id}`)
+    const res = await authedDelete(`/api/admin/merch/products?id=${product.id}`)
+    if (reportError(res, 'Could not delete the product')) { setDeleting(false); return }
     onRefresh()
   }
 
@@ -465,7 +490,7 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setVisible(v => !v)}
+                onClick={toggleVisible}
                 className={`relative w-10 h-5 transition-colors flex-shrink-0 ${visible ? 'bg-forest' : 'bg-gray-300'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white transition-all ${visible ? 'left-5' : 'left-0.5'}`} />

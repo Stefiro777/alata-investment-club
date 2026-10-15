@@ -1,16 +1,19 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { isMerchPagePublished } from '@/lib/merch-visibility'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
+  if (!(await isMerchPagePublished(supabase))) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data: product, error } = await supabase
     .from('products')

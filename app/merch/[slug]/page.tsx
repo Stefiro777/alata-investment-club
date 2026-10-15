@@ -9,7 +9,7 @@ const supabase = createSupabaseAdmin(
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const { data } = await supabase.from('products').select('name').eq('slug', slug).single()
+  const { data } = await supabase.from('products').select('name').eq('slug', slug).eq('visible', true).maybeSingle()
   return { title: data?.name ? `${data.name} — Alata Merch` : 'Alata Merch' }
 }
 

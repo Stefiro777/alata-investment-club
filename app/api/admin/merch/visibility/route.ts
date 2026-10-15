@@ -1,30 +1,27 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function authedUser(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? null
-  if (!token) return null
-  const { data: { user } } = await supabase.auth.getUser(token)
-  return user ?? null
-}
+// Merch admin: privileged roles (bod/director) or media team
+const isAdmin = async () => !!(await requireTeamAccess('media'))
 
-// GET — read current visibility (authenticated users only)
-export async function GET(req: NextRequest) {
-  if (!(await authedUser(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+// GET — read current visibility
+export async function GET() {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { data } = await supabase
     .from('settings').select('value').eq('key', 'merch_page_visible').maybeSingle()
   const visible = data?.value === 'true'
   return NextResponse.json({ visible })
 }
 
-// POST — update visibility (authenticated users only)
+// POST — update visibility
 export async function POST(req: NextRequest) {
-  if (!(await authedUser(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { visible } = await req.json()
   const { error } = await supabase
     .from('settings')

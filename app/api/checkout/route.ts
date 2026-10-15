@@ -6,6 +6,7 @@ import { seatsByEvent } from '@/lib/event-capacity'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
 import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
 import { checkStock, decrementMerchStock, type StockCheckProduct } from '@/lib/merch-stock'
+import { isMerchPagePublished } from '@/lib/merch-visibility'
 import {
   reserveSeats, releaseReservations, attachReservationsToSession, type SeatReservation,
 } from '@/lib/event-seats'
@@ -162,8 +163,8 @@ export async function POST(req: NextRequest) {
       ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents, capacity, members_only').in('id', ticketEventIds)
       : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null; capacity: number | null; members_only: boolean | null }[], error: null }),
     merchProductIds.length
-      ? supabaseAdmin.from('products').select('id, price_cents').in('id', merchProductIds)
-      : Promise.resolve({ data: [] as { id: string; price_cents: number }[], error: null }),
+      ? supabaseAdmin.from('products').select('id, name, price_cents, visible').in('id', merchProductIds)
+      : Promise.resolve({ data: [] as { id: string; name: string; price_cents: number; visible: boolean | null }[], error: null }),
   ])
 
   if (eventsErr)   return NextResponse.json({ error: 'Failed to verify event prices' },   { status: 500 })
@@ -197,7 +198,15 @@ export async function POST(req: NextRequest) {
       items_.push({ ...item, priceCents: realPriceCents })
     } else {
       const product = productMap.get(item.referenceId)
-      if (!product) return NextResponse.json({ error: `Product not found: ${item.referenceId}` }, { status: 400 })
+      if (!product) return NextResponse.json({ error: `Product not found: ${item.referenceId}`, code: 'product_unavailable' }, { status: 400 })
+      // A product hidden after it went into someone's cart (the cart lives in localStorage).
+      if (product.visible === false) {
+        return NextResponse.json({
+          error: `"${product.name}" is no longer available. Please remove it from your cart and try again.`,
+          code: 'product_unavailable',
+          productId: product.id,
+        }, { status: 400 })
+      }
       items_.push({ ...item, priceCents: product.price_cents ?? 0 })
     }
   }
@@ -220,6 +229,13 @@ export async function POST(req: NextRequest) {
       const stockError = checkStock((stockData ?? []) as unknown as StockCheckProduct[], merchRequests)
       if (stockError) return NextResponse.json({ error: stockError, code: 'out_of_stock' }, { status: 409 })
     }
+  }
+
+  if (merchProductIds.length > 0 && !(await isMerchPagePublished(supabaseAdmin))) {
+    return NextResponse.json({
+      error: 'The merch shop is currently closed. Please remove the merch items from your cart.',
+      code: 'merch_unavailable',
+    }, { status: 400 })
   }
 
   const actualShippingCents = shippingCents ?? 0
