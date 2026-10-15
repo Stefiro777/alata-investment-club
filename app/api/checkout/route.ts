@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendOrderConfirmation, sendRegistrationConfirmation } from '@/lib/confirmation-emails'
 import { seatsByEvent } from '@/lib/event-capacity'
+import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
 import {
   reserveSeats, releaseReservations, attachReservationsToSession, type SeatReservation,
 } from '@/lib/event-seats'
@@ -46,6 +47,7 @@ type EventRegistrationPayload = {
   firstName:             string
   lastName:              string
   email:                 string
+  telefono:              string
   annoStudio:            string
   motivation?:           string
   questionsForPanelists?: string
@@ -70,12 +72,13 @@ function safeJson(obj: unknown): string {
 }
 
 function safeEventRegs(regs: EventRegistrationPayload[]): string {
-  const build = (name: number, email: number, anno: number, free: number) =>
+  const build = (name: number, email: number, anno: number, free: number, tel = 20) =>
     JSON.stringify(regs.map(r => ({
       eventId:               r.eventId,
       firstName:             r.firstName?.slice(0, name),
       lastName:              r.lastName?.slice(0, name),
       email:                 r.email?.slice(0, email),
+      telefono:              r.telefono?.slice(0, tel),
       annoStudio:            r.annoStudio?.slice(0, anno),
       motivation:            r.motivation?.slice(0, free),
       questionsForPanelists: r.questionsForPanelists?.slice(0, free),
@@ -117,6 +120,13 @@ export async function POST(req: NextRequest) {
 
   if (!items?.length)   return NextResponse.json({ error: 'Cart is empty' },   { status: 400 })
   if (!customerEmail)   return NextResponse.json({ error: 'Email required' },   { status: 400 })
+
+  // Every event registration needs a valid phone number (normalised here).
+  for (const r of eventRegistrations ?? []) {
+    const phone = normalizePhone(r.telefono)
+    if (!phone) return NextResponse.json({ error: PHONE_ERROR }, { status: 400 })
+    r.telefono = phone
+  }
 
   // ── Determine active membership from the verified session token — never
   // trust a client-asserted "isMember" flag. Same pattern as career/book.
@@ -215,7 +225,7 @@ export async function POST(req: NextRequest) {
           nome:                    r.firstName,
           cognome:                 r.lastName,
           email:                   r.email,
-          telefono:                null,
+          telefono:                r.telefono,
           anno_di_studio:          r.annoStudio,
           motivazione:             r.motivation ?? null,
           questions_for_panelists: r.questionsForPanelists ?? null,
@@ -230,6 +240,17 @@ export async function POST(req: NextRequest) {
 
     // The registrations now count on their own: drop the temporary hold.
     await releaseReservations(supabaseAdmin, reservationIds)
+
+    // CRM: event contacts (with phone) in crm_customers — never blocks the order
+    for (const r of eventRegistrations ?? []) {
+      const title = ticketLines.find(t => t.referenceId === r.eventId)?.name ?? ''
+      const { error: crmError } = await supabaseAdmin.from('crm_customers').insert({
+        name: `${r.firstName} ${r.lastName}`.trim(), email: r.email, phone: r.telefono,
+        type: 'event', reference: title.slice(0, 255), amount: 0,
+        purchased_at: new Date().toISOString(),
+      })
+      if (crmError) console.error('crm_customers insert failed:', crmError.message)
+    }
 
     // 2. Merch order records + CRM
     const freeMerch = items_.filter(i => i.type === 'merch' || !i.type)

@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCart, type CartItem } from '@/app/components/CartContext'
 import { createClient } from '@/lib/supabase'
+import { isValidPhone, PHONE_ERROR } from '@/lib/phone'
 import type { ShippingAddress } from '@/app/api/merch/checkout/route'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ type EventRegEntry = {
   firstName:             string
   lastName:              string
   email:                 string
+  telefono:              string
   annoStudio:            string
   motivation:            string
   questionsForPanelists: string
@@ -532,6 +534,17 @@ function StepRegistration({
                 />
               </div>
               <div className="sm:col-span-2">
+                <label className={LABEL_CLS}>Phone *</label>
+                <input
+                  type="tel"
+                  autoComplete="tel"
+                  value={reg.telefono}
+                  onChange={e => onChange(reg.eventId, 'telefono', e.target.value)}
+                  placeholder="+39 333 123 4567"
+                  className={INPUT_CLS}
+                />
+              </div>
+              <div className="sm:col-span-2">
                 <label className={LABEL_CLS}>Anno di studio *</label>
                 <select
                   value={reg.annoStudio}
@@ -747,7 +760,7 @@ export default function CheckoutClient() {
       eventId:               t.eventId ?? t.cartKey,
       eventName:             t.name,
       registrationField:     null as 'motivation' | 'panelists' | null,
-      firstName: '', lastName: '', email: '', annoStudio: '',
+      firstName: '', lastName: '', email: '', telefono: '', annoStudio: '',
       motivation: '', questionsForPanelists: '',
     }))
 
@@ -757,7 +770,7 @@ export default function CheckoutClient() {
         eventId:               u.referenceId,
         eventName:             u.name,
         registrationField:     null as 'motivation' | 'panelists' | null,
-        firstName: '', lastName: '', email: '', annoStudio: '',
+        firstName: '', lastName: '', email: '', telefono: '', annoStudio: '',
         motivation: '', questionsForPanelists: '',
       }))
 
@@ -855,6 +868,7 @@ export default function CheckoutClient() {
       if (!r.lastName.trim())   return 'Last name is required.'
       if (!r.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email))
         return 'A valid email is required.'
+      if (!isValidPhone(r.telefono)) return PHONE_ERROR
       if (!r.annoStudio) return 'Year of study is required.'
       if (r.registrationField === 'motivation' && !r.motivation.trim())
         return 'Please tell us why you want to attend.'
@@ -946,6 +960,7 @@ export default function CheckoutClient() {
             firstName:             r.firstName,
             lastName:              r.lastName,
             email:                 r.email,
+            telefono:              r.telefono,
             annoStudio:            r.annoStudio,
             motivation:            r.motivation || undefined,
             questionsForPanelists: r.questionsForPanelists || undefined,

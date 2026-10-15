@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { requireTeamAccess } from '@/lib/auth'
 import { isEventFullError } from '@/lib/event-capacity'
+import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -68,11 +69,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    const phone = normalizePhone(telefono)
+    if (!phone) return NextResponse.json({ error: PHONE_ERROR }, { status: 400 })
+
     const supabase = serviceClient()
 
     const { data: eventRowForValidation, error: eventFetchErr } = await supabase
       .from('upcoming_events')
-      .select('registration_field')
+      .select('registration_field, title')
       .eq('id', event_id)
       .single()
 
@@ -95,7 +99,7 @@ export async function POST(req: NextRequest) {
         nome,
         cognome,
         email,
-        telefono: telefono ?? null,
+        telefono: phone,
         anno_di_studio,
         motivazione: motivazione ?? null,
         questions_for_panelists: questions_for_panelists ?? null,
@@ -107,6 +111,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'This event is sold out.', code: 'event_full' }, { status: 409 })
       }
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    // CRM: keep the contact (with phone) in crm_customers — failure must not affect the response
+    try {
+      const { error: crmError } = await supabase.from('crm_customers').insert({
+        name: `${nome} ${cognome}`.trim(), email, phone, type: 'event',
+        reference: (eventRowForValidation.title ?? '').slice(0, 255), amount: 0,
+        purchased_at: new Date().toISOString(),
+      })
+      if (crmError) console.error('crm_customers insert failed:', crmError.message)
+    } catch (crmErr) {
+      console.error('crm_customers insert failed:', crmErr)
     }
 
     // Send confirmation email — failure must not affect the response
