@@ -7,6 +7,7 @@ import { PAYMENT_TX_COLUMNS, recordRefund, type PaymentTransaction } from '@/lib
 import { computeMembershipExpiry, loadRenewalRule } from '@/lib/membership'
 import { releaseSessionReservations } from '@/lib/event-seats'
 import { signedCvUrl } from '@/lib/job-applications'
+import { decrementMerchStock } from '@/lib/merch-stock'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -284,6 +285,11 @@ export async function POST(req: NextRequest) {
             sessionId:    session.id,
           })
         } catch (e) { console.error('Failed to record event ticket transaction:', e) }
+      }
+
+      // Merch stock: atomic and idempotent per session id (webhook retries are safe)
+      if (merchItems.length > 0) {
+        await decrementMerchStock(supabaseAdmin, session.id, merchItems)
       }
 
       // Record merch items

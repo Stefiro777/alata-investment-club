@@ -24,6 +24,8 @@ export type CartItem = {
   variant?: CartVariant
   size?: string
   textVariant?: string | null
+  /** Units available when the item was added; null/undefined = unlimited (the server re-checks at checkout). */
+  maxQty?: number | null
   // ticket
   eventId?: string
   eventDate?: string
@@ -122,7 +124,9 @@ function CartDrawer({
                 className="w-11 h-11 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">−</button>
               <span className="text-sm w-4 text-center">{item.quantity}</span>
               <button onClick={() => updateQty(item.cartKey, item.quantity + 1)}
-                className="w-11 h-11 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">+</button>
+                disabled={item.maxQty != null && item.quantity >= item.maxQty}
+                title={item.maxQty != null && item.quantity >= item.maxQty ? 'Maximum available quantity' : undefined}
+                className="w-11 h-11 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm disabled:opacity-30 disabled:hover:border-gray-200 disabled:cursor-not-allowed">+</button>
             </div>
             <p className="text-sm font-semibold text-gray-900">{fmtEur(item.priceCents * item.quantity)}</p>
           </div>
@@ -243,7 +247,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems(prev => {
       const existing = prev.find(i => i.cartKey === full.cartKey)
       if (existing && full.type === 'ticket') return prev
-      if (existing) return prev.map(i => i.cartKey === full.cartKey ? { ...i, quantity: i.quantity + 1 } : i)
+      if (existing) {
+        const cap = full.maxQty ?? existing.maxQty
+        if (cap != null && existing.quantity >= cap) return prev
+        return prev.map(i => i.cartKey === full.cartKey ? { ...i, maxQty: cap, quantity: i.quantity + 1 } : i)
+      }
+      if (full.maxQty != null && full.maxQty <= 0) return prev
       return [...prev, full]
     })
     setDrawerOpen(true)
@@ -255,7 +264,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQty = useCallback((cartKey: string, qty: number) => {
     if (qty <= 0) { setItems(prev => prev.filter(i => i.cartKey !== cartKey)); return }
-    setItems(prev => prev.map(i => i.cartKey === cartKey ? { ...i, quantity: qty } : i))
+    setItems(prev => prev.map(i => i.cartKey === cartKey
+      ? { ...i, quantity: i.maxQty != null ? Math.min(qty, i.maxQty) : qty }
+      : i))
   }, [])
 
   const clearCart = useCallback(() => {

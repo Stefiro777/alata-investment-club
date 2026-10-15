@@ -24,8 +24,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { data: product } = await supabase
     .from('products')
     .select(`
-      id, slug, name, price_cents, description, sizes, details, visible,
-      product_variants (id, color, color_hex, images, sort_order),
+      id, slug, name, price_cents, description, sizes, details, visible, stock, size_stock,
+      product_variants (id, color, color_hex, images, sort_order, stock),
       product_text_variants (id, option, sort_order)
     `)
     .eq('slug', slug)

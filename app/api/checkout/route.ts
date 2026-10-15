@@ -5,6 +5,7 @@ import { sendOrderConfirmation, sendRegistrationConfirmation } from '@/lib/confi
 import { seatsByEvent } from '@/lib/event-capacity'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
 import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
+import { checkStock, decrementMerchStock, type StockCheckProduct } from '@/lib/merch-stock'
 import {
   reserveSeats, releaseReservations, attachReservationsToSession, type SeatReservation,
 } from '@/lib/event-seats'
@@ -201,6 +202,26 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Merch stock: never sell more than what is available (sold-out products,
+  // and the whole cart summed per product / colour / size).
+  const merchRequests = items
+    .filter(i => i.type === 'merch' || !i.type)
+    .map(i => ({ productId: i.referenceId, variantColor: i.variantColor ?? null, size: i.size ?? null, quantity: i.quantity ?? 1 }))
+  if (merchRequests.length > 0) {
+    const { data: stockData, error: stockErr } = await supabaseAdmin
+      .from('products')
+      .select('id, name, stock, size_stock, product_variants (id, color, stock)')
+      .in('id', merchProductIds)
+    // 42703 = stock columns not migrated yet: behave as unlimited.
+    if (stockErr && stockErr.code !== '42703') {
+      return NextResponse.json({ error: 'Failed to verify stock' }, { status: 500 })
+    }
+    if (!stockErr) {
+      const stockError = checkStock((stockData ?? []) as unknown as StockCheckProduct[], merchRequests)
+      if (stockError) return NextResponse.json({ error: stockError, code: 'out_of_stock' }, { status: 409 })
+    }
+  }
+
   const actualShippingCents = shippingCents ?? 0
   const actualDiscountCents = discountCents ?? 0
 
@@ -282,6 +303,7 @@ export async function POST(req: NextRequest) {
           amount:       0,
           purchased_at: new Date().toISOString(),
         }, { onConflict: 'email' })
+        await decrementMerchStock(supabaseAdmin, freeOrderId, freeMerch)
         for (const item of freeMerch) {
           await supabaseAdmin.from('merch_orders').insert({
             stripe_session_id: freeOrderId,

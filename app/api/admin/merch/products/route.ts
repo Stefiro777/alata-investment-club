@@ -16,8 +16,8 @@ export async function GET() {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const { data, error } = await supabase
     .from('products')
-    .select(`id, slug, name, price_cents, description, sizes, details, visible, created_at,
-             product_variants (id, color, color_hex, images, sort_order),
+    .select(`id, slug, name, price_cents, description, sizes, details, visible, created_at, stock, size_stock,
+             product_variants (id, color, color_hex, images, sort_order, stock),
              product_text_variants (id, option, sort_order)`)
     .order('created_at', { ascending: false })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -29,10 +29,13 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const body = await req.json()
-  const { name, slug, price_cents, description, sizes, details, visible } = body
+  const { name, slug, price_cents, description, sizes, details, visible, stock, size_stock } = body
   if (!name || !slug) return NextResponse.json({ error: 'name and slug required' }, { status: 400 })
   const { data, error } = await supabase.from('products')
-    .insert({ name, slug, price_cents: price_cents ?? 0, description, sizes, details, visible: visible ?? true })
+    .insert({
+      name, slug, price_cents: price_cents ?? 0, description, sizes, details, visible: visible ?? true,
+      stock: stock ?? null, size_stock: size_stock ?? null,
+    })
     .select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ product: data })

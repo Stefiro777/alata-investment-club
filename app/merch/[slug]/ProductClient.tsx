@@ -3,15 +3,19 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { useCart } from '@/app/components/CartContext'
+import { effectiveStock, stockLabel } from '@/lib/merch-stock'
 
 type Variant = {
   id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number
+  stock?: number | null
 }
 type TextVariant = { id: string; option: string; sort_order: number }
 type Product = {
   id: string; slug: string; name: string; price_cents: number
   description: string | null; sizes: string[] | null
   details: Record<string, string> | null
+  stock?: number | null
+  size_stock?: Record<string, number> | null
   product_variants: Variant[]
   product_text_variants: TextVariant[]
 }
@@ -21,7 +25,7 @@ function fmtEur(cents: number) {
 }
 
 export default function ProductClient({ product }: { product: Product }) {
-  const { addItem } = useCart()
+  const { addItem, items: cartItems } = useCart()
 
   const variants   = [...(product.product_variants ?? [])].sort((a, b) => a.sort_order - b.sort_order)
   const textVars   = [...(product.product_text_variants ?? [])].sort((a, b) => a.sort_order - b.sort_order)
@@ -35,9 +39,25 @@ export default function ProductClient({ product }: { product: Product }) {
 
   const images = selectedVariant?.images ?? []
 
+  // Stock for the current colour/size, minus what is already in the cart.
+  const cartKey = selectedVariant && selectedSize
+    ? `${product.id}:${selectedVariant.id}:${selectedSize}:${selectedText ?? 'none'}`
+    : ''
+  const left = effectiveStock(product, selectedVariant?.id, selectedSize || null)
+  const productLines = cartItems.filter(i => i.productId === product.id)
+  const sameLineQty = productLines
+    .filter(i => i.variant?.id === selectedVariant?.id && i.size === selectedSize)
+    .reduce((n, i) => n + i.quantity, 0)
+  const productQty = productLines.reduce((n, i) => n + i.quantity, 0)
+  const addable = left === null
+    ? null
+    : Math.max(0, Math.min(left - sameLineQty, typeof product.stock === 'number' ? product.stock - productQty : Infinity))
+  const soldOut = left !== null && left <= 0
+  const atLimit = addable !== null && addable <= 0
+  const label = stockLabel(left)
+
   function handleAddToCart() {
-    if (!selectedVariant || !selectedSize) return
-    const cartKey = `${product.id}:${selectedVariant.id}:${selectedSize}:${selectedText ?? 'none'}`
+    if (!selectedVariant || !selectedSize || atLimit) return
     addItem({
       cartKey,
       productId:   product.id,
@@ -51,6 +71,7 @@ export default function ProductClient({ product }: { product: Product }) {
       size:        selectedSize,
       textVariant: selectedText,
       priceCents:  product.price_cents,
+      maxQty:      left,
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
@@ -143,7 +164,7 @@ export default function ProductClient({ product }: { product: Product }) {
                         selectedSize === s
                           ? 'bg-forest text-white border-forest'
                           : 'bg-white text-gray-900 border-gray-300 hover:border-forest'
-                      }`}
+                      } ${effectiveStock(product, selectedVariant?.id, s) === 0 ? 'opacity-40 line-through' : ''}`}
                     >
                       {s}
                     </button>
@@ -174,17 +195,24 @@ export default function ProductClient({ product }: { product: Product }) {
               </div>
             )}
 
+            {/* Stock */}
+            {label && (
+              <p className={`text-xs font-semibold uppercase tracking-widest ${soldOut ? 'text-red-600' : 'text-amber-700'}`}>
+                {label}
+              </p>
+            )}
+
             {/* CTA */}
             <button
               onClick={handleAddToCart}
-              disabled={!selectedSize || !selectedVariant}
+              disabled={!selectedSize || !selectedVariant || atLimit}
               className={`w-full py-4 text-sm font-semibold uppercase tracking-widest transition-colors ${
                 added
                   ? 'bg-[#123a2d] text-white'
                   : 'bg-forest hover:bg-forest-deep text-white disabled:bg-gray-200 disabled:text-gray-400'
               }`}
             >
-              {added ? 'AGGIUNTO ✓' : 'AGGIUNGI AL CARRELLO'}
+              {soldOut ? 'OUT OF STOCK' : added ? 'AGGIUNTO ✓' : atLimit ? 'MAX QUANTITY IN CART' : 'AGGIUNGI AL CARRELLO'}
             </button>
 
             {/* Details */}

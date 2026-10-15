@@ -10,8 +10,8 @@ export async function GET() {
   const { data: products, error } = await supabase
     .from('products')
     .select(`
-      id, slug, name, price_cents, description, visible,
-      product_variants (id, color, color_hex, images, sort_order)
+      id, slug, name, price_cents, description, visible, stock, size_stock,
+      product_variants (id, color, color_hex, images, sort_order, stock)
     `)
     .eq('visible', true)
     .order('created_at', { ascending: false })

@@ -36,11 +36,12 @@ type DiscountCode = {
   max_uses: number | null; uses_count: number; expires_at: string | null; active: boolean
 }
 
-type Variant  = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number }
+type Variant  = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number; stock?: number | null }
 type TextVar  = { id: string; option: string; sort_order: number }
 type Product  = {
   id: string; slug: string; name: string; price_cents: number; description: string | null
   sizes: string[] | null; details: Record<string, string> | null; visible: boolean; created_at: string
+  stock?: number | null; size_stock?: Record<string, number> | null
   product_variants: Variant[]
   product_text_variants: TextVar[]
 }
@@ -48,6 +49,36 @@ type Product  = {
 const ZONE_LABELS: Record<string, string> = { IT: 'Italy', EU: 'European Union', WORLD: 'International' }
 
 const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+
+// Stock inputs: empty string = unlimited (null)
+function parseStock(v: string): number | null {
+  const t = v.trim()
+  if (t === '') return null
+  const n = Math.floor(Number(t))
+  return Number.isFinite(n) && n >= 0 ? n : null
+}
+
+function buildSizeStock(sizes: string[], draft: Record<string, string>): Record<string, number> | null {
+  const out: Record<string, number> = {}
+  for (const sz of sizes) {
+    const n = parseStock(draft[sz] ?? '')
+    if (n !== null) out[sz] = n
+  }
+  return Object.keys(out).length ? out : null
+}
+
+function StockInput({ value, onChange, onBlur, placeholder = '∞', className = '' }: {
+  value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; className?: string
+}) {
+  return (
+    <input
+      type="number" min="0" step="1" inputMode="numeric"
+      value={value} placeholder={placeholder}
+      onChange={e => onChange(e.target.value)} onBlur={onBlur}
+      className={`border border-gray-200 px-2 py-1 text-sm text-black focus:outline-none focus:border-forest ${className}`}
+    />
+  )
+}
 
 function fmtEur(cents: number) { return `€${(cents / 100).toFixed(2).replace('.', ',')}` }
 function slugify(s: string)    { return s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') }
@@ -144,6 +175,9 @@ function VariantEditor({ productId, variants, onRefresh }: {
   const [uploading,       setUploading]      = useState<string | null>(null)
   const [activeVariantId, setActiveVariantId] = useState<string | null>(null)
   const [confirmDelete,   setConfirmDelete]  = useState<string | null>(null)
+  const [stockDraft, setStockDraft] = useState<Record<string, string>>(
+    () => Object.fromEntries(variants.map(v => [v.id, v.stock != null ? String(v.stock) : '']))
+  )
   // Local image state keyed by variantId for immediate UI updates without full reload
   const [localImages, setLocalImages] = useState<Record<string, string[]>>(
     () => Object.fromEntries(variants.map(v => [v.id, v.images ?? []]))
@@ -152,7 +186,15 @@ function VariantEditor({ productId, variants, onRefresh }: {
   // Sync local state when parent re-fetches variants
   useEffect(() => {
     setLocalImages(Object.fromEntries(variants.map(v => [v.id, v.images ?? []])))
+    setStockDraft(Object.fromEntries(variants.map(v => [v.id, v.stock != null ? String(v.stock) : ''])))
   }, [variants])
+
+  async function saveVariantStock(v: Variant) {
+    const next = parseStock(stockDraft[v.id] ?? '')
+    if (next === (v.stock ?? null)) return
+    await authedPatch('/api/admin/merch/variants', { id: v.id, stock: next })
+    onRefresh()
+  }
 
   async function addVariant() {
     if (!color.trim()) return
@@ -211,6 +253,15 @@ function VariantEditor({ productId, variants, onRefresh }: {
               <span className="w-5 h-5 border border-gray-300 flex-shrink-0"
                     style={{ backgroundColor: v.color_hex ?? '#ccc' }} />
               <span className="text-sm font-medium text-black flex-1">{v.color}</span>
+              <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-gray-400">
+                Stock
+                <StockInput
+                  value={stockDraft[v.id] ?? ''}
+                  onChange={val => setStockDraft(d => ({ ...d, [v.id]: val }))}
+                  onBlur={() => saveVariantStock(v)}
+                  className="w-16"
+                />
+              </label>
               <span className="text-[10px] text-gray-400">{imgs.length}/5</span>
               <button
                 onClick={() => setActiveVariantId(activeVariantId === v.id ? null : v.id)}
@@ -310,6 +361,10 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
   const [priceEur,   setPriceEur]   = useState((product.price_cents / 100).toFixed(2))
   const [sizes,      setSizes]      = useState<string[]>(product.sizes ?? [])
   const [visible,    setVisible]    = useState(product.visible)
+  const [stockStr,   setStockStr]   = useState(product.stock != null ? String(product.stock) : '')
+  const [sizeStock,  setSizeStock]  = useState<Record<string, string>>(
+    () => Object.fromEntries(Object.entries(product.size_stock ?? {}).map(([k, n]) => [k, String(n)]))
+  )
   const [saving,     setSaving]     = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
   const [deleting,   setDeleting]   = useState(false)
@@ -320,6 +375,8 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
       id: product.id, name: name.trim(), description: desc.trim() || null,
       price_cents: Math.round(parseFloat(priceEur || '0') * 100),
       sizes: sizes.length ? sizes : null, visible,
+      stock: parseStock(stockStr),
+      size_stock: buildSizeStock(sizes, sizeStock),
     })
     setSaving(false)
     onRefresh()
@@ -383,6 +440,28 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
               <label className={LABEL_CLS}>Sizes</label>
               <SizeToggle sizes={sizes} onChange={setSizes} />
             </div>
+            <div className="sm:col-span-2">
+              <label className={LABEL_CLS}>Stock</label>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <label className="flex items-center gap-2 text-xs text-gray-600">
+                  Total
+                  <StockInput value={stockStr} onChange={setStockStr} className="w-20" />
+                </label>
+                {sizes.map(sz => (
+                  <label key={sz} className="flex items-center gap-2 text-xs text-gray-600">
+                    {sz}
+                    <StockInput
+                      value={sizeStock[sz] ?? ''}
+                      onChange={val => setSizeStock(d => ({ ...d, [sz]: val }))}
+                      className="w-16"
+                    />
+                  </label>
+                ))}
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1.5">
+                Vuoto = illimitato. Il totale vale per tutto il prodotto; per colore usa il campo Stock accanto a ogni variante. Scala da solo a ogni acquisto confermato; sotto 6 pezzi il sito mostra &ldquo;Only X left&rdquo;, a 0 &ldquo;Out of stock&rdquo;.
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -442,6 +521,7 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
   const [desc,     setDesc]     = useState('')
   const [priceEur, setPriceEur] = useState('')
   const [sizes,    setSizes]    = useState<string[]>(['XS', 'S', 'M', 'L', 'XL'])
+  const [stockStr, setStockStr] = useState('')
   const [saving,   setSaving]   = useState(false)
   const [err,      setErr]      = useState('')
 
@@ -506,6 +586,7 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
       price_cents: Math.round(parseFloat(priceEur || '0') * 100),
       description: desc.trim() || null,
       sizes: sizes.length ? sizes : null,
+      stock: parseStock(stockStr),
       visible: true,
     })
     if (productRes.error) { setErr(productRes.error); setSaving(false); return }
@@ -564,6 +645,11 @@ function AddProductModal({ onClose, onRefresh }: { onClose: () => void; onRefres
           <div>
             <label className={LABEL_CLS}>Sizes</label>
             <SizeToggle sizes={sizes} onChange={setSizes} />
+          </div>
+
+          <div>
+            <label className={LABEL_CLS}>Stock totale <span className="normal-case text-gray-400">(vuoto = illimitato)</span></label>
+            <StockInput value={stockStr} onChange={setStockStr} placeholder="es. 30" className="w-28" />
           </div>
 
           {/* ── Color Variants ── */}
