@@ -989,7 +989,7 @@ export default function UpcomingEventsAdminSection({
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [regsModal, setRegsModal] = useState<UpcomingEvent | null>(null)
-  const [emailEventTarget, setEmailEventTarget] = useState<{ event: UpcomingEvent; recipientCount: number } | null>(null)
+  const [emailEventTarget, setEmailEventTarget] = useState<{ event: UpcomingEvent } | null>(null)
   const [completedOpen, setCompletedOpen] = useState(false)
   const [regCounts, setRegCounts] = useState<Record<string, number>>({})
   const [regIds, setRegIds] = useState<Record<string, string[]>>({})
@@ -1078,7 +1078,7 @@ export default function UpcomingEventsAdminSection({
   }
 
   function openEmailCompose(ev: UpcomingEvent) {
-    setEmailEventTarget({ event: ev, recipientCount: regCounts[ev.id] ?? 0 })
+    setEmailEventTarget({ event: ev })
   }
 
   async function sendQr(ev: UpcomingEvent) {
@@ -1202,7 +1202,7 @@ export default function UpcomingEventsAdminSection({
         <RegistrationsModal
           event={regsModal}
           onClose={() => setRegsModal(null)}
-          onSendEmail={(count) => setEmailEventTarget({ event: regsModal, recipientCount: count })}
+          onSendEmail={() => setEmailEventTarget({ event: regsModal })}
         />
       )}
 
