@@ -121,30 +121,74 @@ async function uploadToGallery(file: File): Promise<{ url: string } | { error: s
 }
 
 // ── Compose Modal ────────────────────────────────────────────────────────────
+type Registrant = { id: string; nome: string | null; cognome: string | null; email: string }
+
 function ComposeModal({
   event,
-  recipientCount,
   onClose,
 }: {
   event: UpcomingEvent
-  recipientCount: number
   onClose: () => void
 }) {
+  const [mode, setMode] = useState<'invite' | 'custom'>('invite')
+  const [regs, setRegs] = useState<Registrant[] | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [link, setLink] = useState('')
   const [subject, setSubject] = useState(`Update: ${event.title}`)
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [result, setResult] = useState<{ sent: number; failed: number } | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
+  useEffect(() => {
+    fetch(`/api/event-registrations?event_id=${event.id}`)
+      .then(r => r.json())
+      .then(({ data, error }) => {
+        if (error) { setLoadError(error); return }
+        const rows = (data ?? []) as Registrant[]
+        setRegs(rows)
+        setSelected(new Set(rows.map(r => r.id)))
+      })
+      .catch(err => setLoadError(err.message ?? 'Failed to load registrants'))
+  }, [event.id])
+
+  function toggle(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allSelected = !!regs && regs.length > 0 && selected.size === regs.length
+
+  const trimmedLink = link.trim()
+  const inviteSubject = `You've been selected: ${event.title}`
+  const inviteMessage =
+    `Congratulations [Nome], you've been chosen to take part in ${event.title}!\n\n` +
+    `We look forward to seeing you.` +
+    (trimmedLink ? `\n\nHere is the link: ${trimmedLink}` : '')
+
+  const finalSubject = mode === 'invite' ? inviteSubject : subject.trim()
+  const finalMessage = mode === 'invite' ? inviteMessage : message.trim()
+  const canSend = status !== 'sending' && selected.size > 0 && !!finalSubject && !!finalMessage
+
   async function handleSend() {
-    if (!subject.trim() || !message.trim()) return
+    if (!canSend) return
     setStatus('sending')
     setErrorMsg(null)
     try {
       const res = await fetch('/api/admin/events/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: event.id, subject: subject.trim(), message: message.trim() }),
+        body: JSON.stringify({
+          event_id: event.id,
+          subject: finalSubject,
+          message: finalMessage,
+          registration_ids: Array.from(selected),
+        }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -162,33 +206,35 @@ function ComposeModal({
 
   const inputClass =
     'w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors'
+  const labelClass = 'block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1'
+  const busy = status === 'sending'
 
   return (
     <div
       className="fixed inset-0 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.65)', zIndex: 9999 }}
-      onClick={e => { if (e.target === e.currentTarget && status !== 'sending') onClose() }}
+      onClick={e => { if (e.target === e.currentTarget && !busy) onClose() }}
     >
-      <div className="bg-white border border-line-faint w-full max-w-lg shadow-xl">
+      <div className="bg-white border border-line-faint w-full max-w-lg max-h-[92vh] overflow-y-auto shadow-xl">
         <div className="flex items-start justify-between px-6 py-4 border-b border-line-faint">
           <div>
             <p className="font-serif text-base font-bold text-forest uppercase tracking-widest">
               Email to Registrants
             </p>
             <p className="text-xs text-ink-500 mt-0.5">
-              {event.title} — {recipientCount} recipient{recipientCount !== 1 ? 's' : ''}
+              {event.title} — {selected.size} of {regs?.length ?? 0} selected
             </p>
           </div>
           <button
             onClick={onClose}
-            disabled={status === 'sending'}
+            disabled={busy}
             className="text-ink-500 hover:text-ink-900 text-xl leading-none transition-colors ml-4 mt-0.5 disabled:opacity-40"
           >
             ✕
           </button>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-5">
           {status === 'done' && result ? (
             <div className="py-8 text-center space-y-2">
               <p className="text-forest font-medium text-sm tracking-wide">
@@ -203,30 +249,117 @@ function ComposeModal({
             </div>
           ) : (
             <>
+              {/* Recipients */}
               <div>
-                <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Subject</label>
-                <input
-                  value={subject}
-                  onChange={e => setSubject(e.target.value)}
-                  disabled={status === 'sending'}
-                  className={inputClass}
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className={labelClass}>Recipients</label>
+                  {regs && regs.length > 0 && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setSelected(allSelected ? new Set() : new Set(regs.map(r => r.id)))}
+                      className="text-[11px] text-forest hover:underline disabled:opacity-40"
+                    >
+                      {allSelected ? 'Deselect all' : 'Select all'}
+                    </button>
+                  )}
+                </div>
+                <div className="border border-line max-h-44 overflow-y-auto divide-y divide-black/5">
+                  {loadError ? (
+                    <p className="text-red-600 text-xs p-3">{loadError}</p>
+                  ) : regs === null ? (
+                    <p className="text-xs text-ink-500 p-3">Loading…</p>
+                  ) : regs.length === 0 ? (
+                    <p className="text-xs text-ink-500 p-3">No registrants.</p>
+                  ) : (
+                    regs.map(r => (
+                      <label key={r.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-paper-cool">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(r.id)}
+                          onChange={() => toggle(r.id)}
+                          disabled={busy}
+                          className="h-4 w-4 accent-forest flex-shrink-0"
+                        />
+                        <span className="text-sm text-ink-900 truncate">
+                          {r.nome} {r.cognome}
+                          <span className="text-ink-400 text-xs ml-2">{r.email}</span>
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Message</label>
-                <textarea
-                  rows={6}
-                  value={message}
-                  onChange={e => setMessage(e.target.value)}
-                  disabled={status === 'sending'}
-                  placeholder="Write your message here…"
-                  className={`${inputClass} resize-none`}
-                />
-                <p className="text-[11px] text-ink-400 mt-1">
-                  [Nome] will be replaced with each registrant&apos;s first name.
-                </p>
+              {/* Mode switch */}
+              <div className="flex gap-2">
+                {(['invite', 'custom'] as const).map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setMode(m)}
+                    className={`text-xs font-medium tracking-wide px-4 py-2 border transition-colors ${
+                      mode === m
+                        ? 'bg-forest text-white border-forest'
+                        : 'bg-white text-ink-500 border-line hover:border-forest hover:text-forest'
+                    }`}
+                  >
+                    {m === 'invite' ? 'Quick invite' : 'Custom message'}
+                  </button>
+                ))}
               </div>
+
+              {mode === 'invite' ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className={labelClass}>Meeting link (optional)</label>
+                    <input
+                      value={link}
+                      onChange={e => setLink(e.target.value)}
+                      disabled={busy}
+                      placeholder="https://meet.google.com/…"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Preview</label>
+                    <div className="border border-line-faint bg-[#f9f9f9] px-3 py-3 text-sm text-ink-900 whitespace-pre-wrap leading-relaxed">
+                      <span className="block text-[11px] text-ink-400 mb-2">Subject: {inviteSubject}</span>
+                      {inviteMessage}
+                    </div>
+                    <p className="text-[11px] text-ink-400 mt-1">
+                      [Nome] is replaced with each recipient&apos;s name.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className={labelClass}>Subject</label>
+                    <input
+                      value={subject}
+                      onChange={e => setSubject(e.target.value)}
+                      disabled={busy}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Message</label>
+                    <textarea
+                      rows={6}
+                      value={message}
+                      onChange={e => setMessage(e.target.value)}
+                      disabled={busy}
+                      placeholder="Write your message here…"
+                      className={`${inputClass} resize-none`}
+                    />
+                    <p className="text-[11px] text-ink-400 mt-1">
+                      [Nome] will be replaced with each registrant&apos;s first name.
+                    </p>
+                  </div>
+                </>
+              )}
 
               {status === 'error' && errorMsg && (
                 <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{errorMsg}</p>
@@ -236,7 +369,7 @@ function ComposeModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  disabled={status === 'sending'}
+                  disabled={busy}
                   className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40"
                 >
                   Cancel
@@ -244,10 +377,10 @@ function ComposeModal({
                 <button
                   type="button"
                   onClick={handleSend}
-                  disabled={status === 'sending' || !subject.trim() || !message.trim()}
+                  disabled={!canSend}
                   className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {status === 'sending' ? 'Sending…' : 'Send'}
+                  {busy ? 'Sending…' : `Send to ${selected.size}`}
                 </button>
               </div>
             </>
@@ -811,6 +944,41 @@ function EventAccordion({
   )
 }
 
+// ── Quick status switch (one click, no need to open the row) ────────────────
+const QUICK_STATUS: { value: UpcomingEvent['status']; label: string }[] = [
+  { value: 'open', label: 'Open' },
+  { value: 'coming_soon', label: 'Soon' },
+  { value: 'completed', label: 'Closed' },
+]
+
+function QuickStatus({
+  value,
+  busy,
+  onChange,
+}: {
+  value: UpcomingEvent['status']
+  busy: boolean
+  onChange: (s: UpcomingEvent['status']) => void
+}) {
+  return (
+    <div className="inline-flex border border-forest" onClick={e => e.stopPropagation()}>
+      {QUICK_STATUS.map(o => (
+        <button
+          key={o.value}
+          type="button"
+          disabled={busy}
+          onClick={() => { if (o.value !== value) onChange(o.value) }}
+          className={`text-[10px] font-medium tracking-widest uppercase px-2.5 py-1 transition-colors disabled:opacity-50 ${
+            value === o.value ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ── Main Section ─────────────────────────────────────────────────────────────
 export default function UpcomingEventsAdminSection({
   initialEvents,
@@ -828,6 +996,7 @@ export default function UpcomingEventsAdminSection({
   const [takenByEvent, setTakenByEvent] = useState<Record<string, number>>({})
   const [waitlistCounts, setWaitlistCounts] = useState<Record<string, number>>({})
   const [waitlistModal, setWaitlistModal] = useState<UpcomingEvent | null>(null)
+  const [statusBusy, setStatusBusy] = useState<string | null>(null)
 
   const loadSeatInfo = useCallback(async () => {
     const supabase = createClient()
@@ -896,6 +1065,18 @@ export default function UpcomingEventsAdminSection({
     if (expandedId === id) setExpandedId(null)
   }
 
+  async function handleQuickStatus(ev: UpcomingEvent, status: UpcomingEvent['status']) {
+    const prev = ev.status
+    setStatusBusy(ev.id)
+    setEvents(list => list.map(e => (e.id === ev.id ? { ...e, status } : e)))
+    const { error } = await createClient().from('upcoming_events').update({ status }).eq('id', ev.id)
+    if (error) {
+      setEvents(list => list.map(e => (e.id === ev.id ? { ...e, status: prev } : e)))
+      alert(`Impossibile cambiare lo stato: ${error.message}`)
+    }
+    setStatusBusy(null)
+  }
+
   function openEmailCompose(ev: UpcomingEvent) {
     setEmailEventTarget({ event: ev, recipientCount: regCounts[ev.id] ?? 0 })
   }
@@ -920,12 +1101,11 @@ export default function UpcomingEventsAdminSection({
     return list.map(ev => {
       const isExpanded = expandedId === ev.id
       const badge = (
-        <span className={`text-[10px] font-medium tracking-widest uppercase px-2 py-1 whitespace-nowrap ${
-          muted ? 'border border-gray-300 text-gray-400' :
-          ev.status === 'open' ? 'bg-forest text-white' : 'border border-forest text-forest'
-        }`}>
-          {ev.status.replace('_', ' ')}
-        </span>
+        <QuickStatus
+          value={ev.status}
+          busy={statusBusy === ev.id}
+          onChange={st => void handleQuickStatus(ev, st)}
+        />
       )
       return (
         <div key={ev.id} className="border-b border-black/5 last:border-0">
@@ -946,7 +1126,7 @@ export default function UpcomingEventsAdminSection({
             </div>
 
             {/* Desktop: single-line grid */}
-            <div className="hidden sm:grid sm:grid-cols-[110px_1fr_140px_24px] sm:items-center sm:gap-4">
+            <div className="hidden sm:grid sm:grid-cols-[110px_1fr_200px_24px] sm:items-center sm:gap-4">
               <span className={`font-medium whitespace-nowrap text-sm ${muted ? 'text-ink-500' : 'text-ink-900'}`}>{ev.date}</span>
               <span className={`text-sm truncate ${muted ? 'text-ink-500' : 'text-ink-900'}`} title={ev.title}>{ev.title}</span>
               <span>{badge}</span>
@@ -987,7 +1167,7 @@ export default function UpcomingEventsAdminSection({
       </div>
 
       <div className="bg-white border border-line-faint">
-        <div className="hidden sm:grid sm:grid-cols-[110px_1fr_140px_24px] gap-4 px-4 py-3 border-b border-line-faint bg-[#f9f9f9] text-xs font-medium text-ink-500 uppercase tracking-wide">
+        <div className="hidden sm:grid sm:grid-cols-[110px_1fr_200px_24px] gap-4 px-4 py-3 border-b border-line-faint bg-[#f9f9f9] text-xs font-medium text-ink-500 uppercase tracking-wide">
           <span>Date</span><span>Title</span><span>Status</span><span />
         </div>
         {activeEvents.length === 0 ? (
@@ -1042,7 +1222,6 @@ export default function UpcomingEventsAdminSection({
       {emailEventTarget && (
         <ComposeModal
           event={emailEventTarget.event}
-          recipientCount={emailEventTarget.recipientCount}
           onClose={() => setEmailEventTarget(null)}
         />
       )}

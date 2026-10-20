@@ -11,6 +11,22 @@ const supabaseAdmin = createAdminClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+function escapeHtml(str: string) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+// Escape first, then turn bare http(s) URLs into clickable links.
+function toHtml(text: string) {
+  return escapeHtml(text).replace(
+    /(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" style="color:#1a4a3a;font-weight:600;">$1</a>'
+  )
+}
+
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -20,22 +36,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  let body: { event_id?: string; subject?: string; message?: string }
+  let body: { event_id?: string; subject?: string; message?: string; registration_ids?: string[] }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { event_id, subject, message } = body
+  const { event_id, subject, message, registration_ids } = body
   if (!event_id || !subject?.trim() || !message?.trim()) {
     return NextResponse.json({ error: 'Missing event_id, subject, or message' }, { status: 400 })
   }
 
-  const { data: registrations, error: regErr } = await supabaseAdmin
+  if (registration_ids !== undefined && (!Array.isArray(registration_ids) || registration_ids.length === 0)) {
+    return NextResponse.json({ error: 'No recipients selected' }, { status: 400 })
+  }
+
+  let query = supabaseAdmin
     .from('event_registrations')
     .select('nome, email')
     .eq('event_id', event_id)
+  if (registration_ids) query = query.in('id', registration_ids)
+
+  const { data: registrations, error: regErr } = await query
 
   if (regErr) return NextResponse.json({ error: regErr.message }, { status: 500 })
   if (!registrations || registrations.length === 0) {
@@ -46,7 +69,7 @@ export async function POST(req: NextRequest) {
   let failed = 0
 
   for (const reg of registrations) {
-    const personalizedMessage = message.replace(/\[Nome\]/g, reg.nome ?? '')
+    const personalizedMessage = toHtml(message.replace(/\[Nome\]/g, reg.nome ?? ''))
     try {
       const { error } = await resend.emails.send({
         from: FROM,
@@ -63,7 +86,7 @@ export async function POST(req: NextRequest) {
         <tr>
           <td style="background:#1a4a3a;padding:24px 32px;">
             <p style="margin:0;font-size:11px;color:#a8c5b8;letter-spacing:2px;text-transform:uppercase;">Alata Investment Club</p>
-            <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">${subject.trim()}</h1>
+            <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">${escapeHtml(subject.trim())}</h1>
           </td>
         </tr>
         <tr>
