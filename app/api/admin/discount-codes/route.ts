@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { code, type, value, max_uses, expires_at } = body
+  const { code, type, value, max_uses, expires_at, members_only } = body
 
   if (!code?.trim() || !type || value == null)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
       expires_at: expires_at || null,
       uses_count: 0,
       active: true,
+      members_only: members_only === true,
     })
     .select()
     .single()
@@ -65,8 +66,13 @@ export async function PATCH(req: NextRequest) {
   const user = await requireAdmin()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id, ...updates } = await req.json()
+  const { id, ...body } = await req.json()
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+  // Whitelist: only these columns can be changed through this endpoint.
+  const ALLOWED = ['active', 'members_only', 'max_uses', 'expires_at', 'value', 'type'] as const
+  const updates = Object.fromEntries(ALLOWED.filter(k => k in body).map(k => [k, body[k]]))
+  if (Object.keys(updates).length === 0) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
 
   const { error } = await supabaseAdmin
     .from('discount_codes')

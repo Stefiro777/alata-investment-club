@@ -4,6 +4,8 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendOrderConfirmation, sendRegistrationConfirmation } from '@/lib/confirmation-emails'
 import { seatsByEvent } from '@/lib/event-capacity'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
+import { resolveDiscount } from '@/lib/discount-codes'
+import { getMemberFromAuthHeader, isMembershipActive } from '@/lib/career-session'
 import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
 import { checkStock, decrementMerchStock, type StockCheckProduct } from '@/lib/merch-stock'
 import { isMerchPagePublished } from '@/lib/merch-visibility'
@@ -108,7 +110,7 @@ function safeEventRegs(regs: EventRegistrationPayload[]): string {
 export async function POST(req: NextRequest) {
   const {
     items, customerName, customerEmail, shippingAddress, eventRegistrations,
-    shippingZone, shippingCents, discountCode, discountCents,
+    shippingZone, shippingCents, discountCode,
   } = await req.json() as {
     items:               UnifiedLineItem[]
     customerName:        string
@@ -118,7 +120,6 @@ export async function POST(req: NextRequest) {
     shippingZone?:       string | null
     shippingCents?:      number
     discountCode?:       string | null
-    discountCents?:      number
   }
 
   if (!items?.length)   return NextResponse.json({ error: 'Cart is empty' },   { status: 400 })
@@ -133,25 +134,8 @@ export async function POST(req: NextRequest) {
 
   // ── Determine active membership from the verified session token — never
   // trust a client-asserted "isMember" flag. Same pattern as career/book.
-  let isActiveMember = false
   const authHeader = req.headers.get('authorization')
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.slice(7)
-    const { data: { user } } = await supabaseAdmin.auth.getUser(token)
-    if (user?.email) {
-      const { data: member } = await supabaseAdmin
-        .from('club_members')
-        .select('id, membership_expires_at')
-        .eq('email', user.email)
-        .maybeSingle()
-      if (member) {
-        const membershipActive = member.membership_expires_at
-          ? new Date(member.membership_expires_at) > new Date()
-          : false
-        if (membershipActive) isActiveMember = true
-      }
-    }
-  }
+  let isActiveMember = isMembershipActive(await getMemberFromAuthHeader(supabaseAdmin, authHeader))
 
   // ── Recompute every item's real price server-side — the client-submitted
   // priceCents is only ever used as a cart-display hint, never trusted here.
@@ -239,11 +223,27 @@ export async function POST(req: NextRequest) {
   }
 
   const actualShippingCents = shippingCents ?? 0
-  const actualDiscountCents = discountCents ?? 0
+  const itemsTotal = items_.reduce((sum, i) => sum + (i.priceCents * (i.quantity ?? 1)), 0)
+
+  // ── Discount: the client-submitted discountCents is never trusted. The code
+  // is validated again here (members-only included) and the amount recomputed
+  // from the server-side prices, so the preview endpoint can't be bypassed.
+  let actualDiscountCents = 0
+  let appliedDiscountCode: string | null = null
+  if (discountCode?.trim()) {
+    const discount = await resolveDiscount(discountCode, itemsTotal, authHeader)
+    if (!discount.ok) {
+      return NextResponse.json(
+        { error: discount.error, code: 'discount_invalid', reason: discount.denial },
+        { status: discount.status },
+      )
+    }
+    actualDiscountCents = discount.discountCents
+    appliedDiscountCode = discount.code
+  }
 
   // Fully free orders are completed entirely server-side (registrations,
   // order records and confirmation emails) — the client only redirects.
-  const itemsTotal = items_.reduce((sum, i) => sum + (i.priceCents * (i.quantity ?? 1)), 0)
   const grandTotal = itemsTotal + actualShippingCents - actualDiscountCents
 
   // ── Seats: hold them atomically BEFORE anything is charged or inserted.
@@ -418,13 +418,13 @@ export async function POST(req: NextRequest) {
 
   // Create Stripe coupon for discount
   let couponId: string | undefined
-  if (actualDiscountCents > 0 && discountCode) {
+  if (actualDiscountCents > 0 && appliedDiscountCode) {
     try {
       const coupon = await stripe.coupons.create({
         amount_off: actualDiscountCents,
         currency:   'eur',
         duration:   'once',
-        name:       discountCode,
+        name:       appliedDiscountCode,
       })
       couponId = coupon.id
     } catch (e) {
@@ -446,7 +446,7 @@ export async function POST(req: NextRequest) {
       shippingAddress: shippingAddress ? JSON.stringify(shippingAddress).slice(0, 500) : '',
       shippingZone:   shippingZone ?? '',
       shippingCents:  String(actualShippingCents),
-      discountCode:   discountCode ?? '',
+      discountCode:   appliedDiscountCode ?? '',
       discountCents:  String(actualDiscountCents),
       // FIX 2 — safe serialization to avoid truncated JSON
       merchItems:         safeJson(merchItems.map(i => ({

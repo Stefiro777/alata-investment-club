@@ -172,7 +172,7 @@ function Stepper({ step, stepDefs }: { step: number; stepDefs: StepDef[] }) {
 
 function StepOrder({
   cartItems, upsells, selected, onToggleUpsell,
-  subtotalCents, discountCode, discountCents, discountLabel, discountError, discountApplying,
+  subtotalCents, discountCode, discountCents, discountLabel, discountError, discountReason, discountApplying,
   onDiscountCodeChange, onApplyDiscount, onRemoveDiscount,
   hasMerch, onContinue,
 }: {
@@ -185,6 +185,7 @@ function StepOrder({
   discountCents:        number
   discountLabel:        string
   discountError:        string
+  discountReason:       string
   discountApplying:     boolean
   onDiscountCodeChange: (v: string) => void
   onApplyDiscount:      () => void
@@ -350,7 +351,15 @@ function StepOrder({
               </button>
             </div>
             {discountError && (
-              <p className="text-xs text-red-600 mt-1">{discountError}</p>
+              <p className="text-xs text-red-600 mt-1">
+                {discountError}
+                {discountReason === 'login_required' && (
+                  <> <Link href="/login" className="underline font-semibold">Accedi</Link></>
+                )}
+                {discountReason === 'membership_expired' && (
+                  <> <Link href="/dashboard/membership" className="underline font-semibold">Rinnova la membership</Link></>
+                )}
+              </p>
             )}
           </div>
         )}
@@ -729,6 +738,7 @@ export default function CheckoutClient() {
   const [discountCents,    setDiscountCents]    = useState(0)
   const [discountLabel,    setDiscountLabel]    = useState('')
   const [discountError,    setDiscountError]    = useState('')
+  const [discountReason,   setDiscountReason]   = useState('')
   const [discountApplying, setDiscountApplying] = useState(false)
 
   const [eventRegs, setEventRegs] = useState<EventRegEntry[]>([])
@@ -825,17 +835,24 @@ export default function CheckoutClient() {
     setDiscountApplying(true)
     setDiscountError('')
     try {
+      // The token lets the server verify membership for members-only codes.
+      const { data: { session } } = await createClient().auth.getSession()
       const res  = await fetch('/api/discount-codes/validate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({ code: discountCode.trim(), subtotalCents }),
       })
       const data = await res.json()
       if (data.valid) {
         setDiscountCents(data.discountCents)
         setDiscountLabel(data.description)
+        setDiscountReason('')
       } else {
         setDiscountError(data.error ?? 'Invalid code')
+        setDiscountReason(data.reason ?? '')
       }
     } catch {
       setDiscountError('Could not validate code. Please try again.')
@@ -849,6 +866,7 @@ export default function CheckoutClient() {
     setDiscountCents(0)
     setDiscountLabel('')
     setDiscountError('')
+    setDiscountReason('')
   }
 
   function validateShipping(): string {
@@ -1000,7 +1018,17 @@ export default function CheckoutClient() {
         clearCart()
         window.location.href = data.url
       } else {
-        setError(data.error ?? 'Something went wrong. Please try again.')
+        if (data.code === 'discount_invalid') {
+          // The server rejected the code (e.g. members-only): drop it and go back to the discount box.
+          setDiscountCents(0)
+          setDiscountLabel('')
+          setDiscountError(data.error ?? 'Invalid code')
+          setDiscountReason(data.reason ?? '')
+          setError('')
+          setStep(1)
+        } else {
+          setError(data.error ?? 'Something went wrong. Please try again.')
+        }
         setPaying(false)
       }
     } catch {
@@ -1064,6 +1092,7 @@ export default function CheckoutClient() {
                 discountCents={discountCents}
                 discountLabel={discountLabel}
                 discountError={discountError}
+                discountReason={discountReason}
                 discountApplying={discountApplying}
                 onDiscountCodeChange={setDiscountCode}
                 onApplyDiscount={handleApplyDiscount}

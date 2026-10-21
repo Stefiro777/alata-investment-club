@@ -45,6 +45,7 @@ type ShippingRate = { zone: 'IT' | 'EU' | 'WORLD'; price_cents: number }
 type DiscountCode = {
   id: string; code: string; type: 'percentage' | 'fixed'; value: number
   max_uses: number | null; uses_count: number; expires_at: string | null; active: boolean
+  members_only: boolean
 }
 
 type Variant  = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number; stock?: number | null }
@@ -1066,10 +1067,10 @@ function DiscountCodesSection() {
   const [addErr,  setAddErr]  = useState('')
   const [form, setForm] = useState({
     code: '', type: 'percentage' as 'percentage' | 'fixed',
-    value: '', max_uses: '', expires_at: '',
+    value: '', max_uses: '', expires_at: '', members_only: false,
   })
 
-  function setF(k: keyof typeof form, v: string) { setForm(p => ({ ...p, [k]: v })) }
+  function setF(k: keyof typeof form, v: string | boolean) { setForm(p => ({ ...p, [k]: v })) }
 
   useEffect(() => {
     authedGet('/api/admin/discount-codes').then(d => {
@@ -1087,10 +1088,11 @@ function DiscountCodesSection() {
         value: Number(form.value),
         max_uses: form.max_uses ? Number(form.max_uses) : null,
         expires_at: form.expires_at || null,
+        members_only: form.members_only,
       })
       if (res.error) throw new Error(res.error)
       setCodes(p => [res.code, ...p])
-      setForm({ code: '', type: 'percentage', value: '', max_uses: '', expires_at: '' })
+      setForm({ code: '', type: 'percentage', value: '', max_uses: '', expires_at: '', members_only: false })
       setShowAdd(false)
     } catch (e: unknown) {
       setAddErr(e instanceof Error ? e.message : 'Error')
@@ -1102,6 +1104,12 @@ function DiscountCodesSection() {
   async function handleToggle(id: string, active: boolean) {
     await authedPatch('/api/admin/discount-codes', { id, active })
     setCodes(p => p.map(c => c.id === id ? { ...c, active } : c))
+  }
+
+  async function handleToggleMembersOnly(id: string, members_only: boolean) {
+    const res = await authedPatch('/api/admin/discount-codes', { id, members_only })
+    if (reportError(res, 'Could not update code')) return
+    setCodes(p => p.map(c => c.id === id ? { ...c, members_only } : c))
   }
 
   async function handleDelete(id: string) {
@@ -1151,6 +1159,14 @@ function DiscountCodesSection() {
               <label className={LABEL_CLS}>Expires At (blank = never)</label>
               <input type="date" value={form.expires_at} onChange={e => setF('expires_at', e.target.value)} className={INPUT_CLS} />
             </div>
+            <label className="col-span-2 flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.members_only} onChange={e => setF('members_only', e.target.checked)}
+                className="mt-0.5 accent-forest" />
+              <span>
+                <span className="block text-xs font-semibold text-black">Riservato ai membri</span>
+                <span className="block text-xs text-gray-500">Applicabile solo da utenti registrati con membership attiva</span>
+              </span>
+            </label>
           </div>
           {addErr && <p className="text-xs text-red-600">{addErr}</p>}
           <button onClick={handleAdd} disabled={saving}
@@ -1176,6 +1192,11 @@ function DiscountCodesSection() {
                   }`}>
                     {c.active ? 'Active' : 'Inactive'}
                   </span>
+                  {c.members_only && (
+                    <span className="text-[9px] font-semibold uppercase tracking-widest px-1.5 py-0.5 bg-black text-white">
+                      Solo membri
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {c.type === 'percentage' ? `${c.value}% off` : `${fmtEur(c.value)} off`}
@@ -1185,6 +1206,10 @@ function DiscountCodesSection() {
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
+                <button onClick={() => handleToggleMembersOnly(c.id, !c.members_only)}
+                  className="text-[9px] font-semibold uppercase tracking-widest px-2 py-1 border border-gray-300 text-gray-600 hover:border-forest hover:text-forest transition-colors">
+                  {c.members_only ? 'Rendi pubblico' : 'Solo membri'}
+                </button>
                 <button onClick={() => handleToggle(c.id, !c.active)}
                   className="text-[9px] font-semibold uppercase tracking-widest px-2 py-1 border border-gray-300 text-gray-600 hover:border-forest hover:text-forest transition-colors">
                   {c.active ? 'Disable' : 'Enable'}
