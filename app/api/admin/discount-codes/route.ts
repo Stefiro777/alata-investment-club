@@ -7,10 +7,13 @@ const supabaseAdmin = createAdmin(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const SUPERADMIN_EMAIL = 'finullistefano@gmail.com'
+
 async function requireAdmin() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+  if (user.email === SUPERADMIN_EMAIL) return user
   const { data: member } = await supabaseAdmin
     .from('club_members').select('role').eq('email', user.email!).maybeSingle()
   if (member?.role !== 'bod' && member?.role !== 'director') return null
@@ -71,8 +74,41 @@ export async function PATCH(req: NextRequest) {
 
   // Whitelist: only these columns can be changed through this endpoint.
   const ALLOWED = ['active', 'members_only', 'max_uses', 'expires_at', 'value', 'type'] as const
-  const updates = Object.fromEntries(ALLOWED.filter(k => k in body).map(k => [k, body[k]]))
+  const updates: Record<string, unknown> = Object.fromEntries(ALLOWED.filter(k => k in body).map(k => [k, body[k]]))
   if (Object.keys(updates).length === 0) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
+
+  const { data: current, error: currentErr } = await supabaseAdmin
+    .from('discount_codes').select('type, value, uses_count').eq('id', id).maybeSingle()
+  if (currentErr) return NextResponse.json({ error: currentErr.message }, { status: 500 })
+  if (!current) return NextResponse.json({ error: 'Code not found' }, { status: 404 })
+
+  const bad = (error: string) => NextResponse.json({ error }, { status: 400 })
+
+  if ('active' in updates && typeof updates.active !== 'boolean') return bad('Invalid active flag')
+  if ('members_only' in updates && typeof updates.members_only !== 'boolean') return bad('Invalid members-only flag')
+
+  // type and value are validated together, against what the row will look like.
+  const type  = ('type'  in updates ? updates.type  : current.type)  as string
+  const value = ('value' in updates ? Number(updates.value) : current.value) as number
+  if (type !== 'percentage' && type !== 'fixed') return bad('Invalid type')
+  if (!Number.isInteger(value) || value <= 0) return bad('Value must be a positive whole number')
+  if (type === 'percentage' && value > 100) return bad('Percentage must be between 1 and 100')
+  if ('value' in updates) updates.value = value
+
+  if ('max_uses' in updates) {
+    if (updates.max_uses === '' || updates.max_uses == null) updates.max_uses = null
+    else {
+      const maxUses = Number(updates.max_uses)
+      if (!Number.isInteger(maxUses) || maxUses < 1) return bad('Max uses must be a positive whole number')
+      if (maxUses < (current.uses_count ?? 0)) return bad(`Max uses cannot be lower than the uses already made (${current.uses_count})`)
+      updates.max_uses = maxUses
+    }
+  }
+
+  if ('expires_at' in updates) {
+    if (!updates.expires_at) updates.expires_at = null
+    else if (Number.isNaN(new Date(updates.expires_at as string).getTime())) return bad('Invalid expiry date')
+  }
 
   const { error } = await supabaseAdmin
     .from('discount_codes')

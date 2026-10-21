@@ -1072,6 +1072,16 @@ function DiscountCodesSection() {
 
   function setF(k: keyof typeof form, v: string | boolean) { setForm(p => ({ ...p, [k]: v })) }
 
+  // Inline edit of an existing code (the code itself and its use counter stay read-only).
+  const [editingId,   setEditingId]   = useState<string | null>(null)
+  const [editSaving,  setEditSaving]  = useState(false)
+  const [editErr,     setEditErr]     = useState('')
+  const [editForm,    setEditForm]    = useState({
+    type: 'percentage' as 'percentage' | 'fixed',
+    value: '', max_uses: '', expires_at: '', members_only: false,
+  })
+  function setE(k: keyof typeof editForm, v: string | boolean) { setEditForm(p => ({ ...p, [k]: v })) }
+
   useEffect(() => {
     authedGet('/api/admin/discount-codes').then(d => {
       setCodes(d.codes ?? [])
@@ -1106,10 +1116,35 @@ function DiscountCodesSection() {
     setCodes(p => p.map(c => c.id === id ? { ...c, active } : c))
   }
 
-  async function handleToggleMembersOnly(id: string, members_only: boolean) {
-    const res = await authedPatch('/api/admin/discount-codes', { id, members_only })
-    if (reportError(res, 'Could not update code')) return
-    setCodes(p => p.map(c => c.id === id ? { ...c, members_only } : c))
+  function startEdit(c: DiscountCode) {
+    setEditingId(c.id)
+    setEditErr('')
+    setEditForm({
+      type: c.type, value: String(c.value),
+      max_uses: c.max_uses !== null ? String(c.max_uses) : '',
+      expires_at: c.expires_at ? c.expires_at.slice(0, 10) : '',
+      members_only: c.members_only,
+    })
+  }
+
+  async function handleSaveEdit(id: string) {
+    if (!editForm.value) { setEditErr('Value is required.'); return }
+    setEditSaving(true); setEditErr('')
+    const res = await authedPatch('/api/admin/discount-codes', {
+      id, type: editForm.type, value: Number(editForm.value),
+      max_uses: editForm.max_uses ? Number(editForm.max_uses) : null,
+      expires_at: editForm.expires_at || null,
+      members_only: editForm.members_only,
+    })
+    setEditSaving(false)
+    if (res.error) { setEditErr(res.error); return }
+    setCodes(p => p.map(c => c.id === id ? {
+      ...c, type: editForm.type, value: Number(editForm.value),
+      max_uses: editForm.max_uses ? Number(editForm.max_uses) : null,
+      expires_at: editForm.expires_at ? new Date(editForm.expires_at).toISOString() : null,
+      members_only: editForm.members_only,
+    } : c))
+    setEditingId(null)
   }
 
   async function handleDelete(id: string) {
@@ -1182,7 +1217,55 @@ function DiscountCodesSection() {
         <p className="text-xs text-gray-400 py-4 text-center border border-dashed border-gray-200">No discount codes yet.</p>
       ) : (
         <div className="space-y-2">
-          {codes.map(c => (
+          {codes.map(c => editingId === c.id ? (
+            <div key={c.id} className="border border-gray-200 p-4 bg-gray-50 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-black font-mono">{c.code}</span>
+                <span className="text-xs text-gray-500">{c.uses_count} use{c.uses_count !== 1 ? 's' : ''} so far</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={LABEL_CLS}>Type *</label>
+                  <select value={editForm.type} onChange={e => setE('type', e.target.value as 'percentage' | 'fixed')} className={INPUT_CLS}>
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed (euro cents)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={LABEL_CLS}>Value * {editForm.type === 'percentage' ? '(%)' : '(cents)'}</label>
+                  <input type="number" min={1} value={editForm.value} onChange={e => setE('value', e.target.value)} className={INPUT_CLS} />
+                </div>
+                <div>
+                  <label className={LABEL_CLS}>Max Uses (blank = ∞)</label>
+                  <input type="number" min={Math.max(1, c.uses_count)} value={editForm.max_uses}
+                    onChange={e => setE('max_uses', e.target.value)} className={INPUT_CLS} placeholder="∞" />
+                </div>
+                <div>
+                  <label className={LABEL_CLS}>Expires At (blank = never)</label>
+                  <input type="date" value={editForm.expires_at} onChange={e => setE('expires_at', e.target.value)} className={INPUT_CLS} />
+                </div>
+                <label className="col-span-2 flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" checked={editForm.members_only} onChange={e => setE('members_only', e.target.checked)}
+                    className="mt-0.5 accent-forest" />
+                  <span>
+                    <span className="block text-xs font-semibold text-black">Riservato ai membri</span>
+                    <span className="block text-xs text-gray-500">Applicabile solo da utenti registrati con membership attiva</span>
+                  </span>
+                </label>
+              </div>
+              {editErr && <p className="text-xs text-red-600">{editErr}</p>}
+              <div className="flex gap-2">
+                <button onClick={() => handleSaveEdit(c.id)} disabled={editSaving}
+                  className="flex-1 py-2 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-40">
+                  {editSaving ? 'Saving…' : 'Save changes'}
+                </button>
+                <button onClick={() => setEditingId(null)} disabled={editSaving}
+                  className="px-4 py-2 border border-gray-300 text-gray-600 text-[10px] font-semibold uppercase tracking-widest hover:border-forest hover:text-forest transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
             <div key={c.id} className="flex items-center gap-3 border border-gray-200 p-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -1206,9 +1289,9 @@ function DiscountCodesSection() {
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => handleToggleMembersOnly(c.id, !c.members_only)}
+                <button onClick={() => startEdit(c)}
                   className="text-[9px] font-semibold uppercase tracking-widest px-2 py-1 border border-gray-300 text-gray-600 hover:border-forest hover:text-forest transition-colors">
-                  {c.members_only ? 'Rendi pubblico' : 'Solo membri'}
+                  Edit
                 </button>
                 <button onClick={() => handleToggle(c.id, !c.active)}
                   className="text-[9px] font-semibold uppercase tracking-widest px-2 py-1 border border-gray-300 text-gray-600 hover:border-forest hover:text-forest transition-colors">
