@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
@@ -13,13 +13,9 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (searchParams.get('msg') === 'account-created') {
-      setSuccessMsg('Account created successfully. You can now sign in.')
-    }
-  }, [searchParams])
+  const successMsg = searchParams.get('msg') === 'account-created'
+    ? 'Account created successfully. You can now sign in.'
+    : null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,7 +34,8 @@ function LoginForm() {
       return
     }
 
-    router.push('/dashboard')
+    const to = searchParams.get('redirectTo')
+    router.push(to && to.startsWith('/') && !to.startsWith('//') ? to : '/dashboard')
     router.refresh()
   }
 
@@ -50,21 +47,20 @@ function LoginForm() {
         style={{ animation: 'panelSlideRight 0.9s cubic-bezier(0.22,1,0.36,1) both' }}
       >
         <Image
-          src="/redesign/capitolino-hd.jpg"
-          alt="Capitolium of Brescia"
+          src="/redesign/borsa-finestra.jpg"
+          alt=""
           fill
-          className="object-cover grayscale animate-ken-burns"
+          className="object-cover"
           preload
         />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
-        <div className="absolute inset-0 hero-vignette" />
-        <div style={{ position: 'relative', zIndex: 1 }} className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(11,29,22,0.66)' }} />
+                <div style={{ position: 'relative', zIndex: 1 }} className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
           <div
             className="w-10 h-px bg-white/40 mb-8"
             style={{ animation: 'heroFadeIn 0.8s ease 0.25s both' }}
           />
           <p
-            className="font-serif italic text-3xl lg:text-4xl leading-snug mb-5"
+            className="font-serif italic font-medium text-[clamp(36px,3.6vw,52px)] leading-[1.15] mb-5"
             style={{ animation: 'heroFadeUp 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s both' }}
           >
             Great investments start with great people.
@@ -85,23 +81,15 @@ function LoginForm() {
       {/* Right — form panel */}
       <div
         className="w-full md:w-1/2 flex items-center justify-center py-16 px-6 sm:px-12"
-        style={{ background: '#f5f5f0', animation: 'heroFadeIn 0.7s ease 0.1s both' }}
+        style={{ background: '#f5f1e8', animation: 'heroFadeIn 0.7s ease 0.1s both' }}
       >
         <div className="w-full max-w-sm">
           {/* Logo */}
           <div className="text-center mb-10" style={{ animation: 'heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.15s both' }}>
             <Link href="/" className="inline-block">
-              <div className="border-2 border-forest">
-                <Image
-                  src="/white-black.png"
-                  alt="Alata Investment Club"
-                  width={140}
-                  height={140}
-                  className="object-contain"
-                />
-              </div>
+              <Image src="/redesign/logo-dark.png" alt="Alata Investment Club" width={800} height={431} className="mx-auto h-11 w-auto" />
             </Link>
-            <h1 className="font-serif text-2xl font-light text-black mt-6">Members Area</h1>
+            <h1 className="font-serif text-[44px] font-medium leading-[1.1] text-night mt-8">Members Area</h1>
             <p className="text-black text-sm mt-1">
               Sign in to access exclusive materials.
             </p>
@@ -109,12 +97,12 @@ function LoginForm() {
 
           {/* Form card */}
           <div
-            className="bg-white p-8 border border-line"
+            className="pt-2"
             style={{ animation: 'heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.3s both' }}
           >
             <form onSubmit={handleSubmit} className="space-y-5">
               <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.38s both' }}>
-                <label htmlFor="email" className="block text-xs font-medium tracking-wide uppercase text-black mb-2">
+                <label htmlFor="email" className="block text-[13px] text-earth-700">
                   Email
                 </label>
                 <input
@@ -125,13 +113,13 @@ function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
+                  className="rd-field text-night"
                 />
               </div>
 
               <div style={{ animation: 'heroFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.46s both' }}>
                 <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-black">
+                  <label htmlFor="password" className="block text-[13px] text-earth-700">
                     Password
                   </label>
                   <Link href="/forgot-password" className="underline-grow text-xs text-forest">
@@ -146,7 +134,7 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
+                  className="rd-field text-night"
                 />
               </div>
 
@@ -166,7 +154,7 @@ function LoginForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide py-3.5 px-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  className="w-full rounded-full bg-night hover:bg-moss text-ivory text-[12px] font-semibold uppercase tracking-[0.14em] py-4 px-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                   style={{ transition: 'background-color 0.2s cubic-bezier(0.22,1,0.36,1)' }}
                 >
                   {loading ? (
@@ -184,7 +172,7 @@ function LoginForm() {
               </div>
             </form>
 
-            <p className="text-center text-xs text-black mt-6 pt-6 border-t border-[#f5f5f5]">
+            <p className="text-center text-xs text-black mt-6 pt-6 border-t border-night/15">
               Don&apos;t have an account?{' '}
               <a
                 href="mailto:info@alatainvestmentclub.com"

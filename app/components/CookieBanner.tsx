@@ -1,39 +1,47 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useSyncExternalStore } from 'react'
+
+const KEY = 'cookie-consent'
+const noop = () => () => {}
 
 export default function CookieBanner() {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    if (!sessionStorage.getItem('cookie-consent')) setVisible(true)
-  }, [])
+  // Read the stored choice without a setState-in-effect; the server renders nothing.
+  const stored = useSyncExternalStore(noop, () => sessionStorage.getItem(KEY), () => 'pending')
+  const [dismissed, setDismissed] = useState(false)
 
   function handle(choice: 'accepted' | 'declined') {
-    sessionStorage.setItem('cookie-consent', choice)
+    sessionStorage.setItem(KEY, choice)
     if (choice === 'accepted') {
       window.dispatchEvent(new Event('cookie-consent-updated'))
     }
-    setVisible(false)
+    setDismissed(true)
   }
 
-  if (!visible) return null
+  if (dismissed || stored !== null) return null
 
+  // Accept and Decline carry the same weight: no nudging towards consent.
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-line-faint py-4 px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <p className="text-sm text-ink-500">
-        We use cookies to improve your experience. By continuing to browse, you accept our use of cookies.
+    <div
+      role="region"
+      aria-label="Cookie consent"
+      className="fixed inset-x-3 bottom-3 z-[180] flex flex-col gap-4 rounded-[18px] bg-night px-6 py-5 text-ivory shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)] sm:inset-x-auto sm:left-1/2 sm:w-[min(760px,calc(100%-32px))] sm:-translate-x-1/2 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p className="text-[13px] leading-[1.6] text-ivory/85">
+        We use analytics cookies only if you accept them, to understand how the site is used.
       </p>
-      <div className="flex items-center gap-3 flex-shrink-0">
+      <div className="flex shrink-0 items-center gap-3">
         <button
+          type="button"
           onClick={() => handle('declined')}
-          className="border border-black text-black text-xs font-medium tracking-wide px-5 py-2 hover:bg-black hover:text-white transition-colors duration-fast"
+          className="rounded-full border border-ivory/70 px-5 py-2 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-ivory/10"
         >
           Decline
         </button>
         <button
+          type="button"
           onClick={() => handle('accepted')}
-          className="bg-forest text-white text-xs font-medium tracking-wide px-5 py-2 hover:bg-forest-deep transition-colors duration-fast"
+          className="rounded-full border border-ivory/70 px-5 py-2 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-ivory/10"
         >
           Accept
         </button>

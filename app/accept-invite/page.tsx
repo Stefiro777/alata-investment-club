@@ -156,15 +156,15 @@ function AcceptInviteForm() {
       {/* Left — image panel */}
       <div className="hidden md:block md:w-1/2 relative">
         <Image
-          src="/capitolino.jpg"
-          alt="Capitolino"
+          src="/redesign/borsa-finestra.jpg"
+          alt=""
           fill
-          className="object-cover grayscale"
+          className="object-cover"
           priority
         />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(11,29,22,0.66)' }} />
         <div style={{ position: 'relative', zIndex: 1 }} className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
-          <p className="font-serif italic text-3xl lg:text-4xl leading-snug mb-5">
+          <p className="font-serif italic font-medium text-[clamp(36px,3.6vw,52px)] leading-[1.15] mb-5">
             Great investments start with great people.
           </p>
           <p className="text-xs tracking-widest uppercase text-white/60">
@@ -174,25 +174,17 @@ function AcceptInviteForm() {
       </div>
 
       {/* Right — form panel */}
-      <div className="w-full md:w-1/2 bg-white flex items-center justify-center py-16 px-6 sm:px-12">
+      <div className="w-full md:w-1/2 bg-ivory flex items-center justify-center py-16 px-6 sm:px-12">
         <div className="w-full max-w-sm">
           <div className="text-center mb-10">
             <Link href="/" className="inline-block">
-              <div style={{ background: 'white', boxShadow: '0 8px 48px rgba(0,0,0,0.15)', border: '1px solid #1a4a3a', outline: '3px solid #1a4a3a', outlineOffset: '-7px' }}>
-                <Image
-                  src="/white-black.png"
-                  alt="Alata Investment Club"
-                  width={140}
-                  height={140}
-                  className="object-contain"
-                />
-              </div>
+              <Image src="/redesign/logo-dark.png" alt="Alata Investment Club" width={800} height={431} className="mx-auto h-11 w-auto" />
             </Link>
-            <h1 className="font-serif text-2xl font-light text-ink-900 mt-6">Create Your Account</h1>
+            <h1 className="font-serif text-[44px] font-medium leading-[1.1] text-night mt-8">Create Your Account</h1>
             <p className="text-ink-500 text-sm mt-1">Set a password to complete your registration.</p>
           </div>
 
-          <div className="bg-white p-8 border border-line">
+          <div className="pt-2">
             {status === 'loading' && (
               <div className="flex items-center justify-center gap-2 py-6 text-sm text-ink-500">
                 <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
@@ -257,36 +249,36 @@ function AcceptInviteForm() {
             {status === 'ready' && invite && (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
+                  <label className="block text-[13px] text-earth-700">
                     Email
                   </label>
-                  <div className="w-full px-4 py-3 border border-line bg-black/5 text-ink-900 text-sm">
+                  <div className="w-full border-b border-night/20 py-2 font-serif text-[22px] text-night/70">
                     {invite.email}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
+                  <label className="block text-[13px] text-earth-700">
                     Team
                   </label>
-                  <div className="w-full px-4 py-3 border border-line bg-black/5 text-ink-900 text-sm">
+                  <div className="w-full border-b border-night/20 py-2 font-serif text-[22px] text-night/70">
                     {TEAM_LABELS[invite.team] ?? invite.team}
                   </div>
                 </div>
 
                 {invite.lab_subdivision && (
                   <div>
-                    <label className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
+                    <label className="block text-[13px] text-earth-700">
                       Subdivision
                     </label>
-                    <div className="w-full px-4 py-3 border border-line bg-black/5 text-ink-900 text-sm">
+                    <div className="w-full border-b border-night/20 py-2 font-serif text-[22px] text-night/70">
                       {LAB_SUBDIVISION_LABELS[invite.lab_subdivision] ?? invite.lab_subdivision}
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label htmlFor="fullName" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
+                  <label htmlFor="fullName" className="block text-[13px] text-earth-700">
                     Full Name
                   </label>
                   <input
@@ -296,12 +288,12 @@ function AcceptInviteForm() {
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
+                    className="rd-field text-night"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
+                  <label htmlFor="phone" className="block text-[13px] text-earth-700">
                     Phone <span className="text-ink-400 normal-case">(optional)</span>
                   </label>
                   <input
@@ -310,12 +302,12 @@ function AcceptInviteForm() {
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
                     placeholder="+39 333 123 4567"
-                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
+                    className="rd-field text-night"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
+                  <label htmlFor="password" className="block text-[13px] text-earth-700">
                     Password
                   </label>
                   <input
@@ -325,12 +317,12 @@ function AcceptInviteForm() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
+                    className="rd-field text-night"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="confirm" className="block text-xs font-medium tracking-wide uppercase text-ink-500 mb-2">
+                  <label htmlFor="confirm" className="block text-[13px] text-earth-700">
                     Confirm Password
                   </label>
                   <input
@@ -340,7 +332,7 @@ function AcceptInviteForm() {
                     value={confirm}
                     onChange={e => setConfirm(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 border border-line focus:outline-none focus:border-forest text-ink-900 placeholder-ink-300 text-sm transition-colors bg-white"
+                    className="rd-field text-night"
                   />
                 </div>
 
@@ -351,7 +343,7 @@ function AcceptInviteForm() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide py-3.5 px-6 transition-colors duration-fast flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  className="w-full rounded-full bg-night hover:bg-moss text-ivory text-[12px] font-semibold uppercase tracking-[0.14em] py-4 px-6 transition-colors duration-fast flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                 >
                   {submitting ? (
                     <>

@@ -9,7 +9,7 @@ export default function CookiePolicy() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-xs text-white/40 hover:text-white/80 transition-colors tracking-wide"
+        className="hover:text-ivory"
       >
         Cookie Policy
       </button>
@@ -20,24 +20,24 @@ export default function CookiePolicy() {
           onClick={() => setOpen(false)}
         >
           {/* Overlay */}
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-night/60" />
 
           {/* Modal */}
           <div
-            className="relative bg-white max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8"
+            role="dialog" aria-modal="true" aria-label="Cookie Policy" className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-[18px] bg-ivory p-8 text-night md:p-10"
             onClick={e => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               onClick={() => setOpen(false)}
-              className="absolute top-4 right-4 border border-forest text-forest text-xs font-medium tracking-wide px-4 py-1.5 hover:bg-forest hover:text-white transition-colors duration-fast"
+              className="absolute right-6 top-6 text-[13px] font-medium hover:underline underline-offset-[6px]"
             >
               Close
             </button>
 
-            <h2 className="font-serif text-2xl font-bold text-ink-900 mb-6">Cookie Policy</h2>
+            <h2 className="rd-display mb-6 text-[40px]">Cookie Policy</h2>
 
-            <div className="space-y-5 text-sm text-[#4b5563] leading-relaxed">
+            <div className="space-y-5 text-sm text-earth-700 leading-relaxed">
               <section>
                 <h3 className="font-semibold text-ink-900 mb-1">What are cookies?</h3>
                 <p>
@@ -79,7 +79,7 @@ export default function CookiePolicy() {
                 <h3 className="font-semibold text-ink-900 mb-1">Contact</h3>
                 <p>
                   For any questions regarding this Cookie Policy, please contact us at{' '}
-                  <a href="mailto:info@alatainvestmentclub.com" className="text-forest underline">
+                  <a href="mailto:info@alatainvestmentclub.com" className="text-club underline underline-offset-4">
                     info@alatainvestmentclub.com
                   </a>.
                 </p>
