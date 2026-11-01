@@ -9,7 +9,7 @@ import type { ReactNode } from 'react'
  * the pages that have not been converted yet. Exact paths, or prefixes
  * ending in '/'.
  */
-const REDESIGNED: string[] = ['/', '/events', '/events/', '/reports', '/team', '/team/alumni', '/career-service', '/join-us', '/partners', '/dashboard', '/dashboard/', '/admin', '/admin/']
+const REDESIGNED: string[] = ['/', '/events', '/events/', '/reports', '/team', '/team/alumni', '/career-service', '/join-us', '/partners', '/merch', '/merch/', '/checkout', '/checkout/', '/dashboard', '/dashboard/', '/admin', '/admin/']
 
 export function isRedesigned(pathname: string) {
   return REDESIGNED.some(p => (p.endsWith('/') && p !== '/' ? pathname.startsWith(p) : pathname === p))

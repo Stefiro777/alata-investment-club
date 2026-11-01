@@ -1,19 +1,24 @@
-import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
-import Image from 'next/image'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import Parallax from '@/app/components/Parallax'
-import Reveal from '@/app/components/Reveal'
-import { MotionReveal, MotionLine } from '@/app/components/motion/Motion'
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { isSoldOut, effectiveStock, stockLabel } from '@/lib/merch-stock'
+import { publicOnly } from '@/lib/public-filters'
+import { fmtEur, longDate } from '@/lib/event-display'
+import SiteNav from '@/app/components/site/SiteNav'
+import SiteFooter from '@/app/components/site/SiteFooter'
+import { ScrollProgress } from '@/app/components/site/Media'
+
+export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Merch — Alata Investment Club',
+  description: 'The club’s merch and the tickets for the next paid events.',
+}
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-
-function fmtEur(cents: number) {
-  return `€${(cents / 100).toFixed(2).replace('.', ',')}`
-}
 
 type Variant = { id: string; color: string; color_hex: string | null; images: string[] | null; sort_order: number; stock: number | null }
 type Product = {
@@ -21,167 +26,151 @@ type Product = {
   stock: number | null; size_stock: Record<string, number> | null; sizes: string[] | null
   product_variants: Variant[]
 }
+type Ticket = { id: string; slug: string | null; title: string; date: string; ticket_price_cents: number | null; member_price_cents: number | null }
 
-export default async function MerchPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ checkout?: string }>
-}) {
+/** All the photos of a product, first variant first. */
+function photosOf(p: Product): string[] {
+  return [...(p.product_variants ?? [])]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .flatMap(v => v.images ?? [])
+}
+
+/** Board M2: the photo changes on hover (second photo, if there is one). */
+function ProductCard({ product }: { product: Product }) {
+  const [first, second] = photosOf(product)
+  const soldOut = isSoldOut(product)
+  const label = soldOut ? 'Out of stock' : stockLabel(effectiveStock({ stock: product.stock }))
+  return (
+    <Link href={`/merch/${product.slug}`} className="group block">
+      <div className="relative aspect-[308/380] overflow-hidden bg-sand">
+        {first && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={first} alt={product.name} className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${second ? 'group-hover:opacity-0' : ''}`} loading="lazy" />
+        )}
+        {second && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={second} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" loading="lazy" />
+        )}
+        {label && (
+          <span className="absolute left-3 top-3 rounded-full bg-ivory px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-night">{label}</span>
+        )}
+      </div>
+      <div className="rd-display mt-3.5 text-[24px] leading-[1.15] md:text-[26px]">{product.name}</div>
+      <div className="mt-1 text-[14px] text-earth-700">{fmtEur(product.price_cents)}</div>
+    </Link>
+  )
+}
+
+export default async function MerchPage({ searchParams }: { searchParams: Promise<{ checkout?: string }> }) {
   const sp = await searchParams
-
-  // Check visibility
-  const { data: setting } = await supabase
-    .from('settings').select('value').eq('key', 'merch_page_visible').maybeSingle()
+  const { data: setting } = await supabase.from('settings').select('value').eq('key', 'merch_page_visible').maybeSingle()
 
   if (!setting || setting.value !== 'true') {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-forest mb-4">
-          Alata Investment Club
-        </p>
-        <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-none mb-6">
-          COMING SOON
-        </h1>
-        <div className="w-10 h-px bg-white/30 mx-auto mb-6" />
-        <p className="text-base text-white/60 max-w-sm">
-          Our merch is on its way. Stay tuned.
-        </p>
-      </div>
+      <>
+        <section className="relative flex min-h-[100svh] flex-col bg-ivory text-night">
+          <SiteNav tone="light" />
+          <div className="rd-gutter flex flex-1 flex-col justify-center py-28">
+            <div className="text-[13px] text-earth-700">Merch</div>
+            <h1 className="rd-display mt-3 text-[clamp(52px,7vw,88px)]">Coming <em>soon</em></h1>
+            <p className="mt-5 max-w-[420px] text-[15px] leading-[1.7] text-earth-700">The club&apos;s merch is on its way.</p>
+          </div>
+        </section>
+        <SiteFooter />
+      </>
     )
   }
 
-  // Fetch products
-  const { data: products } = await supabase
-    .from('products')
-    .select('id, slug, name, price_cents, description, sizes, stock, size_stock, product_variants (id, color, color_hex, images, sort_order, stock)')
-    .eq('visible', true)
-    .order('created_at', { ascending: false })
+  const today = new Date().toISOString().split('T')[0]
+  const [{ data: products }, { data: tickets }] = await Promise.all([
+    supabase
+      .from('products')
+      .select('id, slug, name, price_cents, description, sizes, stock, size_stock, product_variants (id, color, color_hex, images, sort_order, stock)')
+      .eq('visible', true)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('upcoming_events')
+      .select('id, slug, title, date, ticket_price_cents, member_price_cents')
+      .eq('status', 'open')
+      .gte('date', today)
+      .gt('ticket_price_cents', 0)
+      .order('date', { ascending: true }),
+  ])
 
   const items = (products ?? []) as Product[]
+  const paid = publicOnly(tickets as Ticket[] | null, t => t.title)
+  const hero = items[0]
+  const heroPhoto = hero ? photosOf(hero)[0] : null
 
   return (
-    <div className="bg-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-      {/* Success banner */}
+    <>
       {sp.checkout === 'success' && (
-        <div className="bg-forest text-white text-center py-3 text-sm font-semibold tracking-wide">
-          Order confirmed — a receipt has been sent to your email.
+        <div role="status" className="relative z-50 bg-club py-3 text-center text-[14px] text-ivory">
+          Order confirmed: a receipt has been sent to your email.
         </div>
       )}
 
-      {/* Hero */}
-      <section className="relative min-h-[500px] lg:min-h-[610px] flex items-center justify-center text-white overflow-hidden">
-        <Parallax>
-          <Image
-            src="/redesign/teatro-hd.jpg"
-            alt=""
-            fill
-            className="object-cover grayscale animate-ken-burns"
-            style={{ objectPosition: 'center 60%' }}
-            preload
-          />
-        </Parallax>
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26, 74, 58, 0.78)', zIndex: 1 }} />
-        <div className="absolute inset-0 hero-vignette" style={{ zIndex: 1 }} />
-        <div style={{ position: 'relative', zIndex: 2 }} className="text-center px-6 py-20">
-          <MotionReveal delay={0} y={20}>
-            <p className="text-xs tracking-[0.35em] uppercase text-white/60 mb-6">
-              Official Merchandise
-            </p>
-          </MotionReveal>
-          <MotionReveal delay={0.15}>
-            <h1 className="font-serif text-6xl md:text-8xl font-semibold text-white leading-[1.02] mb-6">
-              Wear <em className="italic">the Club</em>
-            </h1>
-          </MotionReveal>
-          <MotionReveal delay={0.4} y={0} blur={6}>
-            <div className="w-10 h-px bg-white/30 mx-auto mb-6" />
-          </MotionReveal>
-          <MotionReveal delay={0.5}>
-            <p className="text-base text-white/80 max-w-xl mx-auto leading-relaxed">
-              Selected pieces for members and enthusiasts.
-            </p>
-          </MotionReveal>
-        </div>
-      </section>
-
-      {/* Product grid */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 sm:py-20">
-        {items.length === 0 ? (
-          <div className="py-24 text-center">
-            <p className="text-sm text-gray-400 uppercase tracking-widest">No products available yet.</p>
+      {/* M1 · one product, large, like a still life */}
+      <section className="relative bg-ivory text-night">
+        <SiteNav tone="light" />
+        {hero ? (
+          <div className="rd-gutter grid gap-10 pb-[clamp(56px,8vw,90px)] pt-[clamp(96px,10vw,110px)] md:grid-cols-[minmax(0,440px)_minmax(0,584px)] md:items-center md:justify-between">
+            <div className="order-2 md:order-1">
+              <div className="text-[13px] text-earth-700">Merch</div>
+              <h1 className="rd-display mt-3 text-[clamp(44px,6.3vw,76px)]">{hero.name}</h1>
+              <div className="rd-display mt-6 text-[40px]">{fmtEur(hero.price_cents)}</div>
+              <Link href={`/merch/${hero.slug}`} className="rd-italic mt-8 inline-block text-[clamp(36px,3.7vw,44px)] text-club hover:underline underline-offset-[0.18em]">
+                Choose your size
+              </Link>
+            </div>
+            <Link href={`/merch/${hero.slug}`} className="order-1 block aspect-square overflow-hidden bg-sand md:order-2" aria-label={hero.name}>
+              {heroPhoto && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={heroPhoto} alt="" className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.02]" />
+              )}
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-            {items.map((product, i) => {
-              const variants = [...(product.product_variants ?? [])].sort((a, b) => a.sort_order - b.sort_order)
-              const firstImg = variants[0]?.images?.[0] ?? null
-              const soldOut = isSoldOut(product)
-              const lowLabel = soldOut ? 'Out of stock' : stockLabel(effectiveStock({ stock: product.stock }))
-              return (
-                <Reveal key={product.id} direction="up" delay={(i % 3) * 120}>
-                  <Link
-                    href={`/merch/${product.slug}`}
-                    className="group block"
-                  >
-                    {/* Image */}
-                    <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden mb-4 border border-transparent group-hover:border-[#1a4a3a] transition-colors duration-base">
-                      {firstImg ? (
-                        <Image
-                          src={firstImg}
-                          alt={product.name}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="object-cover group-hover:scale-[1.04] transition-transform duration-700"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-gray-300 text-xs uppercase tracking-widest">No image</span>
-                        </div>
-                      )}
-                      {lowLabel && (
-                        <span className={`absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-[0.2em] px-3 py-1.5 ${soldOut ? 'bg-ink-900 text-white' : 'bg-white text-forest border border-forest'}`}>
-                          {lowLabel}
-                        </span>
-                      )}
-                      {/* Subtle green veil on hover */}
-                      <div className="absolute inset-0 bg-forest/0 group-hover:bg-forest/5 transition-colors duration-base pointer-events-none" />
-                    </div>
-
-                    {/* Color swatches */}
-                    {variants.length > 0 && (
-                      <div className="flex gap-1.5 mb-3">
-                        {variants.slice(0, 6).map(v => (
-                          <span
-                            key={v.id}
-                            className="w-4 h-4 border border-gray-200"
-                            style={{ backgroundColor: v.color_hex ?? '#ccc' }}
-                            title={v.color}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Info */}
-                    <div className="flex items-baseline justify-between gap-3">
-                      <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-900 group-hover:text-[#1a4a3a] transition-colors">
-                        {product.name}
-                      </h2>
-                      <p className="font-serif text-lg text-gray-900 leading-none">{fmtEur(product.price_cents)}</p>
-                    </div>
-
-                    <span className="mt-4 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-forest border border-forest px-3 py-1.5 group-hover:bg-forest group-hover:text-white transition-colors">
-                      View
-                      <svg className="w-3 h-3 transition-transform duration-base group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </span>
-                  </Link>
-                </Reveal>
-              )
-            })}
+          <div className="rd-gutter pb-24 pt-[clamp(110px,14vw,140px)]">
+            <h1 className="rd-display text-[clamp(52px,7vw,88px)]">The <em>shop</em></h1>
+            <p className="mt-5 text-[15px] text-earth-700">New pieces are on their way.</p>
           </div>
         )}
-      </div>
-    </div>
+      </section>
+
+      {/* M2 · products and tickets */}
+      {(items.length > 0 || paid.length > 0) && (
+        <section className="border-t border-night/10 bg-ivory py-[clamp(56px,8vw,90px)] text-night">
+          <div className="rd-gutter grid gap-16 lg:grid-cols-[minmax(0,640px)_minmax(0,384px)] lg:justify-between">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6">
+              {items.map(p => <ProductCard key={p.id} product={p} />)}
+            </div>
+            <div>
+              <h2 className="rd-display text-[48px] italic">Tickets</h2>
+              {paid.length === 0 ? (
+                <p className="mt-5 border-t border-night pt-4 text-[14px] text-earth-700">No paid events open right now.</p>
+              ) : (
+                <ul className="mt-5 border-t border-night">
+                  {paid.map(t => (
+                    <li key={t.id}>
+                      <Link href={t.slug ? `/events/${t.slug}#register` : '/events'} className="block border-b border-night/20 py-4 transition-colors hover:bg-night/[0.03]">
+                        <div className="rd-display text-[24px]">{t.title}</div>
+                        <div className="mt-1 text-[13px] text-earth-700">
+                          {longDate(t.date)} · {fmtEur(t.ticket_price_cents ?? 0)}
+                          {t.member_price_cents != null && t.member_price_cents !== t.ticket_price_cents ? ` · members ${t.member_price_cents ? fmtEur(t.member_price_cents) : 'free'}` : ''}
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <SiteFooter />
+      <ScrollProgress />
+    </>
   )
 }

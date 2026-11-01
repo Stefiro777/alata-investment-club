@@ -1,8 +1,9 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -75,18 +76,7 @@ function loadFromStorage(): CartItem[] {
   } catch { return [] }
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-function CalendarIcon() {
-  return (
-    <svg className="w-7 h-7 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  )
-}
-
-// ── CartDrawer ────────────────────────────────────────────────────────────────
+// ── CartDrawer (board M3: the cart slides in from the right) ─────────────────
 
 function CartDrawer({
   items, totalCents, removeItem, updateQty, clearCart, onClose, onCheckout,
@@ -99,108 +89,97 @@ function CartDrawer({
   onClose: () => void
   onCheckout: () => void
 }) {
+  const reduced = useReducedMotion()
   const merch   = items.filter(i => !i.type || i.type === 'merch')
   const tickets = items.filter(i => i.type === 'ticket')
   const hasMixed = merch.length > 0 && tickets.length > 0
 
-  function renderMerchItem(item: CartItem) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  function renderItem(item: CartItem) {
+    const isTicket = item.type === 'ticket'
+    const meta = isTicket
+      ? [item.eventDate ? fmtDate(item.eventDate) : null, item.eventLocation].filter(Boolean).join(' · ')
+      : [item.variant?.color, item.size ? `Size ${item.size}` : null, item.textVariant].filter(Boolean).join(' · ')
     return (
-      <div key={item.cartKey} className="flex gap-4 border border-gray-100 p-3">
-        {item.variant?.image ? (
-          <div className="relative w-16 h-16 flex-shrink-0 bg-gray-100 overflow-hidden">
-            <Image src={item.variant.image} alt={item.name} fill className="object-cover" />
-          </div>
-        ) : (
-          <div className="w-16 h-16 flex-shrink-0 bg-gray-100" />
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 leading-tight">{item.name}</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {[item.variant?.color, item.size, item.textVariant].filter(Boolean).join(' / ')}
-          </p>
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center gap-2">
-              <button onClick={() => updateQty(item.cartKey, item.quantity - 1)}
-                className="w-11 h-11 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm">−</button>
-              <span className="text-sm w-4 text-center">{item.quantity}</span>
-              <button onClick={() => updateQty(item.cartKey, item.quantity + 1)}
-                disabled={item.maxQty != null && item.quantity >= item.maxQty}
-                title={item.maxQty != null && item.quantity >= item.maxQty ? 'Maximum available quantity' : undefined}
-                className="w-11 h-11 flex items-center justify-center border border-gray-200 text-gray-600 hover:border-forest transition-colors text-sm disabled:opacity-30 disabled:hover:border-gray-200 disabled:cursor-not-allowed">+</button>
-            </div>
-            <p className="text-sm font-semibold text-gray-900">{fmtEur(item.priceCents * item.quantity)}</p>
+      <li key={item.cartKey} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-start gap-4 border-b border-night/20 py-4">
+        <div className="relative h-[70px] w-[56px] overflow-hidden bg-sand">
+          {!isTicket && item.variant?.image && <Image src={item.variant.image} alt="" fill className="object-cover" />}
+          {isTicket && <span className="absolute inset-0 flex items-center justify-center font-serif text-[22px] italic text-club">T</span>}
+        </div>
+        <div className="min-w-0">
+          <p className="font-serif text-[22px] font-medium leading-[1.15]">{item.name}</p>
+          {meta && <p className="mt-1 text-[13px] text-earth-700">{meta}</p>}
+          <div className="mt-2 flex items-center gap-3 text-[13px]">
+            {!isTicket && (
+              <>
+                <button type="button" onClick={() => updateQty(item.cartKey, item.quantity - 1)} aria-label="One less" className="flex h-8 w-8 items-center justify-center rounded-full border border-night/30 hover:border-night">−</button>
+                <span className="w-4 text-center">{item.quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => updateQty(item.cartKey, item.quantity + 1)}
+                  disabled={item.maxQty != null && item.quantity >= item.maxQty}
+                  aria-label="One more"
+                  title={item.maxQty != null && item.quantity >= item.maxQty ? 'Maximum available quantity' : undefined}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-night/30 hover:border-night disabled:opacity-30"
+                >+</button>
+              </>
+            )}
+            <button type="button" onClick={() => removeItem(item.cartKey)} className="text-earth-500 underline underline-offset-4 hover:text-night">Remove</button>
           </div>
         </div>
-        <button onClick={() => removeItem(item.cartKey)}
-          className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 self-start -m-3.5 p-3.5">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+        <p className="font-serif text-[22px] font-medium">{fmtEur(item.priceCents * item.quantity)}</p>
+      </li>
     )
   }
-
-  function renderTicketItem(item: CartItem) {
-    return (
-      <div key={item.cartKey} className="flex gap-4 border border-gray-100 p-3">
-        <div className="w-16 h-16 flex-shrink-0 bg-forest/10 flex items-center justify-center">
-          <CalendarIcon />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 leading-tight">{item.name}</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {[item.eventDate ? fmtDate(item.eventDate) : null, item.eventLocation].filter(Boolean).join(' · ')}
-          </p>
-          <p className="text-sm font-semibold text-gray-900 mt-2">{fmtEur(item.priceCents)}</p>
-        </div>
-        <button onClick={() => removeItem(item.cartKey)}
-          className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 self-start -m-3.5 p-3.5">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    )
-  }
-
-  const SECTION_CLS = 'text-[10px] font-semibold uppercase tracking-widest text-gray-400'
 
   return (
     <>
-      <div className="fixed inset-0 z-[200] bg-black/50" onClick={onClose} aria-hidden />
-      <div className="fixed right-0 top-0 h-full w-full max-w-md z-[201] bg-white flex flex-col shadow-2xl"
-           style={{ fontFamily: 'Inter, sans-serif' }}>
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
-          <h2 className="font-serif text-xl font-bold text-gray-900">Cart</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors -m-3.5 p-3.5">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+      <motion.div
+        className="fixed inset-0 z-[200] bg-night/60"
+        onClick={onClose}
+        aria-hidden
+        initial={reduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={reduced ? undefined : { opacity: 0 }}
+      />
+      <motion.aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Your cart"
+        className="fixed right-0 top-0 z-[201] flex h-full w-full max-w-[600px] flex-col bg-ivory px-[clamp(24px,5vw,64px)] text-night"
+        initial={reduced ? false : { x: '100%' }}
+        animate={{ x: 0 }}
+        exit={reduced ? undefined : { x: '100%' }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="flex items-baseline justify-between pb-6 pt-10">
+          <h2 className="font-serif text-[48px] font-medium leading-[1.1]">Your cart</h2>
+          <button type="button" onClick={onClose} className="text-[13px] font-medium hover:underline underline-offset-[6px]">Close</button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto border-t border-night">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center py-16">
-              <p className="text-sm text-gray-400 mb-2">Your cart is empty.</p>
-              <button onClick={onClose}
-                className="text-xs font-semibold uppercase tracking-widest text-forest underline">
-                Continue shopping
-              </button>
+            <div className="py-16">
+              <p className="font-serif text-[28px] italic text-earth-700">Your cart is empty.</p>
+              <button type="button" onClick={onClose} className="mt-4 text-[13px] underline underline-offset-4">Continue browsing</button>
             </div>
           ) : (
             <>
               {tickets.length > 0 && (
                 <>
-                  {hasMixed && <p className={SECTION_CLS}>Tickets</p>}
-                  {tickets.map(renderTicketItem)}
+                  {hasMixed && <p className="rd-eyebrow pt-5 text-[10px] text-earth-500">Tickets</p>}
+                  <ul>{tickets.map(renderItem)}</ul>
                 </>
               )}
               {merch.length > 0 && (
                 <>
-                  {hasMixed && <p className={`${SECTION_CLS} pt-2`}>Merch</p>}
-                  {merch.map(renderMerchItem)}
+                  {hasMixed && <p className="rd-eyebrow pt-5 text-[10px] text-earth-500">Merch</p>}
+                  <ul>{merch.map(renderItem)}</ul>
                 </>
               )}
             </>
@@ -208,22 +187,26 @@ function CartDrawer({
         </div>
 
         {items.length > 0 && (
-          <div className="border-t border-gray-200 px-6 py-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Total</p>
-              <p className="text-xl font-bold text-gray-900">{fmtEur(totalCents)}</p>
+          <div className="pb-10 pt-6">
+            {merch.length > 0 && (
+              <div className="flex justify-between text-[14px] text-earth-700">
+                <span>Shipping (IT, EU, World)</span>
+                <span>calculated at checkout</span>
+              </div>
+            )}
+            <div className="mt-3 flex items-baseline justify-between">
+              <span className="text-[14px]">Subtotal</span>
+              <span className="font-serif text-[36px] font-medium">{fmtEur(totalCents)}</span>
             </div>
-            <button onClick={onCheckout}
-              className="w-full bg-forest hover:bg-[#143d30] text-white text-xs font-semibold uppercase tracking-widest py-4 transition-colors">
-              Proceed to Checkout →
-            </button>
-            <button onClick={clearCart}
-              className="w-full text-xs text-gray-400 hover:text-gray-700 transition-colors text-center">
-              Clear cart
-            </button>
+            <div className="mt-6 flex items-baseline justify-between gap-6">
+              <button type="button" onClick={onCheckout} className="font-serif text-[46px] font-medium italic leading-[1.1] text-club hover:underline underline-offset-[0.18em]">
+                Checkout
+              </button>
+              <button type="button" onClick={clearCart} className="text-[13px] text-earth-500 hover:text-night">Clear cart</button>
+            </div>
           </div>
         )}
-      </div>
+      </motion.aside>
     </>
   )
 }
@@ -234,6 +217,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items,      setItems]      = useState<CartItem[]>(loadFromStorage)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
 
   // Persist to localStorage whenever items change
   useEffect(() => {
@@ -241,8 +225,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items])
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
-    console.log('addItem received:', item)
-    console.log('existing cart:', items)
     const full: CartItem = { type: 'merch', ...item, quantity: 1 }
     setItems(prev => {
       const existing = prev.find(i => i.cartKey === full.cartKey)
@@ -292,24 +274,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {children}
 
       {/* Floating cart button — visible when cart has items and drawer is closed */}
-      {count > 0 && !drawerOpen && (
+      {count > 0 && !drawerOpen && !pathname.startsWith('/checkout') && (
         <button
           onClick={() => setDrawerOpen(true)}
-          className="fixed bottom-6 right-6 z-[190] w-14 h-14 bg-forest hover:bg-[#143d30] text-white shadow-xl flex items-center justify-center transition-colors"
-          aria-label="Open cart"
+          className="fixed bottom-6 right-6 z-[190] rounded-full bg-night px-5 py-3 text-[13px] font-medium tracking-[0.04em] text-ivory shadow-[0_12px_32px_-12px_rgba(11,29,22,0.6)] transition-colors hover:bg-moss"
+          aria-label={`Open cart (${count} items)`}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-forest text-[10px] font-bold flex items-center justify-center border border-forest">
-            {count > 9 ? '9+' : count}
-          </span>
+          Cart ({count > 9 ? '9+' : count})
         </button>
       )}
 
+      <AnimatePresence>
       {drawerOpen && (
         <CartDrawer
+          key="cart"
           items={items}
           totalCents={totalCents}
           removeItem={removeItem}
@@ -319,6 +297,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           onCheckout={handleCheckout}
         />
       )}
+      </AnimatePresence>
     </Ctx.Provider>
   )
 }

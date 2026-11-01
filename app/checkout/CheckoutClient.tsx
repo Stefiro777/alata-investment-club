@@ -125,7 +125,7 @@ const ANNO_OPTIONS = [
   'Altro',
 ]
 
-const INPUT_CLS   = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-forest bg-white'
+const INPUT_CLS   = 'w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-forest bg-ivory'
 const LABEL_CLS   = 'block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1'
 const SECTION_CLS = 'text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2'
 
@@ -141,10 +141,10 @@ function Stepper({ step, stepDefs }: { step: number; stepDefs: StepDef[] }) {
             <div className="flex flex-col items-center gap-1">
               <div className={`w-8 h-8 flex items-center justify-center text-xs font-bold border-2 transition-colors ${
                 step > n
-                  ? 'border-forest bg-forest text-white'
+                  ? 'border-night bg-night text-ivory'
                   : step === n
-                    ? 'border-forest bg-white text-forest'
-                    : 'border-gray-300 bg-white text-gray-400'
+                    ? 'border-forest bg-ivory text-forest'
+                    : 'border-gray-300 bg-ivory text-gray-400'
               }`}>
                 {step > n ? (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +158,7 @@ function Stepper({ step, stepDefs }: { step: number; stepDefs: StepDef[] }) {
             </div>
             {i < stepDefs.length - 1 && (
               <div className={`w-12 sm:w-20 h-px mx-2 mb-4 transition-colors ${
-                step > n ? 'bg-forest' : 'bg-gray-200'
+                step > n ? 'bg-night' : 'bg-night/15'
               }`} />
             )}
           </div>
@@ -199,7 +199,7 @@ function StepOrder({
 
   function renderMerchItem(item: CartItem) {
     return (
-      <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
+      <div key={item.cartKey} className="flex gap-4 border-b border-night/20 py-3">
         {item.variant?.image ? (
           <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 overflow-hidden">
             <Image src={item.variant.image} alt={item.name} fill className="object-cover" />
@@ -221,7 +221,7 @@ function StepOrder({
 
   function renderTicketItem(item: CartItem) {
     return (
-      <div key={item.cartKey} className="flex gap-4 border border-gray-200 p-3">
+      <div key={item.cartKey} className="flex gap-4 border-b border-night/20 py-3">
         <div className="w-20 h-20 flex-shrink-0 bg-forest/10 flex items-center justify-center">
           <svg className="w-7 h-7 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
@@ -244,7 +244,7 @@ function StepOrder({
 
   return (
     <div>
-      <h2 className="font-serif text-2xl font-bold text-black mb-6">Your Order</h2>
+      <h2 className="font-serif text-[40px] font-medium leading-[1.1] text-night mb-6">Your Order</h2>
 
       <div className="space-y-3 mb-8">
         {tickets.length > 0 && (
@@ -273,7 +273,7 @@ function StepOrder({
               return (
                 <div key={u.id}
                   className={`flex items-center gap-4 border p-3 transition-colors ${
-                    isSelected ? 'border-forest bg-[#f4f9f7]' : 'border-gray-200 bg-white'
+                    isSelected ? 'border-forest bg-[#f4f9f7]' : 'border-gray-200 bg-ivory'
                   }`}
                 >
                   {u.image ? (
@@ -304,7 +304,7 @@ function StepOrder({
                     className={`flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest px-4 py-2 border transition-colors ${
                       isSelected
                         ? 'bg-forest text-white border-forest hover:bg-[#143d30]'
-                        : 'bg-white text-black border-black hover:bg-gray-50'
+                        : 'bg-ivory text-black border-black hover:bg-gray-50'
                     }`}
                   >
                     {isSelected ? 'Remove' : 'Add'}
@@ -345,7 +345,7 @@ function StepOrder({
               <button
                 onClick={onApplyDiscount}
                 disabled={discountApplying || !discountCode.trim()}
-                className="px-4 py-2 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-40"
+                className="px-4 py-2 border border-black bg-ivory text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-40"
               >
                 {discountApplying ? '…' : 'Apply'}
               </button>
@@ -393,7 +393,7 @@ function StepOrder({
 
       <button
         onClick={onContinue}
-        className="w-full py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors"
+        className="w-full py-3.5 rounded-full bg-night text-ivory text-[11px] font-semibold uppercase tracking-[0.14em] hover:bg-moss transition-colors"
       >
         Continue →
       </button>
@@ -436,7 +436,7 @@ function StepShipping({
 
   return (
     <div>
-      <h2 className="font-serif text-2xl font-bold text-black mb-6">Shipping Details</h2>
+      <h2 className="font-serif text-[40px] font-medium leading-[1.1] text-night mb-6">Shipping Details</h2>
 
       {error && (
         <p className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2 mb-4">{error}</p>
@@ -462,7 +462,7 @@ function StepShipping({
 
       {/* Live shipping cost */}
       {shippingRates.length > 0 && (
-        <div className="border border-gray-200 p-3 mb-6 flex items-center justify-between">
+        <div className="border-b border-night/20 py-3 mb-6 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Shipping</p>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -477,11 +477,11 @@ function StepShipping({
 
       <div className="flex gap-3">
         <button onClick={onBack}
-          className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors">
+          className="px-6 py-3.5 border border-black bg-ivory text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors">
           ← Back
         </button>
         <button onClick={onContinue}
-          className="flex-1 py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
+          className="flex-1 py-3.5 rounded-full bg-night text-ivory text-[11px] font-semibold uppercase tracking-[0.14em] hover:bg-moss transition-colors">
           Continue →
         </button>
       </div>
@@ -502,7 +502,7 @@ function StepRegistration({
 }) {
   return (
     <div>
-      <h2 className="font-serif text-2xl font-bold text-black mb-6">Event Registration</h2>
+      <h2 className="font-serif text-[40px] font-medium leading-[1.1] text-night mb-6">Event Registration</h2>
 
       {error && (
         <p className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2 mb-4">{error}</p>
@@ -593,11 +593,11 @@ function StepRegistration({
 
       <div className="flex gap-3 mt-6">
         <button onClick={onBack}
-          className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors">
+          className="px-6 py-3.5 border border-black bg-ivory text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors">
           ← Back
         </button>
         <button onClick={onContinue}
-          className="flex-1 py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors">
+          className="flex-1 py-3.5 rounded-full bg-night text-ivory text-[11px] font-semibold uppercase tracking-[0.14em] hover:bg-moss transition-colors">
           Continue →
         </button>
       </div>
@@ -629,9 +629,9 @@ function StepPayment({
 
   return (
     <div>
-      <h2 className="font-serif text-2xl font-bold text-black mb-6">Payment</h2>
+      <h2 className="font-serif text-[40px] font-medium leading-[1.1] text-night mb-6">Payment</h2>
 
-      <div className="border border-gray-200 p-4 mb-6 space-y-2">
+      <div className="border-y border-night/30 py-4 mb-6 space-y-2">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Order Summary</p>
 
         <div className="flex justify-between text-sm">
@@ -683,17 +683,17 @@ function StepPayment({
 
       <div className="flex gap-3">
         <button onClick={onBack} disabled={paying}
-          className="px-6 py-3.5 border border-black bg-white text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-40">
+          className="px-6 py-3.5 border border-black bg-ivory text-black text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-40">
           ← Back
         </button>
         {isFreeOrder ? (
           <button onClick={onFreeComplete} disabled={paying}
-            className="flex-1 py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
+            className="flex-1 py-3.5 rounded-full bg-night text-ivory text-[11px] font-semibold uppercase tracking-[0.14em] hover:bg-moss transition-colors disabled:opacity-60">
             {paying ? 'Processing…' : 'Complete Registration →'}
           </button>
         ) : (
           <button onClick={onPay} disabled={paying}
-            className="flex-1 py-3.5 bg-forest text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[#143d30] transition-colors disabled:opacity-60">
+            className="flex-1 py-3.5 rounded-full bg-night text-ivory text-[11px] font-semibold uppercase tracking-[0.14em] hover:bg-moss transition-colors disabled:opacity-60">
             {paying ? 'Redirecting…' : `Pay ${fmtEur(totalCents)} →`}
           </button>
         )}
@@ -1043,38 +1043,35 @@ export default function CheckoutClient() {
   const backHref  = hasTicket && !hasMerch ? '/events' : '/merch'
 
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="flex min-h-screen bg-ivory text-night">
 
-      {/* Left — branding panel (desktop only) */}
-      <div className="hidden md:block md:w-1/2 relative">
-        <Image
-          src="/capitolino.jpg"
-          alt="Capitolino"
-          fill
-          className="object-cover grayscale"
-          priority
-        />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
-        <div style={{ position: 'relative', zIndex: 1 }}
-          className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
-          <p className="font-serif italic text-3xl lg:text-4xl leading-snug mb-5">
+      {/* Left — the club, veiled in green (desktop only) */}
+      <div className="relative hidden bg-night text-ivory md:block md:w-1/2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/redesign/borsa-finestra.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-night opacity-[0.66]" />
+        <div className="relative flex h-full flex-col justify-between px-[var(--gutter)] py-[30px]">
+          <Link href="/" aria-label="Alata Investment Club, home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/redesign/logo-light.png" alt="Alata" className="h-10 w-auto" />
+          </Link>
+          <p className="font-serif text-[clamp(36px,3.6vw,52px)] font-medium italic leading-[1.15]">
             Great investments start with great people.
-          </p>
-          <p className="text-xs tracking-widest uppercase text-white/60">
-            Alata Investment Club — Brescia
           </p>
         </div>
       </div>
 
-      {/* Right — checkout panel */}
-      <div className="w-full md:w-1/2 flex flex-col bg-white">
-        <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <Link href={backHref} className="text-xs font-semibold uppercase tracking-widest text-forest hover:underline">
+      {/* Right — checkout */}
+      <div className="flex w-full flex-col md:w-1/2">
+        <div className="flex items-center justify-between border-b border-night/15 px-6 py-5 md:px-10">
+          <Link href={backHref} className="text-[13px] font-medium hover:underline underline-offset-[6px]">
             {backLabel}
           </Link>
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Alata Investment Club
-          </p>
+          <Link href="/" className="md:hidden" aria-label="Alata Investment Club, home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/redesign/logo-dark.png" alt="Alata" className="h-[30px] w-auto" />
+          </Link>
+          <span className="hidden text-[13px] text-earth-700 md:inline">Checkout</span>
         </div>
 
         <div className="flex-1 overflow-y-auto">

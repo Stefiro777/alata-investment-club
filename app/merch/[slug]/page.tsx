@@ -1,6 +1,8 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import ProductClient from './ProductClient'
+import SiteNav from '@/app/components/site/SiteNav'
+import SiteFooter from '@/app/components/site/SiteFooter'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,5 +35,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .single()
 
   if (!product) notFound()
-  return <ProductClient product={product as Parameters<typeof ProductClient>[0]['product']} />
+  return (
+    <>
+      <div className="relative min-h-[100svh] bg-ivory text-night">
+        <SiteNav tone="light" />
+        <div className="rd-gutter pb-20 pt-[clamp(96px,10vw,110px)]">
+          <ProductClient product={product as Parameters<typeof ProductClient>[0]['product']} />
+        </div>
+      </div>
+      <SiteFooter />
+    </>
+  )
 }

@@ -77,158 +77,119 @@ export default function ProductClient({ product }: { product: Product }) {
     setTimeout(() => setAdded(false), 2000)
   }
 
+  const pill = (on: boolean) =>
+    `rounded-full border px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.1em] transition-colors ${
+      on ? 'border-night bg-night text-ivory' : 'border-night/40 hover:border-night'
+    }`
+
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-      <div className="max-w-6xl mx-auto px-6 py-12 lg:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+    <div className="grid gap-10 md:grid-cols-[minmax(0,440px)_minmax(0,584px)] md:justify-between">
+      {/* Info / selectors (board M1: the product as a still life) */}
+      <div className="order-2 flex flex-col md:order-1 md:pt-[110px]">
+        <div className="text-[13px] text-earth-700">Merch</div>
+        <h1 className="rd-display mt-3 text-[clamp(44px,6.3vw,76px)]">{product.name}</h1>
+        <div className="rd-display mt-5 text-[40px]">{fmtEur(product.price_cents).replace(',00', '')}</div>
+        {product.description && <p className="mt-5 text-[15px] leading-[1.7] text-earth-700">{product.description}</p>}
 
-          {/* Gallery */}
-          <div className="flex gap-3" style={{ animation: 'panelSlideRight 0.7s cubic-bezier(0.22,1,0.36,1) both' }}>
-            {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="flex flex-col gap-2 w-16">
-                {images.map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setMainImg(i)}
-                    className={`relative aspect-square w-16 overflow-hidden border-2 transition-colors ${i === mainImg ? 'border-forest' : 'border-transparent hover:border-forest/40'}`}
-                  >
-                    <Image src={img} alt="" fill className="object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-            {/* Main image */}
-            <div className="flex-1 relative aspect-[3/4] bg-gray-100 overflow-hidden">
-              {images[mainImg] ? (
-                <Image
-                  key={`${selectedVariant?.id ?? 'v'}-${mainImg}`}
-                  src={images[mainImg]}
-                  alt={product.name}
-                  fill
-                  className="object-cover animate-card-enter"
-                  preload
+        {variants.length > 1 && (
+          <fieldset className="mt-8">
+            <legend className="text-[13px] text-earth-700">Colour · <span className="text-night">{selectedVariant?.color}</span></legend>
+            <div className="mt-2.5 flex gap-2.5">
+              {variants.map(v => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => { setSelectedVariant(v); setMainImg(0) }}
+                  aria-label={v.color}
+                  aria-pressed={selectedVariant?.id === v.id}
+                  className={`h-9 w-9 rounded-full border transition-shadow ${selectedVariant?.id === v.id ? 'border-night ring-2 ring-night ring-offset-2 ring-offset-ivory' : 'border-night/25'}`}
+                  style={{ backgroundColor: v.color_hex ?? '#ccc' }}
                 />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-gray-300 text-xs uppercase tracking-widest">No image</span>
-                </div>
-              )}
+              ))}
             </div>
-          </div>
+          </fieldset>
+        )}
 
-          {/* Info / selectors */}
-          <div className="flex flex-col gap-6" style={{ animation: 'heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.15s both' }}>
-            <div>
-              <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 leading-tight">
-                {product.name}
-              </h1>
-              <div className="w-8 h-px bg-forest mt-4 mb-3" />
-              <p className="font-serif text-2xl text-gray-900">{fmtEur(product.price_cents)}</p>
+        {sizes.length > 0 && (
+          <fieldset className="mt-7">
+            <legend className="text-[13px] text-earth-700">Size</legend>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {sizes.map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSelectedSize(s)}
+                  aria-pressed={selectedSize === s}
+                  className={`${pill(selectedSize === s)} ${effectiveStock(product, selectedVariant?.id, s) === 0 ? 'line-through opacity-40' : ''}`}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
+          </fieldset>
+        )}
 
-            {product.description && (
-              <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
-            )}
+        {textVars.length > 0 && (
+          <fieldset className="mt-7">
+            <legend className="text-[13px] text-earth-700">Text</legend>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {textVars.map(tv => (
+                <button key={tv.id} type="button" onClick={() => setSelectedText(tv.option)} aria-pressed={selectedText === tv.option} className={pill(selectedText === tv.option)}>
+                  {tv.option}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
 
-            {/* Color */}
-            {variants.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">
-                  Colore — <span className="text-gray-900">{selectedVariant?.color}</span>
-                </p>
-                <div className="flex gap-2">
-                  {variants.map(v => (
-                    <button
-                      key={v.id}
-                      onClick={() => { setSelectedVariant(v); setMainImg(0) }}
-                      title={v.color}
-                      className={`w-11 h-11 border-2 transition-all ${selectedVariant?.id === v.id ? 'border-forest scale-110' : 'border-gray-200 hover:border-gray-400'}`}
-                      style={{ backgroundColor: v.color_hex ?? '#ccc' }}
-                    />
-                  ))}
-                </div>
+        {label && <p className={`mt-6 text-[11px] font-semibold uppercase tracking-[0.14em] ${soldOut ? 'text-[#8a2a1d]' : 'text-earth-700'}`}>{label}</p>}
+
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={!selectedSize || !selectedVariant || atLimit}
+          className="rd-italic mt-8 self-start text-[clamp(36px,3.7vw,44px)] text-club hover:underline underline-offset-[0.18em] disabled:text-earth-500 disabled:no-underline"
+        >
+          {soldOut ? 'Out of stock' : added ? 'Added to your cart' : atLimit ? 'All available pieces are in your cart' : 'Add to cart'}
+        </button>
+
+        {product.details && Object.keys(product.details).length > 0 && (
+          <dl className="mt-10 border-t border-night/20">
+            {Object.entries(product.details).map(([k, v]) => (
+              <div key={k} className="grid grid-cols-[120px_minmax(0,1fr)] gap-4 border-b border-night/10 py-3 text-[14px]">
+                <dt className="text-earth-500">{k}</dt>
+                <dd>{v}</dd>
               </div>
-            )}
+            ))}
+          </dl>
+        )}
+      </div>
 
-            {/* Size */}
-            {sizes.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Taglia</p>
-                <div className="flex gap-2 flex-wrap">
-                  {sizes.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => setSelectedSize(s)}
-                      className={`px-4 py-2 text-sm font-semibold uppercase border transition-colors ${
-                        selectedSize === s
-                          ? 'bg-forest text-white border-forest'
-                          : 'bg-white text-gray-900 border-gray-300 hover:border-forest'
-                      } ${effectiveStock(product, selectedVariant?.id, s) === 0 ? 'opacity-40 line-through' : ''}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Text variant */}
-            {textVars.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Variante testo</p>
-                <div className="flex gap-2 flex-wrap">
-                  {textVars.map(tv => (
-                    <button
-                      key={tv.id}
-                      onClick={() => setSelectedText(tv.option)}
-                      className={`px-4 py-2 text-sm font-semibold border transition-colors ${
-                        selectedText === tv.option
-                          ? 'bg-forest text-white border-forest'
-                          : 'bg-white text-gray-900 border-gray-300 hover:border-forest'
-                      }`}
-                    >
-                      {tv.option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Stock */}
-            {label && (
-              <p className={`text-xs font-semibold uppercase tracking-widest ${soldOut ? 'text-red-600' : 'text-amber-700'}`}>
-                {label}
-              </p>
-            )}
-
-            {/* CTA */}
-            <button
-              onClick={handleAddToCart}
-              disabled={!selectedSize || !selectedVariant || atLimit}
-              className={`w-full py-4 text-sm font-semibold uppercase tracking-widest transition-colors ${
-                added
-                  ? 'bg-[#123a2d] text-white'
-                  : 'bg-forest hover:bg-forest-deep text-white disabled:bg-gray-200 disabled:text-gray-400'
-              }`}
-            >
-              {soldOut ? 'OUT OF STOCK' : added ? 'AGGIUNTO ✓' : atLimit ? 'MAX QUANTITY IN CART' : 'AGGIUNGI AL CARRELLO'}
-            </button>
-
-            {/* Details */}
-            {product.details && Object.keys(product.details).length > 0 && (
-              <div className="border-t border-gray-100 pt-6 space-y-2">
-                {Object.entries(product.details).map(([k, v]) => (
-                  <div key={k} className="flex gap-4 text-sm">
-                    <span className="w-28 text-gray-400 uppercase tracking-wide text-xs font-semibold flex-shrink-0">{k}</span>
-                    <span className="text-gray-700">{v}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
+      {/* Gallery */}
+      <div className="order-1 md:order-2">
+        <div className="relative aspect-square w-full overflow-hidden bg-sand">
+          {images[mainImg] ? (
+            <Image key={`${selectedVariant?.id ?? 'v'}-${mainImg}`} src={images[mainImg]} alt={product.name} fill className="object-cover" preload />
+          ) : (
+            <div className="absolute inset-0 flex items-end p-3.5 text-[11px] uppercase tracking-[0.14em] text-earth-700">Photo coming soon</div>
+          )}
         </div>
+        {images.length > 1 && (
+          <div className="mt-3 flex gap-3">
+            {images.map((img, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setMainImg(i)}
+                aria-label={`Photo ${i + 1}`}
+                aria-pressed={i === mainImg}
+                className={`relative aspect-square w-16 overflow-hidden bg-sand transition-opacity ${i === mainImg ? 'opacity-100' : 'opacity-55 hover:opacity-100'}`}
+              >
+                <Image src={img} alt="" fill className="object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

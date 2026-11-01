@@ -8,49 +8,31 @@ function SuccessContent() {
   useSearchParams() // consume to satisfy Suspense boundary
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 text-center"
-         style={{ fontFamily: 'Inter, sans-serif' }}>
-      {/* Icon */}
-      <div className="w-16 h-16 border-2 border-forest flex items-center justify-center mb-8">
-        <svg className="w-8 h-8 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
+    <div className="flex min-h-screen flex-col bg-ivory text-night">
+      <div className="rd-gutter pt-6 md:pt-[30px]">
+        <Link href="/" aria-label="Alata Investment Club, home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/redesign/logo-dark.png" alt="Alata" className="h-[34px] w-auto md:h-10" />
+        </Link>
       </div>
-
-      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-forest mb-4">
-        Alata Investment Club
-      </p>
-
-      <h1 className="font-serif text-4xl sm:text-5xl font-bold text-black leading-tight mb-4">
-        Order Confirmed
-      </h1>
-
-      <div className="w-10 h-px bg-black mx-auto mb-6" />
-
-      <p className="text-base text-gray-600 max-w-sm mb-2">
-        A receipt has been sent to your email.
-      </p>
-      <p className="text-sm text-gray-500 max-w-sm mb-10">
-        We will contact you with shipping details shortly.
-      </p>
-
-      <Link
-        href="/merch"
-        className="text-[10px] font-semibold uppercase tracking-widest px-8 py-3.5 bg-forest text-white hover:bg-[#143d30] transition-colors"
-      >
-        Back to Shop
-      </Link>
+      <div className="rd-gutter flex flex-1 flex-col justify-center py-20">
+        <div className="text-[13px] text-earth-700">Order confirmed</div>
+        <h1 className="rd-display mt-3 text-[clamp(52px,7vw,88px)]">Thank <em>you.</em></h1>
+        <p className="mt-6 max-w-[460px] text-[16px] leading-[1.7] text-earth-700">
+          A receipt has been sent to your email. For merch, we will write to you with the shipping details.
+        </p>
+        <div className="mt-10 flex flex-wrap gap-x-10 gap-y-4">
+          <Link href="/merch" className="rd-italic text-[36px] text-club hover:underline underline-offset-[0.18em]">Back to the shop</Link>
+          <Link href="/events" className="rd-italic text-[36px] hover:underline underline-offset-[0.18em]">Next events</Link>
+        </div>
+      </div>
     </div>
   )
 }
 
 export default function SuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-sm text-gray-400">Loading…</p>
-      </div>
-    }>
+    <Suspense fallback={<div className="min-h-screen bg-ivory" />}>
       <SuccessContent />
     </Suspense>
   )
