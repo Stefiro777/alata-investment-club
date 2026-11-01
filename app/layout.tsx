@@ -11,6 +11,7 @@ import CookiePolicy from './components/CookiePolicy'
 import AnalyticsWrapper from './components/AnalyticsWrapper'
 import GoogleAnalytics from './components/GoogleAnalytics'
 import { CartProvider } from './components/CartContext'
+import LegacyChrome from './components/site/LegacyChrome'
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -95,7 +96,8 @@ export default async function RootLayout({
     <html lang="en" className={`${cormorant.variable} ${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         <CartProvider>
-        {/* Navbar */}
+        {/* Old navbar: only on pages not yet moved to the redesign */}
+        <LegacyChrome>
         <header className="bg-forest shadow-md sticky top-0 z-[100]">
           <nav className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -155,6 +157,7 @@ export default async function RootLayout({
             </div>
           </nav>
         </header>
+        </LegacyChrome>
 
         {/* Main. overflow-x-hidden guards against MotionReveal's untriggered
             translateX offset (and similar decorative transforms) pushing the
@@ -165,7 +168,7 @@ export default async function RootLayout({
         <GoogleAnalytics />
         <CookieBanner />
 
-        {/* Footer */}
+        <LegacyChrome>
         <footer className="bg-forest text-white border-t border-white/20">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
@@ -242,6 +245,7 @@ export default async function RootLayout({
             </div>
           </div>
         </footer>
+        </LegacyChrome>
         </CartProvider>
       </body>
     </html>

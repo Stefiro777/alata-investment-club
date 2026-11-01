@@ -48,6 +48,18 @@
   --btn-x-sm:      22px;
   --card-px:       24px;
   --card-py:       24px;
+
+  /* Redesign 2026 — quiet luxury palette (design-reference/NOTES.md) */
+  --night:         #0b1d16;
+  --pine:          #0f2a21;
+  --moss:          #12352a;
+  --ivory:         #f5f1e8;
+  --club:          #1a4a3a;
+  --sand:          #e8e1d2;
+  --earth-700:     #3d3b37;
+  --earth-600:     #4a4740;
+  --earth-500:     #5a5750;
+  --gutter:        clamp(20px, 4.7vw, 56px);
 }
 
 @theme inline {
@@ -82,6 +94,17 @@
   /* Lines */
   --color-line:         var(--line-soft);
   --color-line-faint:   var(--line-faint);
+
+  /* Redesign 2026 */
+  --color-night:        var(--night);
+  --color-pine:         var(--pine);
+  --color-moss:         var(--moss);
+  --color-ivory:        var(--ivory);
+  --color-club:         var(--club);
+  --color-sand:         var(--sand);
+  --color-earth-700:    var(--earth-700);
+  --color-earth-600:    var(--earth-600);
+  --color-earth-500:    var(--earth-500);
 
   /* Typography */
   --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
@@ -394,3 +417,54 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─── Redesign 2026 ─────────────────────────────────────────────────
+   Shared typography for the redesigned pages. Large titles never go
+   under line-height 1.1 so ascenders and descenders never touch. */
+.rd-display {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+.rd-display em { font-style: italic; }
+.rd-italic {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.15;
+}
+.rd-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.rd-gutter {
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+.rd-num { font-variant-numeric: lining-nums tabular-nums; font-feature-settings: 'lnum' 1, 'tnum' 1; }
+
+/* Underline field used by the redesigned forms */
+.rd-field {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  font-size: 24px;
+  line-height: 1.25;
+  color: inherit;
+  outline: none;
+}
+.rd-field::placeholder { color: currentColor; opacity: 0.35; }
+.rd-field:focus-visible { border-bottom-width: 2px; padding-bottom: 7px; }
+textarea.rd-field { resize: vertical; min-height: 72px; }
+
+@keyframes rd-marquee-l { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+@keyframes rd-marquee-r { from { transform: translateX(-50%) } to { transform: translateX(0) } }
