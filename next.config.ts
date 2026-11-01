@@ -17,7 +17,7 @@ const CSP = [
   // PDF.js Web Worker loaded from unpkg at runtime
   "worker-src 'self' blob: https://unpkg.com",
   // PDF preview via blob: and Supabase storage + YouTube/Vimeo gallery embeds
-  "frame-src 'self' blob: https://iyigyfygsalvvveeeheq.supabase.co https://www.youtube.com https://player.vimeo.com https://js.stripe.com https://hooks.stripe.com",
+  "frame-src 'self' blob: https://iyigyfygsalvvveeeheq.supabase.co https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://js.stripe.com https://hooks.stripe.com",
   // PDF <object>/<embed> preview: blob: URLs and Supabase storage
   "object-src 'self' blob: https://iyigyfygsalvvveeeheq.supabase.co",
   // Prevent clickjacking (redundant with X-Frame-Options but defence-in-depth)

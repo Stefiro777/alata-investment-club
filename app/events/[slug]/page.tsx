@@ -1,6 +1,9 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import EventDetailClient from './EventDetailClient'
+import SiteNav from '@/app/components/site/SiteNav'
+import SiteFooter from '@/app/components/site/SiteFooter'
+import { isPubliclyHidden } from '@/lib/public-filters'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,7 +27,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     .eq('slug', slug)
     .maybeSingle()
 
-  if (!event) notFound()
+  if (!event || isPubliclyHidden(event.title)) notFound()
 
   const { data: images } = await supabase
     .from('event_images')
@@ -38,5 +41,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const row = (availability as { event_id: string; sold_out: boolean }[] | null)?.find(a => a.event_id === event.id)
   const soldOut = !!row?.sold_out && event.date >= today && event.status !== 'coming_soon'
 
-  return <EventDetailClient event={event} images={images ?? []} soldOut={soldOut} />
+  return (
+    <>
+      <EventDetailClient event={event} images={images ?? []} soldOut={soldOut} nav={<SiteNav tone="dark" />} />
+      <SiteFooter />
+    </>
+  )
 }

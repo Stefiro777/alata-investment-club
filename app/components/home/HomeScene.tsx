@@ -13,6 +13,7 @@ import {
 import { VeiledMedia } from '@/app/components/site/Media'
 import { StatusPill } from '@/app/components/site/ui'
 import { splitStatValue, type AboutStat } from '@/lib/about-stats'
+import { shortDate } from '@/lib/event-display'
 
 export type HomeEvent = { id: string; slug: string | null; title: string; date: string; status: string | null }
 
@@ -65,10 +66,6 @@ function Moment({ progress, index, children, className = '' }: {
   )
 }
 
-function shortDate(iso: string) {
-  const d = new Date(iso + 'T00:00:00')
-  return `${String(d.getDate()).padStart(2, '0')} ${d.toLocaleDateString('en-GB', { month: 'short' })}`
-}
 
 /* ── F3: a counter that rolls from 0 to the real value with the scroll ── */
 function Drum({ local, stat, reduced }: { local: MotionValue<number>; stat: AboutStat; reduced: boolean }) {
