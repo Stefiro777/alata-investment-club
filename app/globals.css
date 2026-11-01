@@ -468,3 +468,4 @@ textarea.rd-field { resize: vertical; min-height: 72px; }
 
 @keyframes rd-marquee-l { from { transform: translateX(0) } to { transform: translateX(-50%) } }
 @keyframes rd-marquee-r { from { transform: translateX(-50%) } to { transform: translateX(0) } }
+@keyframes rd-fill { from { width: 0 } to { width: 100% } }
