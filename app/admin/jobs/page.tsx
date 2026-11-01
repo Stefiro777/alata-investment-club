@@ -1,13 +1,4 @@
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import { requireTeamAccess } from '@/lib/auth'
-import AdminNavbar from '../components/AdminNavbar'
-import JobApplicationsClient from './JobApplicationsClient'
-
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export type JobApplication = {
   id: string
@@ -26,21 +17,7 @@ export type JobApplication = {
   archived: boolean
 }
 
-export default async function AdminJobsPage() {
-  const member = await requireTeamAccess('career')
-  if (!member) redirect('/dashboard')
-
-  const { data: applications } = await supabaseAdmin
-    .from('job_applications')
-    .select('id, job_offer_id, job_title, first_name, last_name, email, phone, linkedin_url, cover_letter, cv_url, cv_filename, submitted_at, status, archived')
-    .order('submitted_at', { ascending: false })
-
-  return (
-    <>
-      <AdminNavbar userEmail={member.email ?? ''} />
-      <main className="bg-[#f9f9f9] min-h-screen">
-        <JobApplicationsClient applications={(applications ?? []) as JobApplication[]} />
-      </main>
-    </>
-  )
+// The applications to job offers moved to the Career team page.
+export default function AdminJobsPage() {
+  redirect('/dashboard/career/applications')
 }

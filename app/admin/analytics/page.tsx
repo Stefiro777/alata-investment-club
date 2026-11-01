@@ -1465,8 +1465,8 @@ export default function AdminAnalyticsPage() {
   return (
     <>
       <AdminNavbar userEmail={userEmail} />
-      <main className="bg-[#f9f9f9] min-h-screen">
-        <div className="max-w-5xl mx-auto px-6 lg:px-8 py-10">
+      <div>
+        <div>
 
           {/* Page header */}
           <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
@@ -1516,7 +1516,7 @@ export default function AdminAnalyticsPage() {
           {tab === 'participation'      && <ParticipationTab />}
 
         </div>
-      </main>
+      </div>
     </>
   )
 }

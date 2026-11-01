@@ -45,7 +45,7 @@ export default async function AdminPeoplePage() {
   return (
     <>
       <AdminNavbar userEmail={member.email ?? ''} />
-      <main className="bg-[#f9f9f9] min-h-screen">
+      <div>
         {/* TeamClient has its own max-w-5xl wrapper */}
         <TeamClient members={(teamMembersData ?? []) as TeamMember[]} />
         <div className="border-t border-line-faint" />
@@ -54,7 +54,7 @@ export default async function AdminPeoplePage() {
           <hr className="border-line-faint" />
           <AlumniCompaniesSection initialCompanies={(alumniCompaniesData ?? []) as AlumniCompany[]} />
         </div>
-      </main>
+      </div>
     </>
   )
 }

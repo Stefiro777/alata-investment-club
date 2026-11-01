@@ -1,58 +1,48 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { sectionOf } from '@/app/components/board/sections'
 
-const NAV = [
-  { label: 'Settings',    href: '/admin/settings'    },
-  { label: 'Membership',  href: '/admin/membership'  },
-  { label: 'Resources',   href: '/admin/dashboard'   },
-  { label: 'People',      href: '/admin/people'      },
-  { label: 'Job Offers',  href: '/admin/jobs'        },
-  { label: 'CRM',         href: '/admin/crm'         },
-  { label: 'Analytics',   href: '/admin/analytics'   },
-  { label: 'Finance',     href: '/admin/finance'     },
-  { label: 'Archive',     href: '/admin/archive'     },
-  { label: 'Hackathon',   href: '/admin/hackathon'   },
-] as const
-
-export default function AdminNavbar({ userEmail: _ }: { userEmail: string }) {
+/**
+ * Heading of a Board panel screen: the voice (Site, Finance, CRM…) with its
+ * line and the pill tabs of the screens grouped under it. The sidebar is in
+ * BoardShell. Kept under this name because every admin page renders it.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function AdminNavbar(_props: { userEmail?: string }) {
   const pathname = usePathname()
-
-  return (
-    <nav
-      className="sticky top-0 z-40 w-full bg-white flex items-center px-8"
-      style={{ height: '56px', borderBottom: '1px solid #e5e5e5' }}
-    >
-      {/* Nav links */}
-      <div className="flex items-stretch h-full flex-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        {NAV.map(item => {
-          const isActive = pathname.startsWith(item.href)
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              className="flex items-center px-4 text-[0.75rem] whitespace-nowrap transition-colors duration-100 flex-shrink-0"
-              style={{
-                letterSpacing: '0.1em',
-                color: isActive ? '#1a4a3a' : '#4a4a4a',
-                borderBottom: isActive ? '2px solid #1a4a3a' : '2px solid transparent',
-                fontWeight: isActive ? 500 : 400,
-              }}
-            >
-              {item.label}
-            </a>
-          )
-        })}
+  const section = sectionOf(pathname)
+  if (!section) {
+    if (!pathname.startsWith('/admin/hackathon')) return null
+    return (
+      <div className="mb-8">
+        <h1 className="rd-display text-[clamp(40px,4.6vw,54px)]">Hackathon</h1>
+        <p className="mt-3 text-[14px] leading-[1.6] text-earth-600">Sessions, participants, materials and judging of the M&amp;A game.</p>
       </div>
-
-      {/* Back link */}
-      <a
-        href="/dashboard"
-        className="flex-shrink-0 ml-8 transition-colors duration-100 hover:text-forest"
-        style={{ fontSize: '0.75rem', color: '#4a4a4a', letterSpacing: '0.02em' }}
-      >
-        ← Back to Dashboard
-      </a>
-    </nav>
+    )
+  }
+  return (
+    <div className="mb-8">
+      <h1 className="rd-display text-[clamp(40px,4.6vw,54px)]">{section.label}</h1>
+      <p className="mt-3 text-[14px] leading-[1.6] text-earth-600">{section.sub}</p>
+      {section.tabs.length > 1 && (
+        <nav className="mt-6 flex flex-wrap gap-2" aria-label={`${section.label} screens`}>
+          {section.tabs.map(t => {
+            const on = pathname === t.href || pathname.startsWith(t.href + '/')
+            return (
+              <Link
+                key={t.href}
+                href={t.href}
+                aria-current={on ? 'page' : undefined}
+                className={`rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${on ? 'border-night bg-night text-ivory' : 'border-night/50 hover:border-night'}`}
+              >
+                {t.label}
+              </Link>
+            )
+          })}
+        </nav>
+      )}
+    </div>
   )
 }

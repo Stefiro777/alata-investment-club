@@ -10,9 +10,9 @@ export default async function AdminCRMPage() {
   return (
     <>
       <AdminNavbar userEmail={member.email ?? ''} />
-      <main className="bg-[#f9f9f9] min-h-screen">
+      <div>
         <CRMClient />
-      </main>
+      </div>
     </>
   )
 }

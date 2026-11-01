@@ -19,11 +19,11 @@ export default async function AdminDashboardPage() {
   return (
     <>
       <AdminNavbar userEmail={member.email ?? ''} />
-      <main className="bg-[#f9f9f9] min-h-screen">
-        <div className="max-w-5xl mx-auto px-8 py-10">
+      <div>
+        <div>
           <ResourcesSection initialResources={(resourcesData ?? []) as Resource[]} />
         </div>
-      </main>
+      </div>
     </>
   )
 }

@@ -10,9 +10,9 @@ export default async function AdminHackathonPage() {
   return (
     <>
       <AdminNavbar userEmail={member.email ?? ''} />
-      <main className="bg-[#f9f9f9] min-h-screen">
+      <div>
         <HackathonAdminClient />
-      </main>
+      </div>
     </>
   )
 }

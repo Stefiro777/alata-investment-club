@@ -17,9 +17,9 @@ export default async function AdminArchivePage() {
   return (
     <>
       <AdminNavbar userEmail={member.email ?? ''} />
-      <main className="bg-[#f9f9f9] min-h-screen">
+      <div>
         <ArchiveClient initialDocs={docs ?? []} userEmail={member.email ?? ''} />
-      </main>
+      </div>
     </>
   )
 }

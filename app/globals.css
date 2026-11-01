@@ -486,3 +486,4 @@ textarea.rd-field { resize: vertical; min-height: 72px; }
 .rd-app button[class*="border-forest"], .rd-app a[class*="border-forest"] { border-radius: 999px; }
 .rd-app button.bg-forest, .rd-app a.bg-forest { background-color: var(--night); }
 .rd-app button.bg-forest:hover, .rd-app a.bg-forest:hover { background-color: var(--moss); }
+.rd-app main .mx-auto.max-w-5xl, .rd-app main .mx-auto.max-w-6xl, .rd-app main .mx-auto.max-w-7xl { max-width: none; padding-left: 0; padding-right: 0; }

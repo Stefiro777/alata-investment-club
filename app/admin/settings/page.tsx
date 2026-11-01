@@ -32,7 +32,7 @@ export default async function AdminSettingsPage() {
   return (
     <>
       <AdminNavbar userEmail={member.email ?? ''} />
-      <main className="bg-[#f9f9f9] min-h-screen">
+      <div>
         <SettingsClient
           applicationsOpen={appSettings?.value === 'true'}
           showPrices={showPricesRow ? showPricesRow.value === 'true' : true}
@@ -42,7 +42,7 @@ export default async function AdminSettingsPage() {
           showEventsReviews={showEventsReviewsRow?.value === 'true'}
           aboutStats={parseAboutStats(aboutStatsRow?.value)}
         />
-      </main>
+      </div>
     </>
   )
 }
