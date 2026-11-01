@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
-import Reveal from '../components/Reveal'
 import MentorBookingOverlay from './MentorBookingOverlay'
 
 type Mentor = {
@@ -17,59 +15,10 @@ type Mentor = {
   bookable: boolean
 }
 
-function initials(name: string) {
-  return name.split(' ').map(n => n[0]).join('')
-}
-
-function MentorCard({ mentor, onOpen }: { mentor: Mentor; onOpen: () => void }) {
-  return (
-    <>
-      <div className="group bg-white overflow-hidden flex flex-col h-full" style={{ border: '1px solid var(--forest)' }}>
-        {/* Portrait — full-bleed, sharp corners, same treatment as /team */}
-        {/* Dark backing when there is a photo: the 4/5 box has a fractional height, and a light background would show as a grey hairline under the image */}
-        <div className={`relative aspect-[4/5] overflow-hidden ${mentor.photo_url ? "bg-forest" : "bg-paper-stone"}`}>
-          {mentor.photo_url ? (
-            <Image
-              src={mentor.photo_url}
-              alt={mentor.full_name}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover object-top transition-transform duration-slow group-hover:scale-[1.04]"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="font-serif text-4xl text-forest/60">{initials(mentor.full_name)}</span>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-forest/0 group-hover:bg-forest/10 transition-colors duration-base pointer-events-none" />
-        </div>
-
-        {/* Info — name, role and bio_short all visible without interaction */}
-        <div className="relative p-4 bg-forest flex flex-col flex-1">
-          <div className="absolute top-0 left-0 h-px bg-white/40 w-0 group-hover:w-full transition-[width] duration-slow" />
-          <h3 className="font-serif text-lg font-bold text-white leading-tight">{mentor.full_name}</h3>
-          {mentor.role_title && (
-            <p className="text-xs uppercase tracking-widest text-white/70 mt-1">{mentor.role_title}</p>
-          )}
-          {mentor.bio_short && (
-            <p className="text-sm text-white/80 leading-relaxed mt-3 flex-1">{mentor.bio_short}</p>
-          )}
-          <button
-            type="button"
-            onClick={onOpen}
-            className="mt-5 inline-flex items-center justify-center gap-2 border border-white/40 text-white text-xs font-semibold uppercase tracking-widest py-3 hover:bg-white hover:text-forest hover:border-white transition-colors duration-base"
-          >
-            View Availability
-          </button>
-        </div>
-      </div>
-    </>
-  )
-}
-
+/** Board C2: choose your mentor, then the booking scene (C3) opens. */
 export default function MentorSection() {
   const [mentors, setMentors] = useState<Mentor[]>([])
-  const [loaded, setLoaded]   = useState(false)
+  const [loaded, setLoaded] = useState(false)
   // The overlay lives here, not in the card, so a cart suggestion can switch it to another mentor.
   const [openMentorId, setOpenMentorId] = useState<string | null>(null)
 
@@ -80,31 +29,44 @@ export default function MentorSection() {
       .catch(() => setLoaded(true))
   }, [])
 
-  if (!loaded || mentors.length === 0) return null
-
   const openMentor = mentors.find(m => m.id === openMentorId) ?? null
 
   return (
-    <section className="py-20 sm:py-28 bg-paper-warm border-t border-line">
-      <div className="max-w-6xl mx-auto px-6 lg:px-8">
-        <Reveal>
-          <div className="mb-14 text-center">
-            <p className="text-xs tracking-[0.2em] uppercase text-ink-500 mb-4">One-on-one</p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-4">Meet Our Mentors</h2>
-            <p className="text-ink-500 text-sm leading-relaxed max-w-xl mx-auto">
-              Book a session directly with one of our mentors. View their profile and check availability.
-            </p>
-          </div>
-        </Reveal>
-        {/* Fixed card width (same as MemberCard in /team, ~276px), wrapped rows are
-            centered, so any mentor count (1, 2, 4, 5...) stays symmetric. */}
-        <div className="flex flex-wrap justify-center gap-6">
-          {mentors.map((m, i) => (
-            <Reveal key={m.id} delay={i * 80} direction="up" className="w-full max-w-[17.25rem]">
-              <MentorCard mentor={m} onOpen={() => setOpenMentorId(m.id)} />
-            </Reveal>
-          ))}
+    <section id="mentors" className="bg-ivory py-[clamp(72px,9vw,100px)] text-night">
+      <div className="rd-gutter">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <h2 className="rd-display text-[clamp(44px,5.4vw,64px)]">Choose your <em>mentor</em></h2>
+          <div className="rd-italic text-[24px] text-club md:pb-2">Free for verified members</div>
         </div>
+
+        {!loaded ? (
+          <div className="mt-12 h-[420px]" aria-busy="true" />
+        ) : mentors.length === 0 ? (
+          <p className="rd-italic mt-12 text-[28px] text-earth-700">New mentors are joining soon.</p>
+        ) : (
+          <ul className="mt-12 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+            {mentors.map(m => (
+              <li key={m.id} className="group flex max-w-[300px] flex-col sm:max-w-none">
+                <div className="aspect-[250/290] overflow-hidden bg-moss">
+                  {m.photo_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.photo_url} alt={`Portrait of ${m.full_name}`} className="h-full w-full object-cover object-top grayscale transition-[filter] duration-500 group-hover:grayscale-0" loading="lazy" />
+                  )}
+                </div>
+                <div className="rd-display mt-[18px] text-[30px] leading-[1.1]">{m.full_name}</div>
+                {m.role_title && <div className="mt-1.5 text-[13px] font-medium text-club">{m.role_title}</div>}
+                {m.bio_short && <p className="mt-2 text-[13px] leading-[1.55] text-earth-700">{m.bio_short}</p>}
+                <button
+                  type="button"
+                  onClick={() => setOpenMentorId(m.id)}
+                  className="rd-italic mt-4 self-start text-[26px] hover:underline underline-offset-[0.18em]"
+                >
+                  Book a session
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       {openMentor && (
         <MentorBookingOverlay

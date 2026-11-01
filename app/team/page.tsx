@@ -1,83 +1,59 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
-import Reveal from '../components/Reveal'
-import Parallax from '../components/Parallax'
-import { MotionReveal, MotionLine } from '../components/motion/Motion'
+import SiteNav from '@/app/components/site/SiteNav'
+import SiteFooter from '@/app/components/site/SiteFooter'
+import { LinkedInIcon } from '@/app/components/site/ui'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
+  title: 'Team — Alata Investment Club',
+  description: 'The Board of the Alata Investment Club.',
   alternates: { canonical: 'https://alatainvestmentclub.com/team' },
 }
 
 type TeamMember = {
   id: string
   name: string
-  role: string
+  role: string | null
   photo_url: string | null
   linkedin_url: string | null
   type: string
   order_index: number | null
 }
 
-function initials(name: string) {
-  return name.split(' ').map(n => n[0]).join('')
-}
-
-function MemberCard({ member }: { member: TeamMember }) {
+function Person({ m }: { m: TeamMember }) {
   return (
-    <div className="group member-card-simple bg-white overflow-hidden flex flex-col" style={{ border: '1px solid var(--forest)' }}>
-      {/* Portrait — full-bleed, sharp corners */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-paper-stone">
-        {member.photo_url ? (
-          <Image
-            src={member.photo_url}
-            alt={member.name}
-            fill
-            sizes="(max-width: 640px) 50vw, 300px"
-            className="member-photo object-cover object-top transition-transform duration-slow group-hover:scale-[1.04]"
+    <li className="group flex items-end gap-[18px]">
+      <div className="h-[132px] w-[100px] shrink-0 overflow-hidden bg-moss">
+        {m.photo_url && (
+          // One tone for every portrait; colour comes back on hover.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={m.photo_url}
+            alt={`Portrait of ${m.name}`}
+            className="h-full w-full object-cover grayscale contrast-[1.05] transition-[filter] duration-500 group-hover:grayscale-0 group-focus-within:grayscale-0"
+            loading="lazy"
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="font-serif text-4xl text-forest/60">{initials(member.name)}</span>
-          </div>
         )}
-        {/* Subtle green veil on hover */}
-        <div className="absolute inset-0 bg-forest/0 group-hover:bg-forest/10 transition-colors duration-base pointer-events-none" />
       </div>
-      {/* Info bar — fixed height so the role text never changes the card's size */}
-      <div className="relative p-4 bg-forest h-[104px] flex flex-col justify-center">
-        {/* Hairline that grows on hover */}
-        <div className="absolute top-0 left-0 h-px bg-white/40 w-0 group-hover:w-full transition-[width] duration-slow" />
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="font-serif text-lg font-bold text-white leading-tight line-clamp-1">{member.name}</h3>
-          {member.linkedin_url && (
-            <a
-              href={member.linkedin_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${member.name} on LinkedIn`}
-              className="shrink-0 opacity-60 group-hover:opacity-100 hover:!opacity-70 transition-opacity duration-base -m-3.5 p-3.5"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="20" height="20" fill="white"/>
-                <path d="M5.5 8H7.5V14.5H5.5V8ZM6.5 7C5.84 7 5.5 6.56 5.5 6C5.5 5.44 5.85 5 6.51 5C7.17 5 7.5 5.44 7.5 6C7.5 6.56 7.16 7 6.5 7ZM14.5 14.5H12.5V11C12.5 10.17 12.19 9.62 11.47 9.62C10.92 9.62 10.6 10 10.44 10.36C10.38 10.51 10.37 10.72 10.37 10.93V14.5H8.37V8H10.37V8.89C10.66 8.43 11.18 7.78 12.37 7.78C13.85 7.78 14.5 8.78 14.5 10.35V14.5Z" fill="#1a4a3a"/>
-              </svg>
-            </a>
-          )}
-        </div>
-        <p className="text-xs uppercase tracking-widest text-white/70 mt-1 line-clamp-2">{member.role}</p>
+      <div className="min-w-0">
+        <div className="rd-display text-[26px] leading-[1.1]">{m.name}</div>
+        {m.role && <div className="mt-[5px] text-[12px] leading-[1.4] text-ivory/75">{m.role}</div>}
+        {m.linkedin_url && (
+          <a href={m.linkedin_url} target="_blank" rel="noopener noreferrer" aria-label={`${m.name} on LinkedIn`} className="-m-2 mt-0.5 inline-block p-2 leading-none text-ivory/80 hover:text-ivory">
+            <LinkedInIcon />
+          </a>
+        )}
       </div>
-    </div>
+    </li>
   )
 }
 
 export default async function TeamPage() {
   const supabase = await createClient()
-
-  const [{ data: showAlumniRow }, { data: membersData }] = await Promise.all([
+  const [{ data: alumniSetting }, { data }] = await Promise.all([
     supabase.from('settings').select('value').eq('key', 'show_alumni').maybeSingle(),
     supabase
       .from('team_members')
@@ -85,105 +61,48 @@ export default async function TeamPage() {
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
   ])
-
-  const showAlumni = showAlumniRow?.value === 'true'
-  const members = (membersData ?? []) as TeamMember[]
+  const members = (data ?? []) as TeamMember[]
   const bod = members.filter(m => m.type === 'bod')
   const management = members.filter(m => m.type === 'management')
-  // Hide a section's heading until it actually has a photo to show — an empty
-  // wall of initials before onboarding reads as "broken", not "coming soon".
-  const bodReady = bod.some(m => m.photo_url)
-  const managementReady = management.some(m => m.photo_url)
+  const showAlumni = alumniSetting?.value !== 'false'
 
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
-        <Parallax>
-          <Image src="/universita.jpg" alt="" fill className="object-cover grayscale animate-ken-burns" style={{ objectPosition: 'center 20%' }} preload />
-        </Parallax>
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
-        <div className="absolute inset-0 hero-vignette" />
-        <div className="relative z-10 w-full py-20 sm:py-28">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <MotionReveal delay={0} y={20}>
-              <p className="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">Our Team</p>
-            </MotionReveal>
-            <MotionReveal delay={0.15}>
-              <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white mb-6">Our Team</h1>
-            </MotionReveal>
-            <MotionLine delay={0.35} duration={0.8} className="w-12 h-px bg-white/30 mb-6" />
-            <MotionReveal delay={0.45}>
-              <p className="text-white/70 text-base max-w-2xl leading-relaxed">
-                Meet the Board of Directors and Management driving Alata Investment Club — united by ambition and a genuine passion for finance.
-              </p>
-            </MotionReveal>
+    <>
+      <section className="relative min-h-[100svh] bg-night text-ivory">
+        <SiteNav tone="dark" />
+        <div className="rd-gutter pb-20 pt-[clamp(104px,12vw,92px)]">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <h1 className="rd-display text-[clamp(60px,7.7vw,92px)]">The <em>Board</em></h1>
+            <p className="max-w-[260px] text-[14px] leading-[1.65] text-ivory/85 md:pb-4 md:text-right">
+              The {bod.length === 9 ? 'nine' : bod.length} people who run the club.
+            </p>
           </div>
+
+          {bod.length > 0 ? (
+            <ul className="mt-12 grid gap-x-8 gap-y-[30px] sm:grid-cols-2 md:mt-[46px] lg:grid-cols-3">
+              {bod.map(m => <Person key={m.id} m={m} />)}
+            </ul>
+          ) : (
+            <p className="rd-italic mt-16 text-[28px] text-ivory/70">The new Board is being announced.</p>
+          )}
+
+          {management.length > 0 && (
+            <>
+              <h2 className="rd-display mt-20 text-[clamp(40px,5vw,56px)]"><em>Management</em></h2>
+              <ul className="mt-8 grid gap-x-8 gap-y-[30px] sm:grid-cols-2 lg:grid-cols-3">
+                {management.map(m => <Person key={m.id} m={m} />)}
+              </ul>
+            </>
+          )}
+
+          {showAlumni && (
+            <Link href="/team/alumni" className="rd-italic mt-16 inline-block text-[clamp(28px,3vw,36px)] hover:underline underline-offset-[0.18em]">
+              Where our members went next
+            </Link>
+          )}
         </div>
       </section>
-
-      {/* Board of Directors */}
-      {bodReady && (
-        <section className="py-20 sm:py-28 bg-white">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <Reveal>
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Board of Directors</h2>
-            </Reveal>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
-              {bod.map((m, i) => (
-                <Reveal key={m.id} delay={i * 80} direction="up">
-                  <MemberCard member={m} />
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Management */}
-      {managementReady && (
-        <section className="py-20 sm:py-28 bg-gray-100 border-t border-line">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <Reveal>
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-ink-900 mb-10">Management</h2>
-            </Reveal>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-[54.75rem] mx-auto">
-              {management.map((m, i) => (
-                <Reveal key={m.id} delay={i * 70} direction="up">
-                  <MemberCard member={m} />
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Meet our Alumni */}
-      {showAlumni && (
-        <section className="py-20 bg-white border-t border-line">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-8">
-            <Reveal direction="right">
-              <p className="text-xs tracking-[0.2em] uppercase text-ink-400 mb-3">Past Members</p>
-              <h2 className="font-serif text-3xl font-bold text-ink-900 mb-3">Meet our Alumni</h2>
-              <div className="w-10 h-px bg-forest" />
-              <p className="text-ink-500 text-sm leading-relaxed mt-4 max-w-lg">
-                Discover the former members who helped build Alata Investment Club and are now making an impact across the financial industry.
-              </p>
-            </Reveal>
-            <Reveal direction="left" delay={100}>
-              <Link
-                href="/team/alumni"
-                className="inline-flex items-center gap-3 bg-forest hover:bg-forest-deep text-white text-sm font-medium tracking-wide px-10 py-4 transition-colors duration-fast whitespace-nowrap"
-              >
-                View Alumni
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </Reveal>
-          </div>
-        </section>
-      )}
-    </div>
+      <SiteFooter />
+    </>
   )
 }

@@ -12,9 +12,6 @@ import { MONTHS, WEEKDAYS, daysInMonth, firstDayOffset, toDateStr, formatDateLon
 const stripeKey     = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
 const stripePromise = stripeKey ? loadStripe(stripeKey) : null
 
-const inputCls = 'w-full border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-forest bg-white'
-const labelCls = 'block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1.5'
-
 type Mentor = {
   id: string
   full_name: string
@@ -65,7 +62,8 @@ function MentorBookingOverlayInner({
   const [year, setYear]   = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [slots, setSlots]               = useState<Slot[]>([])
-  const [loadingSlots, setLoadingSlots] = useState(false)
+  // Month whose slots are loaded; the month on screen is loading until they match.
+  const [loadedMonth, setLoadedMonth] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
 
@@ -104,7 +102,7 @@ function MentorBookingOverlayInner({
   // The member price is computed on the server from the visitor's session.
   useEffect(() => {
     if (!authReady) return
-    setLoadingPricing(true)
+    // loadingPricing starts true; the token is read once, so this runs once.
     fetch('/api/career/pricing', { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} })
       .then(r => r.json())
       .then(data => { setPricing(data.error ? null : (data as Pricing)); setLoadingPricing(false) })
@@ -114,15 +112,14 @@ function MentorBookingOverlayInner({
   // Fetch slots when the month changes.
   useEffect(() => {
     if (!mentor.bookable) return
-    setLoadingSlots(true)
-    setSelectedDate(null)
-    setSelectedTime(null)
+    const key = `${year}-${month}`
     fetch(`/api/career/slots?mentor_id=${mentor.id}&year=${year}&month=${month}`)
       .then(r => r.json())
-      .then(data => { setSlots(data.slots ?? []); setLoadingSlots(false) })
-      .catch(() => setLoadingSlots(false))
+      .then(data => { setSlots(data.slots ?? []); setLoadedMonth(key) })
+      .catch(() => { setSlots([]); setLoadedMonth(key) })
   }, [mentor.bookable, mentor.id, year, month])
 
+  const loadingSlots = mentor.bookable && loadedMonth !== `${year}-${month}`
   const offset      = firstDayOffset(year, month)
   const totalDays    = daysInMonth(year, month)
   const availDates  = new Set(slots.filter(s => s.available).map(s => s.date))
@@ -131,9 +128,11 @@ function MentorBookingOverlayInner({
 
   function prevMonth() {
     if (isPrevDisabled) return
+    setSelectedDate(null); setSelectedTime(null)
     if (month === 1) { setYear(y => y - 1); setMonth(12) } else setMonth(m => m - 1)
   }
   function nextMonth() {
+    setSelectedDate(null); setSelectedTime(null)
     if (month === 12) { setYear(y => y + 1); setMonth(1) } else setMonth(m => m + 1)
   }
 
@@ -158,309 +157,218 @@ function MentorBookingOverlayInner({
 
   const canContinueStep1 = !!selectedDate && !!selectedTime
   const canContinueStep2 = name.trim() && email.trim() && motivation.trim() && goal.trim()
-  const stepLabel = confirmed ? 'Booking Confirmed'
-    : step === 1 ? 'Pick a Slot'
-    : step === 2 ? 'Your Details'
-    : step === 3 ? 'Your Cart'
-    : 'Confirm Booking'
+  const priceText = pricing
+    ? `${pricing.duration_minutes} min · ${pricing.price_cents > 0 ? formatEuros(pricing.price_cents).replace(',00', '') : 'Free'}${pricing.price_cents > 0 ? ' · free for members' : ''}`
+    : null
+  const fieldCls = 'rd-field text-ivory'
+  const labelText = 'block text-[13px] text-ivory/75'
+  const ctaCls = 'rd-italic text-[clamp(34px,3.7vw,44px)] hover:underline underline-offset-[0.18em] disabled:opacity-35 disabled:no-underline'
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.75)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Book a session with ${mentor.full_name}`}
+      className="fixed inset-0 z-[150] overflow-y-auto bg-night text-ivory"
     >
-      <div className="bg-white w-full max-w-xl max-h-[92vh] flex flex-col shadow-2xl" style={{ fontFamily: 'Inter, sans-serif' }}>
+      <div className="rd-gutter flex items-center justify-between pt-6 md:pt-[30px]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/redesign/logo-light.png" alt="Alata" className="h-[34px] w-auto md:h-10" />
+        <button type="button" onClick={onClose} className="text-[13px] font-medium tracking-[0.04em] hover:underline underline-offset-[6px]">
+          Close
+        </button>
+      </div>
 
-        <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200 flex-shrink-0">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-forest mb-0.5">
-              {mentor.full_name}{pricing ? ` — ${pricing.duration_minutes}-minute session` : ''}
-            </p>
-            <h2 className="font-serif text-xl font-bold text-gray-900">{stepLabel}</h2>
+      <div className="rd-gutter pb-16 pt-[clamp(32px,6vw,50px)]">
+        {confirmed ? (
+          <div className="max-w-[640px] py-10">
+            <div className="text-[13px] text-ivory/75">{sessionName}</div>
+            <h2 className="rd-display mt-2 text-[clamp(44px,5vw,64px)]">You are <em>booked.</em></h2>
+            {selectedDate && selectedTime && <p className="mt-4 text-[16px] text-ivory/85">{formatDateLong(selectedDate)} at {selectedTime}</p>}
+            <p className="mt-3 text-[14px] text-ivory/70">A confirmation email has been sent to {email}.</p>
+            <button type="button" onClick={onClose} className={`${ctaCls} mt-10`}>Back to the mentors</button>
           </div>
-          <div className="flex items-center gap-4">
-            {!confirmed && (
-              <div className="flex items-center gap-1.5">
-                {([1, 2, 3, 4] as const).map(n => (
-                  <span key={n} className="w-2 h-2 rounded-full transition-colors"
-                    style={{ background: step >= n ? '#1a4a3a' : '#e5e7eb' }} />
-                ))}
-              </div>
-            )}
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors -m-3.5 p-3.5">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-7 py-6">
-
-          {/* ── STEP 1: Bio + Calendar ── */}
-          {!confirmed && step === 1 && (
+        ) : step === 1 ? (
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,420px)_minmax(0,544px)] lg:justify-between">
             <div>
-              {mentor.bio_long && (
-                <p className="text-sm text-gray-600 leading-relaxed mb-6">{mentor.bio_long}</p>
+              <div className="text-[13px] text-ivory/75">Your session with {mentor.full_name}</div>
+              <h2 className="rd-display mt-2 text-[clamp(40px,4.7vw,56px)]">{mentor.role_title || 'Career session'}</h2>
+              {priceText && <div className="mt-3 text-[14px] text-ivory/85">{priceText}</div>}
+              {pricing && isMember && pricing.effective_price_cents === 0 && pricing.price_cents > 0 && (
+                <div className="mt-1 text-[13px] text-ivory/70">Free for you: member benefit.</div>
               )}
+              {mentor.bio_long && <p className="mt-6 text-[14px] leading-[1.7] text-ivory/80">{mentor.bio_long}</p>}
 
+              {mentor.bookable && (
+                <div className="mt-12">
+                  <div className="text-[13px] text-ivory/75">
+                    {selectedDate
+                      ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+                      : 'Choose a day in the calendar'}
+                  </div>
+                  {selectedDate && !loadingSlots && (
+                    timesForDay.length === 0 ? (
+                      <p className="mt-3 text-[13px] text-ivory/60">No free times on this day.</p>
+                    ) : (
+                      <div className="mt-3.5 flex flex-wrap gap-2.5">
+                        {timesForDay.map(s => (
+                          <button
+                            key={s.time}
+                            type="button"
+                            onClick={() => setSelectedTime(s.time)}
+                            aria-pressed={selectedTime === s.time}
+                            className={`rounded-full border px-5 py-2.5 text-[13px] font-medium transition-colors ${selectedTime === s.time ? 'border-ivory bg-ivory text-night' : 'border-ivory/50 hover:border-ivory'}`}
+                          >
+                            {s.time}
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    disabled={!canContinueStep1 || loadingPricing || !pricing}
+                    className={`${ctaCls} mt-10 block`}
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div>
               {!mentor.bookable ? (
-                <p className="text-sm text-gray-400 py-8 text-center">Not yet available for online booking.</p>
+                <p className="rd-italic text-[28px] text-ivory/70">Not yet available for online booking.</p>
               ) : (
                 <>
-                  {pricing && (
-                    <p className="text-xs font-semibold uppercase tracking-widest text-forest mb-5">
-                      {pricing.duration_minutes} minutes ·{' '}
-                      {pricing.effective_price_cents === 0
-                        ? (pricing.price_cents > 0 ? 'Free — member benefit' : 'Free')
-                        : formatEuros(pricing.effective_price_cents)}
-                    </p>
-                  )}
-                  {/* Month navigator */}
-                  <div className="flex items-center justify-between mb-5">
-                    <button onClick={prevMonth} disabled={isPrevDisabled}
-                      className="-m-3 p-3 text-gray-400 hover:text-forest transition-colors disabled:opacity-25">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <span className="text-sm font-semibold uppercase tracking-widest text-gray-900">
-                      {MONTHS[month - 1]} {year}
-                    </span>
-                    <button onClick={nextMonth} className="-m-3 p-3 text-gray-400 hover:text-forest transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-7 -mx-3 mb-1">
-                    {WEEKDAYS.map(d => (
-                      <div key={d} className="text-center text-[10px] font-semibold uppercase tracking-widest text-gray-400 py-1">
-                        {d}
-                      </div>
-                    ))}
-                  </div>
-
-                  {loadingSlots ? (
-                    <div className="h-44 flex items-center justify-center">
-                      <p className="text-sm text-gray-400">Loading availability…</p>
+                  <div className="mb-[22px] flex items-baseline justify-between">
+                    <div className="flex items-baseline gap-4">
+                      <button type="button" onClick={prevMonth} disabled={isPrevDisabled} aria-label="Previous month" className="-m-2 p-2 text-[24px] text-ivory/70 hover:text-ivory disabled:opacity-25">‹</button>
+                      <span className="rd-italic text-[clamp(34px,3.7vw,44px)]">{MONTHS[month - 1]}</span>
+                      <button type="button" onClick={nextMonth} aria-label="Next month" className="-m-2 p-2 text-[24px] text-ivory/70 hover:text-ivory">›</button>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-7 -mx-3">
-                      {Array.from({ length: offset }).map((_, i) => <div key={`e${i}`} />)}
-                      {Array.from({ length: totalDays }).map((_, i) => {
-                        const day     = i + 1
-                        const dateStr = toDateStr(year, month, day)
-                        const isPast  = dateStr < todayStr
-                        const hasSlot = availDates.has(dateStr)
-                        const isSel   = selectedDate === dateStr
-                        return (
-                          <div key={day} className="flex flex-col items-center py-1 relative">
+                    <span className="text-[13px] text-ivory/75">{year}</span>
+                  </div>
+                  <div className="grid grid-cols-7 gap-y-1.5">
+                    {WEEKDAYS.map(d => (
+                      <div key={d} className="text-center text-[11px] uppercase tracking-[0.1em] text-ivory/70">{d}</div>
+                    ))}
+                    {loadingSlots ? (
+                      <div className="col-span-7 flex h-[260px] items-center justify-center text-[13px] text-ivory/60">Loading availability…</div>
+                    ) : (
+                      <>
+                        {Array.from({ length: offset }).map((_, i) => <div key={`e${i}`} />)}
+                        {Array.from({ length: totalDays }).map((_, i) => {
+                          const day = i + 1
+                          const dateStr = toDateStr(year, month, day)
+                          const free = dateStr >= todayStr && availDates.has(dateStr)
+                          const sel = selectedDate === dateStr
+                          return (
                             <button
+                              key={day}
                               type="button"
-                              disabled={isPast || !hasSlot}
+                              disabled={!free}
                               onClick={() => { setSelectedDate(dateStr); setSelectedTime(null) }}
-                              className="w-full max-w-11 aspect-square mx-auto text-sm transition-colors"
-                              style={{
-                                background: isSel ? '#1a4a3a' : 'transparent',
-                                color: isSel ? '#fff' : isPast || !hasSlot ? '#d1d5db' : '#111827',
-                                cursor: isPast || !hasSlot ? 'default' : 'pointer',
-                              }}
+                              aria-pressed={sel}
+                              aria-label={`${day} ${MONTHS[month - 1]}${free ? ', available' : ''}`}
+                              className={`mx-1 flex h-[46px] items-center justify-center rounded-full font-serif text-[22px] font-medium transition-colors sm:mx-1.5 ${
+                                sel ? 'bg-ivory text-night' : free ? 'border border-ivory/55 hover:border-ivory' : 'cursor-default text-ivory/35'
+                              }`}
                             >
                               {day}
                             </button>
-                            {hasSlot && !isPast && (
-                              <span className="absolute bottom-0 w-1 h-1 rounded-full"
-                                style={{ background: isSel ? '#fff' : 'var(--forest)' }} />
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  {selectedDate && !loadingSlots && (
-                    <div className="mt-5 pt-5 border-t border-gray-200">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">
-                        {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long' })}
-                      </p>
-                      {timesForDay.length === 0 ? (
-                        <p className="text-sm text-gray-400">No available times for this date.</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {timesForDay.map(s => (
-                            <button
-                              key={s.time}
-                              type="button"
-                              onClick={() => setSelectedTime(s.time)}
-                              className="px-4 py-2 text-sm font-medium border transition-colors"
-                              style={{
-                                background: selectedTime === s.time ? '#1a4a3a' : '#fff',
-                                color: selectedTime === s.time ? '#fff' : '#374151',
-                                borderColor: selectedTime === s.time ? '#1a4a3a' : '#e5e7eb',
-                              }}
-                            >
-                              {s.time}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                          )
+                        })}
+                      </>
+                    )}
+                  </div>
+                  <div className="mt-[18px] text-[12px] text-ivory/70">Available days are outlined. Slots come from the Career team&apos;s availability.</div>
                 </>
               )}
             </div>
-          )}
-
-          {/* ── STEP 2: Details ── */}
-          {!confirmed && step === 2 && (
-            <div className="space-y-4">
-              <p className="text-xs text-gray-400 mb-2">{selectedDate && formatDateLong(selectedDate)} at {selectedTime}</p>
-              <div>
-                <label className={labelCls}>Full Name *</label>
-                <input value={name} onChange={e => setName(e.target.value)}
-                  placeholder="Your full name" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Email *</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="your@email.com" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>What prompted you to book this session? *</label>
-                <textarea rows={3} value={motivation} onChange={e => setMotivation(e.target.value)}
-                  placeholder="Tell us what brought you here…" className={`${inputCls} resize-none`} />
-              </div>
-              <div>
-                <label className={labelCls}>What would you like to achieve from this session? *</label>
-                <textarea rows={3} value={goal} onChange={e => setGoal(e.target.value)}
-                  placeholder="Share your goals for this session…" className={`${inputCls} resize-none`} />
-              </div>
-              <div>
-                <label className={labelCls}>CV / Cover Letter (optional — PDF or DOCX, max 5MB)</label>
+          </div>
+        ) : step === 2 ? (
+          <div className="max-w-[720px]">
+            <div className="text-[13px] text-ivory/75">{sessionName} · {selectedDate && formatDateLong(selectedDate)} at {selectedTime}</div>
+            <h2 className="rd-display mt-2 text-[clamp(40px,4.7vw,56px)]">About <em>you</em></h2>
+            <div className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+              <label className={labelText}>Full name<input value={name} onChange={e => setName(e.target.value)} autoComplete="name" className={fieldCls} /></label>
+              <label className={labelText}>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" className={fieldCls} /></label>
+              <label className={`${labelText} sm:col-span-2`}>What prompted you to book this session?<textarea rows={2} value={motivation} onChange={e => setMotivation(e.target.value)} className={fieldCls} /></label>
+              <label className={`${labelText} sm:col-span-2`}>What would you like to achieve from it?<textarea rows={2} value={goal} onChange={e => setGoal(e.target.value)} className={fieldCls} /></label>
+              <div className="sm:col-span-2">
+                <span className={labelText}>Your CV (PDF or DOCX, optional, max 5 MB)</span>
                 <input ref={fileRef} type="file"
                   accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   className="hidden" onChange={handleCvUpload} />
                 {cvFilename ? (
-                  <div className="flex items-center gap-3 border border-forest/30 bg-[#f9f9f8] px-4 py-3">
-                    <svg className="w-4 h-4 text-forest flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-sm text-gray-700 flex-1 min-w-0 truncate">{cvFilename}</span>
-                    <button type="button" onClick={removeCv}
-                      className="text-xs text-gray-400 hover:text-red-500 transition-colors flex-shrink-0">
-                      Remove
-                    </button>
+                  <div className="mt-2.5 flex items-center gap-4 text-[14px]">
+                    <span className="min-w-0 truncate">{cvFilename}</span>
+                    <button type="button" onClick={removeCv} className="text-[13px] text-ivory/70 underline underline-offset-4 hover:text-ivory">Remove</button>
                   </div>
                 ) : (
                   <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-                    className="flex items-center gap-2 border border-dashed border-gray-300 px-4 py-3 w-full text-sm text-gray-500 transition-colors disabled:opacity-40">
-                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    {uploading ? 'Uploading…' : 'Upload PDF or DOCX'}
+                    className="mt-2.5 rounded-full border border-ivory/50 px-5 py-2.5 text-[13px] font-medium hover:border-ivory disabled:opacity-40">
+                    {uploading ? 'Uploading…' : 'Upload your CV'}
                   </button>
                 )}
-                {uploadError && <p className="mt-1 text-xs text-red-600">{uploadError}</p>}
+                {uploadError && <p role="alert" className="mt-2 text-[13px] text-[#f0b3a6]">{uploadError}</p>}
               </div>
             </div>
-          )}
-
-          {!confirmed && step === 3 && pricing && selectedDate && selectedTime && (
-            <>
-              {isMember && membershipExpired && (
-                <div className="mb-4 flex items-center justify-between gap-3 border border-yellow-300 bg-yellow-50 px-4 py-3">
-                  <p className="text-xs text-yellow-800">Rinnova la membership per accedere ai prezzi riservati.</p>
-                  <a href="/dashboard/membership" className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest text-forest underline">
-                    Rinnova →
-                  </a>
-                </div>
-              )}
-              <BookingCart
-                sessionName={sessionName}
-                sessionPrice={pricing.price_cents}
-                isMember={isMember}
-                mentorId={mentor.id}
-                authToken={authToken}
-                onSelectMentor={id => onSwitchMentor?.(id)}
-                slot={{ date: selectedDate, time: selectedTime }}
-                formatDate={formatDateLong}
-                onProceed={extras => { setCartExtras(extras); setStep(4) }}
-                onBack={() => setStep(2)}
-              />
-            </>
-          )}
-
-          {!confirmed && step === 4 && pricing && selectedDate && selectedTime && (
-            stripePromise ? (
-              <Elements stripe={stripePromise}>
-                <PaymentForm
-                  session={{ name: sessionName, price_cents: pricing.price_cents, effective_price_cents: pricing.effective_price_cents }}
-                  slot={{ date: selectedDate, time: selectedTime }}
-                  form={{ name, email, motivation, goal, cvUrl }}
-                  isMember={isMember}
-                  authToken={authToken}
-                  extraItems={cartExtras}
-                  mentorId={mentor.id}
-                  onSuccess={() => setConfirmed(true)}
-                />
-              </Elements>
-            ) : (
-              <p className="text-sm text-red-600 border-l-2 border-red-400 pl-3">
-                Payment unavailable — please contact us to book.
-              </p>
-            )
-          )}
-
-          {confirmed && (
-            <div className="flex flex-col items-center text-center py-10">
-              <div className="flex items-center justify-center w-16 h-16 mb-6" style={{ background: 'var(--forest)' }}>
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="font-serif text-2xl font-bold text-gray-900 mb-2">Booking Confirmed</h3>
-              <p className="text-sm font-medium text-gray-700 mb-1">{sessionName}</p>
-              {selectedDate && selectedTime && (
-                <p className="text-sm text-gray-400 mb-6">{formatDateLong(selectedDate)} at {selectedTime}</p>
-              )}
-              <p className="text-sm text-gray-500 mb-8 max-w-xs">
-                A confirmation email has been sent to <span className="font-medium text-gray-700">{email}</span>
-              </p>
-              <button onClick={onClose}
-                className="border text-xs font-semibold uppercase tracking-widest px-8 py-3 transition-colors"
-                style={{ borderColor: 'var(--forest)', color: 'var(--forest)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#1a4a3a'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#1a4a3a' }}
-              >
-                Close
+            <div className="mt-10 flex flex-wrap items-baseline gap-x-10 gap-y-4">
+              <button type="button" onClick={() => setStep(3)} disabled={!canContinueStep2 || loadingPricing || !pricing} className={ctaCls}>
+                Continue
               </button>
+              <button type="button" onClick={() => setStep(1)} className="text-[13px] text-ivory/70 hover:text-ivory">Back</button>
             </div>
-          )}
-        </div>
-
-        {!confirmed && (step === 1 || step === 2) && (
-          <div className="flex items-center justify-between px-7 py-5 border-t border-gray-200 flex-shrink-0">
-            {step > 1 ? (
-              <button
-                onClick={() => setStep(s => (s - 1) as 1 | 2)}
-                className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-              >
-                ← Back
-              </button>
-            ) : (
-              <div />
+          </div>
+        ) : (
+          <div className="max-w-[640px]">
+            <div className="text-[13px] text-ivory/75">{sessionName}</div>
+            <h2 className="rd-display mt-2 text-[clamp(40px,4.7vw,56px)]">{step === 3 ? <>Your <em>cart</em></> : <>Book the <em>session</em></>}</h2>
+            {isMember && membershipExpired && step === 3 && (
+              <p className="mt-4 text-[14px] text-ivory/80">
+                Renew your membership to get the member price. <a href="/dashboard/membership" className="underline underline-offset-4">Renew</a>
+              </p>
             )}
-            <button
-              onClick={() => setStep(s => (s + 1) as 2 | 3)}
-              disabled={(step === 1 ? !canContinueStep1 : !canContinueStep2) || loadingPricing || !pricing}
-              className="text-xs font-semibold uppercase tracking-widest px-8 py-3 transition-colors disabled:opacity-40"
-              style={{ background: 'var(--forest)', color: '#fff' }}
-            >
-              Continue →
-            </button>
+            <div className="mt-8 bg-ivory p-[clamp(20px,3vw,32px)] text-night">
+              {step === 3 && pricing && selectedDate && selectedTime && (
+                <BookingCart
+                  sessionName={sessionName}
+                  sessionPrice={pricing.price_cents}
+                  isMember={isMember}
+                  mentorId={mentor.id}
+                  authToken={authToken}
+                  onSelectMentor={id => onSwitchMentor?.(id)}
+                  slot={{ date: selectedDate, time: selectedTime }}
+                  formatDate={formatDateLong}
+                  onProceed={extras => { setCartExtras(extras); setStep(4) }}
+                  onBack={() => setStep(2)}
+                />
+              )}
+              {step === 4 && pricing && selectedDate && selectedTime && (
+                stripePromise ? (
+                  <Elements stripe={stripePromise}>
+                    <PaymentForm
+                      session={{ name: sessionName, price_cents: pricing.price_cents, effective_price_cents: pricing.effective_price_cents }}
+                      slot={{ date: selectedDate, time: selectedTime }}
+                      form={{ name, email, motivation, goal, cvUrl }}
+                      isMember={isMember}
+                      authToken={authToken}
+                      extraItems={cartExtras}
+                      mentorId={mentor.id}
+                      onSuccess={() => setConfirmed(true)}
+                    />
+                  </Elements>
+                ) : (
+                  <p className="text-[14px] text-[#8a2a1d]">Payment unavailable: please contact us to book.</p>
+                )
+              )}
+            </div>
+            {step === 4 && (
+              <button type="button" onClick={() => setStep(3)} className="mt-6 text-[13px] text-ivory/70 hover:text-ivory">Back</button>
+            )}
           </div>
         )}
       </div>

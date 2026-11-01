@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { cleanLinkedInLine, linkedInTitle, linkedInUrl } from '@/lib/linkedin'
 
 type Contenuto = {
   id: number
@@ -11,28 +12,8 @@ type Contenuto = {
   link: string | null
 }
 
-function cleanLine(line: string): string {
-  return line
-    .replace(/\r/g, '')
-    .replace(/@\[([^\]]+)\]\(urn:[^)]*\)/g, '$1')
-    .replace(/\\\(/g, '(')
-    .replace(/\\\)/g, ')')
-    .replace(/urn:li:\S*/g, '')
-    .replace(/#\S+/g, '')
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
-    .replace(/[^\x20-\x7E\xA0-\u017E]/g, '')
-    .replace(/[ \t]+/g, ' ')
-    .trim()
-}
-
-function getTitle(text: string): string {
-  const lines = text.split(/\r?\n/)
-  for (const line of lines) {
-    const cleaned = cleanLine(line)
-    if (cleaned.length > 0) return cleaned
-  }
-  return ''
-}
+const cleanLine = cleanLinkedInLine
+const getTitle = linkedInTitle
 
 function getPreview(text: string): string | null {
   const lines = text.split(/\r?\n/)
@@ -54,12 +35,7 @@ function getPreview(text: string): string | null {
   return body.length > 120 ? body.slice(0, 120).trimEnd() + '...' : body
 }
 
-function getLinkedInUrl(link: string): string {
-  if (link.startsWith('urn:')) {
-    return `https://www.linkedin.com/feed/update/${link}/`
-  }
-  return link
-}
+const getLinkedInUrl = linkedInUrl
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return null
