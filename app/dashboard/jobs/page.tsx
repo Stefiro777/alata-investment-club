@@ -1,5 +1,7 @@
 'use client'
 
+import { PageTitle } from '@/app/components/member/ui'
+import { MentorStrip, JobResources } from './JobsExtras'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../DashboardProfileContext'
@@ -697,26 +699,26 @@ export default function JobsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <p className="text-sm text-gray-400">Caricamento…</p>
-      </div>
+      <p className="py-12 text-[13px] text-earth-600">Loading…</p>
     )
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-8 py-10">
+    <div>
+      <PageTitle title="Job Offers" sub="Open positions, mentors and every resource the club keeps for your applications." />
+      <MentorStrip />
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-6 mb-10">
-        <div>
-          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 mb-3">Job Offers</h1>
-          <div className="w-8 h-px bg-forest" />
+      <div className="mb-6 mt-10 flex flex-wrap items-baseline justify-between gap-6 border-b border-night pb-3">
+        <div className="flex items-baseline gap-4">
+          <h2 className="rd-italic text-[32px]">Job offers</h2>
+          <span className="rd-eyebrow text-[10px] text-earth-500">{officialOffers.length + memberOffers.length} open</span>
         </div>
         {/* Subscription toggle — no longer flex-shrink-0: min-w-0 lets the text
             wrap onto a second line under space pressure instead of the whole
             row (text + switch) refusing to shrink and overflowing the page. */}
         <div className="flex items-center gap-3 min-w-0 pt-1">
-          <span className="text-sm text-gray-500 min-w-0">Ricevi notifiche per nuove offerte</span>
+          <span className="min-w-0 text-[13px] text-earth-600">Notify me of new offers</span>
           <button
             onClick={handleToggleSubscription}
             disabled={togglingSubscription}
@@ -743,8 +745,7 @@ export default function JobsPage() {
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="font-serif text-2xl font-bold text-gray-900">Offerte del Club</h2>
-            <div className="w-6 h-px bg-forest mt-2" />
+            <h3 className="rd-eyebrow text-[10px] text-earth-500">From the club</h3>
           </div>
           {isBoD && (
             <button
@@ -754,14 +755,14 @@ export default function JobsPage() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Aggiungi offerta
+              Add offer
             </button>
           )}
         </div>
 
         {officialOffers.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 border border-dashed border-gray-200 text-center">
-            Nessuna offerta ufficiale al momento.
+            No offers from the club right now.
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-4">
@@ -778,15 +779,13 @@ export default function JobsPage() {
         )}
       </section>
 
-      {/* Separator */}
-      <div className="border-t border-gray-200 mb-12" />
+
 
       {/* ── Offerte segnalate ── */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="font-serif text-2xl font-bold text-gray-900">Segnalate dalla Community</h2>
-            <div className="w-6 h-px bg-forest mt-2" />
+            <h3 className="rd-eyebrow text-[10px] text-earth-500">Suggested by members</h3>
           </div>
           <button
             onClick={() => setModal({ mode: 'add-member' })}
@@ -795,13 +794,13 @@ export default function JobsPage() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Segnala offerta
+            Suggest an offer
           </button>
         </div>
 
         {memberOffers.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 border border-dashed border-gray-200 text-center">
-            Nessuna offerta segnalata dai membri al momento.
+            No offers suggested by members yet.
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-4">
@@ -817,6 +816,8 @@ export default function JobsPage() {
           </div>
         )}
       </section>
+
+      <JobResources displayName={profile?.full_name ?? 'Member'} />
 
       {/* Modal */}
       {modal && userId && (

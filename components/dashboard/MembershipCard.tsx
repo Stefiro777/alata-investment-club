@@ -11,7 +11,7 @@ interface MembershipCardProps {
   expiresAt: string | null
 }
 
-const MONTHS_UP = ['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT','NOV','DIC']
+const MONTHS_UP = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 
 // Expiry is 31/12 23:59:59 Europe/Rome: format in that zone so the card never
 // shows 1 January to a viewer in a timezone east of Rome.
@@ -125,7 +125,7 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             {/* Left: membro dal */}
             <div>
-              <p style={{ margin: '0 0 5px', color: 'rgba(255,255,255,0.5)', fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase' }}>MEMBRO DAL</p>
+              <p style={{ margin: '0 0 5px', color: 'rgba(255,255,255,0.5)', fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase' }}>MEMBER SINCE</p>
               <p style={{ margin: 0, color: 'white', fontSize: 16, fontWeight: 300 }}>{memberSince ?? '—'}</p>
             </div>
 
@@ -139,7 +139,7 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
 
             {/* Right: expiry */}
             <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: '0 0 5px', color: 'rgba(255,255,255,0.5)', fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase' }}>VALIDA FINO AL</p>
+              <p style={{ margin: '0 0 5px', color: 'rgba(255,255,255,0.5)', fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase' }}>VALID UNTIL</p>
               <p style={{ margin: 0, color: 'white', fontSize: 14, fontWeight: 300 }}>
                 {expiresAt ? fmtDate(expiresAt) : '—'}
               </p>
@@ -178,7 +178,7 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          {downloading ? 'Download…' : 'Scarica Card'}
+          {downloading ? 'Download…' : 'Download the card'}
         </button>
 
         {(isExpired || isSoon) && (

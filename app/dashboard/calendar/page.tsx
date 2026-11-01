@@ -1,20 +1,12 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { Suspense, useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { PageTitle, Tabs } from '@/app/components/member/ui'
 import { createClient } from '@/lib/supabase'
 import { TEAM_BADGE } from '../teamColors'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const FILTER_OPTIONS = [
-  { key: 'all',       label: 'All' },
-  { key: 'events',    label: 'Events' },
-  { key: 'media',     label: 'Media' },
-  { key: 'career',    label: 'Career' },
-  { key: 'lab',       label: 'Lab' },
-] as const
-
-type CalFilter = 'all' | 'events' | 'media' | 'career' | 'lab' | 'posts'
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -41,33 +33,7 @@ const CONTENT_TYPES: Record<string, string[]> = {
 
 const PLATFORMS = ['Instagram', 'LinkedIn', 'TikTok', 'YouTube', 'Newsletter']
 const PED_STATUSES = ['draft', 'scheduled', 'published'] as const
-type PedStatus = typeof PED_STATUSES[number]
-
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-type CalTask = {
-  id: string
-  title: string
-  due_date: string
-  priority: string
-  team: string | null
-  assigned_to: string[]
-  status: string
-}
-
-type PostPlan = {
-  id: string
-  title: string
-  description: string | null
-  team: string | null
-  scheduled_date: string
-  status: string
-  created_by: string
-}
-
-type DayItem =
-  | { kind: 'task'; data: CalTask }
-  | { kind: 'post'; data: PostPlan }
 
 type UpcomingEventItem = {
   id: string
@@ -98,36 +64,6 @@ type PedPost = {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function priorityDotColor(p: string): string {
-  if (p === 'high')   return '#dc2626'
-  if (p === 'low')    return '#6b7280'
-  return '#d97706'
-}
-
-function priorityColor(p: string): string {
-  if (p === 'high')   return 'bg-[#7f1d1d] text-white'
-  if (p === 'low')    return 'bg-[#374151] text-white'
-  return 'bg-[#92400e] text-white'
-}
-
-function statusLabel(s: string): string {
-  if (s === 'in_progress') return 'In corso'
-  if (s === 'done')        return 'Completata'
-  return 'Todo'
-}
-
-function priorityLabel(p: string): string {
-  if (p === 'high') return 'High'
-  if (p === 'low')  return 'Low'
-  return 'Medium'
-}
-
-function teamLabel(t: string | null): string {
-  if (!t) return '—'
-  const found = FILTER_OPTIONS.find(o => o.key === t)
-  return found ? found.label : t
-}
 
 function toISODate(d: Date): string {
   const y = d.getFullYear()
@@ -190,450 +126,9 @@ function MonthNav({
 
 // ── Tasks tab components ───────────────────────────────────────────────────────
 
-function TaskPill({ task, onClick }: { task: CalTask; onClick: () => void }) {
-  const title = task.title.length > 22 ? task.title.slice(0, 22) + '…' : task.title
-  const badge = task.team ? (TEAM_BADGE[task.team] ?? null) : null
-  const bg    = badge?.bg   ?? '#e5e7eb'
-  const color = badge?.text ?? '#111827'
-
-  return (
-    <button
-      type="button"
-      onClick={e => { e.stopPropagation(); onClick() }}
-      style={{ backgroundColor: bg, color }}
-      className="w-full text-left text-[10px] font-semibold uppercase tracking-wide pr-1.5 py-0.5 truncate flex items-stretch"
-    >
-      <span
-        style={{ backgroundColor: priorityDotColor(task.priority), width: 5, flexShrink: 0, borderRadius: 0 }}
-        className="mr-1 self-stretch"
-      />
-      <span className="truncate">{title}</span>
-    </button>
-  )
-}
-
-function PostPlanPill({ plan, onClick }: { plan: PostPlan; onClick: () => void }) {
-  const title = plan.title.length > 20 ? plan.title.slice(0, 20) + '…' : plan.title
-  const teamColor = plan.team ? (TEAM_BADGE[plan.team]?.bg ?? '#555555') : '#555555'
-
-  return (
-    <button
-      type="button"
-      onClick={e => { e.stopPropagation(); onClick() }}
-      style={{ backgroundColor: '#3a1a2a', color: '#ffffff' }}
-      className="w-full text-left text-[10px] font-semibold uppercase tracking-wide py-0.5 flex items-stretch"
-    >
-      <span style={{ backgroundColor: teamColor, width: 5, flexShrink: 0, borderRadius: 0 }} className="self-stretch" />
-      <span style={{ backgroundColor: '#e879a0', width: 5, flexShrink: 0, borderRadius: 0 }} className="mr-1 self-stretch" />
-      <span className="truncate self-center">{title}</span>
-    </button>
-  )
-}
-
-function PostPlanPopup({
-  plan, onClose, onDelete,
-}: { plan: PostPlan; onClose: () => void; onDelete: (id: string) => void }) {
-  const [confirming, setConfirming] = useState(false)
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="bg-white w-full max-w-sm shadow-2xl">
-        <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-[#e5e7eb]">
-          <h3 className="font-serif text-lg font-bold text-ink-900 leading-snug flex-1">{plan.title}</h3>
-          <button onClick={onClose} className="text-ink-400 hover:text-ink-900 p-1 flex-shrink-0">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="px-6 py-4 space-y-3 text-sm">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Team</p>
-              <p className="text-ink-900">{teamLabel(plan.team)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Data pianificata</p>
-              <p className="text-ink-900">{fmtDate(plan.scheduled_date)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Status</p>
-              <p className="text-ink-900">{plan.status}</p>
-            </div>
-          </div>
-          {plan.description && (
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Descrizione</p>
-              <p className="text-ink-900 whitespace-pre-wrap">{plan.description}</p>
-            </div>
-          )}
-        </div>
-        <div className="px-6 pb-5 border-t border-[#e5e7eb] pt-3">
-          {confirming ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-ink-500 flex-1">Delete this post?</span>
-              <button type="button" onClick={() => { onDelete(plan.id); onClose() }} className="text-xs font-medium uppercase tracking-wide px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white transition-colors">
-                Yes, delete
-              </button>
-              <button type="button" onClick={() => setConfirming(false)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-ink-900 transition-colors">
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button type="button" onClick={() => setConfirming(true)} className="text-xs font-medium uppercase tracking-wide text-ink-400 hover:text-red-600 transition-colors">
-              Delete post
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function DayPopover({
-  dateStr, tasks, postPlans, onClose, onTaskClick, onPostClick,
-}: {
-  dateStr: string; tasks: CalTask[]; postPlans: PostPlan[]
-  onClose: () => void; onTaskClick: (t: CalTask) => void; onPostClick: (p: PostPlan) => void
-}) {
-  const dateDisplay = new Date(dateStr + 'T00:00:00').toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[#e5e7eb]">
-          <h3 className="font-serif text-lg font-bold text-ink-900">{dateDisplay}</h3>
-          <button onClick={onClose} className="text-ink-400 hover:text-ink-900 p-1 flex-shrink-0">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="px-4 py-3 flex flex-col gap-1 max-h-72 overflow-y-auto">
-          {tasks.map(t => <TaskPill key={t.id} task={t} onClick={() => { onClose(); onTaskClick(t) }} />)}
-          {postPlans.length > 0 && tasks.length > 0 && <div className="my-1 border-t border-[#e5e7eb]" />}
-          {postPlans.map(p => <PostPlanPill key={p.id} plan={p} onClick={() => { onClose(); onPostClick(p) }} />)}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TaskPopup({ task, onClose }: { task: CalTask; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white w-full max-w-sm shadow-2xl">
-        <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-[#e5e7eb]">
-          <h3 className="font-serif text-lg font-bold text-ink-900 leading-snug flex-1">{task.title}</h3>
-          <button onClick={onClose} className="text-ink-400 hover:text-ink-900 p-1 flex-shrink-0">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="px-6 py-4 space-y-3 text-sm">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Team</p>
-              <p className="text-ink-900">{teamLabel(task.team)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Due date</p>
-              <p className="text-ink-900">{fmtDate(task.due_date)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Status</p>
-              <p className="text-ink-900">{statusLabel(task.status)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-ink-400 mb-0.5">Priority</p>
-              <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 ${priorityColor(task.priority)}`}>
-                {priorityLabel(task.priority)}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Mobile agenda (TasksTab only) ────────────────────────────────────────────
 
-function AgendaTaskRow({ task, onClick }: { task: CalTask; onClick: () => void }) {
-  const badge = task.team ? (TEAM_BADGE[task.team] ?? null) : null
-  const bg    = badge?.bg   ?? '#e5e7eb'
-  const color = badge?.text ?? '#111827'
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{ backgroundColor: bg, color }}
-      className="w-full min-h-[44px] text-left text-sm font-medium px-3 py-2.5 flex items-center gap-2"
-    >
-      <span style={{ backgroundColor: priorityDotColor(task.priority), width: 6, flexShrink: 0, borderRadius: 0 }} className="self-stretch" />
-      <span className="flex-1">{task.title}</span>
-    </button>
-  )
-}
-
-function AgendaPostRow({ plan, onClick }: { plan: PostPlan; onClick: () => void }) {
-  const teamColor = plan.team ? (TEAM_BADGE[plan.team]?.bg ?? '#555555') : '#555555'
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{ backgroundColor: '#3a1a2a', color: '#ffffff' }}
-      className="w-full min-h-[44px] text-left text-sm font-medium px-3 py-2.5 flex items-center gap-2"
-    >
-      <span style={{ backgroundColor: teamColor, width: 6, flexShrink: 0, borderRadius: 0 }} className="self-stretch" />
-      <span style={{ backgroundColor: '#e879a0', width: 6, flexShrink: 0, borderRadius: 0 }} className="self-stretch" />
-      <span className="flex-1">{plan.title}</span>
-    </button>
-  )
-}
-
-function MobileAgendaView({
-  year, month, tasksByDate, postsByDate, onTaskClick, onPostClick,
-}: {
-  year: number
-  month: number
-  tasksByDate: Record<string, CalTask[]>
-  postsByDate: Record<string, PostPlan[]>
-  onTaskClick: (t: CalTask) => void
-  onPostClick: (p: PostPlan) => void
-}) {
-  const days = useMemo(() => {
-    const dateSet = new Set<string>([...Object.keys(tasksByDate), ...Object.keys(postsByDate)])
-    return Array.from(dateSet)
-      .filter(dateStr => {
-        const d = new Date(dateStr + 'T00:00:00')
-        return d.getFullYear() === year && d.getMonth() === month
-      })
-      .sort((a, b) => a.localeCompare(b))
-  }, [year, month, tasksByDate, postsByDate])
-
-  if (days.length === 0) {
-    return <p className="text-sm text-ink-500 py-8 text-center">Nessun task in questo mese.</p>
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      {days.map(dateStr => {
-        const dayTasks = tasksByDate[dateStr] ?? []
-        const dayPosts = postsByDate[dateStr] ?? []
-        const items: DayItem[] = [
-          ...dayTasks.map(d => ({ kind: 'task' as const, data: d })),
-          ...dayPosts.map(d => ({ kind: 'post' as const, data: d })),
-        ]
-        const d = new Date(dateStr + 'T00:00:00')
-        const weekday = d.toLocaleDateString('it-IT', { weekday: 'short' })
-        const dayLabel = weekday.charAt(0).toUpperCase() + weekday.slice(1)
-
-        return (
-          <div key={dateStr}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500 mb-1.5">
-              {dayLabel} {d.getDate()}
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {items.map(item =>
-                item.kind === 'task'
-                  ? <AgendaTaskRow key={item.data.id} task={item.data} onClick={() => onTaskClick(item.data)} />
-                  : <AgendaPostRow key={item.data.id} plan={item.data} onClick={() => onPostClick(item.data)} />
-              )}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 // ── TasksTab ──────────────────────────────────────────────────────────────────
-
-function TasksTab() {
-  const today = new Date()
-  const [year, setYear]           = useState(today.getFullYear())
-  const [month, setMonth]         = useState(today.getMonth())
-  const [tasks, setTasks]         = useState<CalTask[]>([])
-  const [postPlans, setPostPlans] = useState<PostPlan[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [filter, setFilter]       = useState<CalFilter>('all')
-  const [popup, setPopup]                   = useState<CalTask | null>(null)
-  const [postPopup, setPostPopup]           = useState<PostPlan | null>(null)
-  const [dayPopover, setDayPopover]         = useState<string | null>(null)
-
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const [taskResult, postResult] = await Promise.all([
-        supabase.from('tasks').select('id, title, due_date, priority, team, assigned_to, status').not('due_date', 'is', null).order('due_date', { ascending: true }),
-        supabase.from('post_plans').select('id, title, description, team, scheduled_date, status, created_by').not('scheduled_date', 'is', null).order('scheduled_date', { ascending: true }),
-      ])
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setTasks((taskResult.data ?? []).map((r: any) => ({
-        id: r.id, title: r.title ?? '', due_date: r.due_date as string,
-        priority: r.priority ?? 'medium', team: r.team ?? null, assigned_to: r.assigned_to ?? [], status: r.status ?? 'todo',
-      })))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setPostPlans((postResult.data ?? []).map((r: any) => ({
-        id: r.id, title: r.title ?? '', description: r.description ?? null,
-        team: r.team ?? null, scheduled_date: r.scheduled_date as string, status: r.status ?? 'draft', created_by: r.created_by ?? '',
-      })))
-      setLoading(false)
-    }
-    load()
-  }, [])
-
-  function prevMonth() { if (month === 0) { setYear(y => y - 1); setMonth(11) } else setMonth(m => m - 1) }
-  function nextMonth() { if (month === 11) { setYear(y => y + 1); setMonth(0) } else setMonth(m => m + 1) }
-
-  const filteredTasks = useMemo(() => {
-    if (filter === 'posts') return []
-    if (filter === 'all')   return tasks
-    return tasks.filter(t => t.team === filter)
-  }, [tasks, filter])
-
-  const filteredPosts = useMemo(() => {
-    if (filter === 'all' || filter === 'posts') return postPlans
-    return postPlans.filter(p => p.team === filter)
-  }, [postPlans, filter])
-
-  const tasksByDate = useMemo(() => {
-    const map: Record<string, CalTask[]> = {}
-    for (const t of filteredTasks) {
-      if (!map[t.due_date]) map[t.due_date] = []
-      map[t.due_date].push(t)
-    }
-    return map
-  }, [filteredTasks])
-
-  const postsByDate = useMemo(() => {
-    const map: Record<string, PostPlan[]> = {}
-    for (const p of filteredPosts) {
-      if (!map[p.scheduled_date]) map[p.scheduled_date] = []
-      map[p.scheduled_date].push(p)
-    }
-    return map
-  }, [filteredPosts])
-
-  async function handleDeletePost(id: string) {
-    setPostPlans(prev => prev.filter(p => p.id !== id))
-    const supabase = createClient()
-    await supabase.from('post_plans').delete().eq('id', id)
-  }
-
-  const grid = useMemo(() => buildGrid(year, month), [year, month])
-  const todayStr = toISODate(today)
-
-  if (loading) return <div className="py-16 text-sm text-ink-500">Loading...</div>
-
-  return (
-    <div>
-      {/* Filter bar */}
-      <div className="flex items-center gap-2 flex-wrap mb-6">
-        {FILTER_OPTIONS.map(o => (
-          <button key={o.key} type="button" onClick={() => setFilter(o.key as CalFilter)}
-            className={`text-xs font-medium uppercase tracking-wide px-4 py-1.5 border transition-colors ${filter === o.key ? 'bg-forest text-white border-forest' : 'bg-white text-ink-500 border-[#e5e7eb] hover:border-forest hover:text-ink-900'}`}>
-            {o.label}
-          </button>
-        ))}
-      </div>
-
-      <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
-
-      {/* Calendar grid — desktop/tablet (sm and up) */}
-      <div className="hidden sm:block border border-[#e5e7eb]">
-        <div className="grid grid-cols-7 border-b border-[#e5e7eb]">
-          {WEEKDAYS.map(d => (
-            <div key={d} className="py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-ink-400">{d}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7">
-          {grid.map((day, i) => {
-            const dateStr   = toISODate(day)
-            const isToday   = dateStr === todayStr
-            const inMonth   = day.getMonth() === month
-            const dayTasks  = tasksByDate[dateStr] ?? []
-            const dayPosts  = postsByDate[dateStr] ?? []
-            const allItems: DayItem[] = [
-              ...dayTasks.map(d => ({ kind: 'task' as const, data: d })),
-              ...dayPosts.map(d => ({ kind: 'post' as const, data: d })),
-            ]
-            const visible  = allItems.slice(0, 2)
-            const overflow = allItems.length - visible.length
-            const isLastRow = i >= 35
-
-            return (
-              <div key={dateStr + i} className={['min-h-[96px] p-2 border-b border-r border-[#e5e7eb] flex flex-col gap-1', (i + 1) % 7 === 0 ? 'border-r-0' : '', isLastRow ? 'border-b-0' : ''].join(' ')}>
-                <div className="flex-shrink-0">
-                  <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-forest text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
-                    {day.getDate()}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-0.5 flex-1">
-                  {visible.map(item =>
-                    item.kind === 'task'
-                      ? <TaskPill key={item.data.id} task={item.data} onClick={() => setPopup(item.data)} />
-                      : <PostPlanPill key={item.data.id} plan={item.data} onClick={() => setPostPopup(item.data)} />
-                  )}
-                  {overflow > 0 && (
-                    <button type="button" onClick={e => { e.stopPropagation(); setDayPopover(dateStr) }} className="text-[10px] text-ink-400 hover:text-ink-700 pl-1 text-left transition-colors">
-                      +{overflow} altri
-                    </button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Agenda — mobile (below sm) */}
-      <div className="sm:hidden">
-        <MobileAgendaView
-          year={year}
-          month={month}
-          tasksByDate={tasksByDate}
-          postsByDate={postsByDate}
-          onTaskClick={t => setPopup(t)}
-          onPostClick={p => setPostPopup(p)}
-        />
-      </div>
-
-      {/* Legend */}
-      <div className="flex items-center gap-6 mt-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] uppercase tracking-wide text-ink-400 font-medium">Priority:</span>
-          {[{ label: 'High', color: '#dc2626' }, { label: 'Medium', color: '#d97706' }, { label: 'Low', color: '#6b7280' }].map(l => (
-            <span key={l.label} className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-600">
-              <span style={{ backgroundColor: l.color, width: 8, height: 8, borderRadius: 0, display: 'inline-block', flexShrink: 0 }} />
-              {l.label}
-            </span>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span style={{ backgroundColor: '#e879a0', width: 8, height: 8, borderRadius: 0, display: 'inline-block', flexShrink: 0 }} />
-          <span className="text-[10px] uppercase tracking-wide text-ink-400 font-medium">Post LinkedIn</span>
-        </div>
-      </div>
-
-      {dayPopover && (
-        <DayPopover dateStr={dayPopover} tasks={tasksByDate[dayPopover] ?? []} postPlans={postsByDate[dayPopover] ?? []} onClose={() => setDayPopover(null)} onTaskClick={t => setPopup(t)} onPostClick={p => setPostPopup(p)} />
-      )}
-      {popup && <TaskPopup task={popup} onClose={() => setPopup(null)} />}
-      {postPopup && <PostPlanPopup plan={postPopup} onClose={() => setPostPopup(null)} onDelete={handleDeletePost} />}
-    </div>
-  )
-}
-
-// ── EventiTab ─────────────────────────────────────────────────────────────────
 
 function EventDetailModal({
   event, onClose, onDelete,
@@ -1225,7 +720,7 @@ function PedTab() {
   useEffect(() => {
     fetch('/api/ped')
       .then(r => r.json())
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       .then(json => setPosts((json.data ?? []) as PedPost[]))
       .finally(() => setLoading(false))
   }, [])
@@ -1484,44 +979,30 @@ function PedTab() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-export default function CalendarPage() {
-  const [activeTab, setActiveTab] = useState<'tasks' | 'eventi' | 'ped'>('tasks')
-
-  const TABS = [
-    { key: 'tasks'  as const, label: 'Task' },
-    { key: 'eventi' as const, label: 'Calendario Eventi' },
-    { key: 'ped'    as const, label: 'PED' },
-  ]
+function CalendarTabs() {
+  const params = useSearchParams()
+  const [activeTab, setActiveTab] = useState<'eventi' | 'ped'>(params.get('view') === 'ped' ? 'ped' : 'eventi')
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
-      <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-3">Calendario</h1>
-      <div className="w-8 h-px bg-forest mb-8" />
-
-      {/* Tab bar */}
-      <div className="border-b border-gray-200 mb-8">
-        <div className="flex gap-6">
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className="pb-2 text-sm font-['Inter'] transition-colors"
-              style={
-                activeTab === tab.key
-                  ? { borderBottom: '2px solid #1a4a3a', color: 'var(--forest)', fontWeight: 600 }
-                  : { borderBottom: '2px solid transparent', color: '#6b7280' }
-              }
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+    <>
+      <PageTitle
+        title="Calendar"
+        sub={activeTab === 'ped' ? 'The editorial plan, separate from events.' : 'Club events and your team’s dates.'}
+      />
+      <div className="mb-8 mt-6">
+        <Tabs tabs={[{ key: 'eventi', label: 'Club' }, { key: 'ped', label: 'PED' }]} value={activeTab} onChange={setActiveTab} />
       </div>
+      {activeTab === 'eventi' ? <EventiTab /> : <PedTab />}
+    </>
+  )
+}
 
-      {activeTab === 'tasks'  && <TasksTab />}
-      {activeTab === 'eventi' && <EventiTab />}
-      {activeTab === 'ped'    && <PedTab />}
-    </div>
+// Two separate calendars (boards ACld / APdd): Club (events and team dates)
+// and PED (the editorial plan). The task view left with the tasks.
+export default function CalendarPage() {
+  return (
+    <Suspense fallback={null}>
+      <CalendarTabs />
+    </Suspense>
   )
 }

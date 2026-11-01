@@ -1,165 +1,101 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { DashboardProfileProvider, type MemberProfile } from './DashboardProfileContext'
-import DashboardNav from './DashboardNav'
-
-function MembershipBadge({ expiresAt }: { expiresAt: string | null }) {
-  if (!expiresAt) return null
-
-  const now       = new Date()
-  const expiry    = new Date(expiresAt)
-  const diffMs    = expiry.getTime() - now.getTime()
-  const diffDays  = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  const isExpired = diffMs <= 0
-  const isSoon    = !isExpired && diffDays <= 7
-
-  const formatted = expiry.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
-
-  if (isExpired) {
-    return (
-      <Link href="/dashboard/membership" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-600">
-        <span className="w-2 h-2 bg-red-500 inline-block" />
-        Membership scaduta — <span className="underline">Rinnova</span>
-      </Link>
-    )
-  }
-
-  if (isSoon) {
-    return (
-      <Link href="/dashboard/membership" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-yellow-700">
-        <span className="w-2 h-2 bg-yellow-400 inline-block" />
-        Membership scade il {formatted} — <span className="underline">Rinnova</span>
-      </Link>
-    )
-  }
-
-  return (
-    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-forest">
-      <span className="w-2 h-2 bg-forest inline-block" />
-      Membership attiva fino al {formatted}
-    </p>
-  )
-}
+import MemberShell from '@/app/components/member/MemberShell'
 
 type Status = 'loading' | 'ok' | 'not-found' | 'unauthenticated'
+type Loaded = { status: Status; profile: MemberProfile | null }
+
+/** Reads the session user and their club_members row (any column the DB has). */
+async function loadProfile(): Promise<Loaded> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { status: 'unauthenticated', profile: null }
+
+  const { data } = await supabase
+    .from('club_members')
+    .select('*')
+    .eq('email', user.email ?? '')
+    .maybeSingle()
+  if (!data) return { status: 'not-found', profile: null }
+
+  const row = data as Record<string, unknown>
+  // Link user_id on the server if it is not linked yet (the browser can no
+  // longer write club_members.user_id). Errors are ignored: email still matches.
+  if (!row.user_id) fetch('/api/me/link-account', { method: 'POST' }).catch(() => {})
+
+  const str = (k: string) => (typeof row[k] === 'string' ? (row[k] as string) : null)
+  return {
+    status: 'ok',
+    profile: {
+      full_name: str('full_name') ?? 'Member',
+      role: str('role') ?? 'member',
+      teams: Array.isArray(row.teams) ? (row.teams as string[]) : null,
+      email: user.email ?? '',
+      membership_expires_at: str('membership_expires_at'),
+      member_id: str('member_id'),
+      created_at: str('created_at'),
+      id: str('id'),
+      title: str('title'),
+      phone: str('phone'),
+      photo_url: str('photo_url'),
+      linkedin_url: str('linkedin_url'),
+      degree_programme: str('degree_programme'),
+      study_level: str('study_level'),
+      study_year: typeof row.study_year === 'number' ? row.study_year : null,
+    },
+  }
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [profile, setProfile] = useState<MemberProfile | null>(null)
-  const [status, setStatus] = useState<Status>('loading')
+  const [state, setState] = useState<Loaded>({ status: 'loading', profile: null })
+  // Bumped when the tab comes back to the foreground, to refresh teams/role.
+  const [visibleTick, setVisibleTick] = useState(0)
 
-  const loadProfile = useCallback(async () => {
-    const supabase = createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      setStatus('unauthenticated')
-      router.push('/login')
-      return
-    }
-
-    const { data: profileData, error } = await supabase
-      .from('club_members')
-      .select('full_name, role, teams, membership_expires_at, member_id, created_at, user_id')
-      .eq('email', user?.email ?? '')
-      .maybeSingle()
-
-    console.log('Profile loaded:', profileData)
-
-    if (!profileData) {
-      setStatus('not-found')
-      return
-    }
-
-    // Collega user_id se non ancora collegato: lo fa il server (il browser non puo' piu'
-    // scrivere user_id su club_members). Una sola chiamata, errori ignorati: l'app
-    // ricade comunque sul match per email.
-    if (!(profileData as { user_id?: string | null }).user_id) {
-      fetch('/api/me/link-account', { method: 'POST' }).catch(() => {})
-    }
-
-    setProfile({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      full_name:             (profileData as any).full_name             ?? 'Member',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      role:                  (profileData as any).role                  ?? 'member',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      teams:                 (profileData as any).teams                 ?? null,
-      email:                 user.email ?? '',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      membership_expires_at: (profileData as any).membership_expires_at ?? null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      member_id:             (profileData as any).member_id ?? null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      created_at:            (profileData as any).created_at ?? null,
+  // Load on mount, on every route change and when the tab is shown again, so
+  // changes made by an admin (teams, role) show up without a manual reload.
+  useEffect(() => {
+    let cancelled = false
+    loadProfile().then(next => {
+      if (cancelled) return
+      if (next.status === 'unauthenticated') router.push('/login')
+      setState(next)
     })
-    setStatus('ok')
-  }, [router])
+    return () => { cancelled = true }
+  }, [pathname, visibleTick, router])
 
-  // Fetch iniziale + re-fetch a ogni cambio di route, così i dati
-  // (es. teams) riflettono eventuali modifiche fatte da un admin mentre
-  // la dashboard è aperta, senza bisogno di un reload manuale.
   useEffect(() => {
-    loadProfile()
-  }, [pathname, loadProfile])
+    const onVisible = () => { if (document.visibilityState === 'visible') setVisibleTick(n => n + 1) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [])
 
-  // Re-fetch quando la tab torna in foreground, per lo stesso motivo.
-  useEffect(() => {
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        loadProfile()
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [loadProfile])
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-paper-stone flex items-center justify-center">
-        <p className="text-sm text-ink-500">Loading…</p>
-      </div>
-    )
+  if (state.status === 'loading') {
+    return <div className="min-h-screen bg-ivory" aria-busy="true" />
   }
-
-  if (status === 'unauthenticated') {
-    return null
-  }
-
-  if (status === 'not-found' || !profile) {
+  if (state.status === 'unauthenticated') return null
+  if (state.status === 'not-found' || !state.profile) {
     return (
-      <div className="min-h-screen bg-paper-stone flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <p className="font-serif text-2xl text-ink-900">Profile not found</p>
-          <p className="text-sm text-ink-500">Contact admin to get access.</p>
+      <div className="flex min-h-screen items-center justify-center bg-ivory px-6 text-night">
+        <div className="max-w-[420px]">
+          <p className="rd-display text-[40px]">Profile not found</p>
+          <p className="mt-3 text-[15px] leading-[1.7] text-earth-700">
+            Your account is not linked to a club member yet. Write to info@alatainvestmentclub.com.
+          </p>
         </div>
       </div>
     )
   }
 
+  const profile = state.profile
   return (
     <DashboardProfileProvider profile={profile}>
-      <DashboardNav profile={profile} />
-
-      {/* Welcome header */}
-      <div className="bg-white border-b border-line">
-        <div className="max-w-7xl mx-auto px-8 py-10">
-          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-4">
-            Welcome back, {profile.full_name}
-          </h1>
-          <div className="w-12 h-px bg-forest mb-4" />
-          <MembershipBadge expiresAt={profile.membership_expires_at} />
-        </div>
-      </div>
-
-      {/* Page content */}
-      {children}
+      <MemberShell profile={profile}>{children}</MemberShell>
     </DashboardProfileProvider>
   )
 }

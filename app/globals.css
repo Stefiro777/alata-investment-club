@@ -469,3 +469,20 @@ textarea.rd-field { resize: vertical; min-height: 72px; }
 @keyframes rd-marquee-l { from { transform: translateX(0) } to { transform: translateX(-50%) } }
 @keyframes rd-marquee-r { from { transform: translateX(-50%) } to { transform: translateX(0) } }
 @keyframes rd-fill { from { width: 0 } to { width: 100% } }
+
+/* ─── Member area & Board panel: legacy tools in the new language ───
+   The internal tools (calendar, CRM, finance, team content…) keep their
+   logic; inside .rd-app they pick up the redesign palette and type. */
+.rd-app { font-family: var(--font-inter), "Inter", system-ui, sans-serif; }
+.rd-app .font-serif { font-weight: 500; letter-spacing: -0.005em; }
+.rd-app .bg-white { background-color: #fbf9f3; }
+.rd-app .bg-paper-stone, .rd-app .bg-paper-warm, .rd-app .bg-paper-cool,
+.rd-app .bg-gray-50, .rd-app .bg-\[\#f9f9f9\], .rd-app .bg-\[\#f5f5f3\], .rd-app .bg-\[\#f3f4f6\] { background-color: var(--ivory); }
+.rd-app .text-ink-900, .rd-app .text-gray-900, .rd-app .text-black { color: var(--night); }
+.rd-app .text-ink-700, .rd-app .text-gray-700 { color: var(--earth-700); }
+.rd-app .text-ink-500, .rd-app .text-gray-500, .rd-app .text-gray-600 { color: var(--earth-600); }
+.rd-app .border-line, .rd-app .border-gray-200, .rd-app .border-\[\#e5e7eb\], .rd-app .border-\[\#e5e5e5\] { border-color: rgba(11, 29, 22, 0.15); }
+.rd-app button.bg-forest, .rd-app a.bg-forest,
+.rd-app button[class*="border-forest"], .rd-app a[class*="border-forest"] { border-radius: 999px; }
+.rd-app button.bg-forest, .rd-app a.bg-forest { background-color: var(--night); }
+.rd-app button.bg-forest:hover, .rd-app a.bg-forest:hover { background-color: var(--moss); }

@@ -841,13 +841,13 @@ export default function MembersPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-10">
+    <div>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-6 mb-8">
+      <div className="mb-8 flex items-start justify-between gap-6">
         <div>
-          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-ink-900 mb-3">Membri</h1>
-          <div className="w-8 h-px bg-forest" />
+          <h1 className="rd-display text-[clamp(40px,4.6vw,54px)]">People</h1>
+          <p className="mt-3 text-[14px] text-earth-600">The club, and the people who came before. <a href="/team/alumni" className="rd-italic text-[18px] text-club underline-offset-4 hover:underline">See the alumni</a></p>
         </div>
         {canAdd && (
           <button
@@ -857,7 +857,7 @@ export default function MembersPage() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Aggiungi membro
+            Add member
           </button>
         )}
       </div>
@@ -914,9 +914,8 @@ export default function MembersPage() {
               {/* Rows */}
               <div className="border border-line">
                 {group.members.map(m => {
-                  const stats = m.user_id
-                    ? (taskStats[m.user_id] ?? { total: 0, done: 0, completedTasks: [] })
-                    : null
+                  // Tasks left the member area: no task counts on people.
+                  const stats = null as (typeof taskStats)[string] | null
                   return (
                     <MemberRow
                       key={m.id}

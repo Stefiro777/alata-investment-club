@@ -1,368 +1,219 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { useProfile } from './DashboardProfileContext'
-import MembershipCard from '@/components/dashboard/MembershipCard'
+import { useProfile, type MemberProfile } from './DashboardProfileContext'
+import { visibleTeams, isPrivilegedProfile } from '@/app/components/member/MemberShell'
+import { timeRange } from '@/lib/event-display'
+import { isPubliclyHidden } from '@/lib/public-filters'
+import { Section, Row, FieldRow, Pill, ProgressRule } from '@/app/components/member/ui'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+type NextEvent = {
+  id: string; slug: string | null; title: string; date: string; status: string | null
+  start_time: string | null; end_time: string | null; location: string | null; members_only: boolean | null
+}
+type Resource = { id: string; title: string; description: string | null; url: string | null; category: string | null; is_folder: boolean | null; audience?: string[] | null }
+type RoleProfile = { reports_to: string | null; responsibilities: string[] | null }
 
-type Category = {
-  id: string
-  name: string
-  color: string | null
+const TEAM_LABEL: Record<string, string> = { events: 'Events', media: 'Media', career: 'Career', lab: 'Lab' }
+
+function levelLabel(p: MemberProfile) {
+  if (!p.study_level) return null
+  const lvl = p.study_level === 'master' ? 'Master' : 'Bachelor'
+  return p.study_year ? `${lvl}, year ${p.study_year}` : lvl
 }
 
-type Task = {
-  id: string
-  title: string
-  status: string
-  due_date: string | null
-  category_id: string | null
-  category: Category | null
-  team: string | null
+/** What the profile already holds, out of seven fields. */
+function profileFields(p: MemberProfile) {
+  return [
+    { label: 'Email', value: p.email, source: 'From application' },
+    { label: 'Phone', value: p.phone, source: 'From application' },
+    { label: 'Degree', value: p.degree_programme, source: 'From application' },
+    { label: 'Year', value: levelLabel(p), source: 'From application' },
+    { label: 'Photo', value: p.photo_url ? 'Added' : null, source: null },
+    { label: 'LinkedIn', value: p.linkedin_url ? p.linkedin_url.replace(/^https?:\/\/(www\.)?/, '') : null, source: null },
+  ]
 }
 
-const TEAM_NAMES: Record<string, string> = {
-  events:  'Events',
-  media:   'Media',
-  career:  'Career',
-  academy: 'Academy',
-  syrto:   'Syrto',
-  lab:     'Lab',
-  alumni:  'Alumni',
-}
+function MembershipNotice({ profile }: { profile: MemberProfile }) {
+  const params = useSearchParams()
+  const flag = params.get('membership')
+  const exp = profile.membership_expires_at ? new Date(profile.membership_expires_at) : null
+  const [now] = useState(() => Date.now())
+  const days = exp ? Math.floor((exp.getTime() - now) / 86_400_000) : null
 
-type Comment = {
-  id: string
-  task_id: string
-  body: string
-  created_at: string
-  task_title: string
-  author_name: string
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-function isOverdue(iso: string | null): boolean {
-  if (!iso) return false
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return new Date(iso) < today
-}
-
-function isToday(iso: string | null): boolean {
-  if (!iso) return false
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const d = new Date(iso)
-  d.setHours(0, 0, 0, 0)
-  return d.getTime() === today.getTime()
-}
-
-function isTomorrow(iso: string | null): boolean {
-  if (!iso) return false
-  const tomorrow = new Date()
-  tomorrow.setHours(0, 0, 0, 0)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const d = new Date(iso)
-  d.setHours(0, 0, 0, 0)
-  return d.getTime() === tomorrow.getTime()
-}
-
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'adesso'
-  if (mins < 60) return `${mins} min fa`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours} ${hours === 1 ? 'ora' : 'ore'} fa`
-  const days = Math.floor(hours / 24)
-  if (days === 1) return 'ieri'
-  if (days < 7) return `${days} giorni fa`
-  return formatDate(iso)
-}
-
-function statusLabel(status: string): string {
-  if (status === 'done') return 'Fatto'
-  if (status === 'in_progress' || status === 'in progress') return 'In corso'
-  return 'Todo'
-}
-
-function statusClass(status: string): string {
-  if (status === 'in_progress' || status === 'in progress') {
-    return 'bg-forest/10 text-forest'
-  }
-  return 'bg-ink-900/8 text-ink-500'
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function TaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
-  const due = task.due_date
-  const urgent = isOverdue(due) || isToday(due)
-  const dateText = due ? formatDate(due) : null
-
+  let text: string | null = null
+  if (flag === 'removed') text = 'You are no longer part of the membership. For information, write to the Board.'
+  else if (flag === 'expired' || (days !== null && days < 0)) text = 'Your membership has expired. Renew it to open the rest of the area.'
+  else if (days !== null && days <= 30) text = `Your membership expires on ${exp!.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`
+  if (!text) return null
   return (
-    <div
-      onClick={onClick}
-      className="border border-line bg-white px-5 py-4 flex flex-col gap-2 cursor-pointer hover:bg-paper-stone transition-colors"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-semibold text-ink-900 leading-snug flex-1">{task.title}</p>
-        <span className={`text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 flex-shrink-0 ${statusClass(task.status)}`}>
-          {statusLabel(task.status)}
-        </span>
-      </div>
-
-      {/* Source badge */}
-      {task.team ? (
-        <span className="self-start text-xs font-medium uppercase tracking-wide px-2 py-0.5 bg-forest text-white">
-          {TEAM_NAMES[task.team] ?? task.team}
-        </span>
-      ) : null}
-
-      <div className="flex items-center gap-3 flex-wrap">
-        {task.category && (
-          <span
-            className="text-[10px] font-medium uppercase tracking-wide px-2 py-0.5"
-            style={{
-              backgroundColor: task.category.color ? `${task.category.color}22` : '#1a4a3a22',
-              color: task.category.color ?? '#1a4a3a',
-            }}
-          >
-            {task.category.name}
-          </span>
-        )}
-        {dateText && (
-          <span className={`text-[11px] ${urgent ? 'text-red-500 font-semibold' : 'text-ink-400'}`}>
-            {urgent && isOverdue(due) && !isToday(due) ? '⚠ ' : ''}{dateText}
-          </span>
-        )}
-      </div>
+    <div role="status" className="mb-8 flex flex-wrap items-center justify-between gap-4 border-y border-night/20 py-4">
+      <p className="text-[14px]">{text}</p>
+      {flag !== 'removed' && <Link href="/dashboard/membership" className="rd-italic text-[22px] text-club hover:underline underline-offset-[0.18em]">Renew</Link>}
     </div>
   )
 }
-
-function CommentCard({ comment }: { comment: Comment }) {
-  const preview = comment.body.length > 80 ? comment.body.slice(0, 80) + '…' : comment.body
-
-  return (
-    <div className="border border-line bg-white px-5 py-4 flex flex-col gap-1.5">
-      <p className="text-[10px] font-medium uppercase tracking-wide text-ink-400 truncate">
-        {comment.task_title}
-      </p>
-      <p className="text-sm text-ink-900 leading-snug">{preview}</p>
-      <div className="flex items-center justify-between gap-2 mt-1">
-        <span className="text-[11px] text-ink-500">{comment.author_name}</span>
-        <span className="text-[11px] text-ink-400">{relativeTime(comment.created_at)}</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const profile      = useProfile()
-  const router       = useRouter()
-  const searchParams = useSearchParams()
-  const membershipExpiredBanner = searchParams.get('membership') === 'expired'
+  const profile = useProfile()!
+  const [next, setNext] = useState<NextEvent | null | undefined>(undefined)
+  const [resources, setResources] = useState<Resource[]>([])
+  const [role, setRole] = useState<RoleProfile | null>(null)
 
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [comments, setComments] = useState<Comment[]>([])
-  const [loading, setLoading] = useState(true)
+  const firstTeam = (profile.teams ?? []).find(t => TEAM_LABEL[t]) ?? null
+  const level = levelLabel(profile)
+  const canManageEvents = visibleTeams(profile).some(t => t.slug === 'events')
+
   useEffect(() => {
-    if (!profile) return
+    const supabase = createClient()
+    const today = new Date().toISOString().split('T')[0]
+    let cancelled = false
 
-    async function load() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+    supabase
+      .from('upcoming_events')
+      .select('id, slug, title, date, status, start_time, end_time, location, members_only')
+      .gte('date', today)
+      .neq('status', 'completed')
+      .order('date', { ascending: true })
+      .limit(5)
+      .then(({ data }) => {
+        if (cancelled) return
+        const list = ((data ?? []) as NextEvent[]).filter(e => !isPubliclyHidden(e.title))
+        setNext(list[0] ?? null)
+      })
 
-      const uid = user.id
+    supabase
+      .from('resources')
+      .select('*')
+      .order('order_index', { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return
+        const rows = ((data ?? []) as Resource[]).filter(r => !r.is_folder && r.url)
+        const key = profile.study_level ? `${profile.study_level}_${profile.study_year ?? ''}` : null
+        // resources.audience (SQL F) targets a year of study; until it exists,
+        // pick one guide per area: master, career, learning.
+        const targeted = key ? rows.filter(r => r.audience?.some(a => a === key || a === profile.study_level)) : []
+        const picks = targeted.length > 0
+          ? targeted
+          : (['masters', 'career', 'education'] as const).map(c => rows.find(r => r.category === c)).filter(Boolean) as Resource[]
+        setResources(picks.slice(0, 3))
+      })
 
-      // Tasks assigned to this user, not done
-      const { data: taskRows } = await supabase
-        .from('tasks')
-        .select('id, title, status, due_date, category_id, is_todo_item, team, task_categories(id, name, color)')
-        .contains('assigned_to', [uid])
-        .neq('status', 'done')
-        .order('due_date', { ascending: true, nullsFirst: false })
-
-      const parsedTasks: Task[] = (taskRows ?? [])
-        // Exclude todo-list items and orphans: keep only tasks belonging to a team
-        .filter((r: Record<string, unknown>) =>
-          r.is_todo_item !== true && r.team !== null && r.team !== undefined
-        )
-        .map((r: Record<string, unknown>) => ({
-          id: r.id as string,
-          title: r.title as string,
-          status: r.status as string,
-          due_date: r.due_date as string | null,
-          category_id: r.category_id as string | null,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          category: r.task_categories ? (r.task_categories as any) : null,
-          team: (r.team as string) ?? null,
-        }))
-
-      setTasks(parsedTasks)
-
-      // Recent comments on tasks assigned to this user
-      // Step 1: get all task ids where user is assigned
-      const { data: myTasks } = await supabase
-        .from('tasks')
-        .select('id, title')
-        .contains('assigned_to', [uid])
-
-      const taskIds = (myTasks ?? []).map((t: Record<string, unknown>) => t.id as string)
-
-      let parsedComments: Comment[] = []
-      if (taskIds.length > 0) {
-        // Step 2: fetch latest comments on those tasks
-        const { data: commentRows } = await supabase
-          .from('task_comments')
-          .select('id, content, created_at, task_id, author_id')
-          .in('task_id', taskIds)
-          .order('created_at', { ascending: false })
-          .limit(5)
-
-        const rows = commentRows ?? []
-
-        // Step 3: resolve author names
-        const authorIds = [...new Set(
-          rows.map((r: Record<string, unknown>) => r.author_id).filter(Boolean)
-        )] as string[]
-        let nameMap: Record<string, string> = {}
-        if (authorIds.length) {
-          const { data: members } = await supabase
-            .from('club_members')
-            .select('user_id, full_name')
-            .in('user_id', authorIds)
-          ;(members ?? []).forEach((m: Record<string, unknown>) => {
-            if (m.user_id) nameMap[m.user_id as string] = m.full_name as string
-          })
-        }
-
-        // Build task title map
-        const titleMap: Record<string, string> = {}
-        ;(myTasks ?? []).forEach((t: Record<string, unknown>) => {
-          titleMap[t.id as string] = t.title as string
-        })
-
-        parsedComments = rows.map((r: Record<string, unknown>) => ({
-          id: r.id as string,
-          task_id: r.task_id as string,
-          body: (r.content as string) ?? '',
-          created_at: r.created_at as string,
-          task_title: titleMap[r.task_id as string] ?? '',
-          author_name: r.author_id ? (nameMap[r.author_id as string] ?? 'Membro') : 'Membro',
-        }))
-      }
-
-      setComments(parsedComments)
-      setLoading(false)
+    if (firstTeam && profile.title) {
+      // role_profiles (SQL E) may not exist yet: any error just hides the block.
+      supabase
+        .from('role_profiles')
+        .select('reports_to, responsibilities')
+        .eq('team', firstTeam)
+        .eq('title', profile.title)
+        .maybeSingle()
+        .then(({ data, error }) => { if (!cancelled && !error && data) setRole(data as RoleProfile) })
     }
+    return () => { cancelled = true }
+  }, [firstTeam, profile.title, profile.study_level, profile.study_year])
 
-    load()
-  }, [profile])
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-8 py-16 text-sm text-ink-500">
-        Caricamento...
-      </div>
-    )
-  }
-
-  const urgentCount = tasks.filter(t => isToday(t.due_date) || isTomorrow(t.due_date)).length
-
-  const memberSince = profile?.created_at ? String(new Date(profile.created_at).getFullYear()) : null
+  const fields = profileFields(profile)
+  const filled = 1 + fields.filter(f => f.value).length // the name is always there
+  const roleLine = [profile.title, firstTeam ? TEAM_LABEL[firstTeam] : isPrivilegedProfile(profile) ? (profile.role === 'bod' ? 'Board of Directors' : 'Management') : null].filter(Boolean).join(' · ')
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
+    <>
+      <Suspense fallback={null}><MembershipNotice profile={profile} /></Suspense>
 
-      {/* Membership expired banner */}
-      {membershipExpiredBanner && (
-        <div className="border border-red-300 bg-red-50 px-5 py-4 flex items-center justify-between gap-4">
-          <p className="text-xs font-semibold uppercase tracking-widest text-red-600">
-            La tua membership è scaduta — Rinnova per accedere a tutte le funzionalità
-          </p>
-          <Link
-            href="/dashboard/membership"
-            className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-widest text-forest underline"
-          >
-            Rinnova →
-          </Link>
+      <div className="flex items-start gap-5">
+        <div className="h-[82px] w-[64px] shrink-0 overflow-hidden bg-sand">
+          {profile.photo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.photo_url} alt="" className="h-full w-full object-cover" />
+          )}
+        </div>
+        <div className="min-w-0">
+          <h1 className="rd-display text-[clamp(34px,4vw,44px)]">{profile.full_name}</h1>
+          {roleLine && <div className="rd-italic mt-1 text-[18px] text-earth-700">{roleLine}</div>}
+        </div>
+      </div>
+      <p className="rd-italic mt-6 text-[clamp(24px,2.5vw,28px)]">Curiosity compounds. So does preparation.</p>
+
+      {/* Next event */}
+      {next === undefined ? (
+        <div className="mt-7 h-[165px] bg-pine/90" aria-busy="true" />
+      ) : next ? (
+        <div className="mt-7 grid gap-5 bg-pine px-6 py-6 text-ivory md:grid-cols-[150px_minmax(0,1fr)_auto] md:items-center md:gap-7 md:px-9 md:py-[26px]">
+          <div>
+            <div className="rd-eyebrow mb-3 text-[11px] text-ivory/70 md:hidden">Next event</div>
+            <div className="font-serif text-[72px] font-medium leading-none">{String(new Date(next.date + 'T00:00:00').getDate()).padStart(2, '0')}</div>
+            <div className="rd-eyebrow mt-3.5 text-[11px] text-ivory/75">{new Date(next.date + 'T00:00:00').toLocaleDateString('en-GB', { month: 'long' })}</div>
+          </div>
+          <div className="min-w-0">
+            <div className="rd-eyebrow hidden text-[11px] text-ivory/70 md:block">Next event</div>
+            <div className="rd-display mt-2 text-[clamp(26px,2.7vw,32px)]">{next.title}</div>
+            <div className="mt-2 text-[14px] text-ivory/85">{[timeRange(next.start_time, next.end_time), next.location].filter(Boolean).join(' · ')}</div>
+          </div>
+          <div className="flex flex-wrap items-center gap-5">
+            {next.members_only && <Pill tone="dark">Members only</Pill>}
+            {next.status === 'open' && next.slug ? (
+              <Link href={`/events/${next.slug}#register`} className="rd-italic text-[28px] hover:underline underline-offset-[0.18em]">Register</Link>
+            ) : (
+              <Pill tone="dark">Soon</Pill>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-7 bg-pine px-9 py-8 text-ivory">
+          <p className="rd-italic text-[26px]">New dates are on their way.</p>
         </div>
       )}
 
-      {/* Banner scadenze */}
-      {urgentCount > 0 && (
-        <div className="bg-forest text-white px-5 py-3 text-sm font-medium">
-          Hai {urgentCount} task in scadenza oggi o domani
+      <div className="mt-4 flex flex-wrap gap-2.5">
+        <Pill href="/events" solid>All events</Pill>
+        {canManageEvents && <Pill href="/dashboard/team/events">Manage events</Pill>}
+        <Pill href="/dashboard/calendar">My calendar</Pill>
+      </div>
+
+      {/* Teams, on mobile (the desktop sidebar already lists them) */}
+      {visibleTeams(profile).length > 0 && (
+        <div className="mt-5 flex flex-wrap gap-2.5 lg:hidden">
+          {visibleTeams(profile).map(t => <Pill key={t.slug} href={`/dashboard/team/${t.slug}`}>{t.label} team</Pill>)}
         </div>
       )}
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid gap-x-12 lg:grid-cols-2">
+        <Section title="Getting started" meta={level ? `For you · ${level}` : 'For you'}>
+          {resources.length === 0 ? (
+            <p className="py-4 text-[13px] text-earth-600">Guides appear here as the Career team adds them.</p>
+          ) : resources.map(r => (
+            <Row key={r.id} title={r.title} detail={r.description} href={r.url ?? undefined} external action="Open" />
+          ))}
+          <Link href="/dashboard/jobs#resources" className="rd-italic mt-3 inline-block text-[20px] hover:underline underline-offset-[0.18em]">All resources</Link>
+        </Section>
 
-        {/* Le mie task (2/3) */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="font-serif text-2xl font-semibold text-ink-900">Le mie task</h2>
-          <div className="w-8 h-px bg-forest" />
-          {tasks.length === 0 ? (
-            <p className="text-sm text-ink-500 pt-2">Nessuna task assegnata al momento.</p>
-          ) : (
-            <div className="space-y-3">
-              {tasks.map(task => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onClick={() => {
-                    if (task.team) router.push(`/dashboard/team/${task.team}`)
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Commenti recenti (1/3) */}
-        <div className="space-y-4">
-          <h2 className="font-serif text-2xl font-semibold text-ink-900">Commenti recenti</h2>
-          <div className="w-8 h-px bg-forest" />
-          {comments.length === 0 ? (
-            <p className="text-sm text-ink-500 pt-2">Nessun commento recente.</p>
-          ) : (
-            <div className="space-y-3">
-              {comments.map(c => <CommentCard key={c.id} comment={c} />)}
-            </div>
-          )}
-        </div>
-
+        <Section title="Your profile" meta={`${filled} of 7`} after={<ProgressRule value={filled / 7} />}>
+          {fields.map(f => (
+            <FieldRow
+              key={f.label}
+              label={f.label}
+              value={f.value ?? 'Not added'}
+              muted={!f.value}
+              aside={f.value ? f.source : <Link href="/dashboard/profile" className="rd-italic text-[20px] hover:underline">Add</Link>}
+            />
+          ))}
+        </Section>
       </div>
 
-      {/* Membership Card — bottom */}
-      <div>
-        <h2 className="font-serif text-2xl font-semibold text-ink-900 mb-1">La tua Membership Card</h2>
-        <div className="w-8 h-px bg-forest mb-5" />
-        <MembershipCard
-          name={profile?.full_name ?? ''}
-          role={profile?.role ?? ''}
-          memberId={profile?.member_id ?? null}
-          memberSince={memberSince}
-          expiresAt={profile?.membership_expires_at ?? null}
-        />
-      </div>
-
-    </div>
+      {role && role.responsibilities && role.responsibilities.length > 0 && (
+        <Section title="Your role" meta={[profile.title, role.reports_to ? `reports to ${role.reports_to}` : null].filter(Boolean).join(' · ')}>
+          <ul>
+            {role.responsibilities.map(r => (
+              <li key={r} className="relative border-b border-night/15 py-[9px] pl-[18px] text-[13px] leading-[1.5] before:absolute before:left-0 before:top-[17px] before:h-px before:w-1.5 before:bg-club">
+                {r}
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+    </>
   )
 }

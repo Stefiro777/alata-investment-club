@@ -10,6 +10,15 @@ export type MemberProfile = {
   membership_expires_at: string | null
   member_id: string | null
   created_at: string | null
+  /** Columns below exist once the redesign SQL has run; null until then. */
+  id?: string | null
+  title?: string | null
+  phone?: string | null
+  photo_url?: string | null
+  linkedin_url?: string | null
+  degree_programme?: string | null
+  study_level?: string | null
+  study_year?: number | null
 }
 
 const DashboardProfileContext = createContext<MemberProfile | null>(null)
