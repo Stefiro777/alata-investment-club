@@ -162,7 +162,7 @@ export default async function RootLayout({
         {/* Main. overflow-x-hidden guards against MotionReveal's untriggered
             translateX offset (and similar decorative transforms) pushing the
             page into horizontal scroll before the reveal animation runs. */}
-        <main className="flex-1 overflow-x-hidden">{children}</main>
+        <main className="flex-1 overflow-x-clip">{children}</main>
         <AnalyticsWrapper />
         {/* GA loads only after the cookie banner records consent */}
         <GoogleAnalytics />

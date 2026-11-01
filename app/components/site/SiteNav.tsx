@@ -8,9 +8,20 @@ import SiteNavClient, { type NavTone } from './SiteNavClient'
  * the dark logo and night links. The bar overlays the top of the page, so
  * pages leave room for it (about 96px on desktop).
  */
-export default async function SiteNav({ tone = 'dark', bigLogo = false }: { tone?: NavTone; bigLogo?: boolean }) {
+export default async function SiteNav({
+  tone = 'dark',
+  bigLogo = false,
+  hideLogo = false,
+  inheritColor = false,
+}: {
+  tone?: NavTone
+  bigLogo?: boolean
+  /** The Home draws its own logo, which changes colour with the scene. */
+  hideLogo?: boolean
+  inheritColor?: boolean
+}) {
   noStore()
   const { data } = await createServiceClient()
     .from('settings').select('value').eq('key', 'merch_page_visible').maybeSingle()
-  return <SiteNavClient tone={tone} bigLogo={bigLogo} merchVisible={data?.value === 'true'} />
+  return <SiteNavClient tone={tone} bigLogo={bigLogo} hideLogo={hideLogo} inheritColor={inheritColor} merchVisible={data?.value === 'true'} />
 }

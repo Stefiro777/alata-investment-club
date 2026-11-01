@@ -27,10 +27,15 @@ function isActive(pathname: string, href: string) {
 export default function SiteNavClient({
   tone,
   bigLogo,
+  hideLogo = false,
+  inheritColor = false,
   merchVisible,
 }: {
   tone: NavTone
   bigLogo: boolean
+  hideLogo?: boolean
+  /** Take the text colour from the parent (the Home animates it). */
+  inheritColor?: boolean
   merchVisible: boolean
 }) {
   const pathname = usePathname()
@@ -41,7 +46,7 @@ export default function SiteNavClient({
   const links = LINKS.filter(l => l.href !== '/merch' || merchVisible)
   const onShop = pathname.startsWith('/merch') || pathname.startsWith('/checkout')
   const showCart = onShop || count > 0
-  const fg = tone === 'dark' ? 'text-ivory' : 'text-night'
+  const fg = inheritColor ? '' : tone === 'dark' ? 'text-ivory' : 'text-night'
 
   // Lock the page while the mobile menu is open.
   useEffect(() => {
@@ -59,7 +64,7 @@ export default function SiteNavClient({
   return (
     <header className={`absolute inset-x-0 top-0 z-40 ${fg}`}>
       <nav className="rd-gutter flex items-center justify-between pt-6 md:pt-[30px]" aria-label="Main">
-        <Link href="/" className="block leading-none" aria-label="Alata Investment Club, home">
+        <Link href="/" className={`block leading-none ${hideLogo ? "invisible" : ""}`} aria-label="Alata Investment Club, home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={tone === 'dark' ? '/redesign/logo-light.png' : '/redesign/logo-dark.png'}
