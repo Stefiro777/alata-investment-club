@@ -1,3 +1,4 @@
+import { requirePrivilegedAccess } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import {
   sendOrderConfirmation,
@@ -11,6 +12,9 @@ type Payload =
   | (RegistrationPayload & { type: 'registration' })
 
 export async function POST(req: NextRequest) {
+  // Not called by the site any more; kept for manual use by BoD/Management only,
+  // so it cannot be used to send emails with the club's name to anyone.
+  if (!(await requirePrivilegedAccess())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   try {
     const body = await req.json() as Payload
 

@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireTeamAccess } from '@/lib/auth'
 
 export async function GET() {
   const service = createServiceClient()
@@ -15,6 +16,8 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // The editorial plan is written by the Media team (and BoD/Management).
+  if (!(await requireTeamAccess('media'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()
   const { title, scheduled_date, platform, content_type, description, assigned_to, notes, attachment_url } = body

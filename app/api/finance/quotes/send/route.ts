@@ -5,6 +5,7 @@ import { Resend } from 'resend'
 import * as path from 'path'
 import { loadLogoPNG, buildQuotePDF } from '@/lib/quote-pdf'
 import type { QuoteData } from '@/lib/quote-pdf'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +19,8 @@ export async function POST(req: NextRequest) {
   )
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // BoD and Management only (Finance lives in the Board panel).
+  if (!(await requirePrivilegedAccess())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { to, subject, quote } = (await req.json()) as { to: string; subject: string; quote: QuoteData }
   if (!to || !quote) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })

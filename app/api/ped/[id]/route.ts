@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireTeamAccess } from '@/lib/auth'
 
 const PED_STATUSES = ['draft', 'scheduled', 'published']
 
@@ -10,6 +11,8 @@ export async function DELETE(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // The editorial plan is written by the Media team (and BoD/Management).
+  if (!(await requireTeamAccess('media'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
   const service = createServiceClient()
@@ -25,6 +28,8 @@ export async function PATCH(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // The editorial plan is written by the Media team (and BoD/Management).
+  if (!(await requireTeamAccess('media'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
   let body: { status?: unknown; posted?: unknown }

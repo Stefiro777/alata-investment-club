@@ -1,23 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabaseAdmin = createAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const SUPERADMIN_EMAIL = 'finullistefano@gmail.com'
-
+/** Media team (who runs the shop), BoD and Management; the superadmin is a 'bod' member. */
 async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-  if (user.email === SUPERADMIN_EMAIL) return user
-  const { data: member } = await supabaseAdmin
-    .from('club_members').select('role').eq('email', user.email!).maybeSingle()
-  if (member?.role !== 'bod' && member?.role !== 'director') return null
-  return user
+  return requireTeamAccess('media')
 }
 
 // GET /api/admin/discount-codes

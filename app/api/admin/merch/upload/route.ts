@@ -1,5 +1,6 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireTeamAccess } from '@/lib/auth'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,6 +12,8 @@ export async function POST(req: NextRequest) {
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { data: { user } } = await supabase.auth.getUser(token)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Only the Media team (and BoD/Management) manage the shop's images.
+  if (!(await requireTeamAccess('media'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const form = await req.formData()
   const file = form.get('image') as File | null

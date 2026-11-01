@@ -1,3 +1,4 @@
+import { requirePrivilegedAccess } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -303,6 +304,8 @@ export async function POST(request: NextRequest) {
   )
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // BoD and Management only (Finance lives in the Board panel).
+  if (!(await requirePrivilegedAccess())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   let payload: PDFPayload
   try { payload = await request.json() }

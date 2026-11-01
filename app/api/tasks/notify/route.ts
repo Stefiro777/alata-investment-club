@@ -1,6 +1,7 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -171,6 +172,9 @@ function buildTaskEmail({
 }
 
 export async function POST(req: NextRequest) {
+  // Not called by the site any more; kept for manual use by BoD/Management only,
+  // so it cannot be used to send emails with the club's name to anyone.
+  if (!(await requirePrivilegedAccess())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   let taskId: string
   try {
     const body = await req.json()

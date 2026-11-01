@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { uniqueSlug } from '@/lib/slug'
+import { requireTeamAccess } from '@/lib/auth'
 
 export async function GET() {
   const service = createServiceClient()
@@ -16,6 +17,8 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Public events are created and deleted by the Events team (and BoD/Management) only.
+  if (!(await requireTeamAccess('events'))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()
   const { date, title, description, location, start_time, end_time } = body
