@@ -634,7 +634,6 @@ export default function JobsPage() {
 
   const isBoD = profile?.role === 'bod' || profile?.role === 'director'
 
-  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     const supabase = createClient()
@@ -653,7 +652,7 @@ export default function JobsPage() {
     // Resolve creator names for member offers
     const memberList = (member ?? []) as JobOffer[]
     const creatorIds = [...new Set(memberList.map(o => o.created_by).filter(Boolean))] as string[]
-    let creatorMap: Record<string, string> = {}
+    const creatorMap: Record<string, string> = {}
     if (creatorIds.length > 0) {
       const { data: creators } = await supabase
         .from('club_members').select('user_id, full_name').in('user_id', creatorIds)
@@ -667,6 +666,9 @@ export default function JobsPage() {
     if (sub) { setSubscribed((sub as { subscribed: boolean }).subscribed); setSubId((sub as { id: string }).id) }
     setLoading(false)
   }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount: state is set after the request resolves
+  useEffect(() => { loadData() }, [])
 
   async function handleToggleSubscription() {
     if (togglingSubscription || !userId) return

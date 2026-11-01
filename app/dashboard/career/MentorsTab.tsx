@@ -223,6 +223,7 @@ export default function MentorsTab() {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount: state is set after the request resolves
   useEffect(() => { refresh() }, [])
 
   function startEdit(m: CareerMentor) {

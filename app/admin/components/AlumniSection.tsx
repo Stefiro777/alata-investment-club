@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Alumni } from '@/lib/types'
 
 // ── Photo upload helper ────────────────────────────────────────────────────────
@@ -368,7 +368,8 @@ function AlumniRow({
 function AlumniList({ alumni: initialAlumni }: { alumni: Alumni[] }) {
   const [list, setList] = useState<Alumni[]>(initialAlumni)
   const listRef = useRef<Alumni[]>(initialAlumni)
-  listRef.current = list
+  // Keep the ref in step for the event handlers, outside of render.
+  useEffect(() => { listRef.current = list }, [list])
 
   const dragIndex = useRef<number | null>(null)
   const [listOpen, setListOpen] = useState(false)

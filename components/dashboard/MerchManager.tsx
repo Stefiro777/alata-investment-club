@@ -198,6 +198,7 @@ function VariantEditor({ productId, variants, onRefresh }: {
 
   // Sync local state when parent re-fetches variants
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset local drafts when the parent reloads the variants
     setLocalImages(Object.fromEntries(variants.map(v => [v.id, v.images ?? []])))
     setStockDraft(Object.fromEntries(variants.map(v => [v.id, v.stock != null ? String(v.stock) : ''])))
   }, [variants])
@@ -294,7 +295,7 @@ function VariantEditor({ productId, variants, onRefresh }: {
 
             {confirmDelete === v.id && (
               <div className="px-3 py-2 bg-red-50 border-t border-red-200 flex items-center gap-3">
-                <span className="text-xs text-red-700 flex-1">Remove "{v.color}"?</span>
+                <span className="text-xs text-red-700 flex-1">Remove &ldquo;{v.color}&rdquo;?</span>
                 <button onClick={() => deleteVariant(v.id)}
                   className="text-xs font-semibold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 px-3 py-1">
                   Confirm
@@ -507,7 +508,7 @@ function ProductRow({ product, onRefresh }: { product: Product; onRefresh: () =>
             </button>
             {confirmDel ? (
               <>
-                <span className="text-xs text-red-600">Delete "{product.name}"?</span>
+                <span className="text-xs text-red-600">Delete &ldquo;{product.name}&rdquo;?</span>
                 <button onClick={del} disabled={deleting}
                   className="px-4 py-2 bg-red-600 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-red-700 disabled:opacity-40">
                   {deleting ? '…' : 'Confirm'}
@@ -887,7 +888,7 @@ function UpsellSection() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-black truncate">{item.resolvedName}</p>
-                    {item.label && <p className="text-xs text-gray-500 truncate">"{item.label}"</p>}
+                    {item.label && <p className="text-xs text-gray-500 truncate">&ldquo;{item.label}&rdquo;</p>}
                     <p className="text-[10px] text-gray-400">Priority: {item.priority}</p>
                   </div>
                   <button onClick={() => toggleActive(item)}
@@ -1325,6 +1326,7 @@ export default function MerchManager() {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount: state is set after the request resolves
   useEffect(() => { load() }, [])
 
   return (

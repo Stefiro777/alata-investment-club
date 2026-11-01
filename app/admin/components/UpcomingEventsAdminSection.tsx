@@ -1012,6 +1012,7 @@ export default function UpcomingEventsAdminSection({
     setWaitlistCounts(counts)
   }, [])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount: state is set after the request resolves
   useEffect(() => { void loadSeatInfo() }, [loadSeatInfo])
 
   const today = new Date(new Date().toDateString())

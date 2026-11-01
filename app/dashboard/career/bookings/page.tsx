@@ -28,18 +28,16 @@ export default function CareerBookingsPage() {
 
   const [tab, setTab]                     = useState<Tab>('mentors')
   const [mentors, setMentors]             = useState<MentorLite[]>([])
-  const [accessChecked, setAccessChecked] = useState(false)
-
   // Access control (the APIs enforce it again)
+  const allowed = !!profile && (
+    profile.role === 'bod' ||
+    profile.role === 'director' ||
+    (profile.teams ?? []).includes('career')
+  )
+  const accessChecked = allowed
   useEffect(() => {
-    if (!profile) return
-    const ok =
-      profile.role === 'bod' ||
-      profile.role === 'director' ||
-      (profile.teams ?? []).includes('career')
-    if (!ok) { router.push('/dashboard'); return }
-    setAccessChecked(true)
-  }, [profile, router])
+    if (profile && !allowed) router.push('/dashboard')
+  }, [profile, allowed, router])
 
   // Full admin listing, used by the Availability and Bookings tabs
   useEffect(() => {

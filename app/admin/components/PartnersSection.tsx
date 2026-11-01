@@ -413,7 +413,8 @@ function PartnerDraggableList({
 }) {
   const [list, setList] = useState<Partner[]>(initialPartners)
   const listRef = useRef<Partner[]>(list)
-  listRef.current = list
+  // Keep the ref in step for the event handlers, outside of render.
+  useEffect(() => { listRef.current = list }, [list])
   const dragIndex = useRef<number | null>(null)
   const [savingOrder, setSavingOrder] = useState(false)
   const [orderError, setOrderError] = useState<string | null>(null)

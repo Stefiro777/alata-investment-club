@@ -45,7 +45,7 @@ function memberStatus(iso: string | null): { label: string; cls: string } {
 // ── KPI bar ───────────────────────────────────────────────────────────────────
 
 function KpiBar({ members }: { members: MemberRow[] }) {
-  const now = Date.now()
+  const [now] = useState(() => Date.now())
   const active  = members.filter(m => m.membership_expires_at && new Date(m.membership_expires_at).getTime() > now + 7 * 86400000).length
   const soon    = members.filter(m => m.membership_expires_at && new Date(m.membership_expires_at).getTime() > now && new Date(m.membership_expires_at).getTime() <= now + 7 * 86400000).length
   const expired = members.filter(m => !m.membership_expires_at || new Date(m.membership_expires_at).getTime() <= now).length

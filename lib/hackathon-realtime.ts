@@ -21,7 +21,8 @@ export function useDiligenceRealtime(
   onMessage: (roomId: string, message: DiligenceBroadcastMessage) => void
 ) {
   const onMessageRef = useRef(onMessage)
-  onMessageRef.current = onMessage
+  // Keep the ref in step for the event handlers, outside of render.
+  useEffect(() => { onMessageRef.current = onMessage }, [onMessage])
 
   const key = roomIds.join(',')
 

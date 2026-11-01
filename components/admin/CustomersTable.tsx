@@ -206,6 +206,7 @@ export default function CustomersTable() {
     setLoading(false)
   }, [typeFilter, search])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount: state is set after the request resolves
   useEffect(() => { load() }, [load])
 
   function toggleSelect(id: string) {

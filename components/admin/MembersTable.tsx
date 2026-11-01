@@ -135,7 +135,7 @@ function ComposeModal({
                   className={`${inputClass} resize-none`}
                 />
                 <p className="text-[11px] text-ink-400 mt-1">
-                  [Nome] will be replaced with each member's name.
+                  [Nome] will be replaced with each member&apos;s name.
                 </p>
               </div>
 

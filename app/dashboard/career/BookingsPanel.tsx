@@ -58,7 +58,8 @@ export default function BookingsPanel({
     setLoading(false)
   }
 
-  useEffect(() => { fetchBookings() }, [fixedMentorId]) // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- fetch on mount and when the mentor changes
+  useEffect(() => { fetchBookings() }, [fixedMentorId])
 
   async function deleteBooking(id: string) {
     setDeletingId(id)

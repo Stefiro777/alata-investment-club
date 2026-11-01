@@ -62,6 +62,7 @@ export default function EventWaitlistAdmin({
     setRows((data ?? []) as WaitlistRow[])
   }, [event.id])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount: state is set after the request resolves
   useEffect(() => { void load() }, [load])
 
   async function setStatus(row: WaitlistRow, status: WaitlistStatus) {

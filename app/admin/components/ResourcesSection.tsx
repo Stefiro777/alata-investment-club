@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { Resource } from '@/lib/types'
 
@@ -306,7 +306,8 @@ function ResourceDraggableList({
   onDeleted: (id: string) => void; onReordered: (reordered: Resource[]) => void
 }) {
   const listRef = useRef<Resource[]>(resources)
-  listRef.current = resources
+  // Keep the ref in step for the event handlers, outside of render.
+  useEffect(() => { listRef.current = resources }, [resources])
   const dragIndex = useRef<number | null>(null)
   const [savingOrder, setSavingOrder] = useState(false)
   const [orderError, setOrderError] = useState<string | null>(null)

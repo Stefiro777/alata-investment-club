@@ -54,6 +54,7 @@ export default function AvailabilityPanel({
 
   useEffect(() => {
     if (!mentorId) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- show the spinner while the new mentor loads
     setLoading(true)
     fetch(`/api/career/availability?mentor_id=${encodeURIComponent(mentorId)}`)
       .then(r => r.json())

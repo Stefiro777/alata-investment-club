@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { TeamMember } from './page'
 
@@ -349,7 +349,8 @@ function MemberRow({
 function MembersSection({ title, type, initialMembers }: { title: string; type: 'bod' | 'management'; initialMembers: TeamMember[] }) {
   const [members, setMembers] = useState<TeamMember[]>(initialMembers)
   const membersRef = useRef<TeamMember[]>(members)
-  membersRef.current = members
+  // Keep the ref in step for the event handlers, outside of render.
+  useEffect(() => { membersRef.current = members }, [members])
 
   const dragSrcRef = useRef<string | null>(null)
   const [savingOrder, setSavingOrder] = useState(false)
