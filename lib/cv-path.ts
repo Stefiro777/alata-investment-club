@@ -30,3 +30,8 @@ export function cvStoragePath(value: string | null | undefined): string | null {
 export function isCareerCvPath(value: unknown): value is string {
   return typeof value === 'string' && /^career-bookings\/[0-9a-f-]{36}-[^/]+$/i.test(value) && !value.includes('..')
 }
+
+/** Paths accepted from the Join Us form (made by /api/applications/upload-cv). */
+export function isApplicationCvPath(value: unknown): value is string {
+  return typeof value === 'string' && /^applications\/[0-9a-f-]{36}-[^/]+$/i.test(value) && !value.includes('..')
+}
