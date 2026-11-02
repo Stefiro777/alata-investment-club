@@ -5,6 +5,7 @@ import SiteFooter from '@/app/components/site/SiteFooter'
 import { VeiledMedia, ScrollProgress } from '@/app/components/site/Media'
 import { StatusPill } from '@/app/components/site/ui'
 import JoinForm from './JoinForm'
+import { ApplyGate, ApplyTrigger } from './ApplyGate'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,8 +76,8 @@ export default async function JoinUsPage() {
         </div>
         <div className="relative mt-[-240px] grid md:absolute md:inset-0 md:mt-0 md:grid-cols-2">
           {[
-            { id: 'analysts', eyebrow: 'Operating members', title: <>Analysts.<br /><em>Write the research.</em></>, body: 'Join the Lab, Media or Events. Learn by doing, and watch your work reach real rooms.', cta: 'Become an Analyst', img: '/redesign/join-analyst.jpg' },
-            { id: 'members', eyebrow: 'Non-operating members', title: <>Members.<br /><em>Be in the room.</em></>, body: 'Every event and every conversation, for those who want to belong without running the club.', cta: 'Become a Member', img: '/redesign/join-member.jpg' },
+            { id: 'analysts', eyebrow: 'Operating members', title: <>Analysts.<br /><em>Write the research.</em></>, body: 'Join the Lab, Media or Events. Learn by doing, and watch your work reach real rooms.', track: 'analyst' as const, cta: 'Become an Analyst', img: '/redesign/join-analyst.jpg' },
+            { id: 'members', eyebrow: 'Non-operating members', title: <>Members.<br /><em>Be in the room.</em></>, body: 'Every event and every conversation, for those who want to belong without running the club.', track: 'member' as const, cta: 'Become a Member', img: '/redesign/join-member.jpg' },
           ].map((side, i) => (
             <div key={side.id} className={`relative flex min-h-[560px] flex-col justify-end px-[var(--gutter)] pb-14 md:min-h-0 md:pt-[300px] ${i === 0 ? 'pt-[340px]' : 'pt-[220px]'}`}>
               <VeiledMedia image={side.img} opacity={0.74} />
@@ -85,7 +86,7 @@ export default async function JoinUsPage() {
                 <div className="rd-eyebrow text-[11px] text-ivory/70">{side.eyebrow}</div>
                 <h2 className="rd-display mt-3 text-[clamp(40px,4.7vw,56px)] leading-[1.12]">{side.title}</h2>
                 <p className="mt-6 max-w-[400px] text-[15px] leading-[1.7] text-ivory/[0.88]">{side.body}</p>
-                <a href={`#${side.id}`} className="rd-italic mt-10 inline-block text-[clamp(32px,3.3vw,40px)] leading-[1.2] hover:underline underline-offset-[0.18em]">{side.cta}</a>
+                <ApplyTrigger track={side.track} className="rd-italic mt-10 inline-block text-[clamp(32px,3.3vw,40px)] leading-[1.2] hover:underline underline-offset-[0.18em]">{side.cta}</ApplyTrigger>
               </div>
             </div>
           ))}
@@ -100,9 +101,9 @@ export default async function JoinUsPage() {
               <h2 className="rd-display text-[clamp(64px,8.7vw,104px)] leading-[1.12]">Analysts</h2>
               <p className="mt-4 max-w-[500px] text-[18px] leading-[1.7] text-ivory/[0.86]">You don&apos;t watch the club happen. You make it.</p>
             </div>
-            <a href="#apply-analyst" className="inline-flex items-center gap-2.5 self-start rounded-full border border-ivory/70 px-[30px] py-[15px] text-[12px] font-semibold uppercase tracking-[0.14em] hover:bg-ivory/10 md:mt-12">
+            <ApplyTrigger track="analyst" className="inline-flex items-center gap-2.5 self-start rounded-full border border-ivory/70 px-[30px] py-[15px] text-[12px] font-semibold uppercase tracking-[0.14em] hover:bg-ivory/10 md:mt-12">
               Apply as an Analyst <span aria-hidden className="text-[16px] tracking-normal">&rarr;</span>
-            </a>
+            </ApplyTrigger>
           </div>
           <div className="mt-14 grid gap-12 md:grid-cols-3 md:gap-16">
             {TEAMS.map(t => (
@@ -149,7 +150,7 @@ export default async function JoinUsPage() {
       </section>
 
       {/* J4 · Analyst application */}
-      <section id="apply-analyst" className="scroll-mt-4 border-t border-night/15 bg-ivory py-[clamp(72px,9vw,100px)] text-night">
+      <ApplyGate track="analyst" className="scroll-mt-4 border-t border-night/15 bg-ivory py-[clamp(72px,9vw,100px)] text-night">
         <div className="rd-gutter grid gap-10 md:grid-cols-[minmax(0,400px)_minmax(0,644px)] md:justify-between">
           <div>
             <h2 className="rd-display text-[clamp(52px,6vw,72px)] leading-[1.12]">Apply as an <em>Analyst</em></h2>
@@ -159,7 +160,7 @@ export default async function JoinUsPage() {
           </div>
           {open ? <JoinForm track="analyst" /> : <Closed />}
         </div>
-      </section>
+      </ApplyGate>
 
       {/* J5 · Members */}
       <section id="members" className="bg-moss py-[clamp(72px,9vw,110px)] text-ivory">
@@ -169,9 +170,9 @@ export default async function JoinUsPage() {
               <h2 className="rd-display text-[clamp(64px,8.7vw,104px)] leading-[1.12]">Members</h2>
               <p className="mt-4 max-w-[520px] text-[18px] leading-[1.7] text-ivory/[0.86]">You don&apos;t need to run the club to be part of it.</p>
             </div>
-            <a href="#apply-member" className="inline-flex items-center gap-2.5 self-start rounded-full border border-ivory/70 px-[30px] py-[15px] text-[12px] font-semibold uppercase tracking-[0.14em] hover:bg-ivory/10 md:mt-12">
+            <ApplyTrigger track="member" className="inline-flex items-center gap-2.5 self-start rounded-full border border-ivory/70 px-[30px] py-[15px] text-[12px] font-semibold uppercase tracking-[0.14em] hover:bg-ivory/10 md:mt-12">
               Become a Member <span aria-hidden className="text-[16px] tracking-normal">&rarr;</span>
-            </a>
+            </ApplyTrigger>
           </div>
           <div className="mt-14 grid gap-14 md:grid-cols-[minmax(0,520px)_minmax(0,444px)] md:justify-between">
             <div className="space-y-6">
@@ -209,7 +210,7 @@ export default async function JoinUsPage() {
       </section>
 
       {/* J6 · Member request */}
-      <section id="apply-member" className="scroll-mt-4 bg-ivory py-[clamp(72px,9vw,100px)] text-night">
+      <ApplyGate track="member" className="scroll-mt-4 bg-ivory py-[clamp(72px,9vw,100px)] text-night">
         <div className="rd-gutter grid gap-10 md:grid-cols-[minmax(0,400px)_minmax(0,644px)] md:justify-between">
           <div>
             <h2 className="rd-display text-[clamp(52px,6vw,72px)] leading-[1.12]">Become a <em>Member</em></h2>
@@ -220,7 +221,7 @@ export default async function JoinUsPage() {
           </div>
           {open ? <JoinForm track="member" /> : <Closed />}
         </div>
-      </section>
+      </ApplyGate>
 
       <SiteFooter />
       <ScrollProgress />
