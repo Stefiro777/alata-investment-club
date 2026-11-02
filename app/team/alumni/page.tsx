@@ -57,9 +57,9 @@ export default async function AlumniPage() {
   return (
     <>
       {/* Al1 · opening */}
-      <section className="relative overflow-hidden bg-pine pb-[clamp(56px,8vw,80px)] text-ivory">
+      <section className="relative overflow-hidden bg-pine text-ivory">
         <SiteNav tone="dark" />
-        <div className="rd-gutter pt-[clamp(104px,12vw,96px)]">
+        <div className="rd-gutter pb-[clamp(56px,8vw,80px)] pt-[clamp(104px,12vw,96px)]">
           <h1 className="rd-display max-w-[900px] text-[clamp(52px,8vw,96px)]">Where our members <em>went next.</em></h1>
           <div className="mt-8 flex flex-col gap-6 md:mt-10 md:flex-row md:items-end md:justify-between">
             <p className="max-w-[420px] text-[15px] leading-[1.65] text-ivory/85">
@@ -71,7 +71,7 @@ export default async function AlumniPage() {
           </div>
         </div>
         {companies.length > 0 && (
-          <div className="mt-[clamp(48px,7vw,72px)] space-y-6" aria-label="Companies where our alumni work">
+          <div className="mt-[clamp(48px,7vw,72px)] space-y-5 bg-ivory py-7 md:space-y-6 md:py-9" aria-label="Companies where our alumni work">
             <LogoTrack companies={companies.slice(0, half)} direction="l" seconds={40} />
             <LogoTrack companies={companies.slice(half)} direction="r" seconds={46} />
           </div>

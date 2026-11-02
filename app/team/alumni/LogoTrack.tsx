@@ -31,17 +31,17 @@ export default function LogoTrack({ companies, direction, seconds }: { companies
     <div className="overflow-hidden">
       <ul
         ref={listRef}
-        className="flex w-max motion-reduce:!animate-none"
+        className="flex w-max mix-blend-multiply motion-reduce:!animate-none"
         style={{ animation: `rd-marquee-${direction} ${seconds}s linear infinite` }}
       >
         {loop.map((c, i) => (
-          <li key={`${c.id}-${i}`} aria-hidden={i >= ok.length} className="mr-[18px] flex h-[80px] w-[180px] shrink-0 items-center justify-center bg-ivory px-6 md:h-[96px] md:w-[220px]">
+          <li key={`${c.id}-${i}`} aria-hidden={i >= ok.length} className="mr-[40px] flex h-[64px] w-[160px] shrink-0 items-center justify-center md:mr-[56px] md:h-[72px] md:w-[200px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={c.logo_url}
               data-id={c.id}
               alt={i < ok.length ? c.name : ''}
-              className="max-h-[44px] max-w-full object-contain"
+              className="max-h-[48px] max-w-full object-contain"
               loading="lazy"
               onError={() => setFailed(prev => new Set(prev).add(c.id))}
             />
