@@ -31,7 +31,7 @@ export default function LogoTrack({ companies, direction, seconds }: { companies
     <div className="overflow-hidden">
       <ul
         ref={listRef}
-        className="flex w-max mix-blend-multiply motion-reduce:!animate-none"
+        className="flex w-max motion-reduce:!animate-none"
         style={{ animation: `rd-marquee-${direction} ${seconds}s linear infinite` }}
       >
         {loop.map((c, i) => (
@@ -41,7 +41,7 @@ export default function LogoTrack({ companies, direction, seconds }: { companies
               src={c.logo_url}
               data-id={c.id}
               alt={i < ok.length ? c.name : ''}
-              className="max-h-[48px] max-w-full object-contain"
+              className="max-h-[48px] max-w-full object-contain opacity-80 [filter:brightness(0)_invert(1)]"
               loading="lazy"
               onError={() => setFailed(prev => new Set(prev).add(c.id))}
             />

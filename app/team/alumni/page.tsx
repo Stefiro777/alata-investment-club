@@ -71,7 +71,7 @@ export default async function AlumniPage() {
           </div>
         </div>
         {companies.length > 0 && (
-          <div className="mt-[clamp(48px,7vw,72px)] space-y-5 bg-ivory py-7 md:space-y-6 md:py-9" aria-label="Companies where our alumni work">
+          <div className="mt-[clamp(48px,7vw,72px)] space-y-5 bg-pine py-7 md:space-y-6 md:py-9" aria-label="Companies where our alumni work">
             <LogoTrack companies={companies.slice(0, half)} direction="l" seconds={40} />
             <LogoTrack companies={companies.slice(half)} direction="r" seconds={46} />
           </div>
