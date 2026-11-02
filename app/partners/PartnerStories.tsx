@@ -64,8 +64,8 @@ export default function PartnerStories({ items }: { items: PartnerStory[] }) {
   ]
 
   return (
-    <section className="bg-ivory py-[clamp(64px,9vw,104px)] text-night" aria-label="Partners and sponsors">
-      <div className="rd-gutter grid grid-cols-1 gap-10 md:grid-cols-[270px_minmax(0,1fr)] md:gap-[34px]">
+    <section className="bg-ivory py-14 text-night md:flex md:min-h-svh md:items-center md:py-[max(32px,5svh)]" aria-label="Partners and sponsors">
+      <div className="rd-gutter grid w-full grid-cols-1 gap-8 md:grid-cols-[clamp(190px,19vw,270px)_minmax(0,1fr)] md:gap-[clamp(20px,2.4vw,34px)]">
         <div className="min-w-0">
           {/* Mobile: one scrolling row of names. Desktop: the lit list. */}
           <div className="flex gap-7 overflow-x-auto pb-3 [scrollbar-width:none] md:block md:overflow-visible md:pb-0">
@@ -119,18 +119,18 @@ export default function PartnerStories({ items }: { items: PartnerStory[] }) {
             animate={{ opacity: 1, y: 0 }}
             exit={reduced ? undefined : { opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="min-w-0 md:min-h-[520px]"
+            className="min-w-0"
           >
-            <div className="flex h-[84px] w-[230px] items-center">
+            <div className="flex h-[84px] w-[230px] items-center md:h-[clamp(52px,9svh,84px)] md:w-[clamp(150px,16svh,230px)]">
               {current.logo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={current.logo} alt={`${current.name} logo`} className="max-h-[84px] max-w-[230px] object-contain object-left" />
+                <img src={current.logo} alt={`${current.name} logo`} className="max-h-full max-w-full object-contain object-left" />
               ) : null}
             </div>
-            <div className="rd-eyebrow mt-[50px] text-night/60">{current.type === 'sponsor' ? 'Sponsor' : 'Partner'}</div>
-            <h2 className="rd-display mt-3 text-[clamp(48px,6vw,72px)]">{current.name}</h2>
+            <div className="rd-eyebrow mt-8 text-night/60 md:mt-[max(16px,4.5svh)]">{current.type === 'sponsor' ? 'Sponsor' : 'Partner'}</div>
+            <h2 className="rd-display mt-2 text-[clamp(44px,min(6vw,9.5svh),72px)] md:mt-[max(6px,1.2svh)]">{current.name}</h2>
             {current.text && (
-              <p className="mt-6 max-w-[700px] whitespace-pre-line text-[17px] leading-[1.75] text-night/[0.88] md:text-[18px]">{current.text}</p>
+              <p className="mt-5 max-w-[700px] whitespace-pre-line text-[17px] leading-[1.75] text-night/[0.88] md:mt-[max(12px,2.4svh)] md:text-[clamp(15px,2.35svh,18px)] md:leading-[1.65]">{current.text}</p>
             )}
             {current.website && (
               <a
@@ -138,7 +138,7 @@ export default function PartnerStories({ items }: { items: PartnerStory[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => visit(current)}
-                className="rd-italic mt-8 inline-block text-[34px] hover:underline underline-offset-[0.18em]"
+                className="rd-italic mt-6 inline-block text-[clamp(26px,4.4svh,34px)] hover:underline underline-offset-[0.18em] md:mt-[max(14px,3svh)]"
               >
                 Visit website
               </a>

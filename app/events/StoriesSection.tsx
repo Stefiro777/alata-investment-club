@@ -38,10 +38,10 @@ export default function StoriesSection({ stories }: { stories: Story[] }) {
   const [lead, guest] = story.title.split(/\s+w\/\s*/i)
 
   return (
-    <section id="stories" className="scroll-mt-6 bg-night py-[clamp(72px,10vw,110px)] text-ivory">
-      <div className="rd-gutter grid grid-cols-1 gap-10 md:grid-cols-[270px_minmax(0,1fr)] md:gap-[34px]">
+    <section id="stories" className="bg-night py-14 text-ivory md:flex md:min-h-svh md:items-center md:py-[max(32px,5svh)]">
+      <div className="rd-gutter grid w-full grid-cols-1 gap-8 md:grid-cols-[clamp(170px,17vw,240px)_minmax(0,1fr)] md:gap-[clamp(20px,2.4vw,34px)]">
         <div className="min-w-0">
-          <div className="rd-eyebrow mb-6 text-ivory/70 md:mb-10">Stories</div>
+          <div className="rd-eyebrow mb-6 text-ivory/70 md:mb-[max(14px,3svh)]">Stories</div>
           <LitList
             items={stories.map(s => ({ key: s.id, label: s.label }))}
             activeKey={story.id}
@@ -60,7 +60,7 @@ export default function StoriesSection({ stories }: { stories: Story[] }) {
             transition={{ duration: 0.35 }}
             className="min-w-0"
           >
-            <div className="relative aspect-[784/372] w-full overflow-hidden bg-moss">
+            <div className="relative aspect-[784/372] w-full overflow-hidden bg-moss md:aspect-auto md:h-[clamp(150px,34svh,372px)]">
               {playing && embed ? (
                 <iframe
                   src={embed}
@@ -89,17 +89,21 @@ export default function StoriesSection({ stories }: { stories: Story[] }) {
               )}
             </div>
 
-            <div className="mt-7 grid gap-8 lg:grid-cols-[minmax(0,420px)_minmax(0,344px)] lg:justify-between">
+            <div className="mt-5 grid gap-6 md:mt-[max(14px,2.4svh)] lg:grid-cols-[minmax(0,1fr)_clamp(200px,22vw,300px)] lg:gap-10">
               <div>
-                {story.meta && <div className="text-[13px] text-ivory/75">{story.meta}</div>}
-                <h2 className="rd-display mt-2 text-[clamp(30px,3vw,36px)]">
+                {story.meta && <div className="text-[clamp(11px,1.6svh,13px)] text-ivory/75">{story.meta}</div>}
+                <h2 className="rd-display mt-1.5 text-[clamp(26px,min(3vw,4.4svh),36px)]">
                   {lead}{guest && <> <em>w/ {guest}</em></>}
                 </h2>
-                <p className="mt-3.5 whitespace-pre-line text-[13.5px] leading-[1.6] text-ivory/[0.88]">{story.description}</p>
+                <div className="mt-2.5 text-[clamp(12px,min(1.05vw,1.85svh),13.5px)] leading-[1.55] text-ivory/[0.88] md:mt-[max(8px,1.4svh)] md:columns-2 md:gap-7">
+                  {story.description.split(/\n{2,}/).map((para, i) => (
+                    <p key={i} className="mb-[0.7em] whitespace-pre-line break-inside-avoid last:mb-0">{para}</p>
+                  ))}
+                </div>
               </div>
               {story.photos.length > 0 && (
                 <div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2.5">
                     {(thumbs.length ? thumbs : story.photos.slice(0, 3)).map((src, i) => (
                       <button
                         key={src}
@@ -116,7 +120,7 @@ export default function StoriesSection({ stories }: { stories: Story[] }) {
                   <button
                     type="button"
                     onClick={() => setLightbox(0)}
-                    className="rd-italic mt-[18px] text-[26px] hover:underline underline-offset-[0.18em]"
+                    className="rd-italic mt-3 text-[clamp(20px,3svh,26px)] hover:underline underline-offset-[0.18em] md:mt-[max(8px,1.6svh)]"
                   >
                     View all photos
                   </button>
