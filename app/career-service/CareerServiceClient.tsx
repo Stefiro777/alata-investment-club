@@ -124,7 +124,7 @@ export default function CareerServiceClient() {
       {/* Hero */}
       <section className="relative min-h-[500px] lg:min-h-[610px] text-white flex items-center overflow-hidden">
         <Parallax>
-          <Image src="/vittoria.jpeg" alt="" fill className="object-cover object-top grayscale animate-ken-burns" preload />
+          <Image src="/vittoria.jpeg" alt="" fill className="object-cover object-top animate-ken-burns" preload />
         </Parallax>
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,74,58,0.82)' }} />
         <div className="absolute inset-0 hero-vignette" />

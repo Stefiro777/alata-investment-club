@@ -93,7 +93,7 @@ export default async function AlumniPage() {
                     <div className="h-[112px] w-[84px] shrink-0 overflow-hidden bg-moss">
                       {a.photo_url && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={a.photo_url} alt={`Portrait of ${a.name}`} className="h-full w-full object-cover grayscale transition-[filter] duration-500 group-hover:grayscale-0" loading="lazy" />
+                        <img src={a.photo_url} alt={`Portrait of ${a.name}`} className="h-full w-full object-cover" loading="lazy" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">

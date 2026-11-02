@@ -28,12 +28,11 @@ function Person({ m }: { m: TeamMember }) {
     <li className="group flex items-end gap-[18px]">
       <div className="h-[132px] w-[100px] shrink-0 overflow-hidden bg-moss">
         {m.photo_url && (
-          // One tone for every portrait; colour comes back on hover.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={m.photo_url}
             alt={`Portrait of ${m.name}`}
-            className="h-full w-full object-cover grayscale contrast-[1.05] transition-[filter] duration-500 group-hover:grayscale-0 group-focus-within:grayscale-0"
+            className="h-full w-full object-cover"
             loading="lazy"
           />
         )}

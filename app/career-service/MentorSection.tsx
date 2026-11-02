@@ -50,7 +50,7 @@ export default function MentorSection() {
                 <div className="aspect-[250/290] overflow-hidden bg-moss">
                   {m.photo_url && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.photo_url} alt={`Portrait of ${m.full_name}`} className="h-full w-full object-cover object-top grayscale transition-[filter] duration-500 group-hover:grayscale-0" loading="lazy" />
+                    <img src={m.photo_url} alt={`Portrait of ${m.full_name}`} className="h-full w-full object-cover object-top" loading="lazy" />
                   )}
                 </div>
                 <div className="rd-display mt-[18px] text-[30px] leading-[1.1]">{m.full_name}</div>
