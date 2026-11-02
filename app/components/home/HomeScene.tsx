@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
   animate,
@@ -74,13 +74,16 @@ function Moment({ progress, index, children, className = '' }: {
 }
 
 
-/* ── F3: a counter that rolls from 0 to the real value with the scroll ── */
-function Drum({ local, stat, reduced }: { local: MotionValue<number>; stat: AboutStat; reduced: boolean }) {
+/* ── F3: a counter that rolls from 0 to the real value on its own ──
+   `run` goes 0 → 1 in a few seconds once the moment has entered the view
+   (see HomeScene); it is not tied to the scroll. With reduced motion the
+   numbers are already final. */
+function Drum({ run, stat, reduced }: { run: MotionValue<number>; stat: AboutStat; reduced: boolean }) {
   const { target, suffix } = splitStatValue(stat.value)
   const [n, setN] = useState(reduced || target === null ? target ?? 0 : 0)
-  useMotionValueEvent(local, 'change', v => {
+  useMotionValueEvent(run, 'change', v => {
     if (reduced || target === null) return
-    setN(Math.round(Math.min(1, v / 0.5) * target))
+    setN(Math.round(Math.min(1, v) * target))
   })
   const show = (k: number) => (target === null ? stat.value : `${k}${suffix}`)
   return (
@@ -193,7 +196,15 @@ export default function HomeScene({
   const { scrollYProgress: p } = useScroll({ target: track, offset: ['start start', 'end end'] })
 
   const local2v = useLocal(p, 2)
-  const local3 = useLocal(p, 3)
+  // F3: video and counters start by themselves, once, when the moment comes in.
+  const [numbersIn, setNumbersIn] = useState(false)
+  const run = useMotionValue(0)
+  useMotionValueEvent(p, 'change', v => { if (v >= handover(2) && !numbersIn) setNumbersIn(true) })
+  useEffect(() => {
+    if (!numbersIn || reduced) return
+    const controls = animate(run, 1, { duration: 2.4, ease: [0.22, 1, 0.36, 1] })
+    return () => controls.stop()
+  }, [numbersIn, reduced, run])
   const local5 = useLocal(p, 5)
 
   // The navbar stays through the scene: dark on the ivory moment (F4),
@@ -254,9 +265,9 @@ export default function HomeScene({
 
         {/* F3 · the numbers */}
         <Moment progress={p} index={3}>
-          <VeiledMedia video="/redesign/pbd-palco.mp4" poster="/redesign/pbd-palco-poster.jpg" veil="#12352a" opacity={0.78} />
+          <VeiledMedia video="/redesign/pbd-palco.mp4" poster="/redesign/pbd-palco-poster.jpg" veil="#12352a" opacity={0.78} play={numbersIn} />
           <div className="rd-gutter relative grid h-full grid-cols-2 content-center gap-x-[clamp(16px,4vw,48px)] gap-y-[clamp(8px,2.4vh,28px)] pt-16 md:content-start md:pt-[100px]">
-            {stats.map(s => <Drum key={s.label} local={local3} stat={s} reduced={reduced} />)}
+            {stats.map(s => <Drum key={s.label} run={run} stat={s} reduced={reduced} />)}
           </div>
           <div className="rd-italic absolute bottom-[28px] right-[var(--gutter)] text-[16px] text-ivory/75">Private Banker Day</div>
         </Moment>

@@ -18,6 +18,7 @@ export function VeiledMedia({
   objectPosition,
   className = '',
   priority = false,
+  play,
 }: {
   image?: string
   video?: string
@@ -28,17 +29,31 @@ export function VeiledMedia({
   objectPosition?: string
   className?: string
   priority?: boolean
+  /**
+   * Video only. Undefined: plays as soon as the page loads. A boolean takes
+   * control: it starts from the first frame when it first becomes true, keeps
+   * looping, and pauses while false.
+   */
+  play?: boolean
 }) {
   const reduced = useReducedMotion()
   const ref = useRef<HTMLVideoElement>(null)
+  const started = useRef(false)
 
   useEffect(() => {
     const v = ref.current
     if (!v) return
     if (reduced) { v.pause(); return }
-    // Some browsers skip autoplay after hydration; nudge it.
-    v.play().catch(() => {})
-  }, [reduced])
+    if (play === undefined) {
+      // Some browsers skip autoplay after hydration; nudge it.
+      v.play().catch(() => {})
+    } else if (play) {
+      if (!started.current) { started.current = true; v.currentTime = 0 }
+      v.play().catch(() => {})
+    } else {
+      v.pause()
+    }
+  }, [reduced, play])
 
   const mediaCls = 'absolute inset-0 h-full w-full object-cover'
   return (
@@ -50,7 +65,7 @@ export function VeiledMedia({
           style={{ objectPosition }}
           src={video}
           poster={poster}
-          autoPlay
+          autoPlay={play === undefined}
           muted
           loop
           playsInline
