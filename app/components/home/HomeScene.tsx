@@ -317,16 +317,24 @@ export default function HomeScene({
         {/* F6 · the finale: the loop returns */}
         <Moment progress={p} index={6}>
           <VeiledMedia video="/redesign/home-loop.mp4" poster="/redesign/home-loop-poster.jpg" opacity={0.6} />
-          <div className="relative flex flex-col items-center px-6 pt-[clamp(120px,19vh,148px)] text-center">
-            <p className="rd-display max-w-[900px] text-[clamp(40px,7vw,84px)]">
+          {/* Column: heading and link on top, ALATA takes what is left (container
+              query), always with a clear gap above it, at every screen height. */}
+          <div className="relative flex h-full flex-col items-center px-6 pb-[28px] pt-[104px] text-center">
+            <p className="rd-display max-w-[900px] text-[clamp(32px,min(7vw,9svh),84px)]">
               You bring the ambition.<br /><em>We bring the wings.</em>
             </p>
-            <Link href="/join-us" className="rd-italic mt-6 text-[clamp(36px,4.5vw,54px)] hover:underline underline-offset-[0.18em]">
+            <Link href="/join-us" className="rd-italic mt-[max(12px,2svh)] text-[clamp(30px,min(4.5vw,5.6svh),54px)] hover:underline underline-offset-[0.18em]">
               Join the Club
             </Link>
-          </div>
-          <div aria-hidden className="absolute inset-x-0 bottom-[28px] whitespace-nowrap text-center font-serif text-[25vw] font-medium leading-none tracking-[-0.02em]">
-            ALATA
+            <div className="mt-[max(28px,5svh)] min-h-0 w-full flex-1 [container-type:size]">
+              <div
+                aria-hidden
+                className="flex h-full items-end justify-center whitespace-nowrap font-serif font-medium leading-[0.9] tracking-[-0.01em]"
+                style={{ fontSize: 'min(25vw, 96cqh)' }}
+              >
+                ALATA
+              </div>
+            </div>
           </div>
         </Moment>
 
