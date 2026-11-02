@@ -4,6 +4,7 @@ import { Resend } from 'resend'
 import { requireTeamAccess } from '@/lib/auth'
 import { isEventFullError } from '@/lib/event-capacity'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
+import { romeClock } from '@/lib/weekly-digest'
 import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -77,12 +78,17 @@ export async function POST(req: NextRequest) {
 
     const { data: eventRowForValidation, error: eventFetchErr } = await supabase
       .from('upcoming_events')
-      .select('registration_field, title, members_only')
+      .select('registration_field, title, members_only, date, status')
       .eq('id', event_id)
       .single()
 
     if (eventFetchErr) {
       return NextResponse.json({ error: 'Event not found' }, { status: 400 })
+    }
+
+    // Past by the Rome calendar day: some events stay 'open' in the database after the day.
+    if (eventRowForValidation.status === 'completed' || (eventRowForValidation.date && eventRowForValidation.date < romeClock(new Date()).date)) {
+      return NextResponse.json({ error: 'This event has already taken place, registrations are closed.', code: 'event_past' }, { status: 410 })
     }
 
     if (eventRowForValidation.members_only) {
