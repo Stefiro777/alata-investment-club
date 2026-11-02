@@ -43,17 +43,9 @@ function LoginForm() {
     <div className="flex min-h-screen">
       {/* Left — image panel */}
       <div
-        className="hidden md:block md:w-1/2 relative overflow-hidden"
+        className="hidden md:block md:w-1/2 relative bg-night overflow-hidden"
         style={{ animation: 'panelSlideRight 0.9s cubic-bezier(0.22,1,0.36,1) both' }}
       >
-        <Image
-          src="/redesign/borsa-finestra.jpg"
-          alt=""
-          fill
-          className="object-cover"
-          preload
-        />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(11,29,22,0.66)' }} />
                 <div style={{ position: 'relative', zIndex: 1 }} className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
           <div
             className="w-10 h-px bg-white/40 mb-8"

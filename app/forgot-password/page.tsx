@@ -34,15 +34,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left — image panel */}
-      <div className="hidden md:block md:w-1/2 relative">
-        <Image
-          src="/redesign/borsa-finestra.jpg"
-          alt=""
-          fill
-          className="object-cover"
-          priority
-        />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(11,29,22,0.66)' }} />
+      <div className="hidden md:block md:w-1/2 relative bg-night">
         <div style={{ position: 'relative', zIndex: 1 }} className="h-full flex flex-col items-center justify-center px-12 text-white text-center">
           <p className="font-serif italic font-medium text-[clamp(36px,3.6vw,52px)] leading-[1.15] mb-5">
             Great investments start with great people.

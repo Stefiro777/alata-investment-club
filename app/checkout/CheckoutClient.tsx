@@ -1045,11 +1045,8 @@ export default function CheckoutClient() {
   return (
     <div className="flex min-h-screen bg-ivory text-night">
 
-      {/* Left — the club, veiled in green (desktop only) */}
+      {/* Left — the club, plain green (desktop only) */}
       <div className="relative hidden bg-night text-ivory md:block md:w-1/2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/redesign/borsa-finestra.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-night opacity-[0.66]" />
         <div className="relative flex h-full flex-col justify-between px-[var(--gutter)] py-[30px]">
           <Link href="/" aria-label="Alata Investment Club, home">
             {/* eslint-disable-next-line @next/next/no-img-element */}
