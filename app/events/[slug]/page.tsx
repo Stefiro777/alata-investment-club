@@ -4,6 +4,7 @@ import EventDetailClient from './EventDetailClient'
 import SiteNav from '@/app/components/site/SiteNav'
 import SiteFooter from '@/app/components/site/SiteFooter'
 import { isPubliclyHidden } from '@/lib/public-filters'
+import { romeClock } from '@/lib/weekly-digest'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,14 +37,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     .order('display_order', { ascending: true })
 
   // Sold out only matters for events that have not happened yet.
-  const today = new Date().toISOString().split('T')[0]
+  // "Past" is decided by the date (Rome), not by status: some events stay
+  // 'open' in the database after the day.
+  const today = romeClock(new Date()).date
+  const isPast = event.date < today
   const { data: availability } = await supabase.rpc('get_event_availability')
   const row = (availability as { event_id: string; sold_out: boolean }[] | null)?.find(a => a.event_id === event.id)
   const soldOut = !!row?.sold_out && event.date >= today && event.status !== 'coming_soon'
 
   return (
     <>
-      <EventDetailClient event={event} images={images ?? []} soldOut={soldOut} nav={<SiteNav tone="dark" />} />
+      <EventDetailClient event={event} images={images ?? []} soldOut={soldOut} isPast={isPast} nav={<SiteNav tone="dark" />} />
       <SiteFooter />
     </>
   )

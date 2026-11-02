@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import type { UpcomingEvent } from '@/lib/types'
 import { useCart } from '@/app/components/CartContext'
@@ -20,25 +20,35 @@ export default function EventDetailClient({
   event,
   images,
   soldOut = false,
+  isPast = false,
   nav,
 }: {
   event: EventWithSpeaker
   images: GalleryImage[]
   soldOut?: boolean
+  /** The event day has gone by (decided on the server, by date). */
+  isPast?: boolean
   nav: ReactNode
 }) {
   const { addItem } = useCart()
   const access = useMemberAccess()
   const [added, setAdded] = useState(false)
   const [lightbox, setLightbox] = useState<number | null>(null)
+  // The registration block stays closed until Register is pressed.
+  const [opened, setOpened] = useState(false)
+  const scrollToForm = useRef(false)
+  const heroRegister = useRef<HTMLButtonElement>(null)
+  const registerSection = useRef<HTMLElement>(null)
+  const [heroRegisterInView, setHeroRegisterInView] = useState(true)
+  const [formInView, setFormInView] = useState(false)
 
   const d = new Date(event.date + 'T00:00:00')
   const kind = eventKind(event.title)
   const membersLocked = !!event.members_only && !access.active
-  const isOpen = event.status === 'open'
+  const isOpen = event.status === 'open' && !isPast
   const hasTicket = isOpen && !soldOut && !membersLocked && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
   const canRegister = isOpen && (soldOut || membersLocked || hasTicket || event.action_type === 'form' || (event.action_type === 'link' && !!event.action_link))
-  const statusLabel = soldOut && isOpen ? 'Full' : isOpen ? 'Open' : event.status === 'coming_soon' ? 'Soon' : 'Past'
+  const statusLabel = isPast ? 'Past' : soldOut && isOpen ? 'Full' : isOpen ? 'Open' : event.status === 'coming_soon' ? 'Soon' : 'Past'
   const when = [d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }), timeRange(event.start_time, event.end_time)].filter(Boolean).join(' · ')
   const price = priceLine(event.ticket_price_cents, event.member_price_cents)
   const memberNote = event.ticket_price_cents && (event.member_price_cents ?? event.ticket_price_cents) < event.ticket_price_cents
@@ -64,7 +74,41 @@ export default function EventDetailClient({
     setTimeout(() => setAdded(false), 2000)
   }
 
-  const registerHref = '#register'
+  function onRegister() {
+    if (opened) {
+      registerSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      scrollToForm.current = true
+      setOpened(true)
+    }
+  }
+
+  // After the block opens, bring it into view.
+  useEffect(() => {
+    if (!opened || !scrollToForm.current) return
+    scrollToForm.current = false
+    requestAnimationFrame(() => registerSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }, [opened])
+
+  // Register is shown once at a time: the big one in the opening block; the
+  // compact bar shows it only when that one has left the screen (and the
+  // registration block itself is not on screen).
+  useEffect(() => {
+    const el = heroRegister.current
+    if (!el) return
+    const io = new IntersectionObserver(([entry]) => setHeroRegisterInView(entry.isIntersecting))
+    io.observe(el)
+    return () => io.disconnect()
+  }, [canRegister])
+  useEffect(() => {
+    const el = registerSection.current
+    if (!el) return
+    const io = new IntersectionObserver(([entry]) => setFormInView(entry.isIntersecting), { threshold: 0.05 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [opened])
+  const showBarRegister = canRegister && !heroRegisterInView && !formInView
+  const showRegisterBlock = !canRegister || opened
 
   return (
     <>
@@ -90,9 +134,9 @@ export default function EventDetailClient({
               </span>
             </div>
             {canRegister && (
-              <a href={registerHref} className="rd-italic pb-[clamp(10px,2.5vw,30px)] text-[clamp(48px,6vw,72px)] leading-[1.1] hover:underline underline-offset-[0.18em]">
+              <button ref={heroRegister} type="button" onClick={onRegister} className="rd-italic pb-[clamp(10px,2.5vw,30px)] text-[clamp(48px,6vw,72px)] leading-[1.1] hover:underline underline-offset-[0.18em]">
                 Register
-              </a>
+              </button>
             )}
           </div>
         </div>
@@ -103,10 +147,10 @@ export default function EventDetailClient({
         <div className="rd-gutter flex h-[72px] items-center gap-4 md:h-[96px] md:gap-6">
           <span className="rd-display shrink-0 text-[28px] md:text-[40px]">{shortDate(event.date)}</span>
           <span className="min-w-0 truncate text-[13px] text-ivory/85 md:text-[14px]">{event.title}</span>
-          {canRegister && (
-            <a href={registerHref} className="rd-italic ml-auto shrink-0 rounded-full border border-ivory px-5 pb-2.5 pt-2 text-[22px] leading-none hover:bg-ivory/10 md:px-[34px] md:pb-3.5 md:pt-3 md:text-[30px]">
+          {showBarRegister && (
+            <button type="button" onClick={onRegister} className="rd-italic ml-auto shrink-0 rounded-full border border-ivory px-5 pb-2.5 pt-2 text-[22px] leading-none hover:bg-ivory/10 md:px-[34px] md:pb-3.5 md:pt-3 md:text-[30px]">
               Register
-            </a>
+            </button>
           )}
         </div>
       </div>
@@ -159,26 +203,20 @@ export default function EventDetailClient({
                 <dd className="rd-display mt-1 text-[28px]">{price}</dd>
               </div>
             </dl>
-            {canRegister && (
-              <>
-                <a href={registerHref} className="rd-italic mt-10 inline-block text-[clamp(64px,8vw,96px)] leading-[1.1] hover:underline underline-offset-[0.12em]">
-                  Register
-                </a>
-                {memberNote && <p className="mt-2 text-[13px] text-ivory/70">{memberNote}</p>}
-              </>
-            )}
+            {canRegister && memberNote && <p className="mt-4 text-[13px] text-ivory/70">{memberNote}</p>}
           </div>
         </div>
       </section>
 
       {/* ── Se3 / Se4 · registration ─────────────────────────────────── */}
-      <section id="register" className="scroll-mt-[72px] bg-ivory text-night md:scroll-mt-[96px]">
+      {showRegisterBlock && (
+      <section ref={registerSection} id={canRegister ? 'register' : undefined} className="scroll-mt-[72px] bg-ivory text-night md:scroll-mt-[96px]">
         <div className="rd-gutter grid gap-10 py-[clamp(56px,8vw,80px)] md:grid-cols-[minmax(0,360px)_minmax(0,624px)] md:justify-between">
           <div>
-            <h2 className="rd-display text-[clamp(52px,6vw,72px)]">{isOpen ? 'Register' : event.status === 'coming_soon' ? 'Soon' : 'Past event'}</h2>
+            <h2 className="rd-display text-[clamp(52px,6vw,72px)]">{isOpen ? 'Your place' : isPast || event.status !== 'coming_soon' ? 'Past event' : 'Soon'}</h2>
             <p className="mt-6 text-[15px] leading-[1.7] text-earth-700">
               {!isOpen
-                ? event.status === 'coming_soon'
+                ? event.status === 'coming_soon' && !isPast
                   ? 'Registrations open soon. Follow us on LinkedIn and Instagram not to miss them.'
                   : 'This event has ended. Look out for the next ones.'
                 : membersLocked
@@ -234,6 +272,7 @@ export default function EventDetailClient({
           </div>
         </div>
       </section>
+      )}
 
       {lightbox !== null && <Lightbox photos={photos} start={lightbox} title={event.title} onClose={() => setLightbox(null)} />}
       <ScrollProgress color="var(--ivory)" />
