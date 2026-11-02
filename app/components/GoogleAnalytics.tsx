@@ -1,36 +1,25 @@
 'use client'
 
 import Script from 'next/script'
-import { useState, useEffect } from 'react'
-
-const GA_ID = 'G-1DKFFPXFT6'
+import { useSyncExternalStore } from 'react'
+import { GA_ID, readConsent, subscribeConsent } from '@/lib/consent'
 
 /**
- * Loads Google Analytics only after the cookie banner records consent
- * (cookie-consent === 'accepted' in sessionStorage). CookieBanner dispatches
- * 'cookie-consent-updated' when the user accepts, so the scripts mount
- * without a page reload.
+ * Google Analytics loads only after the visitor accepts in the cookie banner.
+ * Before a choice, or after Decline, no request goes to Google and no _ga
+ * cookie is set. A Decline after an Accept disables the loaded tag at once
+ * (ga-disable flag, see lib/consent) and removes its cookies.
  */
 export default function GoogleAnalytics() {
-  const [consented, setConsented] = useState(false)
-
-  useEffect(() => {
-    const check = () => {
-      setConsented(sessionStorage.getItem('cookie-consent') === 'accepted')
-    }
-    check()
-    window.addEventListener('cookie-consent-updated', check)
-    return () => window.removeEventListener('cookie-consent-updated', check)
-  }, [])
-
+  const consented = useSyncExternalStore(subscribeConsent, () => readConsent() === 'accepted', () => false)
   if (!consented) return null
 
   return (
     <>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-        strategy="afterInteractive"
-      />
+      <Script id="ga-enable" strategy="afterInteractive">
+        {`window['ga-disable-${GA_ID}'] = false;`}
+      </Script>
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
       <Script id="google-analytics" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];

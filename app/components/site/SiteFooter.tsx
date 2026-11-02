@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import CookiePolicy from '@/app/components/CookiePolicy'
+import CookieSettingsLink from './CookieSettingsLink'
 
 /**
  * Quiet footer for the public pages. The boards end each page on its own
@@ -22,10 +23,11 @@ export default function SiteFooter() {
             <a href="https://www.linkedin.com/company/alatainvestmentclub/" target="_blank" rel="noopener noreferrer" className="hover:text-ivory">LinkedIn</a>
             <a href="https://www.instagram.com/alata_investmentclub" target="_blank" rel="noopener noreferrer" className="hover:text-ivory">Instagram</a>
           </div>
-          <div className="flex items-center gap-6 text-[12px] text-ivory/55">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] text-ivory/55">
             <span>&copy; {new Date().getFullYear()} Alata Investment Club</span>
             <Link href="/privacy-policy" className="hover:text-ivory">Privacy</Link>
             <CookiePolicy />
+            <CookieSettingsLink />
           </div>
         </div>
       </div>

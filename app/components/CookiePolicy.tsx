@@ -1,22 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-export default function CookiePolicy() {
+const OPEN_POLICY = 'cookie-policy-open'
+
+/** Opens the policy from anywhere (the cookie banner links to it). */
+export function openCookiePolicy() {
+  window.dispatchEvent(new Event(OPEN_POLICY))
+}
+
+export default function CookiePolicy({ trigger = true }: { trigger?: boolean }) {
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const onOpen = () => setOpen(true)
+    window.addEventListener(OPEN_POLICY, onOpen)
+    return () => window.removeEventListener(OPEN_POLICY, onOpen)
+  }, [])
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="hover:text-ivory"
-      >
-        Cookie Policy
-      </button>
+      {trigger && (
+        <button type="button" onClick={() => setOpen(true)} className="hover:text-ivory">
+          Cookie Policy
+        </button>
+      )}
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[220] flex items-center justify-center p-4"
           onClick={() => setOpen(false)}
         >
           {/* Overlay */}
