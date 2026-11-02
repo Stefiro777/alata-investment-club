@@ -487,3 +487,18 @@ textarea.rd-field { resize: vertical; min-height: 72px; }
 .rd-app button.bg-forest, .rd-app a.bg-forest { background-color: var(--night); }
 .rd-app button.bg-forest:hover, .rd-app a.bg-forest:hover { background-color: var(--moss); }
 .rd-app main .mx-auto.max-w-5xl, .rd-app main .mx-auto.max-w-6xl, .rd-app main .mx-auto.max-w-7xl { max-width: none; padding-left: 0; padding-right: 0; }
+
+/* Focus ring: none for mouse clicks; for the keyboard, an underline for the big italic links, a thin offset line elsewhere. */
+a:focus:not(:focus-visible), button:focus:not(:focus-visible) { outline: none; }
+a.rd-italic:focus-visible, button.rd-italic:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+a:focus-visible, button:focus-visible {
+  outline: 1.5px solid currentColor;
+  outline-offset: 4px;
+  border-radius: 1px;
+}
+a.rd-italic:focus-visible, button.rd-italic:focus-visible { outline: none; }

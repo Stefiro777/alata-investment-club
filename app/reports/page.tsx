@@ -6,7 +6,8 @@ import { CLUB_LINKEDIN_POSTS, linkedInTitle, linkedInUrl } from '@/lib/linkedin'
 import SiteNav from '@/app/components/site/SiteNav'
 import SiteFooter from '@/app/components/site/SiteFooter'
 import { ScrollProgress } from '@/app/components/site/Media'
-import ReportsArchive, { type ArchivePost } from './ReportsArchive'
+import PdfCover from './PdfCover'
+import ReportsArchive,{ type ArchivePost } from './ReportsArchive'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,8 +45,8 @@ function Cover({ report, size }: { report: FeaturedReport; size: 'lg' | 'sm' }) 
       <img src={report.image_url} alt="" className={`${lg ? 'aspect-[400/594]' : 'aspect-[190/270]'} w-full bg-moss object-cover`} />
     )
   }
-  return (
-    <div className={`relative ${lg ? 'aspect-[400/594]' : 'aspect-[190/270]'} w-full overflow-hidden bg-moss text-ivory`}>
+  const typographic = (
+    <div className="absolute inset-0 text-ivory">
       <div className={`rd-display absolute ${lg ? 'inset-x-7 top-7 text-[clamp(32px,3.8vw,46px)]' : 'inset-x-[13px] top-[13px] text-[clamp(18px,1.8vw,22px)]'}`}>
         {report.title}
       </div>
@@ -54,6 +55,11 @@ function Cover({ report, size }: { report: FeaturedReport; size: 'lg' | 'sm' }) 
       </div>
     </div>
   )
+  const ratio = lg ? 'aspect-[400/594]' : 'aspect-[190/270]'
+  if (report.pdf_url) {
+    return <PdfCover pdfUrl={report.pdf_url} className={`${ratio} w-full`} fallback={typographic} />
+  }
+  return <div className={`relative ${ratio} w-full overflow-hidden bg-moss`}>{typographic}</div>
 }
 
 export default async function ReportsPage() {
