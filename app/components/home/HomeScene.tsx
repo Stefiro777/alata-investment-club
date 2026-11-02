@@ -3,7 +3,9 @@
 import { useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
+  animate,
   motion,
+  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -24,11 +26,16 @@ export type HomeEvent = { id: string; slug: string | null; title: string; date: 
  * each moment fades in and out around its point of the scroll.
  */
 const MOMENTS = 7
-const STEP = 1 / (MOMENTS - 1)
-const FADE = 0.03
+/**
+ * Scroll space of each moment, in viewport heights. The first and last are
+ * half-moments; the values (F2v) have double room so the words light up slowly.
+ */
+const WEIGHTS = [50, 100, 200, 100, 100, 100, 50]
+const TOTAL = WEIGHTS.reduce((a, b) => a + b, 0)
+const FADE = 18 / TOTAL
 
 /** Scroll points where moment i hands over to moment i+1. */
-const handover = (i: number) => (i + 0.5) * STEP
+const handover = (i: number) => WEIGHTS.slice(0, i + 1).reduce((a, b) => a + b, 0) / TOTAL
 
 function useMomentOpacity(progress: MotionValue<number>, i: number) {
   const input = i === 0
@@ -98,18 +105,55 @@ function Drum({ local, stat, reduced }: { local: MotionValue<number>; stat: Abou
   )
 }
 
-/* ── F2v: the three values light up one at a time ── */
-function Value({ local, at, children, italic = false }: {
+/* ── F2v: the three values ──
+   Mouse: the word under the pointer lights up, the others drop. Touch (and
+   when nothing is hovered): scroll lights them one after the other. */
+const VALUES = ['Community', 'Drive', 'Ambition'] as const
+const LIGHT_AT = [0.2, 0.55, 0.8]
+
+function ValueWord({ index, local, hovered, hoverAny, children }: {
+  index: number
   local: MotionValue<number>
-  at: number
+  hovered: MotionValue<number>
+  hoverAny: MotionValue<number>
   children: ReactNode
-  italic?: boolean
 }) {
-  const color = useTransform(local, [at - 0.08, at], ['rgba(245,241,232,0.3)', 'rgba(245,241,232,1)'])
+  const color = useTransform([local, hovered, hoverAny], ([l, h, any]: number[]) => {
+    const at = LIGHT_AT[index]
+    const scroll = Math.min(1, Math.max(0, (l - (at - 0.08)) / 0.08))
+    const light = any * h + (1 - any) * scroll
+    return `rgba(245,241,232,${(0.3 + 0.7 * light).toFixed(3)})`
+  })
+  return <motion.span style={{ color }} className="block">{children}</motion.span>
+}
+
+function Values({ local }: { local: MotionValue<number> }) {
+  const hoverAny = useMotionValue(0)
+  const hovers = [useMotionValue(0), useMotionValue(0), useMotionValue(0)]
+
+  function enter(i: number, e: React.PointerEvent) {
+    if (e.pointerType !== 'mouse') return
+    hovers.forEach((m, j) => animate(m, j === i ? 1 : 0, { duration: 0.35 }))
+    animate(hoverAny, 1, { duration: 0.35 })
+  }
+  function leave(e: React.PointerEvent) {
+    if (e.pointerType !== 'mouse') return
+    animate(hoverAny, 0, { duration: 0.35 })
+  }
+
   return (
-    <motion.div className={`rd-display text-[clamp(60px,11.3vw,136px)] leading-[1.2] ${italic ? 'italic' : ''}`} style={{ color }}>
-      {children}
-    </motion.div>
+    <>
+      {VALUES.map((word, i) => (
+        <div
+          key={word}
+          onPointerEnter={e => enter(i, e)}
+          onPointerLeave={leave}
+          className={`rd-display cursor-default text-[clamp(60px,11.3vw,136px)] leading-[1.2] ${i === 1 ? 'italic' : ''}`}
+        >
+          <ValueWord index={i} local={local} hovered={hovers[i]} hoverAny={hoverAny}>{word}</ValueWord>
+        </div>
+      ))}
+    </>
   )
 }
 
@@ -157,11 +201,11 @@ export default function HomeScene({
   const darkLogo = useTransform(p, [handover(3) - FADE, handover(3) + FADE, handover(4) - FADE, handover(4) + FADE], [0, 1, 1, 0])
   const lightLogo = useTransform(darkLogo, v => 1 - v)
   const navColor = useTransform(darkLogo, [0, 1], ['#f5f1e8', '#0b1d16'])
-  const scrollCue = useTransform(p, [0, 0.04], [1, 0])
+  const scrollCue = useTransform(p, [0, 24 / TOTAL], [1, 0])
   const barColor = useTransform(darkLogo, v => (v > 0.5 ? '#1a4a3a' : '#f5f1e8'))
 
   return (
-    <div ref={track} className="relative bg-night text-ivory" style={{ height: `${MOMENTS * 100}svh` }}>
+    <div ref={track} className="relative bg-night text-ivory" style={{ height: `${TOTAL + 100}svh` }}>
       <div className="sticky top-0 h-[100svh] overflow-hidden">
 
         {/* F1 · the loop */}
@@ -198,9 +242,7 @@ export default function HomeScene({
         <Moment progress={p} index={2}>
           <VeiledMedia image="/redesign/workshop-valori.jpg" opacity={0.7} />
           <div className="relative flex h-full flex-col items-center justify-center px-6 pt-16 text-center">
-            <Value local={local2v} at={0.2}>Community</Value>
-            <Value local={local2v} at={0.55} italic>Drive</Value>
-            <Value local={local2v} at={0.8}>Ambition</Value>
+            <Values local={local2v} />
             <p className="mt-8 max-w-[640px] text-[16px] leading-[1.6] text-ivory/90">
               Taking initiative isn&apos;t a buzzword here, it&apos;s the entry requirement.
             </p>
