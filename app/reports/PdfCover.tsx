@@ -66,7 +66,7 @@ export default function PdfCover({ pdfUrl, className = '', fallback }: { pdfUrl:
       <canvas
         ref={canvasRef}
         aria-hidden
-        className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500 ${drawn ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 h-full w-full object-contain object-center transition-opacity duration-500 ${drawn ? 'opacity-100' : 'opacity-0'}`}
       />
     </div>
   )
