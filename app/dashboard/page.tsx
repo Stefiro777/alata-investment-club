@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase'
 import { useProfile, type MemberProfile } from './DashboardProfileContext'
 import { visibleTeams, isPrivilegedProfile } from '@/app/components/member/MemberShell'
 import { timeRange } from '@/lib/event-display'
+import { DASHBOARD_QUOTES } from '@/lib/dashboard-quotes'
 import { isPubliclyHidden } from '@/lib/public-filters'
 import { Section, Row, FieldRow, Pill, ProgressRule } from '@/app/components/member/ui'
 
@@ -23,6 +24,28 @@ function levelLabel(p: MemberProfile) {
   if (!p.study_level) return null
   const lvl = p.study_level === 'master' ? 'Master' : 'Bachelor'
   return p.study_year ? `${lvl}, year ${p.study_year}` : lvl
+}
+
+/**
+ * The line under the name, chosen by the server at every opening (/api/dashboard-quote).
+ * Nothing is drawn on the server render, so there is no hydration mismatch; the line
+ * keeps its height meanwhile, and falls back to the first phrase if the request fails.
+ */
+function DashboardQuote() {
+  const [quote, setQuote] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/dashboard-quote', { cache: 'no-store' })
+      .then(res => (res.ok ? res.json() : Promise.reject(new Error('quote'))))
+      .then(json => { if (!cancelled) setQuote(String(json.quote)) })
+      .catch(() => { if (!cancelled) setQuote(DASHBOARD_QUOTES[0]) })
+    return () => { cancelled = true }
+  }, [])
+  return (
+    <p className={`rd-italic mt-6 min-h-[1.3em] text-[clamp(24px,2.5vw,28px)] transition-opacity duration-500 ${quote ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">
+      {quote ?? DASHBOARD_QUOTES[0]}
+    </p>
+  )
 }
 
 /** What the profile already holds, out of seven fields. */
@@ -135,7 +158,7 @@ export default function DashboardPage() {
           {roleLine && <div className="rd-italic mt-1 text-[18px] text-earth-700">{roleLine}</div>}
         </div>
       </div>
-      <p className="rd-italic mt-6 text-[clamp(24px,2.5vw,28px)]">Curiosity compounds. So does preparation.</p>
+      <DashboardQuote />
 
       {/* Next event */}
       {next === undefined ? (
