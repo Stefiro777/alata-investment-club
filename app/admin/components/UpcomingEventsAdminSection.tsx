@@ -1,21 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import EventWaitlistAdmin from './EventWaitlistAdmin'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
 import { slugify } from '@/lib/slug'
-import { SegmentedPills } from '@/app/components/member/ui'
-
-function SectionHeading({ title }: { title: string }) {
-  return (
-    <div className="mb-8">
-      <h2 className="font-serif text-2xl font-bold text-forest">{title}</h2>
-      <div className="w-8 h-px bg-forest mt-2" />
-    </div>
-  )
-}
+import { Pill, SegmentedPills } from '@/app/components/member/ui'
 
 const STATUS_OPTIONS: UpcomingEvent['status'][] = ['open', 'coming_soon', 'completed']
 const ACTION_OPTIONS = ['form', 'link'] as const
@@ -643,7 +634,7 @@ function GalleryEditor({ eventId }: { eventId: string }) {
 
   return (
     <div>
-      <label className="block text-xs font-medium text-ink-500 uppercase tracking-wide mb-2">Gallery</label>
+      <label className="rd-eyebrow mb-2 block text-[10px] text-earth-500">Photos for the event page</label>
       {images === null ? (
         <p className="text-xs text-ink-400">Loading…</p>
       ) : (
@@ -674,62 +665,105 @@ function GalleryEditor({ eventId }: { eventId: string }) {
   )
 }
 
-// ── Accordion row (edit form + actions) ──────────────────────────────────────
-function EventAccordion({
-  event,
-  regCount,
-  onSaved,
-  onDeleted,
-  onShowRegistrations,
-  onSendEmail,
-  onSendQr,
-  onCopyLink,
-  taken,
-  waitlistCount,
-  onShowWaitlist,
+// ── Event sheet (board AEvd): next event, registrations, entry codes, extra field, details ──────
+
+const QUICK_STATUS: { value: UpcomingEvent['status']; label: string }[] = [
+  { value: 'open', label: 'Open' },
+  { value: 'coming_soon', label: 'Soon' },
+  { value: 'completed', label: 'Closed' },
+]
+const STATUS_LABEL: Record<string, string> = { open: 'Open', coming_soon: 'Soon', completed: 'Closed' }
+const MONTHS_SHORT = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+
+const fieldCls = 'rd-field mt-0 w-full py-1 text-[18px]'
+const labelCls = 'rd-eyebrow block text-[10px] text-earth-500'
+const dangerBtn = 'rounded-full border border-[#8a2a1d] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a2a1d] transition-colors hover:bg-[#8a2a1d] hover:text-ivory'
+
+function longDate(iso: string) {
+  return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+/** A titled block of the sheet: italic title over a rule, like the other member-area screens. */
+function SheetSection({ title, meta, children }: { title: string; meta?: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-10 first:mt-0">
+      <div className="flex items-baseline justify-between gap-4 pb-3">
+        <h3 className="rd-italic text-[26px]">{title}</h3>
+        {meta && <span className="rd-eyebrow text-[10px] text-earth-500">{meta}</span>}
+      </div>
+      <div className="border-t border-night">{children}</div>
+    </section>
+  )
+}
+
+/** A line with a title, a sentence and an italic action on the right. */
+function ActionRow({ title, detail, action, onClick, disabled }: { title: string; detail?: string; action: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-night/20 py-4 text-left transition-colors hover:bg-night/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <span className="min-w-0">
+        <span className="rd-display block text-[22px] leading-[1.15]">{title}</span>
+        {detail && <span className="mt-1 block text-[12px] leading-[1.5] text-earth-700">{detail}</span>}
+      </span>
+      <span className="rd-italic text-[22px]">{action}</span>
+    </button>
+  )
+}
+
+function EventSheet({
+  event, regCount, taken, waitlistCount, isNext, statusBusy,
+  onSaved, onDeleted, onStatus, onShowRegistrations, onSendEmail, onSendQr, onCopyLink, onShowWaitlist,
 }: {
   event: UpcomingEvent
   regCount: number
+  /** Seats taken now (registrations + active holds); null while loading. */
+  taken: number | null
+  waitlistCount: number
+  isNext: boolean
+  statusBusy: boolean
   onSaved: (ev: UpcomingEvent) => void
   onDeleted: () => void
+  onStatus: (s: UpcomingEvent['status']) => void
   onShowRegistrations: () => void
   onSendEmail: () => void
   onSendQr: () => void
   onCopyLink: () => void
-  /** Seats taken now (registrations + active holds); null while loading. */
-  taken: number | null
-  waitlistCount: number
   onShowWaitlist: () => void
 }) {
   const [form, setForm] = useState<FormState>(() => eventToForm(event))
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [copied, setCopied] = useState(false)
   const [qrConfirm, setQrConfirm] = useState(false)
 
   function set(key: keyof FormState, value: string) {
+    setSaved(false)
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
   async function handleSave() {
-    if (!form.date || !form.title.trim()) return
+    if (!form.date || !form.title.trim()) { setError('Title and date are required.'); return }
     setSaving(true)
     setError(null)
-    const supabase = createClient()
-    const { data, error: err } = await supabase
+    const { data, error: err } = await createClient()
       .from('upcoming_events')
       .update(formToPayload(form))
       .eq('id', event.id)
       .select('*')
       .single()
+    setSaving(false)
     if (err) {
       setError(err.code === '23505' ? 'That slug is already taken by another event.' : err.message)
-      setSaving(false)
       return
     }
+    setSaved(true)
     onSaved(data as UpcomingEvent)
-    setSaving(false)
   }
 
   function handleCopyLink() {
@@ -738,233 +772,221 @@ function EventAccordion({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const inputClass =
-    'w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white transition-colors'
-  const labelClass = 'block text-xs font-medium text-ink-500 uppercase tracking-wide mb-1'
   const previewSlug = form.slug.trim() || slugify(form.title) || 'event-slug'
+  const seats = taken ?? regCount
+  const cap = event.capacity
+  const when = [longDate(event.date), event.start_time ? (event.end_time ? `${event.start_time}–${event.end_time}` : event.start_time) : null, event.location].filter(Boolean).join(' · ')
+  const extra = event.registration_field === 'motivation' ? 'Motivation' : event.registration_field === 'panelists' ? 'Questions for the speaker' : 'None'
 
   return (
-    <div className="p-6 space-y-6" onClick={e => e.stopPropagation()}>
-      {/* Actions bar */}
-      <div className="flex items-center gap-2 flex-wrap pb-4 border-b border-line-faint">
-        <span className="text-xs text-ink-500 mr-1">
-          {regCount} registrant{regCount !== 1 ? 's' : ''}
-        </span>
-        <button
-          onClick={onShowRegistrations}
-          className="border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors"
-        >
-          Show all
-        </button>
-        {regCount > 0 && (
-          <button
-            onClick={onSendEmail}
-            title="Send email to registrants"
-            className="flex items-center gap-1.5 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors"
-          >
-            <EnvelopeIcon /> Email
-          </button>
+    <div>
+      {/* Header: the event, and how full it is */}
+      <SheetSection title={isNext ? 'Next event' : 'Event'} meta={STATUS_LABEL[event.status]?.toUpperCase()}>
+        <div className="pt-5">
+          <div className="rd-display text-[clamp(26px,2.6vw,32px)] leading-[1.1]">{event.title}</div>
+          <div className="mt-2 text-[13px] text-earth-700">{when}</div>
+        </div>
+        {cap ? (
+          <div className="relative mt-5 border-t border-night">
+            <i className="absolute left-0 top-[-2px] block h-1 bg-club" style={{ width: `${Math.round(Math.min(1, seats / cap) * 100)}%` }} />
+          </div>
+        ) : (
+          <div className="mt-5 border-t border-night" />
         )}
-        {regCount > 0 && (
-          qrConfirm ? (
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] text-ink-500 whitespace-nowrap">Send QR to {regCount}?</span>
-              <button onClick={() => { onSendQr(); setQrConfirm(false) }}
-                className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1 transition-colors">Yes</button>
-              <button onClick={() => setQrConfirm(false)}
-                className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors">No</button>
+        <div className="rd-eyebrow mt-2 text-[10px] text-earth-500">
+          {cap ? `${seats} of ${cap} registered` : `${regCount} registered · no seat limit`}
+        </div>
+        <div className="mt-5">
+          <div className={`${labelCls} mb-2`}>Status</div>
+          <SegmentedPills size="sm" label="Status" disabled={statusBusy} options={QUICK_STATUS} value={event.status} onChange={onStatus} />
+        </div>
+      </SheetSection>
+
+      <SheetSection title="Registrations" meta={`${regCount} ${regCount === 1 ? 'person' : 'people'}`}>
+        <ActionRow title="Registrations" detail="Names, motivation and extra field." action="Open" onClick={onShowRegistrations} />
+        <ActionRow title="Waitlist" detail={`${waitlistCount} waiting. Seats are offered when someone leaves.`} action="Open" onClick={onShowWaitlist} />
+        <ActionRow title="Email registrants" detail="Write one message to everyone who signed up." action="Write" onClick={onSendEmail} disabled={regCount === 0} />
+      </SheetSection>
+
+      <SheetSection title="Send entry codes">
+        {qrConfirm ? (
+          <div className="flex flex-wrap items-center gap-4 border-b border-night/20 py-4">
+            <span className="text-[13px]">Send the QR code to {regCount} {regCount === 1 ? 'person' : 'people'}?</span>
+            <span className="flex gap-2">
+              <Pill solid onClick={() => { onSendQr(); setQrConfirm(false) }}>Yes, send</Pill>
+              <Pill onClick={() => setQrConfirm(false)}>No</Pill>
+            </span>
+          </div>
+        ) : (
+          <ActionRow title="Send entry codes" detail="QR codes by email to everyone registered, sent by hand." action="Send" onClick={() => setQrConfirm(true)} disabled={regCount === 0} />
+        )}
+        <ActionRow title="Copy the event link" detail={`/events/${event.slug ?? ''}`} action={copied ? 'Copied' : 'Copy'} onClick={handleCopyLink} />
+      </SheetSection>
+
+      {/* The form: every field the event has */}
+      <SheetSection title="Details" meta={`Extra field · ${extra}`}>
+        <div className="grid gap-x-6 gap-y-5 pt-5 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Title *</label>
+            <input required value={form.title} onChange={e => set('title', e.target.value)} className={fieldCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Date *</label>
+            <input type="date" required value={form.date} onChange={e => set('date', e.target.value)} className={fieldCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Status *</label>
+            <select value={form.status} onChange={e => set('status', e.target.value as UpcomingEvent['status'])} className={fieldCls}>
+              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Start time</label>
+            <input type="time" value={form.start_time} onChange={e => set('start_time', e.target.value)} className={fieldCls} />
+          </div>
+          <div>
+            <label className={labelCls}>End time</label>
+            <input type="time" value={form.end_time} onChange={e => set('end_time', e.target.value)} className={fieldCls} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Location</label>
+            <input value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Aula Magna, Online" className={fieldCls} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Description</label>
+            <textarea rows={4} value={form.description} onChange={e => set('description', e.target.value)} className={`${fieldCls} resize-y`} />
+          </div>
+        </div>
+
+        <h4 className="rd-eyebrow mt-9 text-[10px] text-night">Sign-up</h4>
+        <div className="mt-3 grid gap-x-6 gap-y-5 border-t border-night/20 pt-5 sm:grid-cols-2">
+          <div>
+            <label className={labelCls}>Action type</label>
+            <select value={form.action_type} onChange={e => set('action_type', e.target.value)} className={fieldCls}>
+              <option value="">— none —</option>
+              {ACTION_OPTIONS.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          {form.action_type === 'link' && (
+            <div>
+              <label className={labelCls}>Action link</label>
+              <input value={form.action_link} onChange={e => set('action_link', e.target.value)} placeholder="https://..." className={fieldCls} />
             </div>
-          ) : (
-            <button
-              onClick={() => setQrConfirm(true)}
-              title="Send QR codes to all registrants"
-              className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors"
-            >
-              Send QR
-            </button>
-          )
-        )}
-        <button
-          onClick={onShowWaitlist}
-          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-3 py-1.5 transition-colors"
-        >
-          Waitlist ({waitlistCount})
-        </button>
-        <button
-          onClick={handleCopyLink}
-          className="border border-[#6b7280] text-ink-500 hover:bg-[#6b7280] hover:text-white text-xs font-medium px-3 py-1.5 transition-colors"
-        >
-          {copied ? 'Copied ✓' : 'Copy link'}
-        </button>
-        <div className="ml-auto">
+          )}
+          <div className="sm:col-span-2">
+            <div className={`${labelCls} mb-2`}>Extra field</div>
+            <SegmentedPills
+              size="sm"
+              label="Registration field"
+              options={[{ value: 'none', label: 'None' }, { value: 'motivation', label: 'Motivation' }, { value: 'panelists', label: 'Questions for the speaker' }]}
+              value={form.registration_field ?? 'none'}
+              onChange={v => { setSaved(false); setForm(prev => ({ ...prev, registration_field: v === 'none' ? null : v })) }}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={form.members_only}
+                onChange={e => { setSaved(false); setForm(prev => ({ ...prev, members_only: e.target.checked })) }}
+                className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#1a4a3a]"
+              />
+              <span>
+                <span className="rd-eyebrow block text-[10px] text-night">Members only</span>
+                <span className="mt-1 block text-[11px] leading-[1.5] text-earth-600">
+                  Only verified members (active membership) can register; everyone else sees &ldquo;Login to register&rdquo; / &ldquo;Members only&rdquo;. The check is also made on the server.
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <h4 className="rd-eyebrow mt-9 text-[10px] text-night">Prices and seats</h4>
+        <div className="mt-3 grid gap-x-6 gap-y-5 border-t border-night/20 pt-5 sm:grid-cols-2">
+          <div>
+            <label className={labelCls}>Price for non-members (€)</label>
+            <input type="number" min="0" step="0.01" value={form.ticket_price_eur} onChange={e => set('ticket_price_eur', e.target.value)} placeholder="empty or 0 = free" className={fieldCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Price for members (€)</label>
+            <input type="number" min="0" step="0.01" value={form.member_price_eur} onChange={e => set('member_price_eur', e.target.value)} placeholder="empty = same price" className={fieldCls} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Seats</label>
+            <input type="number" min="1" step="1" value={form.capacity} onChange={e => set('capacity', e.target.value)} placeholder="empty = unlimited" className={fieldCls} />
+            <p className="mt-2 text-[11px] leading-[1.5] text-earth-600">
+              {taken === null ? '' : `Seats taken now: ${taken}${form.capacity ? ` / ${form.capacity}` : ''} (registrations plus checkouts in progress). `}
+              When the seats run out, sign-ups close and the event shows &ldquo;Sold out&rdquo; with the waitlist; if you raise the limit or a seat frees up it opens again.
+            </p>
+          </div>
+        </div>
+
+        <h4 className="rd-eyebrow mt-9 text-[10px] text-night">Address</h4>
+        <div className="mt-3 border-t border-night/20 pt-5">
+          <label className={labelCls}>Slug</label>
+          <input value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="made from the title if empty" className={fieldCls} />
+          <p className="mt-2 text-[11px] text-earth-600">/events/{previewSlug}</p>
+        </div>
+
+        {error && <p role="alert" className="mt-6 border-l-2 border-[#8a2a1d] pl-3 text-[13px] text-[#8a2a1d]">{error}</p>}
+        <div className="mt-8 flex items-center gap-4">
+          <Pill solid onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</Pill>
+          {saved && !saving && <span className="rd-italic text-[18px] text-club">Saved</span>}
+        </div>
+      </SheetSection>
+
+      <SheetSection title="Gallery">
+        <div className="pt-5"><GalleryEditor eventId={event.id} /></div>
+      </SheetSection>
+
+      {/* Destructive action: last, and apart from everything else */}
+      <section className="mt-14 border-t border-[#8a2a1d]/40 pt-6">
+        <h3 className="rd-eyebrow text-[10px] text-[#8a2a1d]">Danger zone</h3>
+        <p className="mt-2 max-w-[460px] text-[12px] leading-[1.6] text-earth-700">Deleting the event also removes its gallery. The registrations of the event cannot be recovered from here.</p>
+        <div className="mt-4">
           {deleteConfirm ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-red-600">Sure?</span>
-              <button onClick={onDeleted} className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1 transition-colors">Yes</button>
-              <button onClick={() => setDeleteConfirm(false)} className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors">No</button>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[13px] text-[#8a2a1d]">Delete &ldquo;{event.title}&rdquo; for good?</span>
+              <button type="button" onClick={onDeleted} className={dangerBtn}>Yes, delete</button>
+              <Pill onClick={() => setDeleteConfirm(false)}>Cancel</Pill>
             </div>
           ) : (
-            <button onClick={() => setDeleteConfirm(true)} className="border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-3 py-1.5 transition-colors">
-              Delete event
-            </button>
+            <button type="button" onClick={() => setDeleteConfirm(true)} className={dangerBtn}>Delete event</button>
           )}
         </div>
-      </div>
-
-      {/* Edit form */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2">
-          <label className={labelClass}>Title *</label>
-          <input required value={form.title} onChange={e => set('title', e.target.value)} className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>Date *</label>
-          <input type="date" required value={form.date} onChange={e => set('date', e.target.value)} className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>Status *</label>
-          <select value={form.status} onChange={e => set('status', e.target.value as UpcomingEvent['status'])} className={inputClass}>
-            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>Start time</label>
-          <input type="time" value={form.start_time} onChange={e => set('start_time', e.target.value)} className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>End time</label>
-          <input type="time" value={form.end_time} onChange={e => set('end_time', e.target.value)} className={inputClass} />
-        </div>
-        <div className="sm:col-span-2">
-          <label className={labelClass}>Location</label>
-          <input value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Aula Magna, Online" className={inputClass} />
-        </div>
-        <div className="sm:col-span-2">
-          <label className={labelClass}>Description</label>
-          <textarea rows={3} value={form.description} onChange={e => set('description', e.target.value)} className={`${inputClass} resize-none`} />
-        </div>
-
-        <div>
-          <label className={labelClass}>Action Type</label>
-          <select value={form.action_type} onChange={e => set('action_type', e.target.value)} className={inputClass}>
-            <option value="">— none —</option>
-            {ACTION_OPTIONS.map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-        </div>
-        {form.action_type === 'link' && (
-          <div>
-            <label className={labelClass}>Action Link</label>
-            <input value={form.action_link} onChange={e => set('action_link', e.target.value)} placeholder="https://..." className={inputClass} />
-          </div>
-        )}
-
-        <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-2">Registration Field</label>
-          <div className="flex gap-2">
-            {(['motivation', 'panelists', 'none'] as const).map(opt => {
-              const value = opt === 'none' ? null : opt
-              return (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setForm(prev => ({ ...prev, registration_field: value }))}
-                  className={`text-xs font-medium tracking-wide px-4 py-2 border transition-colors duration-fast ${
-                    form.registration_field === value
-                      ? 'bg-forest text-white border-forest'
-                      : 'bg-white text-ink-500 border-line hover:border-forest hover:text-forest'
-                  }`}
-                >
-                  {opt === 'motivation' ? 'Motivation' : opt === 'panelists' ? 'Questions for Panelists' : 'None'}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <div>
-          <label className={labelClass}>Prezzo non-member (€)</label>
-          <input type="number" min="0" step="0.01" value={form.ticket_price_eur}
-            onChange={e => set('ticket_price_eur', e.target.value)} placeholder="0.00 = free" className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>Prezzo member (€)</label>
-          <input type="number" min="0" step="0.01" value={form.member_price_eur}
-            onChange={e => set('member_price_eur', e.target.value)} placeholder="vuoto = stesso prezzo" className={inputClass} />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className={labelClass}>Capienza (posti)</label>
-          <input type="number" min="1" step="1" value={form.capacity}
-            onChange={e => set('capacity', e.target.value)} placeholder="vuoto = illimitata" className={inputClass} />
-          <p className="text-[11px] text-ink-400 mt-1">
-            {taken === null ? '' : `Posti occupati ora: ${taken}${form.capacity ? ` / ${form.capacity}` : ''} (iscrizioni + checkout in corso). `}
-            Con la capienza raggiunta le iscrizioni si bloccano e l&apos;evento mostra &ldquo;Sold out&rdquo; con la waitlist; se aumenti la capienza o si libera un posto torna disponibile.
-          </p>
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.members_only}
-              onChange={e => setForm(prev => ({ ...prev, members_only: e.target.checked }))}
-              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-forest"
-            />
-            <span>
-              <span className="block text-xs font-medium text-ink-900 uppercase tracking-widest">Members only</span>
-              <span className="block text-[11px] text-ink-400 mt-1">
-                Solo i membri verificati (iscrizione attiva) possono registrarsi; gli altri vedono &ldquo;Login to register&rdquo; / &ldquo;Members only&rdquo;. Il controllo è anche lato server.
-              </span>
-            </span>
-          </label>
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className={labelClass}>Slug</label>
-          <input value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="generato automaticamente dal titolo se vuoto" className={inputClass} />
-          <p className="text-[11px] text-ink-400 mt-1">/events/{previewSlug}</p>
-        </div>
-      </div>
-
-      {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
-
-      <div className="flex justify-end pt-2 border-t border-black/5">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? '…' : 'Save'}
-        </button>
-      </div>
-
-      <div className="pt-4 border-t border-line-faint">
-        <GalleryEditor eventId={event.id} />
-      </div>
+      </section>
     </div>
   )
 }
 
-// ── Quick status switch (one click, no need to open the row) ────────────────
-const QUICK_STATUS: { value: UpcomingEvent['status']; label: string }[] = [
-  { value: 'open', label: 'Open' },
-  { value: 'coming_soon', label: 'Soon' },
-  { value: 'completed', label: 'Closed' },
-]
-
-function QuickStatus({
-  value,
-  busy,
-  onChange,
-}: {
-  value: UpcomingEvent['status']
-  busy: boolean
-  onChange: (s: UpcomingEvent['status']) => void
+function EventRow({ ev, selected, muted, regCount, taken, onSelect }: {
+  ev: UpcomingEvent
+  selected: boolean
+  muted: boolean
+  regCount: number
+  taken: number | null
+  onSelect: () => void
 }) {
+  const d = new Date(ev.date + 'T00:00:00')
+  const seats = ev.capacity ? `${taken ?? regCount} of ${ev.capacity} registered` : `${regCount} registered`
+  const meta = [ev.members_only ? 'Members' : null, ev.location, seats].filter(Boolean).join(' · ')
   return (
-    <span className="inline-flex" onClick={e => e.stopPropagation()}>
-      <SegmentedPills size="sm" label="Status" disabled={busy} options={QUICK_STATUS} value={value} onChange={onChange} />
-    </span>
+    <li className={`border-b border-night/20 ${selected ? 'bg-night/[0.04]' : ''}`}>
+      <button type="button" onClick={onSelect} aria-current={selected} className={`grid w-full grid-cols-[48px_minmax(0,1fr)_auto] items-start gap-x-4 px-1 py-4 text-left transition-colors hover:bg-night/[0.03] ${muted ? 'opacity-65' : ''}`}>
+        <span className="text-center">
+          <span className="rd-display block text-[26px] leading-none">{String(d.getDate()).padStart(2, '0')}</span>
+          <span className="rd-eyebrow mt-1 block text-[9px] text-earth-500">{MONTHS_SHORT[d.getMonth()]}</span>
+        </span>
+        <span className="min-w-0">
+          <span className="rd-display block text-[22px] leading-[1.15]">{ev.title}</span>
+          <span className="mt-1 block truncate text-[12px] text-earth-700">{meta}</span>
+        </span>
+        <span className="flex flex-col items-end gap-1.5">
+          <Pill size="sm" active={ev.status === 'open'}>{STATUS_LABEL[ev.status] ?? ev.status}</Pill>
+          <span className="rd-italic text-[18px]">{selected ? 'Open' : 'Edit'}</span>
+        </span>
+      </button>
+    </li>
   )
 }
 
@@ -974,8 +996,9 @@ export default function UpcomingEventsAdminSection({
 }: {
   initialEvents: UpcomingEvent[]
 }) {
+  const today = new Date(new Date().toDateString())
   const [events, setEvents] = useState<UpcomingEvent[]>(initialEvents)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(() => initialEvents.find(ev => new Date(ev.date) >= today)?.id ?? null)
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [regsModal, setRegsModal] = useState<UpcomingEvent | null>(null)
   const [emailEventTarget, setEmailEventTarget] = useState<{ event: UpcomingEvent } | null>(null)
@@ -986,6 +1009,7 @@ export default function UpcomingEventsAdminSection({
   const [waitlistCounts, setWaitlistCounts] = useState<Record<string, number>>({})
   const [waitlistModal, setWaitlistModal] = useState<UpcomingEvent | null>(null)
   const [statusBusy, setStatusBusy] = useState<string | null>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const loadSeatInfo = useCallback(async () => {
     const supabase = createClient()
@@ -1004,9 +1028,10 @@ export default function UpcomingEventsAdminSection({
   // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount: state is set after the request resolves
   useEffect(() => { void loadSeatInfo() }, [loadSeatInfo])
 
-  const today = new Date(new Date().toDateString())
   const activeEvents = events.filter(ev => new Date(ev.date) >= today)
   const completedEvents = events.filter(ev => new Date(ev.date) < today)
+  const nextId = activeEvents[0]?.id ?? null
+  const selected = events.find(e => e.id === selectedId) ?? null
 
   // Fetch registration counts and ids for all events — unchanged query, only
   // the UI decides whether to render the full list (RegistrationsModal does
@@ -1039,6 +1064,7 @@ export default function UpcomingEventsAdminSection({
   function handleCreated(created: UpcomingEvent) {
     setEvents(prev => [...prev, created])
     setAddModalOpen(false)
+    setSelectedId(created.id)
   }
 
   async function handleDelete(id: string) {
@@ -1052,7 +1078,7 @@ export default function UpcomingEventsAdminSection({
     }
     await supabase.from('upcoming_events').delete().eq('id', id)
     setEvents(prev => prev.filter(e => e.id !== id))
-    if (expandedId === id) setExpandedId(null)
+    if (selectedId === id) setSelectedId(null)
   }
 
   async function handleQuickStatus(ev: UpcomingEvent, status: UpcomingEvent['status']) {
@@ -1062,13 +1088,9 @@ export default function UpcomingEventsAdminSection({
     const { error } = await createClient().from('upcoming_events').update({ status }).eq('id', ev.id)
     if (error) {
       setEvents(list => list.map(e => (e.id === ev.id ? { ...e, status: prev } : e)))
-      alert(`Impossibile cambiare lo stato: ${error.message}`)
+      alert(`Could not change the status: ${error.message}`)
     }
     setStatusBusy(null)
-  }
-
-  function openEmailCompose(ev: UpcomingEvent) {
-    setEmailEventTarget({ event: ev })
   }
 
   async function sendQr(ev: UpcomingEvent) {
@@ -1087,102 +1109,79 @@ export default function UpcomingEventsAdminSection({
     navigator.clipboard.writeText(url)
   }
 
-  function renderRows(list: UpcomingEvent[], muted: boolean) {
-    return list.map(ev => {
-      const isExpanded = expandedId === ev.id
-      const badge = (
-        <QuickStatus
-          value={ev.status}
-          busy={statusBusy === ev.id}
-          onChange={st => void handleQuickStatus(ev, st)}
-        />
-      )
-      return (
-        <div key={ev.id} className="border-b border-black/5 last:border-0">
-          <div
-            onClick={() => setExpandedId(isExpanded ? null : ev.id)}
-            className={`px-4 py-3 cursor-pointer hover:bg-paper-cool transition-colors min-h-[44px] ${muted ? 'opacity-70' : ''}`}
-          >
-            {/* Mobile: stacked layout — title on its own line, date+status+chevron below */}
-            <div className="flex sm:hidden flex-col gap-1.5">
-              <div className="flex items-start justify-between gap-2">
-                <span className={`text-sm font-medium leading-snug ${muted ? 'text-ink-500' : 'text-ink-900'}`}>{ev.title}</span>
-                <span className={`text-ink-400 text-xs shrink-0 transition-transform mt-0.5 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className={`text-xs whitespace-nowrap ${muted ? 'text-ink-500' : 'text-ink-500'}`}>{ev.date}</span>
-                {badge}
-              </div>
-            </div>
-
-            {/* Desktop: single-line grid */}
-            <div className="hidden sm:grid sm:grid-cols-[110px_1fr_200px_24px] sm:items-center sm:gap-4">
-              <span className={`font-medium whitespace-nowrap text-sm ${muted ? 'text-ink-500' : 'text-ink-900'}`}>{ev.date}</span>
-              <span className={`text-sm truncate ${muted ? 'text-ink-500' : 'text-ink-900'}`} title={ev.title}>{ev.title}</span>
-              <span>{badge}</span>
-              <span className={`text-ink-400 text-xs transition-transform ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
-            </div>
-          </div>
-          {isExpanded && (
-            <EventAccordion
-              event={ev}
-              regCount={regCounts[ev.id] ?? 0}
-              onSaved={handleSaved}
-              onDeleted={() => handleDelete(ev.id)}
-              onShowRegistrations={() => setRegsModal(ev)}
-              onSendEmail={() => openEmailCompose(ev)}
-              onSendQr={() => sendQr(ev)}
-              onCopyLink={() => copyLink(ev)}
-              taken={takenByEvent[ev.id] ?? null}
-              waitlistCount={waitlistCounts[ev.id] ?? 0}
-              onShowWaitlist={() => setWaitlistModal(ev)}
-            />
-          )}
-        </div>
-      )
-    })
+  function select(id: string) {
+    setSelectedId(id)
+    // On narrow screens the sheet sits below the list: bring it into view.
+    if (window.innerWidth < 1024) setTimeout(() => sheetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
   }
 
+  const row = (ev: UpcomingEvent, muted: boolean) => (
+    <EventRow key={ev.id} ev={ev} muted={muted} selected={ev.id === selectedId} regCount={regCounts[ev.id] ?? 0} taken={takenByEvent[ev.id] ?? null} onSelect={() => select(ev.id)} />
+  )
+
   return (
-    <div className="max-w-5xl mx-auto px-8 py-10">
-      <SectionHeading title="Upcoming Events" />
-
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setAddModalOpen(true)}
-          className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-5 py-2.5 transition-colors duration-fast"
-        >
-          + Add Event
-        </button>
+    <div>
+      <div className="mb-8 flex justify-end">
+        <Pill solid onClick={() => setAddModalOpen(true)}>New event</Pill>
       </div>
 
-      <div className="bg-white border border-line-faint">
-        <div className="hidden sm:grid sm:grid-cols-[110px_1fr_200px_24px] gap-4 px-4 py-3 border-b border-line-faint bg-[#f9f9f9] text-xs font-medium text-ink-500 uppercase tracking-wide">
-          <span>Date</span><span>Title</span><span>Status</span><span />
-        </div>
-        {activeEvents.length === 0 ? (
-          <p className="text-sm text-ink-500 text-center py-10">No upcoming events.</p>
-        ) : (
-          renderRows(activeEvents, false)
-        )}
-      </div>
+      <div className="grid gap-x-12 gap-y-12 lg:grid-cols-2">
+        <div>
+          <div className="flex items-baseline justify-between pb-3">
+            <h2 className="rd-italic text-[clamp(28px,3vw,34px)]">Events</h2>
+            <span className="rd-eyebrow text-[10px] text-earth-500">{events.length} total</span>
+          </div>
+          <div className="border-t border-night">
+            {activeEvents.length === 0 ? (
+              <p className="py-8 text-[13px] text-earth-600">No upcoming events.</p>
+            ) : (
+              <ul>{activeEvents.map(ev => row(ev, false))}</ul>
+            )}
+          </div>
 
-      {completedEvents.length > 0 && (
-        <div className="mt-6">
-          <button
-            onClick={() => setCompletedOpen(prev => !prev)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-medium tracking-widest uppercase text-ink-500 hover:bg-[#e9eaeb] transition-colors"
-          >
-            <span>Completed ({completedEvents.length})</span>
-            <span>{completedOpen ? '▲' : '▼'}</span>
-          </button>
-          {completedOpen && (
-            <div className="bg-white border border-t-0 border-[#e5e7eb]">
-              {renderRows(completedEvents, true)}
+          {completedEvents.length > 0 && (
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={() => setCompletedOpen(prev => !prev)}
+                aria-expanded={completedOpen}
+                className="flex w-full items-baseline justify-between border-b border-night py-3 text-left"
+              >
+                <span className="rd-italic text-[24px]">Completed</span>
+                <span className="rd-eyebrow text-[10px] text-earth-500">{completedEvents.length} · {completedOpen ? 'Hide' : 'Show'}</span>
+              </button>
+              {completedOpen && <ul>{completedEvents.map(ev => row(ev, true))}</ul>}
             </div>
           )}
         </div>
-      )}
+
+        <div ref={sheetRef} className="scroll-mt-6 lg:sticky lg:top-6 lg:max-h-[calc(100svh-48px)] lg:self-start lg:overflow-y-auto lg:pr-1">
+          {selected ? (
+            <EventSheet
+              key={selected.id}
+              event={selected}
+              isNext={selected.id === nextId}
+              regCount={regCounts[selected.id] ?? 0}
+              taken={takenByEvent[selected.id] ?? null}
+              waitlistCount={waitlistCounts[selected.id] ?? 0}
+              statusBusy={statusBusy === selected.id}
+              onSaved={handleSaved}
+              onDeleted={() => handleDelete(selected.id)}
+              onStatus={st => void handleQuickStatus(selected, st)}
+              onShowRegistrations={() => setRegsModal(selected)}
+              onSendEmail={() => setEmailEventTarget({ event: selected })}
+              onSendQr={() => sendQr(selected)}
+              onCopyLink={() => copyLink(selected)}
+              onShowWaitlist={() => setWaitlistModal(selected)}
+            />
+          ) : (
+            <div>
+              <h2 className="rd-italic pb-3 text-[clamp(28px,3vw,34px)]">Event</h2>
+              <p className="border-t border-night py-8 text-[13px] text-earth-600">Choose an event from the list, or create a new one.</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {addModalOpen && (
         <AddEventModal onSave={handleCreated} onClose={() => setAddModalOpen(false)} />
