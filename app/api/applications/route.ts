@@ -2,11 +2,37 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
 import { isApplicationCvPath } from '@/lib/cv-path'
+import { Resend } from 'resend'
+import { confirmationEmail } from '@/lib/application-emails'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
+const CONTACT = 'info@alatainvestmentclub.com'
+
+/** The applicant's confirmation. A failure here never loses or rejects the application. */
+async function sendConfirmation(record: Parameters<typeof confirmationEmail>[0]) {
+  const to = typeof record.email === 'string' ? record.email : ''
+  if (!to) return
+  const { subject, html, text } = confirmationEmail(record, CONTACT)
+  let status = 'sent'
+  let error: string | null = null
+  try {
+    const res = await resend.emails.send({ from: FROM, to, replyTo: CONTACT, subject, html, text })
+    if (res.error) { status = 'failed'; error = res.error.message }
+  } catch (e) {
+    status = 'failed'
+    error = e instanceof Error ? e.message : String(e)
+  }
+  if (error) console.error('application confirmation failed:', error)
+  try {
+    await supabase.from('email_log').insert({ kind: 'application_confirmation', recipient: to, subject, status, error })
+  } catch { /* the log is a convenience */ }
+}
 
 const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
 const TEAMS = ['lab', 'media', 'events'] as const
@@ -106,9 +132,11 @@ export async function POST(req: NextRequest) {
       motivazione: `${motivazione}\n\n${extras}`.slice(0, 3600),
     })
     if (legacyError) return NextResponse.json({ error: legacyError.message }, { status: 400 })
+    await sendConfirmation({ ...base, motivazione, track, study_level: studyLevel, first_choice: firstChoice, second_choice: secondChoice, linkedin_url: linkedin || null, cv_path: cvPath })
     return NextResponse.json({ success: true })
   }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  await sendConfirmation({ ...base, motivazione, track, study_level: studyLevel, first_choice: track === 'analyst' ? firstChoice : null, second_choice: track === 'analyst' ? secondChoice : null, linkedin_url: linkedin || null, cv_path: cvPath })
   return NextResponse.json({ success: true })
 }

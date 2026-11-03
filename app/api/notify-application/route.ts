@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { internalEmail, type ApplicationRecord } from '@/lib/application-emails'
 
 function isValidWebhookSecret(provided: string, expected: string): boolean {
   try {
@@ -23,90 +24,6 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const NOTIFY_TO = 'info@alatainvestmentclub.com'
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
 
-interface ApplicationRecord {
-  id?: string | number
-  nome?: string
-  cognome?: string
-  email?: string
-  telephone_number?: string
-  anno_di_studio?: string
-  degree_programme?: string
-  motivazione?: string
-  created_at?: string
-  [key: string]: unknown
-}
-
-function buildHtml(record: ApplicationRecord): string {
-  const fields: [string, string][] = [
-    ['Nome', record.nome ?? '—'],
-    ['Cognome', record.cognome ?? '—'],
-    ['Email', record.email ?? '—'],
-    ['Telefono', record.telephone_number ?? '—'],
-    ['Anno di studio', record.anno_di_studio ?? '—'],
-    ['Corso di laurea', record.degree_programme ?? '—'],
-    ['Motivazione', record.motivazione ?? '—'],
-    ['Data candidatura', record.created_at ? new Date(record.created_at).toLocaleString('it-IT') : '—'],
-    ['ID', String(record.id ?? '—')],
-  ]
-
-  const rows = fields
-    .map(
-      ([label, value]) => `
-      <tr>
-        <td style="padding:10px 16px;background:#f4f7f4;font-weight:600;font-size:13px;
-                   color:#1a4a3a;white-space:nowrap;border-bottom:1px solid #e5e5e5;
-                   vertical-align:top;width:160px;">${label}</td>
-        <td style="padding:10px 16px;font-size:13px;color:#1a1a1a;border-bottom:1px solid #e5e5e5;
-                   vertical-align:top;white-space:pre-wrap;">${value}</td>
-      </tr>`
-    )
-    .join('')
-
-  return `<!DOCTYPE html>
-<html lang="it">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f9f9f9;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0"
-             style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;overflow:hidden;">
-
-        <!-- Header -->
-        <tr>
-          <td colspan="2" style="background:#1a4a3a;padding:24px 32px;">
-            <p style="margin:0;font-size:11px;color:#a8c5b8;letter-spacing:2px;
-                      text-transform:uppercase;">Alata Investment Club</p>
-            <h1 style="margin:6px 0 0;font-size:20px;color:#ffffff;font-weight:700;">
-              Nuova Candidatura
-            </h1>
-          </td>
-        </tr>
-
-        <!-- Fields -->
-        <tr>
-          <td colspan="2" style="padding:0;">
-            <table width="100%" cellpadding="0" cellspacing="0">${rows}
-            </table>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td colspan="2" style="padding:20px 32px;background:#f4f7f4;
-                                  border-top:1px solid #e5e5e5;">
-            <p style="margin:0;font-size:11px;color:#888;">
-              Notifica automatica — Alata Investment Club &bull; alatainvestmentclub.com
-            </p>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`
-}
-
 export async function POST(req: NextRequest) {
   // Verify webhook secret using constant-time comparison to prevent timing attacks
   const provided = req.headers.get('x-webhook-secret')
@@ -127,13 +44,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing record field' }, { status: 400 })
   }
 
-  const subject = `Nuova Candidatura — ${record.nome ?? ''} ${record.cognome ?? ''}`.trim()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alatainvestmentclub.com'
+  const { subject, html } = internalEmail(record, siteUrl)
+  const replyTo = typeof record.email === 'string' && /^[^s@]+@[^s@]+.[^s@]+$/.test(record.email) ? record.email : undefined
 
   const { error } = await resend.emails.send({
     from: FROM,
     to: NOTIFY_TO,
+    replyTo,
     subject,
-    html: buildHtml(record),
+    html,
   })
 
   if (error) {
