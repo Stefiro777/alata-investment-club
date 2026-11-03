@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import MembershipCard from '@/components/dashboard/MembershipCard'
-import { useProfile } from '../DashboardProfileContext'
+import { useProfile, useUpdateProfile } from '../DashboardProfileContext'
 import { PageTitle, Section, FieldRow, ProgressRule } from '@/app/components/member/ui'
 
 type EditKey = 'phone' | 'degree_programme' | 'year' | 'linkedin_url'
@@ -13,6 +13,7 @@ type EditKey = 'phone' | 'degree_programme' | 'year' | 'linkedin_url'
 /** Board APrd: the digital membership card, then the profile details. */
 export default function ProfilePage() {
   const profile = useProfile()!
+  const updateProfile = useUpdateProfile()
   const router = useRouter()
   const [editing, setEditing] = useState<EditKey | null>(null)
   const [draft, setDraft] = useState('')
@@ -20,6 +21,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const photoRef = useRef<HTMLInputElement>(null)
+  const photoSrc = profile.photo_url ?? null
 
   const memberSince = profile.created_at ? String(new Date(profile.created_at).getFullYear()) : null
   const year = profile.study_level
@@ -32,7 +34,7 @@ export default function ProfilePage() {
     { key: 'phone', label: 'Phone', value: profile.phone ?? null, editable: true },
     { key: 'degree_programme', label: 'Degree', value: profile.degree_programme ?? null, editable: true },
     { key: 'year', label: 'Year', value: year, editable: true },
-    { key: 'photo', label: 'Photo', value: profile.photo_url ? 'Added' : null, editable: true },
+    { key: 'photo', label: 'Photo', value: photoSrc ? 'Added' : null, editable: true },
     { key: 'linkedin_url', label: 'LinkedIn', value: profile.linkedin_url?.replace(/^https?:\/\/(www\.)?/, '') ?? null, editable: true },
   ]
   const filled = rows.filter(r => r.value).length
@@ -51,13 +53,25 @@ export default function ProfilePage() {
   async function uploadPhoto(file: File) {
     setSaving(true)
     setError(null)
+    // The chosen file is shown everywhere at once (profile, Dashboard header), before the upload ends.
+    const previous = profile.photo_url ?? null
+    const local = URL.createObjectURL(file)
+    updateProfile({ photo_url: local })
     const fd = new FormData()
     fd.append('photo', file)
-    const res = await fetch('/api/me/profile', { method: 'POST', body: fd })
-    const json = await res.json().catch(() => ({}))
+    const res = await fetch('/api/me/profile', { method: 'POST', body: fd }).catch(() => null)
+    const json = res ? await res.json().catch(() => ({})) : {}
     setSaving(false)
-    if (!res.ok) { setError(json.error ?? 'Upload failed.'); return }
-    window.location.reload()
+    if (!res || !res.ok) {
+      updateProfile({ photo_url: previous })
+      URL.revokeObjectURL(local)
+      setError(json.error ?? 'Upload failed.')
+      return
+    }
+    // The saved address is new on every upload, so no browser or CDN cache can show the old photo.
+    updateProfile({ photo_url: json.url })
+    URL.revokeObjectURL(local)
+    if (photoRef.current) photoRef.current.value = ''
   }
 
   function start(key: EditKey, current: string | null) {
@@ -130,7 +144,13 @@ export default function ProfilePage() {
                 <FieldRow
                   key={r.key}
                   label={r.label}
-                  value={r.value ?? 'Not added'}
+                  value={r.key === 'photo' && photoSrc ? (
+                    <span className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={photoSrc} alt="Your photo" className="h-[40px] w-[31px] object-cover" />
+                      {saving ? 'Uploading…' : 'Added'}
+                    </span>
+                  ) : r.value ?? 'Not added'}
                   muted={!r.value}
                   aside={!r.editable ? null : r.key === 'photo' ? (
                     <button type="button" onClick={() => photoRef.current?.click()} className="rd-italic text-[20px] hover:underline">{r.value ? 'Change' : 'Add'}</button>

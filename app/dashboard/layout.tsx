@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const profile = state.profile
   return (
-    <DashboardProfileProvider profile={profile}>
+    <DashboardProfileProvider profile={profile} onUpdate={patch => setState(prev => (prev.profile ? { ...prev, profile: { ...prev.profile, ...patch } } : prev))}>
       <MemberShell profile={profile}>{children}</MemberShell>
     </DashboardProfileProvider>
   )
