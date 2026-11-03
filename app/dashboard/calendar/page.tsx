@@ -5,15 +5,9 @@ import { useSearchParams } from 'next/navigation'
 import { PageTitle, Tabs } from '@/app/components/member/ui'
 import { createClient } from '@/lib/supabase'
 import { TEAM_BADGE } from '../teamColors'
+import MonthCalendar, { CLUB_EVENT, TEAM_DATE, type CalItem } from './MonthCalendar'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
 
 const PLATFORM_COLORS: Record<string, string> = {
   Instagram:  '#E1306C',
@@ -65,63 +59,8 @@ type PedPost = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function toISODate(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-function buildGrid(year: number, month: number): Date[] {
-  const firstDay = new Date(year, month, 1)
-  const rawDow = firstDay.getDay()
-  const dow = rawDow === 0 ? 6 : rawDow - 1
-
-  const start = new Date(year, month, 1 - dow)
-  return Array.from({ length: 42 }, (_, i) => {
-    const d = new Date(start)
-    d.setDate(start.getDate() + i)
-    return d
-  })
-}
-
 function fmtDate(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-// ── Shared: MonthNav ──────────────────────────────────────────────────────────
-
-function MonthNav({
-  year, month,
-  onPrev, onNext,
-}: { year: number; month: number; onPrev: () => void; onNext: () => void }) {
-  return (
-    <div className="flex items-center gap-4 mb-4">
-      <button
-        type="button"
-        onClick={onPrev}
-        className="p-1.5 border border-[#e5e7eb] hover:border-forest transition-colors"
-        aria-label="Mese precedente"
-      >
-        <svg className="w-4 h-4 text-ink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h2 className="font-serif text-xl font-semibold text-ink-900 w-44 text-center">
-        {MONTHS[month]} {year}
-      </h2>
-      <button
-        type="button"
-        onClick={onNext}
-        className="p-1.5 border border-[#e5e7eb] hover:border-forest transition-colors"
-        aria-label="Mese successivo"
-      >
-        <svg className="w-4 h-4 text-ink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
-  )
 }
 
 // ── Tasks tab components ───────────────────────────────────────────────────────
@@ -300,14 +239,10 @@ function NewEventModal({
 }
 
 function EventiTab() {
-  const today = new Date()
-  const [year, setYear]                         = useState(today.getFullYear())
-  const [month, setMonth]                       = useState(today.getMonth())
   const [events, setEvents]                     = useState<UpcomingEventItem[]>([])
   const [loading, setLoading]                   = useState(true)
   const [selectedEvent, setSelectedEvent]       = useState<UpcomingEventItem | null>(null)
   const [showCreate, setShowCreate]             = useState(false)
-  const [dayPopover, setDayPopover]             = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -345,116 +280,35 @@ function EventiTab() {
     load()
   }, [])
 
-  function prevMonth() { if (month === 0) { setYear(y => y - 1); setMonth(11) } else setMonth(m => m - 1) }
-  function nextMonth() { if (month === 11) { setYear(y => y + 1); setMonth(0) } else setMonth(m => m + 1) }
-
-  const grid      = useMemo(() => buildGrid(year, month), [year, month])
-  const todayStr  = toISODate(today)
-
-  const eventsByDate = useMemo(() => {
-    const map: Record<string, UpcomingEventItem[]> = {}
-    for (const ev of events) {
-      if (!map[ev.date]) map[ev.date] = []
-      map[ev.date].push(ev)
-    }
-    return map
-  }, [events])
-
   if (loading) return <div className="py-16 text-sm text-ink-500">Loading...</div>
+
+  const items: CalItem[] = events.map(ev => {
+    const isTask = ev._source === 'task'
+    return {
+      id: ev.id,
+      date: ev.date,
+      title: ev.title,
+      meta: isTask
+        ? ['Team date', ev._team].filter(Boolean).join(' · ')
+        : [ev.start_time, ev.location].filter(Boolean).join(' · ') || 'Club event',
+      color: isTask ? TEAM_DATE : CLUB_EVENT,
+    }
+  })
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
-        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center justify-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors w-full sm:w-auto">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Nuovo evento
+      <div className="mb-8 flex justify-end">
+        <button type="button" onClick={() => setShowCreate(true)} className="rounded-full bg-club px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ivory transition-colors hover:bg-moss">
+          New event
         </button>
       </div>
 
-      <div className="border border-[#e5e7eb]">
-        <div className="grid grid-cols-7 border-b border-[#e5e7eb]">
-          {WEEKDAYS.map(d => <div key={d} className="py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-ink-400">{d}</div>)}
-        </div>
-        <div className="grid grid-cols-7">
-          {grid.map((day, i) => {
-            const dateStr   = toISODate(day)
-            const isToday   = dateStr === todayStr
-            const inMonth   = day.getMonth() === month
-            const dayEvs    = eventsByDate[dateStr] ?? []
-            const visible   = dayEvs.slice(0, 2)
-            const overflow  = dayEvs.length - visible.length
-            const isLastRow = i >= 35
-
-            return (
-              <div key={dateStr + i} className={['min-h-[96px] p-2 border-b border-r border-[#e5e7eb] flex flex-col gap-1', (i + 1) % 7 === 0 ? 'border-r-0' : '', isLastRow ? 'border-b-0' : ''].join(' ')}>
-                <div className="flex-shrink-0">
-                  <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-forest text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
-                    {day.getDate()}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-0.5 flex-1">
-                  {visible.map(ev => {
-                    const isTask = ev._source === 'task'
-                    const teamBadge = isTask && ev._team ? (TEAM_BADGE[ev._team] ?? null) : null
-                    const bg = isTask ? (teamBadge?.bg ?? '#d97706') : 'var(--forest)'
-                    const rawLabel = ev.start_time ? `${ev.start_time} ${ev.title}` : ev.title
-                    const label = rawLabel.length > 20 ? rawLabel.slice(0, 20) + '…' : rawLabel
-                    return (
-                      <button key={ev.id} type="button" onClick={e => { e.stopPropagation(); setSelectedEvent(ev) }}
-                        className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 truncate flex items-center gap-1"
-                        style={{ backgroundColor: bg, color: '#fff' }}>
-                        {isTask && <span className="flex-shrink-0 text-[8px] border border-white/60 px-0.5 leading-tight">Task</span>}
-                        <span className="truncate">{label}</span>
-                      </button>
-                    )
-                  })}
-                  {overflow > 0 && (
-                    <button type="button" onClick={e => { e.stopPropagation(); setDayPopover(dateStr) }} className="text-[10px] text-ink-400 hover:text-ink-700 pl-1 text-left transition-colors">
-                      +{overflow} altri
-                    </button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Day popover */}
-      {dayPopover && (() => {
-        const evs = eventsByDate[dayPopover] ?? []
-        const dateDisplay = new Date(dayPopover + 'T00:00:00').toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={e => { if (e.target === e.currentTarget) setDayPopover(null) }}>
-            <div className="bg-white w-full max-w-sm shadow-2xl">
-              <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[#e5e7eb]">
-                <h3 className="font-serif text-lg font-bold text-ink-900">{dateDisplay}</h3>
-                <button onClick={() => setDayPopover(null)} className="text-ink-400 hover:text-ink-900 p-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              <div className="px-4 py-3 flex flex-col gap-1 max-h-72 overflow-y-auto">
-                {evs.map(ev => {
-                  const isTask = ev._source === 'task'
-                  const teamBadge = isTask && ev._team ? (TEAM_BADGE[ev._team] ?? null) : null
-                  const bg = isTask ? (teamBadge?.bg ?? '#d97706') : 'var(--forest)'
-                  return (
-                    <button key={ev.id} type="button" onClick={() => { setDayPopover(null); setSelectedEvent(ev) }}
-                      className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5 flex items-center gap-1.5"
-                      style={{ backgroundColor: bg, color: '#fff' }}>
-                      {isTask && <span className="text-[8px] border border-white/60 px-0.5 leading-tight flex-shrink-0">Task</span>}
-                      <span>{ev.start_time ? `${ev.start_time} ` : ''}{ev.title}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )
-      })()}
+      <MonthCalendar
+        items={items}
+        legend={[{ label: 'Club event', color: CLUB_EVENT }, { label: 'Team date', color: TEAM_DATE }]}
+        onPick={id => setSelectedEvent(events.find(e => e.id === id) ?? null)}
+        emptyText="No club events or team dates coming up."
+      />
 
       {selectedEvent && (
         <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onDelete={id => setEvents(prev => prev.filter(e => e.id !== id))} />
@@ -703,15 +557,11 @@ function NewPedModal({
 }
 
 function PedTab() {
-  const today = new Date()
-  const [year, setYear]               = useState(today.getFullYear())
-  const [month, setMonth]             = useState(today.getMonth())
   const [posts, setPosts]             = useState<PedPost[]>([])
   const [loading, setLoading]         = useState(true)
   const [view, setView]               = useState<'calendar' | 'list'>('calendar')
   const [selectedPost, setSelectedPost] = useState<PedPost | null>(null)
   const [showCreate, setShowCreate]   = useState(false)
-  const [dayPopover, setDayPopover]   = useState<string | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [togglingPosted, setTogglingPosted] = useState<string | null>(null)
   const [confirmDel, setConfirmDel]   = useState<string | null>(null)
@@ -725,20 +575,14 @@ function PedTab() {
       .finally(() => setLoading(false))
   }, [])
 
-  function prevMonth() { if (month === 0) { setYear(y => y - 1); setMonth(11) } else setMonth(m => m - 1) }
-  function nextMonth() { if (month === 11) { setYear(y => y + 1); setMonth(0) } else setMonth(m => m + 1) }
-
-  const grid     = useMemo(() => buildGrid(year, month), [year, month])
-  const todayStr = toISODate(today)
-
-  const postsByDate = useMemo(() => {
-    const map: Record<string, PedPost[]> = {}
-    for (const p of posts) {
-      if (!map[p.scheduled_date]) map[p.scheduled_date] = []
-      map[p.scheduled_date].push(p)
-    }
-    return map
-  }, [posts])
+  const pedItems: CalItem[] = posts.map(p => ({
+    id: p.id,
+    date: p.scheduled_date,
+    title: p.title,
+    meta: [p.platform, p.content_type, p.posted ? 'Posted' : p.status].filter(Boolean).join(' · '),
+    color: p.platform ? (PLATFORM_COLORS[p.platform] ?? CLUB_EVENT) : CLUB_EVENT,
+    muted: p.posted,
+  }))
 
   const existingAssignees = useMemo(() =>
     Array.from(new Set(posts.map(p => p.assigned_to).filter(Boolean))) as string[]
@@ -778,108 +622,29 @@ function PedTab() {
   return (
     <div>
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           {(['calendar', 'list'] as const).map(v => (
-            <button key={v} type="button" onClick={() => setView(v)}
-              className={`text-xs font-medium uppercase tracking-wide px-4 py-1.5 border transition-colors ${view === v ? 'bg-forest text-white border-forest' : 'bg-white text-ink-500 border-[#e5e7eb] hover:border-forest hover:text-ink-900'}`}>
-              {v === 'calendar' ? 'Calendario' : 'Lista'}
+            <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v}
+              className={`rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${view === v ? 'border-club bg-club text-ivory' : 'border-night/50 hover:border-night'}`}>
+              {v === 'calendar' ? 'Calendar' : 'List'}
             </button>
           ))}
         </div>
-        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          Nuova entry
+        <button type="button" onClick={() => setShowCreate(true)} className="rounded-full bg-club px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ivory transition-colors hover:bg-moss">
+          New entry
         </button>
       </div>
 
       {view === 'calendar' ? (
         <>
-          <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
-          <div className="border border-[#e5e7eb]">
-            <div className="grid grid-cols-7 border-b border-[#e5e7eb]">
-              {WEEKDAYS.map(d => <div key={d} className="py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-ink-400">{d}</div>)}
-            </div>
-            <div className="grid grid-cols-7">
-              {grid.map((day, i) => {
-                const dateStr   = toISODate(day)
-                const isToday   = dateStr === todayStr
-                const inMonth   = day.getMonth() === month
-                const dayPosts  = postsByDate[dateStr] ?? []
-                const visible   = dayPosts.slice(0, 2)
-                const overflow  = dayPosts.length - visible.length
-                const isLastRow = i >= 35
-
-                return (
-                  <div key={dateStr + i} className={['min-h-[96px] p-2 border-b border-r border-[#e5e7eb] flex flex-col gap-1', (i + 1) % 7 === 0 ? 'border-r-0' : '', isLastRow ? 'border-b-0' : ''].join(' ')}>
-                    <div className="flex-shrink-0">
-                      <span className={['inline-flex items-center justify-center w-6 h-6 text-xs font-semibold', isToday ? 'bg-forest text-white' : inMonth ? 'text-ink-900' : 'text-ink-300'].join(' ')}>
-                        {day.getDate()}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-0.5 flex-1">
-                      {visible.map(p => {
-                        const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : 'var(--forest)'
-                        const label = p.title.length > 20 ? p.title.slice(0, 20) + '…' : p.title
-                        return (
-                          <button key={p.id} type="button" onClick={e => { e.stopPropagation(); setSelectedPost(p) }}
-                            className={`w-full text-left text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 truncate ${p.posted ? 'opacity-50 line-through' : ''}`}
-                            style={{ backgroundColor: color, color: '#fff' }}>
-                            {label}
-                          </button>
-                        )
-                      })}
-                      {overflow > 0 && (
-                        <button type="button" onClick={e => { e.stopPropagation(); setDayPopover(dateStr) }} className="text-[10px] text-ink-400 hover:text-ink-700 pl-1 text-left transition-colors">
-                          +{overflow} altri
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Platform legend */}
-          <div className="flex items-center gap-4 mt-4 flex-wrap">
-            {PLATFORMS.map(p => (
-              <span key={p} className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-ink-600">
-                <span style={{ backgroundColor: PLATFORM_COLORS[p], width: 8, height: 8, borderRadius: 0, display: 'inline-block', flexShrink: 0 }} />
-                {p}
-              </span>
-            ))}
-          </div>
-
-          {/* Day popover */}
-          {dayPopover && (() => {
-            const ps = postsByDate[dayPopover] ?? []
-            const dateDisplay = new Date(dayPopover + 'T00:00:00').toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
-            return (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={e => { if (e.target === e.currentTarget) setDayPopover(null) }}>
-                <div className="bg-white w-full max-w-sm shadow-2xl">
-                  <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[#e5e7eb]">
-                    <h3 className="font-serif text-lg font-bold text-ink-900">{dateDisplay}</h3>
-                    <button onClick={() => setDayPopover(null)} className="text-ink-400 hover:text-ink-900 p-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                  </div>
-                  <div className="px-4 py-3 flex flex-col gap-1 max-h-72 overflow-y-auto">
-                    {ps.map(p => {
-                      const color = p.platform ? (PLATFORM_COLORS[p.platform] ?? '#1a4a3a') : 'var(--forest)'
-                      return (
-                        <button key={p.id} type="button" onClick={() => { setDayPopover(null); setSelectedPost(p) }}
-                          className="w-full text-left text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5"
-                          style={{ backgroundColor: color, color: '#fff' }}>
-                          {p.platform ? `[${p.platform}] ` : ''}{p.title}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
+          <MonthCalendar
+            items={pedItems}
+            legend={PLATFORMS.map(p => ({ label: p, color: PLATFORM_COLORS[p] }))}
+            onPick={id => setSelectedPost(posts.find(p => p.id === id) ?? null)}
+            comingUpTitle="Next posts"
+            emptyText="No posts scheduled."
+          />
         </>
       ) : (
         /* Lista view */
