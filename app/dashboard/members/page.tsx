@@ -4,6 +4,7 @@ import { isHiddenTeam } from '@/lib/hidden-teams'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../DashboardProfileContext'
+import { TEAM_BADGE } from '../teamColors'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -44,26 +45,6 @@ function roleGroupLabel(role: string): string {
   return ROLE_GROUPS.find(r => r.key === role)?.label ?? role
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('it-IT', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
-}
-
-function getQuarter(date: string): { q: string; year: number } {
-  const d = new Date(date)
-  const month = d.getMonth() + 1
-  const year = d.getFullYear()
-  if (month <= 3) return { q: 'Q1', year }
-  if (month <= 6) return { q: 'Q2', year }
-  if (month <= 9) return { q: 'Q3', year }
-  return { q: 'Q4', year }
-}
-
-function currentQuarterInfo(): { q: string; year: number } {
-  return getQuarter(new Date().toISOString())
-}
-
 function lastName(name: string): string {
   return name.trim().split(' ').slice(-1)[0].toLowerCase()
 }
@@ -88,15 +69,18 @@ type Member = {
   title: string | null
   teams: string[] | null
   lab_subdivision: string | null
+  photo_url?: string | null
+  linkedin_url?: string | null
 }
 
-type TaskRecord = {
+type Alumnus = {
   id: string
-  title: string
-  team: string | null
-  status: string
-  completed_at: string | null
-  assigned_to: string[]
+  name: string
+  role: string | null
+  current_company: string | null
+  company: string | null
+  linkedin_url: string | null
+  photo_url: string | null
 }
 
 type FormState = {
@@ -119,154 +103,6 @@ const EMPTY_FORM: FormState = {
   teams: [],
   lab_subdivision: '',
   user_id: null,
-}
-
-// ── CompletedTasksModal ───────────────────────────────────────────────────────
-
-function TaskRow({ task }: { task: TaskRecord }) {
-  return (
-    <div className="flex items-start gap-4 py-3 border-b border-line last:border-b-0">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-ink-900 leading-snug">{task.title}</p>
-        {task.completed_at && (
-          <p className="text-xs text-ink-400 mt-0.5">{formatDate(task.completed_at)}</p>
-        )}
-      </div>
-      {task.team && (
-        <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-forest text-white">
-          {teamLabel(task.team)}
-        </span>
-      )}
-    </div>
-  )
-}
-
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      className="w-4 h-4 text-ink-400 transition-transform duration-150 flex-shrink-0"
-      style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-      fill="none" stroke="currentColor" viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  )
-}
-
-function CompletedTasksModal({
-  memberName,
-  tasks,
-  onClose,
-}: {
-  memberName: string
-  tasks: TaskRecord[]
-  onClose: () => void
-}) {
-  const curQ = currentQuarterInfo()
-  const curKey = `${curQ.q} ${curQ.year}`
-
-  const currentTasks = tasks.filter(t =>
-    t.completed_at && (q => q.q === curQ.q && q.year === curQ.year)(getQuarter(t.completed_at))
-  )
-
-  // Past tasks grouped by quarter, most recent first (tasks already sorted DESC)
-  const pastGroups: { key: string; label: string; tasks: TaskRecord[] }[] = []
-  const seen = new Set<string>()
-  for (const t of tasks) {
-    if (!t.completed_at) continue
-    const q = getQuarter(t.completed_at)
-    const key = `${q.q} ${q.year}`
-    if (key === curKey) continue
-    if (!seen.has(key)) {
-      seen.add(key)
-      pastGroups.push({ key, label: key, tasks: [] })
-    }
-    pastGroups.find(g => g.key === key)!.tasks.push(t)
-  }
-
-  const [pastOpen, setPastOpen] = useState(false)
-  const [openQuarters, setOpenQuarters] = useState<Set<string>>(new Set())
-
-  function toggleQuarter(key: string) {
-    setOpenQuarters(prev => {
-      const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
-      return next
-    })
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="bg-white w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between px-7 py-5 border-b border-line flex-shrink-0">
-          <div>
-            <h2 className="font-serif text-xl font-bold text-ink-900">Task completate</h2>
-            <p className="text-sm text-ink-500 mt-0.5">{memberName}</p>
-          </div>
-          <button onClick={onClose} className="text-ink-400 hover:text-ink-900 p-1">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="overflow-y-auto flex-1">
-          {/* Current quarter */}
-          <div className="px-7 pt-5 pb-4">
-            <h3 className="font-serif text-lg font-semibold text-ink-900 mb-3">{curKey}</h3>
-            {currentTasks.length === 0 ? (
-              <p className="text-sm text-ink-500">Nessuna task completata questo quarter.</p>
-            ) : (
-              <div>{currentTasks.map(t => <TaskRow key={t.id} task={t} />)}</div>
-            )}
-          </div>
-
-          {/* Past quarters accordion */}
-          {pastGroups.length > 0 && (
-            <div className="border-t border-line">
-              <button
-                type="button"
-                onClick={() => setPastOpen(v => !v)}
-                className="w-full flex items-center justify-between px-7 py-4 text-left hover:bg-[#f9f9f9] transition-colors"
-              >
-                <span className="text-sm font-medium text-ink-700">Task precedenti</span>
-                <ChevronIcon open={pastOpen} />
-              </button>
-
-              {pastOpen && (
-                <div className="border-t border-line">
-                  {pastGroups.map(group => (
-                    <div key={group.key} className="border-b border-line last:border-b-0">
-                      <button
-                        type="button"
-                        onClick={() => toggleQuarter(group.key)}
-                        className="w-full flex items-center justify-between px-7 py-3 text-left hover:bg-[#f9f9f9] transition-colors"
-                      >
-                        <span className="text-sm text-ink-700">
-                          {group.label}{' '}
-                          <span className="text-ink-400">({group.tasks.length})</span>
-                        </span>
-                        <ChevronIcon open={openQuarters.has(group.key)} />
-                      </button>
-                      {openQuarters.has(group.key) && (
-                        <div className="px-7 border-t border-line">
-                          {group.tasks.map(t => <TaskRow key={t.id} task={t} />)}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
 }
 
 // ── MemberForm modal ──────────────────────────────────────────────────────────
@@ -332,7 +168,7 @@ function MemberFormModal({
       const { data, error: err } = await supabase
         .from('club_members')
         .insert(payload)
-        .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision')
+        .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision, photo_url, linkedin_url')
         .maybeSingle()
       if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return }
       onSaved(data as Member, true)
@@ -507,22 +343,33 @@ function MemberFormModal({
 
 // ── MemberRow ─────────────────────────────────────────────────────────────────
 
+function Portrait({ src, name }: { src?: string | null; name: string }) {
+  const initials = name.split(/s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase()
+  return (
+    <div className="h-[57px] w-[44px] shrink-0 overflow-hidden bg-[#e8e1d2]">
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
+      ) : (
+        <span className="rd-eyebrow flex h-full items-center justify-center text-[11px] text-earth-500">{initials}</span>
+      )}
+    </div>
+  )
+}
+
+/** Board APed: photo, name in Cormorant, a dot in the team colour with title and team, LinkedIn in italics. */
 function MemberRow({
   member,
   canEdit,
   canDelete,
   onEdit,
   onDelete,
-  taskStats,
-  onOpenCompleted,
 }: {
   member: Member
   canEdit: boolean
   canDelete: boolean
   onEdit: () => void
   onDelete: () => void
-  taskStats: { total: number; done: number; currentQuarterDone: number; completedTasks: TaskRecord[] } | null
-  onOpenCompleted: () => void
 }) {
   const [confirmDel, setConfirmDel] = useState(false)
   const [deleting, setDeleting]     = useState(false)
@@ -535,129 +382,60 @@ function MemberRow({
     else setDeleting(false)
   }
 
-  return (
-    <div className="border-b border-line last:border-b-0 px-5 py-3 flex items-start gap-4 bg-white hover:bg-[#f9f9f9] transition-colors">
-      {/* Main info */}
-      <div className="flex-1 min-w-0">
-        {/* Riga 1: Nome + Titolo inline */}
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <p className="text-base font-semibold text-gray-900">{member.full_name}</p>
-          {member.title && (
-            <p className="text-sm text-forest">{member.title}</p>
-          )}
-        </div>
+  const teams = member.teams ?? []
+  const dot = TEAM_BADGE[member.role === 'bod' ? 'bod' : teams[0] ?? '']?.bg ?? '#1a4a3a'
+  const meta = [member.title, ...teams.map(teamLabel), member.lab_subdivision ? labSubLabel(member.lab_subdivision) : null].filter(Boolean).join(' · ')
 
-        {/* Riga 3: Badge team + subdivision */}
-        {(member.teams ?? []).length > 0 && (
-          <div className="flex items-center gap-1.5 flex-wrap mt-2">
-            {(member.teams ?? []).map(t => (
-              <span
-                key={t}
-                className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px bg-forest text-white"
-              >
-                {teamLabel(t)}
-              </span>
-            ))}
-            {member.lab_subdivision && (
-              <span className="text-sm font-medium text-gray-700">
-                · {labSubLabel(member.lab_subdivision)}
-              </span>
-            )}
+  return (
+    <li className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-x-4 border-b border-night/20 py-3.5">
+      <Portrait src={member.photo_url} name={member.full_name} />
+      <div className="min-w-0">
+        <div className="rd-display truncate text-[22px] leading-[1.15]">{member.full_name}</div>
+        <div className="mt-1 flex items-center gap-2 text-[12px] text-earth-700">
+          <i className="block h-[8px] w-[8px] shrink-0 rounded-full" style={{ backgroundColor: dot }} />
+          <span className="truncate">{meta || roleGroupLabel(member.role)}</span>
+        </div>
+        {(member.email || member.phone) && (
+          <div className="mt-0.5 flex flex-wrap gap-x-4 text-[12px] text-earth-600">
+            {member.email && <a href={`mailto:${member.email}`} className="hover:underline">{member.email}</a>}
+            {member.phone && <a href={`tel:${member.phone}`} className="hover:underline">{member.phone}</a>}
           </div>
         )}
-
-        {/* Riga 4: Email — vertical padding grows the tap height to >=44px
-            without changing the text size. */}
-        <div className="flex items-center gap-4 mt-2 flex-wrap">
-          {member.email && (
-            <a
-              href={`mailto:${member.email}`}
-              className="text-sm text-gray-500 hover:text-forest transition-colors py-3"
-              onClick={e => e.stopPropagation()}
-            >
-              {member.email}
-            </a>
-          )}
-          {member.phone && (
-            <a
-              href={`tel:${member.phone}`}
-              className="text-sm text-gray-600 hover:text-forest transition-colors py-3"
-              onClick={e => e.stopPropagation()}
-            >
-              {member.phone}
-            </a>
-          )}
-        </div>
-
-        {/* Task counter */}
-        <div className="mt-3">
-          {taskStats === null ? (
-            <span className="text-sm text-gray-500">—</span>
-          ) : (
-            <span className="text-sm text-gray-500">
-              {taskStats.total} assegnate
-              {' · '}
-              <button
-                type="button"
-                onClick={onOpenCompleted}
-                className="text-sm text-gray-500 underline-offset-2 hover:underline cursor-pointer py-3"
-              >
-                {taskStats.currentQuarterDone} completate questo quarter
-              </button>
-            </span>
-          )}
-        </div>
       </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-baseline gap-4">
+        {member.linkedin_url && (
+          <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="rd-italic text-[20px] hover:underline underline-offset-[0.18em]">LinkedIn</a>
+        )}
         {confirmDel ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-ink-500">Eliminare?</span>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="text-xs font-semibold text-red-500 hover:text-red-700 disabled:opacity-40"
-            >
-              {deleting ? '…' : 'Sì'}
-            </button>
-            <button
-              onClick={() => setConfirmDel(false)}
-              className="text-xs text-ink-400 hover:text-ink-700"
-            >
-              No
-            </button>
-          </div>
+          <span className="flex items-baseline gap-3 text-[12px]">
+            <span className="text-earth-600">Delete?</span>
+            <button onClick={handleDelete} disabled={deleting} className="font-semibold text-red-600 hover:text-red-800 disabled:opacity-40">{deleting ? '…' : 'Yes'}</button>
+            <button onClick={() => setConfirmDel(false)} className="text-earth-600 hover:text-night">No</button>
+          </span>
         ) : (
           <>
-            {/* Padding-only growth (no negative margin) so the flex gap-2 between
-                the two buttons stays real space, guaranteeing >=8px clearance. */}
-            {canEdit && (
-              <button
-                onClick={onEdit}
-                title="Modifica"
-                className="p-3.5 text-ink-300 hover:text-forest transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-            )}
-            {canDelete && (
-              <button
-                onClick={() => setConfirmDel(true)}
-                title="Elimina"
-                className="p-3.5 text-ink-300 hover:text-red-500 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            )}
+            {canEdit && <button onClick={onEdit} className="rd-italic text-[18px] text-earth-600 hover:text-night hover:underline underline-offset-[0.18em]">Edit</button>}
+            {canDelete && <button onClick={() => setConfirmDel(true)} className="rd-italic text-[18px] text-earth-600 hover:text-red-600 hover:underline underline-offset-[0.18em]">Delete</button>}
           </>
         )}
       </div>
-    </div>
+    </li>
+  )
+}
+
+function AlumnusRow({ a }: { a: Alumnus }) {
+  const meta = [a.role, a.current_company || a.company].filter(Boolean).join(' · ')
+  return (
+    <li className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-x-4 border-b border-night/20 py-3.5">
+      <Portrait src={a.photo_url} name={a.name} />
+      <div className="min-w-0">
+        <div className="rd-display truncate text-[22px] leading-[1.15]">{a.name}</div>
+        {meta && <div className="mt-1 truncate text-[12px] text-earth-700">{meta}</div>}
+      </div>
+      {a.linkedin_url && (
+        <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer" className="rd-italic text-[20px] hover:underline underline-offset-[0.18em]">LinkedIn</a>
+      )}
+    </li>
   )
 }
 
@@ -689,7 +467,7 @@ function FilterDropdown({
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none whitespace-nowrap"
+        className="flex items-center gap-2 rounded-full border border-night/50 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] hover:border-night focus:outline-none whitespace-nowrap"
       >
         <span>{selected.label}</span>
         <svg
@@ -701,7 +479,7 @@ function FilterDropdown({
         </svg>
       </button>
       {open && (
-        <div className="absolute top-full left-0 z-20 bg-white border border-[#e5e7eb] shadow-md min-w-full">
+        <div className="absolute top-full left-0 z-20 mt-1 min-w-full bg-ivory border border-night/20 shadow-md">
           {options.map(o => (
             <button
               key={o.key}
@@ -709,8 +487,8 @@ function FilterDropdown({
               onMouseDown={() => { onChange(o.key); setOpen(false) }}
               className={`w-full text-left px-3 py-2 text-sm border-b border-[#e5e7eb] last:border-b-0 ${
                 o.key === value
-                  ? 'bg-forest text-white'
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? 'bg-club text-ivory'
+                  : 'text-night hover:bg-night/5'
               }`}
             >
               {o.label}
@@ -728,13 +506,13 @@ export default function MembersPage() {
   const profile = useProfile()
 
   const [members, setMembers]               = useState<Member[]>([])
-  const [tasks, setTasks]                   = useState<TaskRecord[]>([])
+  const [alumni, setAlumni]                 = useState<Alumnus[]>([])
+  const [tab, setTab]                       = useState<'members' | 'alumni'>('members')
   const [loading, setLoading]               = useState(true)
   const [search, setSearch]                 = useState('')
   const [teamFilter, setTeamFilter]         = useState('all')
   const [roleFilter, setRoleFilter]         = useState('all')
   const [modal, setModal]                   = useState<(Member & { isNew: boolean }) | null>(null)
-  const [completedModal, setCompletedModal] = useState<{ memberName: string; tasks: TaskRecord[] } | null>(null)
 
   const isBoD      = profile?.role === 'bod' || profile?.role === 'director'
   const isDirector = profile?.role === 'director'
@@ -744,69 +522,41 @@ export default function MembersPage() {
     async function load() {
       const supabase = createClient()
 
-      const [{ data: memberData }, { data: taskData }] = await Promise.all([
+      const [{ data: memberData }, { data: alumniData }] = await Promise.all([
         supabase
           .from('club_members')
           .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision')
           .order('role', { ascending: true })
           .order('full_name', { ascending: true }),
         supabase
-          .from('tasks')
-          .select('id, title, team, status, completed_at, assigned_to'),
+          .from('alumni')
+          .select('id, name, role, current_company, company, linkedin_url, photo_url')
+          .order('order_index', { ascending: true, nullsFirst: false })
+          .order('created_at', { ascending: true }),
       ])
 
       setMembers((memberData ?? []) as Member[])
-      setTasks(
-        (taskData ?? []).map((r: Record<string, unknown>) => ({
-          id: r.id as string,
-          title: r.title as string,
-          team: (r.team as string) ?? null,
-          status: r.status as string,
-          completed_at: (r.completed_at as string) ?? null,
-          assigned_to: (r.assigned_to as string[]) ?? [],
-        }))
-      )
+      setAlumni((alumniData ?? []) as Alumnus[])
       setLoading(false)
     }
     load()
   }, [])
 
-  const taskStats = useMemo(() => {
-    const curQ = currentQuarterInfo()
-    const map: Record<string, { total: number; done: number; currentQuarterDone: number; completedTasks: TaskRecord[] }> = {}
-    for (const task of tasks) {
-      for (const uid of task.assigned_to) {
-        if (!map[uid]) map[uid] = { total: 0, done: 0, currentQuarterDone: 0, completedTasks: [] }
-        map[uid].total++
-        if (task.status === 'done') {
-          map[uid].done++
-          map[uid].completedTasks.push(task)
-          if (task.completed_at) {
-            const q = getQuarter(task.completed_at)
-            if (q.q === curQ.q && q.year === curQ.year) map[uid].currentQuarterDone++
-          }
-        }
-      }
-    }
-    for (const uid in map) {
-      map[uid].completedTasks.sort((a, b) => {
-        if (!a.completed_at) return 1
-        if (!b.completed_at) return -1
-        return new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
-      })
-    }
-    return map
-  }, [tasks])
-
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return members.filter(m => {
-      if (q && !m.full_name.toLowerCase().includes(q)) return false
+      if (q && !m.full_name.toLowerCase().includes(q) && !(m.teams ?? []).some(t => teamLabel(t).toLowerCase().includes(q))) return false
       if (teamFilter !== 'all' && !(m.teams ?? []).includes(teamFilter)) return false
       if (roleFilter !== 'all' && m.role !== roleFilter) return false
       return true
     })
   }, [members, search, teamFilter, roleFilter])
+
+  const filteredAlumni = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return alumni
+    return alumni.filter(a => [a.name, a.role, a.current_company, a.company].some(v => v?.toLowerCase().includes(q)))
+  }, [alumni, search])
 
   const grouped = useMemo(() => {
     return ROLE_GROUPS.map(g => ({
@@ -844,98 +594,89 @@ export default function MembersPage() {
     <div>
 
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="rd-display text-[clamp(40px,4.6vw,54px)]">People</h1>
-          <p className="mt-3 text-[14px] text-earth-600">The club, and the people who came before. <a href="/team/alumni" className="rd-italic text-[18px] text-club underline-offset-4 hover:underline">See the alumni</a></p>
+          <p className="mt-3 text-[14px] text-earth-600">The club, and the people who came before.</p>
         </div>
         {canAdd && (
           <button
             onClick={() => setModal({ ...EMPTY_FORM, id: '', user_id: null, full_name: '', email: null, phone: null, role: 'member', title: null, teams: null, lab_subdivision: null, isNew: true })}
-            className="flex-shrink-0 flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-5 py-2.5 transition-colors"
+            className="shrink-0 self-start rounded-full bg-club px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ivory transition-colors hover:bg-moss"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
             Add member
           </button>
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap mb-8">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Cerca per nome…"
-            className="w-full border border-line pl-8 pr-3 py-2 text-sm bg-white focus:outline-none focus:border-forest"
-          />
-        </div>
-
-        {/* Team filter */}
-        <FilterDropdown
-          value={teamFilter}
-          onChange={setTeamFilter}
-          options={[{ key: 'all', label: 'Tutti i team' }, ...VISIBLE_TEAM_OPTIONS]}
-        />
-
-        {/* Role filter */}
-        <FilterDropdown
-          value={roleFilter}
-          onChange={setRoleFilter}
-          options={[{ key: 'all', label: 'Tutti i ruoli' }, ...ROLE_OPTIONS]}
-        />
-
-        {/* Result count */}
-        <span className="text-xs text-ink-400 ml-auto">{filtered.length} membri</span>
+      {/* Pills switch the list on small screens; from lg up both lists sit side by side. */}
+      <div role="tablist" className="mt-6 flex gap-2 lg:hidden">
+        {([['members', 'Members'], ['alumni', 'Alumni']] as const).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={`rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${tab === key ? 'border-club bg-club text-ivory' : 'border-night/50 hover:border-night'}`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      {/* Grouped list */}
-      {grouped.length === 0 ? (
-        <p className="text-sm text-ink-500">Nessun membro trovato.</p>
-      ) : (
-        <div className="space-y-12">
-          {grouped.map(group => (
-            <div key={group.key}>
-              {/* Group header */}
-              <div className="flex items-center gap-3 mb-4">
-                <p className="text-sm font-semibold uppercase tracking-widest text-gray-400">
-                  {group.label}
-                </p>
-                <span className="text-sm text-gray-300">{group.members.length}</span>
-                <div className="flex-1 h-px bg-line" />
-              </div>
-
-              {/* Rows */}
-              <div className="border border-line">
-                {group.members.map(m => {
-                  // Tasks left the member area: no task counts on people.
-                  const stats = null as (typeof taskStats)[string] | null
-                  return (
-                    <MemberRow
-                      key={m.id}
-                      member={m}
-                      canEdit={canEditMember()}
-                      canDelete={isBoD}
-                      onEdit={() => setModal({ ...m, isNew: false })}
-                      onDelete={() => handleDeleted(m.id)}
-                      taskStats={stats}
-                      onOpenCompleted={() => {
-                        if (stats) setCompletedModal({ memberName: m.full_name, tasks: stats.completedTasks })
-                      }}
-                    />
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+      {/* Search and filters */}
+      <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-night pb-3">
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search by name or team"
+          aria-label="Search people"
+          className="min-w-[200px] flex-1 bg-transparent text-[14px] placeholder:text-earth-600 focus:outline-none"
+        />
+        <div className={tab === 'members' ? 'flex gap-2' : 'hidden gap-2 lg:flex'}>
+          <FilterDropdown value={teamFilter} onChange={setTeamFilter} options={[{ key: 'all', label: 'All teams' }, ...VISIBLE_TEAM_OPTIONS]} />
+          <FilterDropdown value={roleFilter} onChange={setRoleFilter} options={[{ key: 'all', label: 'All roles' }, ...ROLE_OPTIONS]} />
         </div>
-      )}
+      </div>
+
+      <div className="mt-10 grid gap-x-12 gap-y-12 lg:grid-cols-2">
+        <section className={tab === 'members' ? '' : 'hidden lg:block'} aria-label="Members">
+          <div className="flex items-baseline justify-between border-b border-night pb-3">
+            <h2 className="rd-italic text-[clamp(28px,3vw,34px)]">Members</h2>
+            <span className="rd-eyebrow text-[10px] text-earth-500">{filtered.length} {filtered.length === 1 ? 'member' : 'members'}</span>
+          </div>
+          {filtered.length === 0 ? (
+            <p className="py-6 text-[13px] text-earth-600">No member found.</p>
+          ) : (
+            <ul>
+              {grouped.flatMap(g => g.members).map(m => (
+                <MemberRow
+                  key={m.id}
+                  member={m}
+                  canEdit={canEditMember()}
+                  canDelete={isBoD}
+                  onEdit={() => setModal({ ...m, isNew: false })}
+                  onDelete={() => handleDeleted(m.id)}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className={tab === 'alumni' ? '' : 'hidden lg:block'} aria-label="Alumni network">
+          <div className="flex items-baseline justify-between border-b border-night pb-3">
+            <h2 className="rd-italic text-[clamp(28px,3vw,34px)]">Alumni network</h2>
+            <span className="rd-eyebrow text-[10px] text-earth-500">{filteredAlumni.length} alumni</span>
+          </div>
+          {filteredAlumni.length === 0 ? (
+            <p className="py-6 text-[13px] text-earth-600">No alumni found.</p>
+          ) : (
+            <ul>{filteredAlumni.map(a => <AlumnusRow key={a.id} a={a} />)}</ul>
+          )}
+          <a href="/team/alumni" className="rd-italic mt-5 inline-block text-[22px] hover:underline underline-offset-[0.18em]">See all alumni</a>
+        </section>
+      </div>
 
       {/* Form modal */}
       {modal && (
@@ -946,14 +687,6 @@ export default function MembersPage() {
         />
       )}
 
-      {/* Completed tasks modal */}
-      {completedModal && (
-        <CompletedTasksModal
-          memberName={completedModal.memberName}
-          tasks={completedModal.tasks}
-          onClose={() => setCompletedModal(null)}
-        />
-      )}
 
     </div>
   )
