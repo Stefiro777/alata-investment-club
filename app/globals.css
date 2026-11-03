@@ -502,3 +502,12 @@ a:focus-visible, button:focus-visible {
   border-radius: 1px;
 }
 a.rd-italic:focus-visible, button.rd-italic:focus-visible { outline: none; }
+
+/* Member area (MemberShell): no visible scrollbars, on the page, the sidebar and every inner
+   container. Scrolling still works with wheel, touch, keyboard and trackpad. */
+html:has(.rd-member),
+.rd-member,
+.rd-member * { scrollbar-width: none; -ms-overflow-style: none; }
+html:has(.rd-member)::-webkit-scrollbar,
+.rd-member::-webkit-scrollbar,
+.rd-member *::-webkit-scrollbar { display: none; width: 0; height: 0; }

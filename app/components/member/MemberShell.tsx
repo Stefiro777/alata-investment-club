@@ -88,7 +88,7 @@ export default function MemberShell({ profile, children }: { profile: ShellProfi
   }
 
   return (
-    <div className="rd-app min-h-screen bg-ivory text-night">
+    <div className="rd-app rd-member min-h-screen bg-ivory text-night">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[230px] flex-col bg-night text-ivory lg:flex">
         <Link href="/" className="ml-6 mt-[26px] block w-fit leading-none" aria-label="Alata Investment Club, website">
