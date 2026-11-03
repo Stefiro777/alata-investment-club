@@ -187,7 +187,7 @@ export default function DashboardPage() {
           ) : resources.map(r => (
             <Row key={r.id} title={r.title} detail={r.description} href={r.url ?? undefined} external action="Open" />
           ))}
-          <Link href="/dashboard/jobs#resources" className="rd-italic mt-3 inline-block text-[20px] hover:underline underline-offset-[0.18em]">All resources</Link>
+          <Link href="/dashboard/career-resources#resources" className="rd-italic mt-3 inline-block text-[20px] hover:underline underline-offset-[0.18em]">All resources</Link>
         </Section>
 
         <Section title="Your profile" meta={`${filled} of 7`} after={<ProgressRule value={filled / 7} />}>

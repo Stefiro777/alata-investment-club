@@ -171,14 +171,14 @@ function JobModal({
                 <button
                   type="button"
                   onClick={() => setApplyMode('link')}
-                  className={`flex-1 px-3 py-2.5 text-sm transition-colors ${applyMode === 'link' ? 'bg-forest text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`flex-1 px-3 py-2.5 text-sm transition-colors ${applyMode === 'link' ? 'bg-club text-ivory' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
                   Link esterno
                 </button>
                 <button
                   type="button"
                   onClick={() => setApplyMode('form')}
-                  className={`flex-1 px-3 py-2.5 text-sm border-l border-gray-200 transition-colors ${applyMode === 'form' ? 'bg-forest text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`flex-1 px-3 py-2.5 text-sm border-l border-gray-200 transition-colors ${applyMode === 'form' ? 'bg-club text-ivory' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
                   Form interno
                 </button>
@@ -222,7 +222,7 @@ function JobModal({
             Annulla
           </button>
           <button onClick={handleSubmit as unknown as React.MouseEventHandler} disabled={saving}
-            className="bg-forest hover:bg-forest-deep text-white text-sm font-medium px-5 py-2 transition-colors disabled:opacity-50">
+            className="bg-club hover:bg-moss text-ivory text-sm font-medium px-5 py-2 transition-colors disabled:opacity-50">
             {saving ? '…' : isEdit ? 'Salva' : 'Aggiungi'}
           </button>
         </div>
@@ -426,7 +426,7 @@ export function JobApplicationModal({
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-forest text-white py-3 text-sm font-semibold uppercase tracking-widest hover:bg-black transition-colors rounded-none mt-6 disabled:opacity-50"
+                className="w-full bg-club text-ivory py-3 text-sm font-semibold uppercase tracking-widest hover:bg-moss transition-colors rounded-none mt-6 disabled:opacity-50"
               >
                 {submitting ? 'Invio in corso...' : 'Invia candidatura'}
               </button>
@@ -517,13 +517,13 @@ function OfficialJobCard({
           {isFormMode ? (
             <button
               onClick={() => setShowAppModal(true)}
-              className="inline-block bg-forest text-white text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-forest-deep transition-colors"
+              className="inline-block bg-club text-ivory text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-moss transition-colors"
             >
               Candidati →
             </button>
           ) : (
             <a href={offer.link} target="_blank" rel="noopener noreferrer"
-              className="inline-block bg-forest text-white text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-forest-deep transition-colors">
+              className="inline-block bg-club text-ivory text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-moss transition-colors">
               Candidati →
             </a>
           )}
@@ -707,7 +707,7 @@ export default function JobsPage() {
 
   return (
     <div>
-      <PageTitle title="Job Offers" sub="Open positions, mentors and every resource the club keeps for your applications." />
+      <PageTitle title={<>Career <em>Resources</em></>} sub="Open positions, mentors and every resource the club keeps for your applications." />
       <MentorStrip />
 
       {/* Header */}
@@ -752,7 +752,7 @@ export default function JobsPage() {
           {isBoD && (
             <button
               onClick={() => setModal({ mode: 'add-official' })}
-              className="flex items-center gap-1.5 bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors flex-shrink-0"
+              className="flex items-center gap-1.5 bg-club hover:bg-moss text-ivory text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors flex-shrink-0"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

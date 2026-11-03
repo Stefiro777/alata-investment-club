@@ -5,7 +5,7 @@ import ResourcesSection from '@/app/admin/components/ResourcesSection'
 import type { Resource } from '@/lib/types'
 import { PageTitle } from '@/app/components/member/ui'
 
-/** Career team (and BoD/Management): the resources members see in Job Offers. */
+/** Career team (and BoD/Management): the resources members see in Career Resources. */
 export default async function CareerResourcesPage() {
   const member = await requireTeamAccess('career')
   if (!member) redirect('/dashboard')
@@ -19,7 +19,7 @@ export default async function CareerResourcesPage() {
 
   return (
     <>
-      <PageTitle title={<>Club <em>resources</em></>} sub="Career, Master, Learning, Forbes Next Leaders and Alata documents: what members find in Job Offers." />
+      <PageTitle title={<>Club <em>resources</em></>} sub="Career, Master, Learning and Alata documents: what members find in Career Resources." />
       <div className="mt-8">
         <ResourcesSection initialResources={(data ?? []) as Resource[]} />
       </div>

@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
     if (m.user_id && m.email) memberMap[m.user_id] = { full_name: m.full_name ?? 'Membro', email: m.email }
   }
 
-  const jobLink = `${BASE_URL}/dashboard/jobs`
+  const jobLink = `${BASE_URL}/dashboard/career-resources`
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
   // 4. Send emails — fire each independently with delay to avoid rate limiting

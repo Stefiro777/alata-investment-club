@@ -10,7 +10,7 @@ const supabaseAdmin = createAdminClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-/** Career team: applications received through the Job Offers board (moved from /admin/jobs). */
+/** Career team: applications received through the job offers on Career Resources (moved from /admin/jobs). */
 export default async function CareerApplicationsPage() {
   const member = await requireTeamAccess('career')
   if (!member) redirect('/dashboard')
@@ -22,7 +22,7 @@ export default async function CareerApplicationsPage() {
 
   return (
     <>
-      <PageTitle title={<>Job <em>applications</em></>} sub="Applications sent through the Job Offers board. Visible to Career, Management and the BoD." />
+      <PageTitle title={<>Job <em>applications</em></>} sub="Applications sent through the job offers on Career Resources. Visible to Career, Management and the BoD." />
       <div className="mt-8 -mx-5 lg:-mx-0">
         <JobApplicationsClient applications={(applications ?? []) as JobApplication[]} />
       </div>

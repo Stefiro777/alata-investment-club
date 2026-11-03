@@ -45,8 +45,8 @@ function CareerTeam() {
       ) : (
         <Section title="Mentors, offers and resources">
           <Row title="Bookings and mentors" detail="Sessions booked, mentors, availability and cart suggestions." href="/dashboard/career/bookings" action="Open" />
-          <Row title="Job applications" detail="Applications received through the Job Offers board, with CVs." href="/dashboard/career/applications" action="Open" />
-          <Row title="Resources" detail="Add or change what members see in Job Offers." href="/dashboard/career/resources" action="Edit" />
+          <Row title="Job applications" detail="Applications received through the job offers on Career Resources, with CVs." href="/dashboard/career/applications" action="Open" />
+          <Row title="Resources" detail="Add or change what members see in Career Resources." href="/dashboard/career/resources" action="Edit" />
         </Section>
       )}
     </>

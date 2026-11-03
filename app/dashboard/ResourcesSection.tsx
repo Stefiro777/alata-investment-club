@@ -36,12 +36,6 @@ const resources = [
       { label: 'Presentazione ABIC', href: 'https://docs.google.com/presentation/d/1bpDOBXn0Epb-0bQ8XyrKkrqNncY6dx_5', isFolder: false },
     ],
   },
-  {
-    category: 'Forbes Next Leaders',
-    items: [
-      { label: 'Forbes Next Leaders', href: 'https://drive.google.com/drive/folders/1CrWWey10cfgPbnBk4AQsXjbZMUtTYcUx', isFolder: true },
-    ],
-  },
 ]
 
 function FolderIcon({ className }: { className?: string }) {

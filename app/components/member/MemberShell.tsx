@@ -16,7 +16,7 @@ const SUPERADMIN_EMAIL = 'finullistefano@gmail.com'
 
 const MAIN: { href: string; label: string; short: string; icon: IconName }[] = [
   { href: '/dashboard', label: 'Dashboard', short: 'Home', icon: 'home' },
-  { href: '/dashboard/jobs', label: 'Job Offers', short: 'Jobs', icon: 'jobs' },
+  { href: '/dashboard/career-resources', label: 'Career Resources', short: 'Career', icon: 'jobs' },
   { href: '/dashboard/calendar', label: 'Calendar', short: 'Calendar', icon: 'calendar' },
   { href: '/dashboard/members', label: 'People', short: 'People', icon: 'people' },
   { href: '/dashboard/profile', label: 'Profile', short: 'Profile', icon: 'profile' },
@@ -45,7 +45,7 @@ function active(pathname: string, href: string) {
 
 /**
  * Member area shell (boards area/*): dark sidebar on desktop, a fixed bar with
- * Home / Jobs / Calendar / People / Profile on mobile. On mobile the teams are
+ * Home / Career / Calendar / People / Profile on mobile. On mobile the teams are
  * reached from the Dashboard.
  */
 export default function MemberShell({ profile, children }: { profile: ShellProfile; children: ReactNode }) {

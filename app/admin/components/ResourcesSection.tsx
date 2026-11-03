@@ -8,7 +8,6 @@ const RESOURCE_CATEGORIES = [
   { id: 'masters',   label: 'Masters' },
   { id: 'career',    label: 'Career & Recruiting' },
   { id: 'education', label: 'Education' },
-  { id: 'forbes',    label: 'Forbes Next Leaders' },
   { id: 'documenti', label: 'Documenti Alata' },
 ]
 

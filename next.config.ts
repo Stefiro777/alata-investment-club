@@ -41,6 +41,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
+  // The page formerly called Job Offers: old links in emails and bookmarks keep working.
+  async redirects() {
+    return [{ source: '/dashboard/jobs', destination: '/dashboard/career-resources', permanent: true }]
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

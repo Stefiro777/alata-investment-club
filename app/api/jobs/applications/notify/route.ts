@@ -69,7 +69,7 @@ function buildHtml(p: {
         <tr><td style="padding:8px 24px 0;"><table width="100%" cellpadding="0" cellspacing="0">${rows}</table></td></tr>
         <tr>
           <td style="padding:24px;text-align:center;">
-            <a href="${BASE_URL}/dashboard/jobs"
+            <a href="${BASE_URL}/dashboard/career-resources"
                style="display:inline-block;background:#1a4a3a;color:#ffffff;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:12px 28px;text-decoration:none;">
               Gestisci le candidature
             </a>

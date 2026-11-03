@@ -61,9 +61,9 @@ export function JobResources({ displayName }: { displayName: string }) {
     <section id="resources" className="mt-16 scroll-mt-6">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="rd-italic text-[32px]">Resources</h2>
-        <div className="rd-eyebrow text-[10px] text-earth-500">Career · Master · Learning · Forbes Next Leaders · Alata documents</div>
+        <div className="rd-eyebrow text-[10px] text-earth-500">Career · Master · Learning · Alata documents</div>
       </div>
-      <div className="border-t border-night pt-6 [&>div]:!px-0">
+      <div>
         {resources === null
           ? <p className="py-6 text-[13px] text-earth-600">Loading…</p>
           : <DashboardClient displayName={displayName} resources={resources} />}
