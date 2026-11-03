@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProfile } from '../../DashboardProfileContext'
+import { Tabs } from '@/app/components/member/ui'
 import MentorsTab from '../MentorsTab'
 import AvailabilityPanel from '../AvailabilityPanel'
 import BookingsPanel from '../BookingsPanel'
@@ -66,26 +67,8 @@ export default function CareerBookingsPage() {
       {/* Tab bar — scrolls horizontally within itself on narrow viewports instead of
           pushing the whole page into overflow (border lives on the scroll container
           so it still spans the full width even when the tabs don't). */}
-      <div
-        className="overflow-x-auto [&::-webkit-scrollbar]:hidden border-b border-gray-200 mb-8"
-        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
-      >
-        <div className="flex gap-0 w-max">
-          {TABS.map(t => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setTab(t.key)}
-              className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px whitespace-nowrap ${
-                tab === t.key
-                  ? 'border-forest text-forest'
-                  : 'border-transparent text-gray-400 hover:text-gray-700'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+      <div className="mb-8">
+        <Tabs tabs={TABS} value={tab} onChange={setTab} />
       </div>
 
       {tab === 'mentors'      && <MentorsTab />}

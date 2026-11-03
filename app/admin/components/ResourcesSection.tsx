@@ -1,5 +1,6 @@
 'use client'
 
+import { Pill } from '@/app/components/member/ui'
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { Resource } from '@/lib/types'
@@ -201,7 +202,7 @@ function ResourceRow({ resource, onUpdated, onDeleted, showDragHandle }: { resou
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-serif text-sm font-medium text-ink-900 truncate">{resource.title}</p>
             {resource.is_folder && <span className="text-xs px-2 py-0.5 border border-[#9ca3af] text-ink-400">folder</span>}
-            {resource.subcategory && <span className="text-xs px-2 py-0.5 border border-forest text-forest">{resource.subcategory}</span>}
+            {resource.subcategory && <Pill size="sm">{resource.subcategory}</Pill>}
           </div>
           {resource.description && <p className="text-xs text-ink-500 mt-0.5 truncate">{resource.description}</p>}
         </div>

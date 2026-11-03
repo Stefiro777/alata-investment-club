@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { PageTitle, Tabs } from '@/app/components/member/ui'
+import { PageTitle, Pill, SegmentedPills, Tabs } from '@/app/components/member/ui'
 import { createClient } from '@/lib/supabase'
 import { TEAM_BADGE } from '../teamColors'
 import MonthCalendar, { CLUB_EVENT, TEAM_DATE, type CalItem } from './MonthCalendar'
@@ -298,9 +298,7 @@ function EventiTab() {
   return (
     <div>
       <div className="mb-8 flex justify-end">
-        <button type="button" onClick={() => setShowCreate(true)} className="rounded-full bg-club px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ivory transition-colors hover:bg-moss">
-          New event
-        </button>
+        <Pill solid onClick={() => setShowCreate(true)}>New event</Pill>
       </div>
 
       <MonthCalendar
@@ -623,17 +621,8 @@ function PedTab() {
     <div>
       {/* Toolbar */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          {(['calendar', 'list'] as const).map(v => (
-            <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v}
-              className={`rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${view === v ? 'border-club bg-club text-ivory' : 'border-night/50 hover:border-night'}`}>
-              {v === 'calendar' ? 'Calendar' : 'List'}
-            </button>
-          ))}
-        </div>
-        <button type="button" onClick={() => setShowCreate(true)} className="rounded-full bg-club px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ivory transition-colors hover:bg-moss">
-          New entry
-        </button>
+        <SegmentedPills options={[{ value: 'calendar', label: 'Calendar' }, { value: 'list', label: 'List' }]} value={view} onChange={setView} label="View" />
+        <Pill solid onClick={() => setShowCreate(true)}>New entry</Pill>
       </div>
 
       {view === 'calendar' ? (

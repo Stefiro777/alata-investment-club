@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../DashboardProfileContext'
 import { TEAM_BADGE } from '../teamColors'
+import { Pill, Tabs, pillClass } from '@/app/components/member/ui'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -467,7 +468,7 @@ function FilterDropdown({
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 rounded-full border border-night/50 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] hover:border-night focus:outline-none whitespace-nowrap"
+        className={`${pillClass({ active: value !== options[0].key })} focus:outline-none`}
       >
         <span>{selected.label}</span>
         <svg
@@ -600,29 +601,15 @@ export default function MembersPage() {
           <p className="mt-3 text-[14px] text-earth-600">The club, and the people who came before.</p>
         </div>
         {canAdd && (
-          <button
-            onClick={() => setModal({ ...EMPTY_FORM, id: '', user_id: null, full_name: '', email: null, phone: null, role: 'member', title: null, teams: null, lab_subdivision: null, isNew: true })}
-            className="shrink-0 self-start rounded-full bg-club px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ivory transition-colors hover:bg-moss"
-          >
-            Add member
-          </button>
+          <div className="shrink-0 self-start">
+            <Pill solid onClick={() => setModal({ ...EMPTY_FORM, id: '', user_id: null, full_name: '', email: null, phone: null, role: 'member', title: null, teams: null, lab_subdivision: null, isNew: true })}>Add member</Pill>
+          </div>
         )}
       </div>
 
       {/* Pills switch the list on small screens; from lg up both lists sit side by side. */}
-      <div role="tablist" className="mt-6 flex gap-2 lg:hidden">
-        {([['members', 'Members'], ['alumni', 'Alumni']] as const).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={tab === key}
-            onClick={() => setTab(key)}
-            className={`rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${tab === key ? 'border-club bg-club text-ivory' : 'border-night/50 hover:border-night'}`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="mt-6 lg:hidden">
+        <Tabs tabs={[{ key: 'members', label: 'Members' }, { key: 'alumni', label: 'Alumni' }]} value={tab} onChange={setTab} />
       </div>
 
       {/* Search and filters */}

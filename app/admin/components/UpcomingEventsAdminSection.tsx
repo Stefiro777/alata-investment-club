@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
 import { slugify } from '@/lib/slug'
+import { SegmentedPills } from '@/app/components/member/ui'
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -961,21 +962,9 @@ function QuickStatus({
   onChange: (s: UpcomingEvent['status']) => void
 }) {
   return (
-    <div className="inline-flex border border-forest" onClick={e => e.stopPropagation()}>
-      {QUICK_STATUS.map(o => (
-        <button
-          key={o.value}
-          type="button"
-          disabled={busy}
-          onClick={() => { if (o.value !== value) onChange(o.value) }}
-          className={`text-[10px] font-medium tracking-widest uppercase px-2.5 py-1 transition-colors disabled:opacity-50 ${
-            value === o.value ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
+    <span className="inline-flex" onClick={e => e.stopPropagation()}>
+      <SegmentedPills size="sm" label="Status" disabled={busy} options={QUICK_STATUS} value={value} onChange={onChange} />
+    </span>
   )
 }
 

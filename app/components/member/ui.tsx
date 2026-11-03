@@ -75,27 +75,77 @@ export function FieldRow({ label, value, aside, muted }: { label: string; value:
   )
 }
 
-export function Pill({ children, href, solid, tone = 'light', onClick, active }: {
+/* ── Pills ─────────────────────────────────────────────────────────────────────
+   One look for every pill, tab and switch of the member area and the Board panel:
+   fully rounded, active = green #1a4a3a with ivory text, inactive = outline.
+   Nothing square around them. */
+
+export type PillSize = 'md' | 'sm'
+
+/** The class string, for the rare element that must carry the pill look itself (a menu trigger, a label). */
+export function pillClass({ active = false, tone = 'light', size = 'md' }: { active?: boolean; tone?: 'light' | 'dark'; size?: PillSize } = {}) {
+  const base = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border font-semibold uppercase tracking-[0.14em] transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+  const dim = size === 'sm' ? 'px-3 py-1 text-[9px]' : 'px-4 py-2 text-[10px]'
+  const look = tone === 'dark'
+    ? active ? 'border-ivory bg-ivory text-night' : 'border-ivory/70 text-ivory hover:bg-ivory/10'
+    : active ? 'border-club bg-club text-ivory' : 'border-night/50 text-night hover:border-night hover:bg-night/[0.04]'
+  return `${base} ${dim} ${look}`
+}
+
+export function Pill({ children, href, solid, tone = 'light', onClick, active, size = 'md', disabled, type = 'button' }: {
   children: ReactNode
   href?: string
+  /** Filled (active look) without being a toggle. */
   solid?: boolean
   tone?: 'light' | 'dark'
   onClick?: () => void
+  /** A toggle that is on: also sets aria-pressed. */
   active?: boolean
+  size?: PillSize
+  disabled?: boolean
+  type?: 'button' | 'submit'
 }) {
-  const on = solid || active
-  const cls = `inline-block whitespace-nowrap rounded-full border px-[15px] py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
-    tone === 'dark'
-      ? on ? 'border-ivory bg-ivory text-night' : 'border-ivory/80 text-ivory hover:bg-ivory/10'
-      : on ? 'border-night bg-night text-ivory' : 'border-night text-night hover:bg-night/5'
-  }`
+  const cls = pillClass({ active: solid || active, tone, size })
   if (href) return <Link href={href} className={cls}>{children}</Link>
-  if (onClick) return <button type="button" onClick={onClick} aria-pressed={active} className={cls}>{children}</button>
+  if (onClick || type === 'submit') return <button type={type} onClick={onClick} disabled={disabled} aria-pressed={active} className={cls}>{children}</button>
   return <span className={cls}>{children}</span>
 }
 
-/** Pill tabs used at the top of team pages and Board screens. */
-export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { key: T; label: string }[]; value: T; onChange: (v: T) => void }) {
+/** One-of-many switch (Open / Soon / Closed, Calendar / List): separate rounded pills, no frame. */
+export function SegmentedPills<T extends string>({ options, value, onChange, size = 'md', tone = 'light', disabled, label }: {
+  options: { value: T; label: ReactNode }[]
+  value: T
+  onChange: (v: T) => void
+  size?: PillSize
+  tone?: 'light' | 'dark'
+  disabled?: boolean
+  label?: string
+}) {
+  return (
+    <div role="group" aria-label={label} className="inline-flex flex-wrap gap-1.5">
+      {options.map(o => (
+        <button
+          key={o.value}
+          type="button"
+          disabled={disabled}
+          aria-pressed={value === o.value}
+          onClick={() => { if (o.value !== value) onChange(o.value) }}
+          className={pillClass({ active: value === o.value, tone, size })}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Tabs at the top of a page or a team screen. */
+export function Tabs<T extends string>({ tabs, value, onChange, size = 'md' }: {
+  tabs: { key: T; label: ReactNode }[]
+  value: T
+  onChange: (v: T) => void
+  size?: PillSize
+}) {
   return (
     <div role="tablist" className="flex flex-wrap gap-2">
       {tabs.map(t => (
@@ -105,7 +155,7 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { key:
           role="tab"
           aria-selected={value === t.key}
           onClick={() => onChange(t.key)}
-          className={`rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${value === t.key ? 'border-night bg-night text-ivory' : 'border-night/50 hover:border-night'}`}
+          className={pillClass({ active: value === t.key, size })}
         >
           {t.label}
         </button>

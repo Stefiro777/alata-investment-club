@@ -1,5 +1,6 @@
 'use client'
 
+import { Pill } from '@/app/components/member/ui'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -117,7 +118,7 @@ function ItemEditRow({
           )}
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-serif text-base font-medium text-ink-900 truncate">{item.titolo}</p>
-            {item.tag && <span className="text-xs px-2 py-0.5 border border-forest text-forest whitespace-nowrap">{item.tag}</span>}
+            {item.tag && <Pill size="sm">{item.tag}</Pill>}
             {photoCount > 0 && <span className="text-xs text-ink-400 whitespace-nowrap">{photoCount} photo{photoCount !== 1 ? 's' : ''}</span>}
           </div>
           {(item.short_description || item.descrizione) && (

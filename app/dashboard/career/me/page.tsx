@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Tabs } from '@/app/components/member/ui'
 import AvailabilityPanel from '../AvailabilityPanel'
 import BookingsPanel from '../BookingsPanel'
 import { inputCls, labelCls, btnPrimary } from '../ui'
@@ -115,18 +116,8 @@ export default function MyMentorPage() {
         {saved && <p className="mt-2 text-xs text-forest font-medium">Saved</p>}
       </form>
 
-      <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden border-b border-gray-200 mb-8"
-        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-        <div className="flex gap-0 w-max">
-          {([['availability', 'Availability'], ['bookings', 'Bookings']] as const).map(([key, label]) => (
-            <button key={key} type="button" onClick={() => setTab(key)}
-              className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px whitespace-nowrap ${
-                tab === key ? 'border-forest text-forest' : 'border-transparent text-gray-400 hover:text-gray-700'
-              }`}>
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="mb-8">
+        <Tabs tabs={[{ key: 'availability', label: 'Availability' }, { key: 'bookings', label: 'Bookings' }]} value={tab} onChange={setTab} />
       </div>
 
       {tab === 'availability' && <AvailabilityPanel mentors={[{ id: mentor.id, full_name: mentor.full_name }]} fixedMentorId={mentor.id} />}
