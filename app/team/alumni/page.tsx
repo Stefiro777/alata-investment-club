@@ -5,7 +5,7 @@ import SiteNav from '@/app/components/site/SiteNav'
 import SiteFooter from '@/app/components/site/SiteFooter'
 import { LinkedInIcon } from '@/app/components/site/ui'
 import { ScrollProgress } from '@/app/components/site/Media'
-import LogoTrack, { type Company } from './LogoTrack'
+import LogoBand, { type Company } from './LogoTrack'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +52,6 @@ export default async function AlumniPage() {
     seen.add(k)
     return true
   })
-  const half = Math.ceil(companies.length / 2)
 
   return (
     <>
@@ -70,12 +69,7 @@ export default async function AlumniPage() {
             )}
           </div>
         </div>
-        {companies.length > 0 && (
-          <div className="mt-[clamp(48px,7vw,72px)] space-y-5 bg-pine py-7 md:space-y-6 md:py-9" aria-label="Companies where our alumni work">
-            <LogoTrack companies={companies.slice(0, half)} direction="l" seconds={40} />
-            <LogoTrack companies={companies.slice(half)} direction="r" seconds={46} />
-          </div>
-        )}
+        <LogoBand companies={companies} />
       </section>
 
       {/* Al2 · one by one */}
