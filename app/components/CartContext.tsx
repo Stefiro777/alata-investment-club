@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
+import { isEventPast } from '@/lib/event-past'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -68,12 +69,15 @@ function fmtDate(iso: string) {
 
 const STORAGE_KEY = 'alata-cart-v1'
 
-function loadFromStorage(): CartItem[] {
-  if (typeof window === 'undefined') return []
+/** The saved cart; tickets for events that have already taken place are dropped (merch stays). */
+function loadFromStorage(): { items: CartItem[]; removedPast: boolean } {
+  if (typeof window === 'undefined') return { items: [], removedPast: false }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch { return [] }
+    const saved: CartItem[] = raw ? JSON.parse(raw) : []
+    const items = saved.filter(i => !(i.type === 'ticket' && isEventPast(i.eventDate)))
+    return { items, removedPast: items.length !== saved.length }
+  } catch { return { items: [], removedPast: false } }
 }
 
 // ── CartDrawer (board M3: the cart slides in from the right) ─────────────────
@@ -214,7 +218,9 @@ function CartDrawer({
 // ── CartProvider ──────────────────────────────────────────────────────────────
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items,      setItems]      = useState<CartItem[]>(loadFromStorage)
+  const [initial] = useState(loadFromStorage)
+  const [items,      setItems]      = useState<CartItem[]>(initial.items)
+  const [pastNotice, setPastNotice] = useState(initial.removedPast)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -223,6 +229,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)) } catch { /* ignore */ }
   }, [items])
+
+  useEffect(() => {
+    if (!pastNotice) return
+    const t = setTimeout(() => setPastNotice(false), 9000)
+    return () => clearTimeout(t)
+  }, [pastNotice])
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
     const full: CartItem = { type: 'merch', ...item, quantity: 1 }
@@ -272,6 +284,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       drawerOpen, openDrawer: () => setDrawerOpen(true), closeDrawer: () => setDrawerOpen(false),
     }}>
       {children}
+
+      {pastNotice && (
+        <div role="status" className="fixed inset-x-4 bottom-6 z-[200] mx-auto flex max-w-[460px] items-start gap-4 bg-night px-5 py-4 text-[13px] leading-[1.5] text-ivory shadow-[0_12px_32px_-12px_rgba(11,29,22,0.6)]">
+          <span>An event in your cart has already taken place and was removed.</span>
+          <button type="button" onClick={() => setPastNotice(false)} className="ml-auto shrink-0 text-ivory/70 hover:text-ivory" aria-label="Dismiss">&times;</button>
+        </div>
+      )}
 
       {/* Floating cart button — visible when cart has items and drawer is closed */}
       {count > 0 && !drawerOpen && !pathname.startsWith('/checkout') && (

@@ -9,6 +9,7 @@ import { getMemberFromAuthHeader, isMembershipActive } from '@/lib/career-sessio
 import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
 import { checkStock, decrementMerchStock, type StockCheckProduct } from '@/lib/merch-stock'
 import { isMerchPagePublished } from '@/lib/merch-visibility'
+import { isEventPast, TICKET_PAST_ERROR } from '@/lib/event-past'
 import {
   reserveSeats, releaseReservations, attachReservationsToSession, type SeatReservation,
 } from '@/lib/event-seats'
@@ -144,8 +145,8 @@ export async function POST(req: NextRequest) {
 
   const [{ data: eventsData, error: eventsErr }, { data: productsData, error: productsErr }] = await Promise.all([
     ticketEventIds.length
-      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents, capacity, members_only').in('id', ticketEventIds)
-      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null; capacity: number | null; members_only: boolean | null }[], error: null }),
+      ? supabaseAdmin.from('upcoming_events').select('id, ticket_price_cents, member_price_cents, capacity, members_only, date, status').in('id', ticketEventIds)
+      : Promise.resolve({ data: [] as { id: string; ticket_price_cents: number | null; member_price_cents: number | null; capacity: number | null; members_only: boolean | null; date: string | null; status: string | null }[], error: null }),
     merchProductIds.length
       ? supabaseAdmin.from('products').select('id, name, price_cents, visible').in('id', merchProductIds)
       : Promise.resolve({ data: [] as { id: string; name: string; price_cents: number; visible: boolean | null }[], error: null }),
@@ -155,6 +156,12 @@ export async function POST(req: NextRequest) {
   if (productsErr) return NextResponse.json({ error: 'Failed to verify product prices' }, { status: 500 })
 
   const eventMap   = new Map((eventsData ?? []).map(e => [e.id, e]))
+
+  // Tickets for events that already took place are never sold, whatever the cart says.
+  const pastEvent = (eventsData ?? []).find(e => isEventPast(e.date, e.status))
+  if (pastEvent) {
+    return NextResponse.json({ error: TICKET_PAST_ERROR, code: 'event_past', eventId: pastEvent.id }, { status: 410 })
+  }
 
   // ── Members-only events: verified server-side (cookie session or bearer token),
   // so hiding the button in the UI is never the only protection.
