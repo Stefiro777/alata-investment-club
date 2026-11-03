@@ -6,10 +6,6 @@
     },
     {
       "path": "/api/cron/weekly-events",
-      "schedule": "0 16 * * 0"
-    },
-    {
-      "path": "/api/cron/weekly-events",
       "schedule": "0 17 * * 0"
     }
   ]

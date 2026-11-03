@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createServiceClient } from '@/lib/supabase-server'
 import { isPubliclyHidden } from '@/lib/public-filters'
-import { digestHtml, digestWindow, isDigestTime, romeClock, type DigestEvent } from '@/lib/weekly-digest'
+import { digestHtml, digestWindow, romeClock, type DigestEvent } from '@/lib/weekly-digest'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
 const KIND = 'weekly_events'
 
 /**
- * GET /api/cron/weekly-events — every Sunday at 18:00 (Europe/Rome) each
- * active member receives the club's events of the next two weeks, with a
- * direct link to register. Vercel Cron calls it at 16:00 and 17:00 UTC; only
- * the call that is 18:00 in Rome sends (summer and winter time).
+ * GET /api/cron/weekly-events — every Sunday each active member receives the
+ * club's events of the next two weeks, with a direct link to register. Vercel
+ * Cron (Hobby: one call a day) fires it once, Sundays at 17:00 UTC, which is
+ * 18:00 in Rome in winter and 19:00 in summer. A retry on the same day sends
+ * nothing more (email_log).
  *
  * Test without writing to anyone else: ?test=<email> sends only to that
  * address, at any time, and is not recorded as the weekly send.
@@ -25,7 +26,6 @@ export async function GET(req: NextRequest) {
 
   const testTo = req.nextUrl.searchParams.get('test')
   const now = new Date()
-  if (!testTo && !isDigestTime(now)) return NextResponse.json({ skipped: 'not Sunday 18:00 in Rome' })
 
   const db = createServiceClient()
   const { date: today } = romeClock(now)
