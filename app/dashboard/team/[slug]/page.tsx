@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import PRTracker from '@/components/dashboard/PRTracker'
 import MerchManager from '@/components/dashboard/MerchManager'
-import { PageTitle, Section, Row, Tabs } from '@/app/components/member/ui'
+import MerchOrders from '@/components/dashboard/MerchOrders'
+import { PageTitle, Section, Row, Tabs, SegmentedPills } from '@/app/components/member/ui'
 import EventsContent from './EventsContent'
 
 /*
@@ -21,6 +22,7 @@ const COPY: Record<string, { title: string; sub: string; visible: string }> = {
 
 function MediaTeam() {
   const [tab, setTab] = useState<'shop' | 'ped'>('shop')
+  const [shopView, setShopView] = useState<'orders' | 'products'>('orders')
   return (
     <>
       <div className="mt-8"><Tabs tabs={[{ key: 'shop', label: 'Merch' }, { key: 'ped', label: 'PED' }]} value={tab} onChange={setTab} /></div>
@@ -29,7 +31,18 @@ function MediaTeam() {
           <Row title="PED calendar" detail="LinkedIn, Instagram and the newsletter, one colour per channel." href="/dashboard/calendar?view=ped" action="Open" />
         </Section>
       ) : (
-        <div className="mt-8"><MerchManager /></div>
+        <>
+          <div className="mt-6">
+            <SegmentedPills
+              size="sm"
+              label="Merch"
+              options={[{ value: 'orders', label: 'Orders' }, { value: 'products', label: 'Products and shop' }]}
+              value={shopView}
+              onChange={setShopView}
+            />
+          </div>
+          <div className="mt-8">{shopView === 'orders' ? <MerchOrders /> : <MerchManager />}</div>
+        </>
       )}
     </>
   )
