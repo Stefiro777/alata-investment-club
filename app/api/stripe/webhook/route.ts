@@ -8,6 +8,7 @@ import { computeMembershipExpiry, loadRenewalRule } from '@/lib/membership'
 import { releaseSessionReservations } from '@/lib/event-seats'
 import { signedCvUrl } from '@/lib/job-applications'
 import { decrementMerchStock } from '@/lib/merch-stock'
+import { buildMerchOrder, recordMerchOrder, stripeLineLister } from '@/lib/merch-orders'
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -228,30 +229,10 @@ export async function POST(req: NextRequest) {
         }
       } catch (e) { console.error('Failed to register ticket purchases:', e) }
 
-      // Record order in merch_orders
+      // Record the order: one row per Checkout Session, idempotent (a retried webhook updates it).
       try {
-        const meta = session.metadata ?? {}
-        let shippingAddress: unknown = null
-        let upsellItems: unknown = null
-        try { shippingAddress = meta.shippingAddress ? JSON.parse(meta.shippingAddress) : null } catch { /* ignore */ }
-        try { upsellItems     = meta.upsellItems     ? JSON.parse(meta.upsellItems)     : null } catch { /* ignore */ }
-
-        const { error: orderErr } = await supabaseAdmin.from('merch_orders').insert({
-          stripe_session_id: session.id,
-          product_id:        meta.mainProductId   || null,
-          product_name:      meta.mainProductName || 'Merch',
-          variant_color:     meta.variantColor    || null,
-          size:              meta.size            || null,
-          quantity:          1,
-          price_cents:       session.amount_total,
-          upsell_items:      upsellItems,
-          customer_name:     meta.customerName || session.customer_details?.name  || null,
-          customer_email:    meta.customerEmail || session.customer_details?.email || null,
-          shipping_address:  shippingAddress,
-          status:            'paid',
-        })
-        if (orderErr) console.error('Failed to insert merch_order:', orderErr.message)
-      } catch (e) { console.error('Failed to insert merch_order (exception):', e) }
+        await recordMerchOrder(supabaseAdmin, await buildMerchOrder(session, stripeLineLister(stripe)))
+      } catch (e) { console.error('Failed to record merch order:', session.id, e instanceof Error ? e.message : e) }
     } else if (session.metadata?.type === 'unified') {
       const meta = session.metadata ?? {}
       console.log('unified webhook received, meta:', JSON.stringify(meta))
@@ -312,24 +293,12 @@ export async function POST(req: NextRequest) {
               purchased_at: new Date().toISOString(),
             }).then(() => {})
           }
-          const main = merchItems[0]
-          let shippingAddress: unknown = null
-          try { shippingAddress = meta.shippingAddress ? JSON.parse(meta.shippingAddress) : null } catch { /* skip */ }
-          await supabaseAdmin.from('merch_orders').insert({
-            stripe_session_id: session.id,
-            product_id:        main.referenceId || null,
-            product_name:      main.name || 'Merch',
-            variant_color:     main.variantColor || null,
-            size:              main.size         || null,
-            quantity:          main.quantity,
-            price_cents:       session.amount_total,
-            upsell_items:      null,
-            customer_name:     custName  || null,
-            customer_email:    custEmail || null,
-            shipping_address:  shippingAddress,
-            status:            'paid',
-          }).then(() => {})
         } catch (e) { console.error('Failed to record unified merch:', e) }
+
+        // The order and all its lines, apart from the finance step above: a failure there must not lose the order.
+        try {
+          await recordMerchOrder(supabaseAdmin, await buildMerchOrder(session, stripeLineLister(stripe)))
+        } catch (e) { console.error('Failed to record merch order:', session.id, e instanceof Error ? e.message : e) }
       }
 
       // Register event attendees — use full registration data when available
