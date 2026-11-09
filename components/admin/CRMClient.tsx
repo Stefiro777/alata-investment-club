@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Tabs } from '@/app/components/member/ui'
 import MembersTable from './MembersTable'
 import EventContactsTable from './EventContactsTable'
 import SponsorsTable from './SponsorsTable'
@@ -8,38 +9,21 @@ import CustomersTable from './CustomersTable'
 
 const TABS = [
   { key: 'members',   label: 'Members' },
-  { key: 'contacts',  label: 'Event Contacts' },
+  { key: 'contacts',  label: 'Event contacts' },
   { key: 'sponsors',  label: 'Sponsors' },
   { key: 'customers', label: 'Clienti' },
 ] as const
 
 type Tab = typeof TABS[number]['key']
 
+/** Board ABc1d–ABc4d: one tab per list, each with its numbers, list and sheet. */
 export default function CRMClient() {
   const [tab, setTab] = useState<Tab>('members')
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-10">
-      <div className="mb-8">
-        <h2 className="font-serif text-2xl font-bold text-forest">CRM</h2>
-        <div className="w-8 h-px bg-forest mt-2" />
-      </div>
-
-      {/* Tab switcher */}
-      <div className="flex border-b border-line-faint mb-8 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-6 py-3 text-xs font-medium tracking-widest uppercase transition-colors whitespace-nowrap flex-shrink-0 ${
-              tab === t.key
-                ? 'text-forest border-b-2 border-forest'
-                : 'text-ink-500 hover:text-ink-900 border-b-2 border-transparent'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+    <div>
+      <div className="mb-6">
+        <Tabs tabs={TABS.map(t => ({ key: t.key, label: t.label }))} value={tab} onChange={setTab} />
       </div>
 
       {tab === 'members'   && <MembersTable />}
