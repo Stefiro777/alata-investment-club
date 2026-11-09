@@ -5,6 +5,7 @@ import { sendOrderConfirmation, sendRegistrationConfirmation } from '@/lib/confi
 import { seatsByEvent } from '@/lib/event-capacity'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
 import { resolveDiscount } from '@/lib/discount-codes'
+import { recordMerchOrder } from '@/lib/merch-orders'
 import { getMemberFromAuthHeader, isMembershipActive } from '@/lib/career-session'
 import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
 import { checkStock, decrementMerchStock, type StockCheckProduct } from '@/lib/merch-stock'
@@ -327,21 +328,30 @@ export async function POST(req: NextRequest) {
           purchased_at: new Date().toISOString(),
         }, { onConflict: 'email' })
         await decrementMerchStock(supabaseAdmin, freeOrderId, freeMerch)
-        for (const item of freeMerch) {
-          await supabaseAdmin.from('merch_orders').insert({
-            stripe_session_id: freeOrderId,
-            product_id:        item.referenceId ?? null,
-            product_name:      item.name,
-            variant_color:     item.variantColor ?? null,
-            size:              item.size ?? null,
-            quantity:          item.quantity ?? 1,
-            price_cents:       0,
-            customer_name:     customerName,
-            customer_email:    customerEmail,
-            shipping_address:  shippingAddress ?? null,
-            status:            'paid',
-          })
-        }
+        // One order with every line (record_merch_order), keyed by the generated free order id.
+        await recordMerchOrder(supabaseAdmin, {
+          stripe_session_id:        freeOrderId,
+          customer_name:            customerName,
+          customer_email:           customerEmail,
+          shipping_address:         shippingAddress ?? null,
+          phone:                    null,
+          price_cents:              0,
+          shipping_zone:            shippingZone ?? null,
+          shipping_cents:           actualShippingCents,
+          discount_code:            appliedDiscountCode,
+          discount_cents:           actualDiscountCents,
+          stripe_payment_intent_id: null,
+          upsell_items:             null,
+          reconstructed:            false,
+          items: freeMerch.map(item => ({
+            product_id:       item.referenceId ?? null,
+            product_name:     item.name,
+            variant_color:    item.variantColor ?? null,
+            size:             item.size ?? null,
+            quantity:         item.quantity ?? 1,
+            unit_price_cents: item.priceCents,
+          })),
+        })
       } catch (e) {
         console.error('Failed to record free merch order:', e)
       }
