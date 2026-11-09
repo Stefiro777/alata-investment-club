@@ -17,6 +17,29 @@ type TransactionRow = {
   category_id: string | null
 }
 
+type MerchOrderRow = {
+  id: string
+  product_name: string
+  variant_color: string | null
+  size: string | null
+  quantity: number | null
+  price_cents: number
+  customer_name: string | null
+  customer_email: string | null
+  status: string
+  created_at: string
+}
+
+type MerchItemRow = {
+  order_id: string
+  position: number
+  product_name: string
+  variant_color: string | null
+  size: string | null
+  quantity: number
+  unit_price_cents: number
+}
+
 // Financial aggregates for the Sponsors tab of /admin/analytics.
 async function sponsorsSection() {
   const { data } = await supabaseAdmin
@@ -48,7 +71,27 @@ async function financeSection() {
   ])
   const transactions = (txRes.data ?? []) as TransactionRow[]
   const categories   = (catRes.data ?? []) as { id: string; name: string }[]
-  const merchOrders  = ordersRes.data ?? []
+  const orders       = (ordersRes.data ?? []) as MerchOrderRow[]
+
+  // Every article of every order comes from merch_order_items; the summary
+  // columns on merch_orders only describe the first one. An order without
+  // item rows (older than the table) falls back to its summary line.
+  const itemsRes = orders.length
+    ? await supabaseAdmin.from('merch_order_items')
+        .select('order_id, position, product_name, variant_color, size, quantity, unit_price_cents')
+        .in('order_id', orders.map(o => o.id))
+        .order('position', { ascending: true })
+    : { data: [] as MerchItemRow[] }
+  const itemsByOrder: Record<string, MerchItemRow[]> = {}
+  for (const it of (itemsRes.data ?? []) as MerchItemRow[]) {
+    (itemsByOrder[it.order_id] ??= []).push(it)
+  }
+  const merchOrders = orders.map(o => ({
+    ...o,
+    items: itemsByOrder[o.id]?.length
+      ? itemsByOrder[o.id].map(({ product_name, variant_color, size, quantity, unit_price_cents }) => ({ product_name, variant_color, size, quantity, unit_price_cents }))
+      : [{ product_name: o.product_name, variant_color: o.variant_color, size: o.size, quantity: o.quantity ?? 1, unit_price_cents: null }],
+  }))
 
   const income   = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
   const expenses = transactions.filter(t => t.type === 'cost').reduce((s, t) => s + t.amount, 0)
