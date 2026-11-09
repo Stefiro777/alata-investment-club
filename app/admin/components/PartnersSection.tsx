@@ -3,6 +3,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { Partner, PartnerDocument } from '@/lib/types'
+import { SegmentedPills } from '@/app/components/member/ui'
+
+const TYPE_OPTIONS = [
+  { value: 'sponsor', label: 'Sponsor' },
+  { value: 'partner', label: 'Partner' },
+] as const
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -190,18 +196,7 @@ function PartnerInsertForm({ onInserted }: { onInserted: (p: Partner) => void })
       {/* Type selector */}
       <div>
         <label className="block text-xs text-ink-500 mb-2">Type *</label>
-        <div className="flex gap-2">
-          {(['sponsor', 'partner'] as const).map(t => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setType(t)}
-              className={`text-xs font-medium uppercase tracking-wide px-4 py-2 border transition-colors ${type === t ? 'bg-forest text-white border-forest' : 'border-line text-ink-500 hover:border-forest'}`}
-            >
-              {t === 'sponsor' ? 'Sponsor' : 'Partner'}
-            </button>
-          ))}
-        </div>
+        <SegmentedPills label="Type" options={[...TYPE_OPTIONS]} value={type} onChange={setType} />
         <p className="text-xs text-ink-400 mt-1">
           {type === 'sponsor' ? 'Appare nel logo marquee (Sponsors)' : 'Appare nelle card con descrizione (Partners)'}
         </p>
@@ -337,7 +332,7 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-ink-900 truncate">{partner.name}</p>
-            <span className={`flex-shrink-0 text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 ${partner.type === 'partner' ? 'bg-forest/10 text-forest' : 'bg-gray-100 text-gray-600'}`}>
+            <span className="flex-shrink-0 rounded-full border border-night/40 px-2 py-[1px] text-[9px] font-semibold uppercase tracking-[0.14em] text-earth-700">
               {partner.type === 'partner' ? 'Partner' : 'Sponsor'}
             </span>
             <span className="flex-shrink-0 text-xs bg-gray-100 text-gray-600 px-2 py-0.5">{partner.click_count ?? 0} click</span>
@@ -374,14 +369,7 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
           {/* Type */}
           <div>
             <label className="block text-xs text-ink-500 mb-2">Type</label>
-            <div className="flex gap-2">
-              {(['sponsor', 'partner'] as const).map(t => (
-                <button key={t} type="button" onClick={() => setType(t)}
-                  className={`text-xs font-medium uppercase tracking-wide px-3 py-1.5 border transition-colors ${type === t ? 'bg-forest text-white border-forest' : 'border-line text-ink-500 hover:border-forest'}`}>
-                  {t === 'sponsor' ? 'Sponsor' : 'Partner'}
-                </button>
-              ))}
-            </div>
+            <SegmentedPills size="sm" label="Type" options={[...TYPE_OPTIONS]} value={type} onChange={setType} />
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <div>

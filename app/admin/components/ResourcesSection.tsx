@@ -1,6 +1,6 @@
 'use client'
 
-import { Pill } from '@/app/components/member/ui'
+import { Pill, Tabs } from '@/app/components/member/ui'
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { Resource } from '@/lib/types'
@@ -483,19 +483,11 @@ export default function ResourcesSection({ initialResources }: { initialResource
       <SectionHeading title="Resources" />
       <div className="bg-white border border-line-faint p-8 space-y-8">
         {/* Category tabs */}
-        <div className="flex flex-wrap gap-2">
-          {RESOURCE_CATEGORIES.map(c => (
-            <button
-              key={c.id}
-              onClick={() => { setActiveCat(c.id); setResourcesOpen(false); setResourcesSearch('') }}
-              className={`px-4 py-1.5 text-xs font-medium tracking-wide border transition-colors duration-fast ${
-                activeCat === c.id ? 'bg-forest text-white border-forest' : 'border-forest text-forest hover:bg-forest hover:text-white'
-              }`}
-            >
-              {c.label} ({resourcesList.filter(r => r.category === c.id).length})
-            </button>
-          ))}
-        </div>
+        <Tabs
+          tabs={RESOURCE_CATEGORIES.map(c => ({ key: c.id, label: `${c.label} (${resourcesList.filter(r => r.category === c.id).length})` }))}
+          value={activeCat}
+          onChange={id => { setActiveCat(id); setResourcesOpen(false); setResourcesSearch('') }}
+        />
 
         <div className="border-t border-line-faint" />
 

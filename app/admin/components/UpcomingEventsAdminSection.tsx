@@ -284,23 +284,13 @@ function ComposeModal({
               </div>
 
               {/* Mode switch */}
-              <div className="flex gap-2">
-                {(['invite', 'custom'] as const).map(m => (
-                  <button
-                    key={m}
-                    type="button"
-                    disabled={busy}
-                    onClick={() => setMode(m)}
-                    className={`text-xs font-medium tracking-wide px-4 py-2 border transition-colors ${
-                      mode === m
-                        ? 'bg-forest text-white border-forest'
-                        : 'bg-white text-ink-500 border-line hover:border-forest hover:text-forest'
-                    }`}
-                  >
-                    {m === 'invite' ? 'Quick invite' : 'Custom message'}
-                  </button>
-                ))}
-              </div>
+              <SegmentedPills
+                label="Message"
+                disabled={busy}
+                options={[{ value: 'invite', label: 'Quick invite' }, { value: 'custom', label: 'Custom message' }]}
+                value={mode}
+                onChange={setMode}
+              />
 
               {mode === 'invite' ? (
                 <div className="space-y-3">
