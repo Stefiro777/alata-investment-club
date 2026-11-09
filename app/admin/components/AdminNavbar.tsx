@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { sectionOf } from '@/app/components/board/sections'
+import { pillClass } from '@/app/components/member/ui'
 
 /**
  * Heading of a Board panel screen: the voice (Site, Finance, CRM…) with its
@@ -35,7 +36,7 @@ export default function AdminNavbar(_props: { userEmail?: string }) {
                 key={t.href}
                 href={t.href}
                 aria-current={on ? 'page' : undefined}
-                className={`rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${on ? 'border-night bg-night text-ivory' : 'border-night/50 hover:border-night'}`}
+                className={pillClass({ active: on })}
               >
                 {t.label}
               </Link>

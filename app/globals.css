@@ -511,3 +511,12 @@ html:has(.rd-member),
 html:has(.rd-member)::-webkit-scrollbar,
 .rd-member::-webkit-scrollbar,
 .rd-member *::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+/* Board (BoardShell, /admin/**): same rule, on the page, the sidebar and every inner container
+   (tables, panels, menus). Scrolling still works with wheel, touch, keyboard and trackpad. */
+html:has(.rd-board),
+.rd-board,
+.rd-board * { scrollbar-width: none; -ms-overflow-style: none; }
+html:has(.rd-board)::-webkit-scrollbar,
+.rd-board::-webkit-scrollbar,
+.rd-board *::-webkit-scrollbar { display: none; width: 0; height: 0; }

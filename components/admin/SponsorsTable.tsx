@@ -1,6 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { FieldRow, SegmentedPills } from '@/app/components/member/ui'
+import {
+  Numbers, Toolbar, SearchField, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, BlockField, Heading, Dialog,
+  cell, fmtDate, revealSheet, fieldCls, labelCls, btnPrimary, btnGhost, btnDanger, errorCls, type Column,
+} from './crm/ui'
 
 type SponsorPerson = {
   id: string
@@ -30,24 +35,29 @@ type PartnerRow = {
   people: SponsorPerson[]
 }
 
-const LABEL = "text-[10px] font-medium uppercase tracking-widest text-ink-500 block mb-1"
-const INPUT = "w-full border border-line px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white"
-const BTN_PRIMARY = "bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-4 py-2 transition-colors"
-const BTN_GHOST = "border border-line text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-widest uppercase px-4 py-2 transition-colors"
-const BTN_DANGER = "border border-red-300 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1 transition-colors"
+const COLUMNS: Column[] = [
+  { label: 'Company' },
+  { label: 'Type' },
+  { label: 'Ends', wide: true },
+  { label: 'Value', wide: true, align: 'right' },
+  { label: 'People', wide: true, align: 'right' },
+]
+const TEMPLATE = 'grid-cols-[minmax(0,1fr)_64px] sm:grid-cols-[minmax(0,1fr)_64px_88px_80px_60px]'
 
-// ── Chevron icon ──────────────────────────────────────────────────────────────
-function Chevron({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="14" height="14" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  )
-}
+const TYPE_OPTIONS = [
+  { value: 'sponsor', label: 'Sponsor' },
+  { value: 'partner', label: 'Partner' },
+] as const
+
+const FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'sponsor', label: 'Sponsors' },
+  { value: 'partner', label: 'Partners' },
+] as const
+
+const typeLabel = (t: string) => (t === 'sponsor' ? 'Sponsor' : 'Partner')
+const eur = (n: number) => `€ ${n.toLocaleString('it-IT')}`
+const host = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
 // ── Add/Edit partner modal ────────────────────────────────────────────────────
 function PartnerModal({
@@ -123,120 +133,75 @@ function PartnerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto border border-line">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-[#f9f9f9]">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-forest">
-            {initial ? 'Edit' : 'Add'} Partner / Sponsor
-          </h3>
-          <button onClick={onClose} className="text-ink-400 hover:text-ink-900 text-lg leading-none">×</button>
+    <Dialog title={initial ? 'Edit company' : 'Add company'} sub="Partner or sponsor" onClose={onClose} busy={saving}>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <span className={`${labelCls} mb-2`}>Type</span>
+          <SegmentedPills size="sm" label="Type" options={[...TYPE_OPTIONS]} value={form.type} onChange={t => set('type', t)} />
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          {/* Type toggle */}
-          <div>
-            <label className={LABEL}>Type</label>
-            <div className="flex">
-              {(['sponsor', 'partner'] as const).map(t => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => set('type', t)}
-                  className={`px-5 py-2 text-xs font-medium tracking-widest uppercase border transition-colors ${
-                    form.type === t
-                      ? t === 'sponsor'
-                        ? 'bg-forest text-white border-forest'
-                        : 'bg-[#6ca0dc] text-white border-[#6ca0dc]'
-                      : 'border-line text-ink-500 hover:bg-[#f3f4f6]'
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className={LABEL}>Name *</label>
-            <input className={INPUT} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Acme S.p.A." />
-          </div>
-          <div>
-            <label className={LABEL}>Logo URL</label>
-            <input className={INPUT} value={form.logo_url} onChange={e => set('logo_url', e.target.value)} placeholder="https://…" />
-            <div className="flex items-center gap-2 mt-2">
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="border border-forest text-forest hover:bg-forest hover:text-white text-[10px] font-medium uppercase tracking-widest px-3 py-1.5 transition-colors disabled:opacity-50"
-              >
-                {uploading ? 'Uploading…' : 'oppure carica un file'}
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-              {form.logo_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={form.logo_url} alt="Logo preview" className="h-8 w-8 object-contain border border-line-faint bg-white p-0.5 flex-shrink-0" />
-              )}
-            </div>
-          </div>
-          <div>
-            <label className={LABEL}>Website URL</label>
-            <input className={INPUT} value={form.website_url} onChange={e => set('website_url', e.target.value)} placeholder="https://…" />
-          </div>
-          <div>
-            <label className={LABEL}>Description</label>
-            <textarea className={INPUT + ' resize-none'} rows={2} value={form.description} onChange={e => set('description', e.target.value)} />
-          </div>
-
-          {/* Accordo collapsible */}
-          <div className="border border-line">
-            <button
-              type="button"
-              onClick={() => setAccordoOpen(v => !v)}
-              className="w-full flex items-center justify-between px-4 py-2.5 bg-[#f9f9f9] hover:bg-[#f3f4f6] transition-colors"
-            >
-              <span className="text-[10px] font-medium uppercase tracking-widest text-ink-500">Accordo</span>
-              <Chevron open={accordoOpen} />
+        <label className="block"><span className={labelCls}>Name *</span>
+          <input className={fieldCls} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Acme S.p.A." /></label>
+        <div>
+          <label className="block"><span className={labelCls}>Logo URL</span>
+            <input className={fieldCls} value={form.logo_url} onChange={e => set('logo_url', e.target.value)} placeholder="https://…" /></label>
+          <div className="mt-3 flex items-center gap-3">
+            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className={btnGhost}>
+              {uploading ? 'Uploading…' : 'oppure carica un file'}
             </button>
-            {accordoOpen && (
-              <div className="px-4 py-4 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={LABEL}>Start date</label>
-                    <input type="date" className={INPUT} value={form.agreement_start} onChange={e => set('agreement_start', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className={LABEL}>End date</label>
-                    <input type="date" className={INPUT} value={form.agreement_end} onChange={e => set('agreement_end', e.target.value)} />
-                  </div>
-                </div>
-                <div>
-                  <label className={LABEL}>Value (€)</label>
-                  <input type="number" min="0" step="0.01" className={INPUT} value={form.agreement_value} onChange={e => set('agreement_value', e.target.value)} placeholder="0.00" />
-                </div>
-                <div>
-                  <label className={LABEL}>Description</label>
-                  <textarea className={INPUT + ' resize-none'} rows={3} value={form.agreement_description} onChange={e => set('agreement_description', e.target.value)} />
-                </div>
-              </div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+            {form.logo_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.logo_url} alt="Logo preview" className="h-8 w-8 shrink-0 object-contain" />
             )}
           </div>
+        </div>
+        <label className="block"><span className={labelCls}>Website URL</span>
+          <input className={fieldCls} value={form.website_url} onChange={e => set('website_url', e.target.value)} placeholder="https://…" /></label>
+        <label className="block"><span className={labelCls}>Description</span>
+          <textarea className={`${fieldCls} resize-none`} rows={2} value={form.description} onChange={e => set('description', e.target.value)} /></label>
 
-          {err && <p className="text-xs text-red-500">{err}</p>}
+        {/* Agreement, collapsible */}
+        <div className="border-t border-night/20">
+          <button
+            type="button"
+            onClick={() => setAccordoOpen(v => !v)}
+            aria-expanded={accordoOpen}
+            className="flex w-full items-baseline justify-between py-3 text-left"
+          >
+            <span className="rd-italic text-[22px]">Accordo</span>
+            <span className="rd-eyebrow text-[10px] text-earth-500">{accordoOpen ? 'Hide' : 'Show'}</span>
+          </button>
+          {accordoOpen && (
+            <div className="space-y-5 pb-2">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <label className="block"><span className={labelCls}>Start date</span>
+                  <input type="date" className={fieldCls} value={form.agreement_start} onChange={e => set('agreement_start', e.target.value)} /></label>
+                <label className="block"><span className={labelCls}>End date</span>
+                  <input type="date" className={fieldCls} value={form.agreement_end} onChange={e => set('agreement_end', e.target.value)} /></label>
+              </div>
+              <label className="block"><span className={labelCls}>Value (€)</span>
+                <input type="number" min="0" step="0.01" className={fieldCls} value={form.agreement_value} onChange={e => set('agreement_value', e.target.value)} placeholder="0.00" /></label>
+              <label className="block"><span className={labelCls}>Description</span>
+                <textarea className={`${fieldCls} resize-none`} rows={3} value={form.agreement_description} onChange={e => set('agreement_description', e.target.value)} /></label>
+            </div>
+          )}
+        </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className={BTN_GHOST}>Cancel</button>
-            <button type="submit" disabled={saving} className={BTN_PRIMARY + ' disabled:opacity-50'}>
-              {saving ? '…' : initial ? 'Save' : 'Add'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {err && <p className={errorCls}>{err}</p>}
+
+        <div className="flex justify-end gap-2 border-t border-night/20 pt-4">
+          <button type="button" onClick={onClose} className={btnGhost}>Cancel</button>
+          <button type="submit" disabled={saving} className={btnPrimary}>
+            {saving ? '…' : initial ? 'Save' : 'Add'}
+          </button>
+        </div>
+      </form>
+    </Dialog>
   )
 }
 
-// ── Person inline row (view mode) ─────────────────────────────────────────────
+// ── Person line (view mode) ───────────────────────────────────────────────────
 function PersonRow({
   person,
   onEdit,
@@ -247,27 +212,26 @@ function PersonRow({
   onDelete: (id: string) => void
 }) {
   const [delConfirm, setDelConfirm] = useState(false)
+  const detail = [person.role, person.email, person.phone].filter(Boolean).join(' · ')
   return (
-    <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 items-center px-4 py-2.5 border-b border-line-faint last:border-0 text-xs">
-      <span className="font-medium text-ink-900">{person.name}</span>
-      <span className="text-ink-500">{person.role ?? '—'}</span>
-      <span className="text-ink-500 truncate">{person.email ?? '—'}</span>
-      <span className="text-ink-500">{person.phone ?? '—'}</span>
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => onEdit(person)}
-          className="border border-forest text-forest hover:bg-forest hover:text-white text-[10px] font-medium uppercase tracking-widest px-2 py-1 transition-colors"
-        >
-          Edit
-        </button>
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-night/20 py-3">
+      <div className="min-w-0">
+        <div className="truncate font-serif text-[19px] font-medium leading-[1.15]">{person.name}</div>
+        <div className="mt-0.5 truncate text-[12px] text-earth-600">{detail || '—'}</div>
+        {person.notes && <div className="mt-1 whitespace-pre-wrap text-[12px] leading-[1.5] text-earth-700">{person.notes}</div>}
+      </div>
+      <div className="flex items-center gap-3">
         {delConfirm ? (
           <>
-            <span className="text-[10px] text-red-600">Sure?</span>
-            <button onClick={() => onDelete(person.id)} className={BTN_DANGER}>Yes</button>
-            <button onClick={() => setDelConfirm(false)} className="border border-line text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors">No</button>
+            <span className="text-[12px]">Delete?</span>
+            <button type="button" onClick={() => onDelete(person.id)} className="rd-italic text-[18px] text-[#8a2a1d]">Yes</button>
+            <button type="button" onClick={() => setDelConfirm(false)} className="rd-italic text-[18px]">No</button>
           </>
         ) : (
-          <button onClick={() => setDelConfirm(true)} className={BTN_DANGER}>Delete</button>
+          <>
+            <button type="button" onClick={() => onEdit(person)} className="rd-italic text-[18px]">Edit</button>
+            <button type="button" onClick={() => setDelConfirm(true)} className="rd-italic text-[18px] text-earth-600">Delete</button>
+          </>
         )}
       </div>
     </div>
@@ -322,41 +286,31 @@ function PersonForm({
   }
 
   return (
-    <div className="px-4 py-3 bg-[#f9f9f9] border-b border-line-faint">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-        <div>
-          <label className={LABEL}>Name *</label>
-          <input className={INPUT} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Mario Rossi" />
-        </div>
-        <div>
-          <label className={LABEL}>Role</label>
-          <input className={INPUT} value={form.role} onChange={e => set('role', e.target.value)} placeholder="CEO" />
-        </div>
-        <div>
-          <label className={LABEL}>Email</label>
-          <input className={INPUT} value={form.email} onChange={e => set('email', e.target.value)} placeholder="mario@example.com" />
-        </div>
-        <div>
-          <label className={LABEL}>Phone</label>
-          <input className={INPUT} value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+39 …" />
-        </div>
+    <div className="space-y-4 border-b border-night/20 py-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="block"><span className={labelCls}>Name *</span>
+          <input className={fieldCls} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Mario Rossi" /></label>
+        <label className="block"><span className={labelCls}>Role</span>
+          <input className={fieldCls} value={form.role} onChange={e => set('role', e.target.value)} placeholder="CEO" /></label>
+        <label className="block"><span className={labelCls}>Email</span>
+          <input className={fieldCls} value={form.email} onChange={e => set('email', e.target.value)} placeholder="mario@example.com" /></label>
+        <label className="block"><span className={labelCls}>Phone</span>
+          <input className={fieldCls} value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+39 …" /></label>
       </div>
-      <div className="mb-3">
-        <label className={LABEL}>Notes</label>
-        <textarea className={INPUT + ' resize-none'} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
-      </div>
-      {err && <p className="text-xs text-red-500 mb-2">{err}</p>}
+      <label className="block"><span className={labelCls}>Notes</span>
+        <textarea className={`${fieldCls} resize-none`} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} /></label>
+      {err && <p className={errorCls}>{err}</p>}
       <div className="flex gap-2">
-        <button onClick={handleSave} disabled={saving} className={BTN_PRIMARY + ' disabled:opacity-50'}>
-          {saving ? '…' : initial ? 'Save' : 'Add Contact'}
+        <button type="button" onClick={handleSave} disabled={saving} className={btnPrimary}>
+          {saving ? '…' : initial ? 'Save' : 'Add contact'}
         </button>
-        <button onClick={onCancel} className={BTN_GHOST}>Cancel</button>
+        <button type="button" onClick={onCancel} className={btnGhost}>Cancel</button>
       </div>
     </div>
   )
 }
 
-// ── People expandable panel ───────────────────────────────────────────────────
+// ── People of a company, in its sheet ─────────────────────────────────────────
 function PeoplePanel({ partner, onChange }: { partner: PartnerRow; onChange: (updated: PartnerRow) => void }) {
   const [addingNew, setAddingNew] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -377,174 +331,43 @@ function PeoplePanel({ partner, onChange }: { partner: PartnerRow; onChange: (up
   }
 
   return (
-    <div className="border-t border-line-faint bg-paper-cool">
-      <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-2 bg-[#f3f4f6] border-b border-line-faint">
-        {['Name', 'Role', 'Email', 'Phone', ''].map((h, i) => (
-          <span key={i} className="text-[10px] font-medium uppercase tracking-widest text-ink-400">{h}</span>
-        ))}
-      </div>
+    <section className="mt-10">
+      <Heading title="People" meta={partner.people.length} />
+      <div className="border-t border-night">
+        {partner.people.length === 0 && !addingNew && (
+          <p className="border-b border-night/20 py-4 text-[13px] text-earth-600">No contacts yet.</p>
+        )}
 
-      {partner.people.length === 0 && !addingNew && (
-        <p className="px-4 py-3 text-xs text-ink-400">No contacts yet.</p>
-      )}
+        {partner.people.map(person =>
+          editingId === person.id ? (
+            <PersonForm
+              key={person.id}
+              partnerId={partner.id}
+              initial={person}
+              onSaved={handleSaved}
+              onCancel={() => setEditingId(null)}
+            />
+          ) : (
+            <PersonRow
+              key={person.id}
+              person={person}
+              onEdit={p => setEditingId(p.id)}
+              onDelete={handleDelete}
+            />
+          )
+        )}
 
-      {partner.people.map(person =>
-        editingId === person.id ? (
+        {addingNew ? (
           <PersonForm
-            key={person.id}
             partnerId={partner.id}
-            initial={person}
             onSaved={handleSaved}
-            onCancel={() => setEditingId(null)}
+            onCancel={() => setAddingNew(false)}
           />
         ) : (
-          <PersonRow
-            key={person.id}
-            person={person}
-            onEdit={p => setEditingId(p.id)}
-            onDelete={handleDelete}
-          />
-        )
-      )}
-
-      {addingNew ? (
-        <PersonForm
-          partnerId={partner.id}
-          onSaved={handleSaved}
-          onCancel={() => setAddingNew(false)}
-        />
-      ) : (
-        <div className="px-4 py-2.5">
-          <button
-            onClick={() => setAddingNew(true)}
-            className="text-[10px] font-medium uppercase tracking-widest text-forest hover:underline"
-          >
-            + Add Contact
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Partner row ───────────────────────────────────────────────────────────────
-function PartnerTableRow({
-  partner,
-  onEdit,
-  onDelete,
-  onChange,
-}: {
-  partner: PartnerRow
-  onEdit: (p: PartnerRow) => void
-  onDelete: (id: string) => void
-  onChange: (updated: PartnerRow) => void
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const [delConfirm, setDelConfirm] = useState(false)
-
-  const isSponsor = partner.type === 'sponsor'
-  const badgeClass = isSponsor
-    ? 'bg-forest text-white text-[9px] font-medium uppercase tracking-widest px-2 py-0.5'
-    : 'bg-[#6ca0dc] text-white text-[9px] font-medium uppercase tracking-widest px-2 py-0.5'
-
-  return (
-    <>
-      <tr className="border-b border-black/5 last:border-0 hover:bg-paper-cool transition-colors">
-        <td className="px-3 py-3">
-          <button
-            onClick={() => setExpanded(v => !v)}
-            className="text-ink-400 hover:text-ink-900 transition-colors"
-            title={expanded ? 'Collapse' : 'Expand contacts'}
-          >
-            <Chevron open={expanded} />
-          </button>
-        </td>
-
-        <td className="px-3 py-3">
-          <span className={badgeClass}>{partner.type}</span>
-        </td>
-
-        <td className="px-3 py-3">
-          <div className="flex items-center gap-2 min-w-0">
-            {partner.logo_url && (
-              <img
-                src={partner.logo_url}
-                alt={partner.name}
-                className="w-7 h-7 object-contain flex-shrink-0 border border-line-faint bg-white p-0.5"
-              />
-            )}
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-ink-900 truncate">{partner.name}</p>
-              {partner.description && (
-                <p className="text-xs text-ink-400 truncate max-w-[180px]">{partner.description}</p>
-              )}
-            </div>
-          </div>
-        </td>
-
-        <td className="px-3 py-3">
-          {partner.website_url ? (
-            <a href={partner.website_url} target="_blank" rel="noopener noreferrer"
-               className="text-xs text-forest hover:underline truncate block max-w-[140px]">
-              {partner.website_url.replace(/^https?:\/\//, '')}
-            </a>
-          ) : (
-            <span className="text-xs text-ink-300">—</span>
-          )}
-        </td>
-
-        <td className="px-3 py-3 text-xs text-ink-500 whitespace-nowrap">
-          {partner.agreement_start || partner.agreement_end ? (
-            <span>{partner.agreement_start ?? '?'} → {partner.agreement_end ?? '?'}</span>
-          ) : (
-            <span className="text-ink-300">—</span>
-          )}
-        </td>
-
-        <td className="px-3 py-3 text-xs text-ink-900 whitespace-nowrap">
-          {partner.agreement_value != null
-            ? `€ ${partner.agreement_value.toLocaleString('it-IT')}`
-            : <span className="text-ink-300">—</span>
-          }
-        </td>
-
-        <td className="px-3 py-3 text-xs text-ink-500 text-center">
-          {partner.people.length}
-        </td>
-
-        <td className="px-3 py-3 text-xs text-ink-400 whitespace-nowrap">
-          {new Date(partner.created_at).toLocaleDateString('it-IT')}
-        </td>
-
-        <td className="px-3 py-3 whitespace-nowrap">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => onEdit(partner)}
-              className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium px-2 py-1 transition-colors"
-            >
-              Edit
-            </button>
-            {delConfirm ? (
-              <>
-                <span className="text-[10px] text-red-600">Sure?</span>
-                <button onClick={() => onDelete(partner.id)} className={BTN_DANGER}>Yes</button>
-                <button onClick={() => setDelConfirm(false)} className="border border-line text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors">No</button>
-              </>
-            ) : (
-              <button onClick={() => setDelConfirm(true)} className={BTN_DANGER}>Delete</button>
-            )}
-          </div>
-        </td>
-      </tr>
-
-      {expanded && (
-        <tr>
-          <td colSpan={9} className="p-0">
-            <PeoplePanel partner={partner} onChange={onChange} />
-          </td>
-        </tr>
-      )}
-    </>
+          <button type="button" onClick={() => setAddingNew(true)} className={`${btnGhost} mt-4`}>Add contact</button>
+        )}
+      </div>
+    </section>
   )
 }
 
@@ -555,6 +378,9 @@ export default function SponsorsTable() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'sponsor' | 'partner'>('all')
   const [modal, setModal] = useState<'add' | PartnerRow | null>(null)
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [delConfirm, setDelConfirm] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/admin/crm/sponsors')
@@ -568,15 +394,24 @@ export default function SponsorsTable() {
       return idx >= 0 ? prev.map((x, i) => i === idx ? p : x) : [p, ...prev]
     })
     setModal(null)
+    setOpenId(p.id)
   }
 
   async function handleDelete(id: string) {
     await fetch(`/api/admin/crm/sponsors?id=${id}`, { method: 'DELETE' })
     setPartners(prev => prev.filter(p => p.id !== id))
+    setOpenId(null)
+    setDelConfirm(false)
   }
 
   function handleChange(updated: PartnerRow) {
     setPartners(prev => prev.map(p => p.id === updated.id ? updated : p))
+  }
+
+  function open(id: string) {
+    setOpenId(id)
+    setDelConfirm(false)
+    revealSheet(sheetRef.current)
   }
 
   const filtered = partners.filter(p => {
@@ -593,91 +428,99 @@ export default function SponsorsTable() {
     return new Date(p.agreement_end) >= new Date()
   }).length
 
-  const FILTER_TABS: { key: typeof typeFilter; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'sponsor', label: 'Sponsors' },
-    { key: 'partner', label: 'Partners' },
-  ]
+  const current = partners.find(p => p.id === openId) ?? null
 
   return (
     <div>
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Total', value: totalCount },
-          { label: 'Sponsors', value: sponsorCount },
-          { label: 'Partners', value: partnerCount },
-          { label: 'Active', value: activeCount },
-        ].map(kpi => (
-          <div key={kpi.label} className="border border-line-faint bg-white px-4 py-3">
-            <p className="text-[10px] font-medium uppercase tracking-widest text-ink-400 mb-1">{kpi.label}</p>
-            <p className="text-2xl font-bold text-forest">{kpi.value}</p>
-          </div>
-        ))}
-      </div>
+      <Numbers items={[
+        { value: totalCount, label: 'Total' },
+        { value: sponsorCount, label: 'Sponsors' },
+        { value: partnerCount, label: 'Partners' },
+        { value: activeCount, label: 'Active agreements' },
+      ]} />
 
-      {/* Controls row */}
-      <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-        <div className="flex border border-line">
-          {FILTER_TABS.map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTypeFilter(t.key)}
-              className={`px-4 py-2 text-[10px] font-medium uppercase tracking-widest transition-colors ${
-                typeFilter === t.key
-                  ? 'bg-forest text-white'
-                  : 'text-ink-500 hover:bg-[#f3f4f6]'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+      <Toolbar actions={<button type="button" onClick={() => setModal('add')} className={btnPrimary}>Add company</button>}>
+        <SearchField value={search} onChange={setSearch} placeholder="Company name…" />
+        <div>
+          <span className={`${labelCls} mb-2`}>Type</span>
+          <SegmentedPills size="sm" label="Type filter" options={[...FILTERS]} value={typeFilter} onChange={setTypeFilter} />
         </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search…"
-            className="border border-line px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-48"
-          />
-          <button onClick={() => setModal('add')} className={BTN_PRIMARY}>
-            + Add
-          </button>
-        </div>
-      </div>
+      </Toolbar>
 
       {loading ? (
-        <p className="text-sm text-ink-400 py-8">Loading…</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-sm text-ink-400 py-8">No entries found.</p>
+        <p className="py-10 text-[13px] text-earth-600">Loading…</p>
       ) : (
-        <div className="bg-white border border-line-faint overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line-faint bg-[#f9f9f9]">
-                <th className="px-3 py-3 w-8" />
-                {['Type', 'Name', 'Website', 'Agreement', 'Value', 'Contacts', 'Added', 'Azioni'].map(h => (
-                  <th key={h} className="text-left px-3 py-3 text-[10px] font-medium uppercase tracking-widest text-ink-400 whitespace-nowrap">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
+        <Split
+          sheetRef={sheetRef}
+          list={
+            <CrmTable
+              title="Sponsors and partners"
+              meta={filtered.length === totalCount ? totalCount : `${filtered.length} of ${totalCount}`}
+              columns={COLUMNS}
+              template={TEMPLATE}
+              isEmpty={filtered.length === 0}
+              empty="No entries found."
+            >
               {filtered.map(p => (
-                <PartnerTableRow
-                  key={p.id}
-                  partner={p}
-                  onEdit={row => setModal(row)}
-                  onDelete={handleDelete}
-                  onChange={handleChange}
-                />
+                <CrmRow key={p.id} template={TEMPLATE} selected={p.id === openId} onOpen={() => open(p.id)} label={`Open ${p.name}`}>
+                  <span className={cell(COLUMNS[0])}>
+                    <NameCell name={p.name} sub={p.website_url ? host(p.website_url) : p.description ?? '—'} />
+                  </span>
+                  <span className={cell(COLUMNS[1], 'text-[12px] text-earth-700')}>{typeLabel(p.type)}</span>
+                  <span className={cell(COLUMNS[2], 'rd-num text-[12px] text-earth-700')}>{p.agreement_end ? fmtDate(p.agreement_end) : '—'}</span>
+                  <span className={cell(COLUMNS[3], 'rd-num text-[12px] text-earth-700')}>{p.agreement_value != null ? eur(p.agreement_value) : '—'}</span>
+                  <span className={cell(COLUMNS[4], 'rd-num text-[12px] text-earth-700')}>{p.people.length}</span>
+                </CrmRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </CrmTable>
+          }
+          sheet={
+            current ? (
+              <>
+                <Sheet
+                  title="Company"
+                  meta={typeLabel(current.type)}
+                  actions={
+                    delConfirm ? (
+                      <>
+                        <span className="text-[13px]">Delete {current.name}?</span>
+                        <button type="button" onClick={() => handleDelete(current.id)} className={btnDanger}>Yes, delete</button>
+                        <button type="button" onClick={() => setDelConfirm(false)} className={btnGhost}>No</button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => setModal(current)} className={btnPrimary}>Edit</button>
+                        <button type="button" onClick={() => setDelConfirm(true)} className={btnGhost}>Delete</button>
+                      </>
+                    )
+                  }
+                >
+                  <FieldRow
+                    label="Company"
+                    value={current.name}
+                    // eslint-disable-next-line @next/next/no-img-element
+                    aside={current.logo_url ? <img src={current.logo_url} alt="" className="h-6 w-auto max-w-[72px] object-contain" /> : undefined}
+                  />
+                  <FieldRow label="Type" value={typeLabel(current.type)} />
+                  <FieldRow
+                    label="Website"
+                    value={current.website_url ? <a href={current.website_url} target="_blank" rel="noopener noreferrer" className="hover:underline">{host(current.website_url)}</a> : '—'}
+                    muted={!current.website_url}
+                  />
+                  <FieldRow label="Agreement" value={current.agreement_start || current.agreement_end ? `${fmtDate(current.agreement_start)} → ${fmtDate(current.agreement_end)}` : '—'} muted={!current.agreement_start && !current.agreement_end} />
+                  <FieldRow label="Value" value={current.agreement_value != null ? eur(current.agreement_value) : '—'} muted={current.agreement_value == null} />
+                  <FieldRow label="Clicks" value={current.click_count ?? 0} aside="From the website" />
+                  <FieldRow label="Added" value={fmtDate(current.created_at)} />
+                  {current.description && <BlockField label="Description">{current.description}</BlockField>}
+                  {current.agreement_description && <BlockField label="Agreement terms">{current.agreement_description}</BlockField>}
+                </Sheet>
+                <PeoplePanel key={current.id} partner={current} onChange={handleChange} />
+              </>
+            ) : (
+              <SheetEmpty title="Company" text="Open a sponsor or partner to see the agreement and the people to call." />
+            )
+          }
+        />
       )}
 
       {modal && (

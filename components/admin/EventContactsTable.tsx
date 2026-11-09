@@ -1,7 +1,12 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { FieldRow, SegmentedPills } from '@/app/components/member/ui'
 import { EditParticipantModal, deleteParticipant, type Contact } from './EditParticipantModal'
+import {
+  Numbers, Toolbar, SearchField, SelectField, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, BlockField, Tag, Dialog,
+  cell, fmtDate, revealSheet, fieldCls, labelCls, btnPrimary, btnGhost, btnDanger, errorCls, type Column,
+} from './crm/ui'
 
 type AddForm = {
   nome: string
@@ -9,11 +14,6 @@ type AddForm = {
   email: string
   telefono: string
   anno_di_studio: string
-}
-
-function truncate(str: string | null | undefined, max: number): string {
-  if (!str) return '—'
-  return str.length > max ? str.slice(0, max) + '…' : str
 }
 
 type FieldKey =
@@ -34,6 +34,20 @@ const FIELD_DEFS: { key: FieldKey; label: string }[] = [
 
 const ALL_FIELD_KEYS: FieldKey[] = FIELD_DEFS.map(f => f.key)
 
+const COLUMNS: Column[] = [
+  { label: 'Name' },
+  { label: 'Event', wide: true },
+  { label: 'Date', wide: true },
+  { label: 'Status', align: 'right' },
+]
+const TEMPLATE = 'grid-cols-[minmax(0,1fr)_64px] sm:grid-cols-[minmax(0,1fr)_128px_80px_64px]'
+
+const MEMBER_FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'members', label: 'Members' },
+  { value: 'external', label: 'External' },
+] as const
+
 async function downloadEventContactsPDF(contacts: Contact[], fields: FieldKey[], eventFilter: string) {
   const res = await fetch('/api/admin/crm/event-contacts-pdf', {
     method: 'POST',
@@ -51,26 +65,6 @@ async function downloadEventContactsPDF(contacts: Contact[], fields: FieldKey[],
   a.download = 'event-contacts.pdf'
   a.click()
   URL.revokeObjectURL(url)
-}
-
-function PencilIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-  )
-}
-
-function TrashIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v6M14 11v6" />
-      <path d="M9 6V4h6v2" />
-    </svg>
-  )
 }
 
 // ── Add Participant Modal ────────────────────────────────────────────────────
@@ -121,62 +115,32 @@ function AddParticipantModal({
     setSaving(false)
   }
 
-  const inputClass =
-    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-forest text-sm text-[#1a1a1a] bg-white transition-colors'
-
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 9999 }}
-      onClick={e => { if (e.target === e.currentTarget && !saving) onClose() }}
-    >
-      <div className="bg-white border border-line w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
-          <div>
-            <p className="font-serif text-base font-bold text-forest">Add Participant</p>
-            <p className="text-xs text-ink-500 mt-0.5">{eventTitle}</p>
-          </div>
-          <button onClick={onClose} disabled={saving} className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors -m-4 p-4 disabled:opacity-40">✕</button>
+    <Dialog title="Add participant" sub={eventTitle} onClose={onClose} busy={saving}>
+      <form onSubmit={handleSave} className="space-y-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <label className="block"><span className={labelCls}>Nome *</span>
+            <input required value={form.nome} onChange={e => set('nome', e.target.value)} className={fieldCls} /></label>
+          <label className="block"><span className={labelCls}>Cognome *</span>
+            <input required value={form.cognome} onChange={e => set('cognome', e.target.value)} className={fieldCls} /></label>
         </div>
-        <form onSubmit={handleSave} className="p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Nome *</label>
-              <input required value={form.nome} onChange={e => set('nome', e.target.value)} className={inputClass} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Cognome *</label>
-              <input required value={form.cognome} onChange={e => set('cognome', e.target.value)} className={inputClass} />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Email *</label>
-            <input required type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Telefono</label>
-              <input value={form.telefono} onChange={e => set('telefono', e.target.value)} className={inputClass} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Anno di studio *</label>
-              <input required value={form.anno_di_studio} onChange={e => set('anno_di_studio', e.target.value)} className={inputClass} />
-            </div>
-          </div>
+        <label className="block"><span className={labelCls}>Email *</span>
+          <input required type="email" value={form.email} onChange={e => set('email', e.target.value)} className={fieldCls} /></label>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <label className="block"><span className={labelCls}>Telefono</span>
+            <input value={form.telefono} onChange={e => set('telefono', e.target.value)} className={fieldCls} /></label>
+          <label className="block"><span className={labelCls}>Anno di studio *</span>
+            <input required value={form.anno_di_studio} onChange={e => set('anno_di_studio', e.target.value)} className={fieldCls} /></label>
+        </div>
 
-          {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
+        {error && <p className={errorCls}>{error}</p>}
 
-          <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
-            <button type="button" onClick={onClose} disabled={saving} className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40">
-              Cancel
-            </button>
-            <button type="submit" disabled={saving} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              {saving ? '…' : 'Add'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-2 border-t border-night/20 pt-4">
+          <button type="button" onClick={onClose} disabled={saving} className={btnGhost}>Cancel</button>
+          <button type="submit" disabled={saving} className={btnPrimary}>{saving ? '…' : 'Add'}</button>
+        </div>
+      </form>
+    </Dialog>
   )
 }
 
@@ -190,7 +154,7 @@ export default function EventContactsTable() {
   const [eventFilter, setEventFilter] = useState('')
   const [eventList, setEventList] = useState<{ id: string; title: string; date: string }[]>([])
   const [memberFilter, setMemberFilter] = useState<'all' | 'members' | 'external'>('all')
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [openId, setOpenId] = useState<string | null>(null)
   const [editContact, setEditContact] = useState<Contact | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -202,6 +166,7 @@ export default function EventContactsTable() {
   const [selectedFields, setSelectedFields] = useState<FieldKey[]>(ALL_FIELD_KEYS)
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   function loadContacts(silent = false) {
     if (!silent) setLoading(true)
@@ -253,6 +218,7 @@ export default function EventContactsTable() {
 
   const uniqueEmails = useMemo(() => new Set(contacts.map(c => c.email)).size, [contacts])
   const eventsWithRegs = useMemo(() => new Set(contacts.map(c => c.upcoming_events?.title).filter(Boolean)).size, [contacts])
+  const memberCount = useMemo(() => contacts.filter(c => c.is_member).length, [contacts])
 
   function handleSaved(updated: Contact) {
     setContacts(prev => prev.map(c => c.id === updated.id ? { ...updated, upcoming_events: c.upcoming_events } : c))
@@ -300,6 +266,7 @@ export default function EventContactsTable() {
     const { ok } = await deleteParticipant(id)
     if (ok) {
       setContacts(prev => prev.filter(c => c.id !== id))
+      if (openId === id) setOpenId(null)
     }
     setDeleteConfirm(null)
     setDeleting(false)
@@ -324,282 +291,183 @@ export default function EventContactsTable() {
     }
   }
 
-  if (loading) return <p className="text-sm text-ink-500 py-10 text-center">Loading…</p>
-  if (error) return <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
+  function open(id: string) {
+    setOpenId(id)
+    setDeleteConfirm(null)
+    revealSheet(sheetRef.current)
+  }
+
+  const current = contacts.find(c => c.id === openId) ?? null
+
+  if (loading) return <p className="py-10 text-center text-[13px] text-earth-600">Loading…</p>
+  if (error) return <p className={errorCls}>{error}</p>
 
   return (
-    <div className="space-y-6">
-      {/* KPI strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: 'Total Contacts', value: contacts.length },
-          { label: 'Unique Emails', value: uniqueEmails },
-          { label: 'Events with Registrations', value: eventsWithRegs },
-        ].map(kpi => (
-          <div key={kpi.label} className="bg-white border border-line px-6 py-4">
-            <p className="text-xs text-ink-500 uppercase tracking-widest font-medium">{kpi.label}</p>
-            <p className="text-2xl font-bold text-forest mt-1">{kpi.value}</p>
-          </div>
-        ))}
-      </div>
+    <div>
+      <Numbers items={[
+        { value: contacts.length, label: 'Total contacts' },
+        { value: uniqueEmails, label: 'Unique emails' },
+        { value: eventsWithRegs, label: 'Events with registrations' },
+        { value: memberCount, label: 'Of them members' },
+      ]} />
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name or email…"
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest w-64 transition-colors"
-        />
-        <select
-          value={eventFilter}
-          onChange={e => setEventFilter(e.target.value)}
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest transition-colors"
-        >
-          <option value="">All Events</option>
-          {events.map(ev => (
-            <option key={ev.id} value={ev.id}>{ev.label}</option>
-          ))}
-        </select>
-        <select
-          value={memberFilter}
-          onChange={e => setMemberFilter(e.target.value as 'all' | 'members' | 'external')}
-          aria-label="Filtra per soci"
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest transition-colors"
-        >
-          <option value="all">Soci e non soci</option>
-          <option value="members">Solo soci</option>
-          <option value="external">Solo non soci</option>
-        </select>
+      <Toolbar
+        actions={
+          <>
+            {selectedEvent && (
+              <button type="button" onClick={() => setShowAddModal(true)} className={btnPrimary}>Add participant</button>
+            )}
+            <div className="relative">
+              <button type="button" onClick={() => setPdfMenuOpen(o => !o)} aria-expanded={pdfMenuOpen} className={btnGhost}>
+                Download PDF
+              </button>
+              {pdfMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setPdfMenuOpen(false)} />
+                  <div className="absolute right-0 top-full z-50 mt-2 w-64 border border-night bg-ivory p-4 shadow-xl">
+                    <p className={`${labelCls} mb-3`}>Campi da esportare</p>
+                    <div className="max-h-64 space-y-2 overflow-y-auto">
+                      {FIELD_DEFS.map(f => (
+                        <label key={f.key} className="flex cursor-pointer items-center gap-2 text-[13px]">
+                          <input
+                            type="checkbox"
+                            checked={selectedFields.includes(f.key)}
+                            onChange={() => toggleField(f.key)}
+                            className="accent-[#1a4a3a]"
+                          />
+                          {f.label}
+                        </label>
+                      ))}
+                    </div>
+                    {pdfError && <p className={`${errorCls} mt-3`}>{pdfError}</p>}
+                    <button
+                      type="button"
+                      onClick={handleGeneratePdf}
+                      disabled={selectedFields.length === 0 || generatingPdf}
+                      className={`${btnPrimary} mt-4 w-full`}
+                    >
+                      {generatingPdf ? 'Generazione…' : 'Genera PDF'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Send QR — only when an event is selected */}
+            {eventFilter && filteredForEvent.length > 0 && qrState === 'idle' && (
+              <button type="button" onClick={() => setQrState('confirm')} className={btnGhost}>Send QR codes</button>
+            )}
+          </>
+        }
+      >
+        <SearchField value={search} onChange={setSearch} placeholder="Name or email…" />
+        <SelectField label="Event" value={eventFilter} onChange={setEventFilter} width="sm:w-[260px]">
+          <option value="">All events</option>
+          {events.map(ev => <option key={ev.id} value={ev.id}>{ev.label}</option>)}
+        </SelectField>
+        <div>
+          <span className={`${labelCls} mb-2`}>Members</span>
+          <SegmentedPills size="sm" label="Members filter" options={[...MEMBER_FILTERS]} value={memberFilter} onChange={setMemberFilter} />
+        </div>
+      </Toolbar>
 
-        {eventFilter && (
-          <div className="flex items-baseline gap-2 border-l border-line pl-4">
-            <span className="font-serif text-3xl font-bold text-forest leading-none">{filtered.length}</span>
-            <span className="text-xs text-ink-500 uppercase tracking-widest font-medium">Participants</span>
-          </div>
-        )}
-
-        {eventFilter && selectedEvent && (
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
-          >
-            + Aggiungi partecipante
-          </button>
-        )}
-
-        <div className="relative">
-          <button
-            onClick={() => setPdfMenuOpen(o => !o)}
-            className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
-          >
-            Download PDF
-          </button>
-
-          {pdfMenuOpen && (
+      {eventFilter && qrState !== 'idle' && (
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-y border-night/20 py-3 text-[13px]">
+          {qrState === 'confirm' && (
             <>
-              <div
-                className="fixed inset-0"
-                style={{ zIndex: 40 }}
-                onClick={() => setPdfMenuOpen(false)}
-              />
-              <div
-                className="absolute left-0 top-full mt-1 w-64 bg-white border border-line shadow-lg p-4"
-                style={{ zIndex: 50 }}
-              >
-                <p className="text-xs font-medium text-ink-500 uppercase tracking-widest mb-3">Campi da esportare</p>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {FIELD_DEFS.map(f => (
-                    <label key={f.key} className="flex items-center gap-2 text-sm text-[#1a1a1a] cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedFields.includes(f.key)}
-                        onChange={() => toggleField(f.key)}
-                        className="accent-forest"
-                      />
-                      {f.label}
-                    </label>
-                  ))}
-                </div>
-
-                {pdfError && <p className="text-red-600 text-xs mt-3 border-l-2 border-red-400 pl-2 py-1">{pdfError}</p>}
-
-                <button
-                  onClick={handleGeneratePdf}
-                  disabled={selectedFields.length === 0 || generatingPdf}
-                  className="mt-4 w-full bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {generatingPdf ? 'Generazione…' : 'Genera PDF'}
-                </button>
-              </div>
+              <span>
+                Send the QR code to {filteredForEvent.length} registrant{filteredForEvent.length !== 1 ? 's' : ''} of &ldquo;{selectedEvent?.title ?? ''}&rdquo;?
+              </span>
+              <button type="button" onClick={handleSendQr} className={btnPrimary}>Yes, send</button>
+              <button type="button" onClick={() => setQrState('idle')} className={btnGhost}>Cancel</button>
+            </>
+          )}
+          {qrState === 'sending' && <span className="text-earth-600">Sending…</span>}
+          {qrState === 'done' && qrResult && (
+            <>
+              <span>Sent: {qrResult.sent} · Failed: {qrResult.failed}</span>
+              <button type="button" onClick={() => { setQrState('idle'); setQrResult(null) }} className="rd-italic text-[18px]">Close</button>
+            </>
+          )}
+          {qrState === 'error' && (
+            <>
+              <span className="text-[#8a2a1d]">{qrError}</span>
+              <button type="button" onClick={() => setQrState('idle')} className="rd-italic text-[18px]">Close</button>
             </>
           )}
         </div>
+      )}
 
-        {/* Send QR button — only when an event is selected */}
-        {eventFilter && filteredForEvent.length > 0 && (
-          <div className="flex items-center gap-2">
-            {qrState === 'idle' && (
-              <button
-                onClick={() => setQrState('confirm')}
-                className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
-              >
-                Send QR Codes
-              </button>
-            )}
-            {qrState === 'confirm' && (
-              <div className="flex items-center gap-2 border border-forest px-4 py-2">
-                <span className="text-xs text-forest">
-                  Send QR to {filteredForEvent.length} registrant{filteredForEvent.length !== 1 ? 's' : ''} of &ldquo;{selectedEvent?.title ?? ''}&rdquo;?
+      <Split
+        sheetRef={sheetRef}
+        list={
+          <CrmTable
+            title="Event contacts"
+            meta={selectedEvent ? `${filtered.length} participants` : filtered.length === contacts.length ? contacts.length : `${filtered.length} of ${contacts.length}`}
+            columns={COLUMNS}
+            template={TEMPLATE}
+            isEmpty={filtered.length === 0}
+            empty="No contacts found."
+          >
+            {filtered.map(c => (
+              <CrmRow key={c.id} template={TEMPLATE} selected={c.id === openId} onOpen={() => open(c.id)} label={`Open ${c.nome} ${c.cognome}`}>
+                <span className={cell(COLUMNS[0])}>
+                  <NameCell
+                    name={`${c.nome} ${c.cognome}`}
+                    sub={c.email}
+                    tag={c.source === 'manual' ? <Tag title={c.added_by ? `Aggiunto manualmente da ${c.added_by}` : 'Aggiunto manualmente'}>Manual</Tag> : undefined}
+                  />
                 </span>
-                <button
-                  onClick={handleSendQr}
-                  className="bg-forest text-white text-xs font-medium px-3 py-1 hover:bg-forest-deep transition-colors"
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => setQrState('idle')}
-                  className="border border-[#d1d5db] text-ink-500 text-xs font-medium px-3 py-1 hover:bg-[#f3f4f6] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-            {qrState === 'sending' && (
-              <span className="text-xs text-ink-500 tracking-widest uppercase">Sending…</span>
-            )}
-            {qrState === 'done' && qrResult && (
-              <span className="text-xs text-forest font-medium tracking-wide">
-                ✓ Sent: {qrResult.sent} — Failed: {qrResult.failed}
-                <button onClick={() => { setQrState('idle'); setQrResult(null) }} className="ml-2 text-ink-500 hover:text-[#1a1a1a]">✕</button>
-              </span>
-            )}
-            {qrState === 'error' && (
-              <span className="text-xs text-red-600">
-                {qrError}
-                <button onClick={() => setQrState('idle')} className="ml-2 text-ink-500 hover:text-[#1a1a1a]">✕</button>
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Table */}
-      <div className="bg-white border border-line overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-line bg-[#f9f9f9]">
-              {['Name', 'Email', 'Phone', 'Event', 'Date', 'Field', ''].map((h, i) => (
-                <th key={i} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-ink-500">
-                  No contacts found.
-                </td>
-              </tr>
-            ) : filtered.map(c => {
-              const field = c.motivazione ?? c.questions_for_panelists
-              const isExpanded = expandedId === c.id
-              const isDeleting = deleteConfirm === c.id
-              return (
-                <tr
-                  key={c.id}
-                  className="group border-b border-black/5 last:border-0 hover:bg-[#f9f9f9] transition-colors"
-                >
-                  <td
-                    className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap cursor-pointer"
-                    onClick={() => setExpandedId(isExpanded ? null : c.id)}
-                  >
-                    {c.nome} {c.cognome}
-                    {c.source === 'manual' && (
-                      <span
-                        title={c.added_by ? `Aggiunto manualmente da ${c.added_by}` : 'Aggiunto manualmente'}
-                        className="ml-2 inline-block text-[9px] font-semibold uppercase tracking-widest text-ink-500 border border-[#d1d5db] px-1.5 py-0.5 align-middle"
-                      >
-                        manuale
-                      </span>
-                    )}
-                    {c.member_override !== null && (
-                      <span
-                        title={`Stato socio forzato manualmente: ${c.member_override ? 'Socio' : 'Esterno'}`}
-                        className={`ml-2 inline-block text-[9px] font-semibold uppercase tracking-widest px-1.5 py-0.5 align-middle text-white ${
-                          c.member_override ? 'bg-forest' : 'bg-gray-500'
-                        }`}
-                      >
-                        {c.member_override ? 'socio ⚑' : 'esterno ⚑'}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-ink-500">{c.email}</td>
-                  <td className="px-4 py-3 text-ink-500 whitespace-nowrap">{c.telefono ?? '—'}</td>
-                  <td className="px-4 py-3 text-ink-500 max-w-[180px]">
-                    <span title={c.upcoming_events?.title}>
-                      {truncate(c.upcoming_events?.title, 40)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-ink-500 whitespace-nowrap">
-                    {c.upcoming_events?.date ?? '—'}
-                  </td>
-                  <td
-                    className="px-4 py-3 text-ink-500 max-w-[240px] cursor-pointer"
-                    onClick={() => setExpandedId(isExpanded ? null : c.id)}
-                  >
-                    {isExpanded ? (
-                      <span className="whitespace-pre-wrap">{field ?? '—'}</span>
-                    ) : (
-                      <span>{truncate(field, 60)}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {isDeleting ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-red-600">Delete?</span>
-                        <button
-                          onClick={() => handleDelete(c.id)}
-                          disabled={deleting}
-                          className="border border-red-400 text-red-500 hover:bg-red-500 hover:text-white text-xs font-medium px-2 py-1 transition-colors disabled:opacity-40"
-                        >
-                          Yes
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirm(null)}
-                          className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium px-2 py-1 transition-colors"
-                        >
-                          No
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setEditContact(c)}
-                          title="Edit"
-                          className="p-1.5 text-ink-500 hover:text-forest hover:bg-[#f0f5f3] transition-colors"
-                        >
-                          <PencilIcon />
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirm(c.id)}
-                          title="Delete"
-                          className="p-1.5 text-ink-500 hover:text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+                <span className={cell(COLUMNS[1], 'text-[12px] text-earth-700')} title={c.upcoming_events?.title}>{c.upcoming_events?.title ?? '—'}</span>
+                <span className={cell(COLUMNS[2], 'rd-num text-[12px] text-earth-700')}>{c.upcoming_events?.date ?? '—'}</span>
+                <span className={cell(COLUMNS[3], 'text-[12px] text-earth-700')}>
+                  {c.is_member ? 'Member' : 'External'}{c.member_override !== null ? '*' : ''}
+                </span>
+              </CrmRow>
+            ))}
+          </CrmTable>
+        }
+        sheet={
+          current ? (
+            <Sheet
+              title="Contact"
+              meta={current.source === 'manual' ? 'Added by hand' : 'Self registered'}
+              actions={
+                deleteConfirm === current.id ? (
+                  <>
+                    <span className="text-[13px]">Delete this registration?</span>
+                    <button type="button" onClick={() => handleDelete(current.id)} disabled={deleting} className={btnDanger}>Yes, delete</button>
+                    <button type="button" onClick={() => setDeleteConfirm(null)} className={btnGhost}>No</button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" onClick={() => setEditContact(current)} className={btnPrimary}>Edit</button>
+                    <button type="button" onClick={() => setDeleteConfirm(current.id)} className={btnGhost}>Delete</button>
+                  </>
+                )
+              }
+            >
+              <FieldRow label="Name" value={`${current.nome} ${current.cognome}`} />
+              <FieldRow label="Email" value={<a href={`mailto:${current.email}`} className="hover:underline">{current.email}</a>} />
+              <FieldRow label="Phone" value={current.telefono ?? '—'} muted={!current.telefono} />
+              <FieldRow label="Year" value={current.anno_di_studio || '—'} />
+              <FieldRow label="Event" value={current.upcoming_events?.title ?? '—'} />
+              <FieldRow label="Event date" value={current.upcoming_events?.date ?? '—'} />
+              <FieldRow
+                label="Status"
+                value={current.is_member ? 'Member' : 'External'}
+                aside={current.member_override !== null ? 'Set by hand' : 'Automatic'}
+              />
+              <FieldRow label="Source" value={current.source === 'manual' ? `Manual${current.added_by ? `, ${current.added_by}` : ''}` : 'Self registered'} />
+              <FieldRow label="Check-in" value={current.checked_in ? `Yes, ${fmtDate(current.checked_in_at)}` : 'Not yet'} muted={!current.checked_in} />
+              <FieldRow label="Registered" value={fmtDate(current.created_at)} />
+              {current.motivazione && <BlockField label="Motivation">{current.motivazione}</BlockField>}
+              {current.questions_for_panelists && <BlockField label="Questions for panelists">{current.questions_for_panelists}</BlockField>}
+            </Sheet>
+          ) : (
+            <SheetEmpty title="Contact" text="Open a contact from the list. Choose an event to add participants or send the QR codes." />
+          )
+        }
+      />
 
       {editContact && (
         <EditParticipantModal

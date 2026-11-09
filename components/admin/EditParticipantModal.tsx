@@ -1,6 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { SegmentedPills } from '@/app/components/member/ui'
+import { Dialog, fieldCls, labelCls, btnPrimary, btnGhost, errorCls } from './crm/ui'
+
+const OVERRIDE_OPTIONS = [
+  { key: 'auto', value: null, label: 'Auto' },
+  { key: 'member', value: true, label: 'Socio' },
+  { key: 'external', value: false, label: 'Esterno' },
+] as const
 
 export type Contact = {
   id: string
@@ -103,92 +111,48 @@ export function EditParticipantModal({
     setSaving(false)
   }
 
-  const inputClass =
-    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-forest text-sm text-[#1a1a1a] bg-white transition-colors'
-
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 9999 }}
-      onClick={e => { if (e.target === e.currentTarget && !saving) onClose() }}
-    >
-      <div className="bg-white border border-line w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
-          <p className="font-serif text-base font-bold text-forest">Edit Contact</p>
-          <button onClick={onClose} disabled={saving} className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors -m-4 p-4 disabled:opacity-40">✕</button>
+    <Dialog title="Edit contact" sub={contact.upcoming_events?.title} onClose={onClose} busy={saving}>
+      <form onSubmit={handleSave} className="space-y-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <label className="block"><span className={labelCls}>Nome *</span>
+            <input required value={form.nome} onChange={e => set('nome', e.target.value)} className={fieldCls} /></label>
+          <label className="block"><span className={labelCls}>Cognome *</span>
+            <input required value={form.cognome} onChange={e => set('cognome', e.target.value)} className={fieldCls} /></label>
         </div>
-        <form onSubmit={handleSave} className="p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Nome *</label>
-              <input required value={form.nome} onChange={e => set('nome', e.target.value)} className={inputClass} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Cognome *</label>
-              <input required value={form.cognome} onChange={e => set('cognome', e.target.value)} className={inputClass} />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Email *</label>
-            <input required type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Telefono</label>
-              <input value={form.telefono} onChange={e => set('telefono', e.target.value)} className={inputClass} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Anno di studio *</label>
-              <input required value={form.anno_di_studio} onChange={e => set('anno_di_studio', e.target.value)} className={inputClass} />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Socio</label>
-            <div className="flex gap-2">
-              {([
-                { value: null, label: 'Auto' },
-                { value: true, label: 'Socio' },
-                { value: false, label: 'Esterno' },
-              ] as const).map(opt => (
-                <button
-                  key={String(opt.value)}
-                  type="button"
-                  onClick={() => setForm(prev => ({ ...prev, member_override: opt.value }))}
-                  className={`text-xs font-medium tracking-wide px-4 py-2 border transition-colors ${
-                    form.member_override === opt.value
-                      ? 'bg-forest text-white border-forest'
-                      : 'border-[#d1d5db] text-ink-500 hover:border-forest hover:text-forest'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] text-ink-500 mt-1.5">
-              &ldquo;Auto&rdquo; usa il matching automatico (email o nome). Scegli &ldquo;Socio&rdquo;/&ldquo;Esterno&rdquo; per forzare una correzione manuale.
-            </p>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Motivazione</label>
-            <textarea rows={3} value={form.motivazione} onChange={e => set('motivazione', e.target.value)} className={`${inputClass} resize-none`} />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Questions for Panelists</label>
-            <textarea rows={3} value={form.questions_for_panelists} onChange={e => set('questions_for_panelists', e.target.value)} className={`${inputClass} resize-none`} />
-          </div>
+        <label className="block"><span className={labelCls}>Email *</span>
+          <input required type="email" value={form.email} onChange={e => set('email', e.target.value)} className={fieldCls} /></label>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <label className="block"><span className={labelCls}>Telefono</span>
+            <input value={form.telefono} onChange={e => set('telefono', e.target.value)} className={fieldCls} /></label>
+          <label className="block"><span className={labelCls}>Anno di studio *</span>
+            <input required value={form.anno_di_studio} onChange={e => set('anno_di_studio', e.target.value)} className={fieldCls} /></label>
+        </div>
+        <div>
+          <span className={`${labelCls} mb-2`}>Socio</span>
+          <SegmentedPills
+            size="sm"
+            label="Socio"
+            options={OVERRIDE_OPTIONS.map(o => ({ value: o.key, label: o.label }))}
+            value={OVERRIDE_OPTIONS.find(o => o.value === form.member_override)?.key ?? 'auto'}
+            onChange={k => setForm(prev => ({ ...prev, member_override: OVERRIDE_OPTIONS.find(o => o.key === k)?.value ?? null }))}
+          />
+          <p className="mt-2 text-[11px] leading-[1.5] text-earth-500">
+            &ldquo;Auto&rdquo; usa il matching automatico (email o nome). Scegli &ldquo;Socio&rdquo;/&ldquo;Esterno&rdquo; per forzare una correzione manuale.
+          </p>
+        </div>
+        <label className="block"><span className={labelCls}>Motivazione</span>
+          <textarea rows={3} value={form.motivazione} onChange={e => set('motivazione', e.target.value)} className={`${fieldCls} resize-none`} /></label>
+        <label className="block"><span className={labelCls}>Questions for panelists</span>
+          <textarea rows={3} value={form.questions_for_panelists} onChange={e => set('questions_for_panelists', e.target.value)} className={`${fieldCls} resize-none`} /></label>
 
-          {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
+        {error && <p className={errorCls}>{error}</p>}
 
-          <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
-            <button type="button" onClick={onClose} disabled={saving} className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40">
-              Cancel
-            </button>
-            <button type="submit" disabled={saving} className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              {saving ? '…' : 'Save'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-2 border-t border-night/20 pt-4">
+          <button type="button" onClick={onClose} disabled={saving} className={btnGhost}>Cancel</button>
+          <button type="submit" disabled={saving} className={btnPrimary}>{saving ? '…' : 'Save'}</button>
+        </div>
+      </form>
+    </Dialog>
   )
 }

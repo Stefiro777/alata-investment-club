@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import FileUploadButton from '@/app/components/FileUploadButton'
+import { SegmentedPills, Tabs } from '@/app/components/member/ui'
 import { getRoleColor } from '@/lib/hackathon-colors'
 import { appendDiligenceMessage, useDiligenceRealtime } from '@/lib/hackathon-realtime'
 
@@ -459,21 +460,14 @@ export default function HackathonAdminClient() {
                         Status: {s.status} · Phase {s.current_phase}/{MAX_PHASE} · Code {s.access_code}
                       </p>
                     </div>
-                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                      {(['draft', 'active', 'closed'] as const).map((status) => (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => handleStatusChange(s.id, status)}
-                          className={`text-xs px-3 py-1.5 border transition-colors ${
-                            s.status === status
-                              ? 'bg-forest text-white border-forest'
-                              : 'border-line-faint text-ink-500 hover:text-ink-900'
-                          }`}
-                        >
-                          {status}
-                        </button>
-                      ))}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <SegmentedPills
+                        size="sm"
+                        label="Session status"
+                        options={(['draft', 'active', 'closed'] as const).map(st => ({ value: st, label: st }))}
+                        value={s.status as 'draft' | 'active' | 'closed'}
+                        onChange={st => handleStatusChange(s.id, st)}
+                      />
                     </div>
                   </div>
                 ))
@@ -539,19 +533,8 @@ export default function HackathonAdminClient() {
             </button>
           </div>
 
-          <div className="flex gap-1 border-b border-line-faint mb-6 overflow-x-auto">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-xs uppercase tracking-wide whitespace-nowrap border-b-2 transition-colors ${
-                  activeTab === tab.id ? 'border-forest text-forest' : 'border-transparent text-ink-500 hover:text-ink-900'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="mb-6">
+            <Tabs tabs={TABS.map(t => ({ key: t.id, label: t.label }))} value={activeTab} onChange={setActiveTab} />
           </div>
 
           {activeTab === 'participants' && (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Tabs } from '@/app/components/member/ui'
 import { createClient } from '@/lib/supabase'
 import type { Review } from '@/lib/types'
 
@@ -145,20 +146,12 @@ export default function ReviewsAdminSection({ initialReviews }: { initialReviews
       <SectionHeading title="Reviews" />
 
       {/* Tabs */}
-      <div className="flex border-b border-line-faint mb-6">
-        {(['alumni', 'events'] as TabType[]).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 text-sm font-medium tracking-wide transition-colors duration-fast ${
-              activeTab === tab
-                ? 'border-b-2 border-forest text-forest'
-                : 'text-ink-500 hover:text-ink-900'
-            }`}
-          >
-            {tab === 'alumni' ? 'Alumni Reviews' : 'Events Reviews'}
-          </button>
-        ))}
+      <div className="mb-6">
+        <Tabs
+          tabs={[{ key: 'alumni' as TabType, label: 'Alumni reviews' }, { key: 'events' as TabType, label: 'Events reviews' }]}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
       </div>
 
       {/* Add button */}

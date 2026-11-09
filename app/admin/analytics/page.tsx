@@ -1,10 +1,15 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import AdminNavbar from '../components/AdminNavbar'
 import { EditParticipantModal, deleteParticipant, type Contact } from '@/components/admin/EditParticipantModal'
+import { Tabs, Section, Row, FieldRow, SegmentedPills } from '@/app/components/member/ui'
+import {
+  Numbers, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, Heading, SearchField, SelectField,
+  cell, revealSheet, labelCls, btnPrimary, btnGhost, type Column,
+} from '@/components/admin/crm/ui'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -15,10 +20,16 @@ type Event    = { id: string; date: string }
 type Booking  = { id: string; status: string; is_member_free: boolean; slot_date: string; created_at: string }
 type Partner  = { id: string; name: string; type: string; created_at: string }
 type JobOffer       = { id: string; type: string }
+type MerchItem      = {
+  product_name: string; variant_color: string | null; size: string | null
+  quantity: number; unit_price_cents: number | null
+}
 type MerchOrder     = {
   id: string; product_name: string; variant_color: string | null; size: string | null
   quantity: number; price_cents: number | null; customer_name: string | null
   customer_email: string | null; status: string; created_at: string
+  /** Every article of the order, from merch_order_items. */
+  items: MerchItem[]
 }
 
 type QuarterSnapshot = {
@@ -68,30 +79,41 @@ function fmtEuros(n: number): string {
   return `€${n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-// ── Shared style constants ─────────────────────────────────────────────────────
+const eurRound = (n: number) => `€${Math.round(n).toLocaleString('it-IT')}`
+const Loading = () => <p className="py-10 text-[13px] text-earth-600">Loading…</p>
+const Empty = ({ children }: { children: React.ReactNode }) => (
+  <p className="border-b border-night/20 py-8 text-[13px] text-earth-600">{children}</p>
+)
 
-const labelCls  = 'text-[10px] font-semibold uppercase tracking-widest text-gray-500'
-const btnPrimary = 'inline-block bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest px-5 py-2.5 transition-colors'
-
-// ── KPI Card ──────────────────────────────────────────────────────────────────
-
-function KpiCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
+/** A labelled bar on the board palette: label, value, thin rule filled in green. */
+function BarRow({ label, value, share, negative }: { label: string; value: React.ReactNode; share: number; negative?: boolean }) {
   return (
-    <div className="bg-white border border-gray-200 px-5 py-5 flex flex-col">
-      <p className={`${labelCls} mb-2`}>{label}</p>
-      <p className="font-serif text-4xl font-bold text-forest leading-none">{value}</p>
-      {sub && <p className="text-[10px] text-gray-400 mt-1.5">{sub}</p>}
+    <div className="pb-3 pt-3.5">
+      <div className="flex items-baseline justify-between gap-4 text-[13px]">
+        <span className="min-w-0 truncate">{label}</span>
+        <span className={`rd-num shrink-0 ${negative ? 'text-[#8a2a1d]' : ''}`}>{value}</span>
+      </div>
+      <div className="mt-2 h-px bg-night/15">
+        <i className={`block h-[3px] -translate-y-px ${negative ? 'bg-[#8a2a1d]' : 'bg-club'}`} style={{ width: `${Math.round(Math.min(1, Math.max(0, share)) * 100)}%` }} />
+      </div>
     </div>
   )
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className={`${labelCls} mb-3 mt-8 first:mt-0`}>{children}</p>
-  )
-}
+// ── Overview Tab (board ABa1d) ─────────────────────────────────────────────────
 
-// ── Overview Tab ──────────────────────────────────────────────────────────────
+/* The public pages and the sources Google Analytics reports on. The numbers live
+   in Google Analytics (no reporting API is connected to the site), so each row
+   opens the page and the panel says where to read the views. */
+const TOP_PAGES = [
+  { title: 'Home', href: '/' },
+  { title: 'Events', href: '/events' },
+  { title: 'Reports', href: '/reports' },
+  { title: 'Join Us', href: '/join-us' },
+  { title: 'Merch', href: '/merch' },
+]
+const SOURCES = ['Direct', 'LinkedIn', 'Instagram', 'Search']
+const GA_URL = 'https://analytics.google.com'
 
 function OverviewTab() {
   const [members, setMembers]           = useState<Member[]>([])
@@ -101,18 +123,12 @@ function OverviewTab() {
   const [bookings, setBookings]         = useState<Booking[]>([])
   const [reportsQCount, setReportsQCount] = useState(0)
   const [jobs, setJobs]                 = useState<JobOffer[]>([])
-  const [snapshots, setSnapshots]       = useState<QuarterSnapshot[]>([])
   const [loading, setLoading]           = useState(true)
-  const [barMounted, setBarMounted]     = useState(false)
 
   // Banner state
   const [showBanner, setShowBanner]     = useState(false)
   const [archiving, setArchiving]       = useState(false)
   const [archiveSuccess, setArchiveSuccess] = useState(false)
-
-  // Past quarters section
-  const [pastExpanded, setPastExpanded]   = useState(false)
-  const [expandedSnaps, setExpandedSnaps] = useState<Set<string>>(new Set())
 
   const { quarter: curQ, year: curY } = getCurrentQuarter()
   const { quarter: prevQ, year: prevY } = prevQuarterOf(curQ, curY)
@@ -147,9 +163,7 @@ function OverviewTab() {
       setBookings(bs)
       setReportsQCount(rpRes.count ?? 0)
       setJobs(js)
-      setSnapshots(sns)
       setLoading(false)
-      setTimeout(() => setBarMounted(true), 80)
 
       // Banner: show if previous quarter has no snapshot yet (and at least one snap exists)
       const hasPrevSnap = sns.some(s => s.quarter_number === prevQ && s.year === prevY)
@@ -181,13 +195,7 @@ function OverviewTab() {
   const bookingsThisQuarter = bookings.filter(b => b.created_at >= qs).length
   const memberFreeBookings  = bookings.filter(b => b.is_member_free).length
 
-  const totalJobs  = jobs.length
   const activeJobs = jobs.filter(j => j.type === 'official').length
-  void totalJobs
-
-  const bodPct    = totalMembers > 0 ? (membersBod      / totalMembers) * 100 : 0
-  const dirPct    = totalMembers > 0 ? (membersDirector / totalMembers) * 100 : 0
-  const memberPct = totalMembers > 0 ? (membersMember   / totalMembers) * 100 : 0
 
   const handleArchive = async () => {
     setArchiving(true)
@@ -207,14 +215,6 @@ function OverviewTab() {
         body:    JSON.stringify({ quarter_number: prevQ, year: prevY, kpi_data: kpiData }),
       })
       if (res.ok) {
-        const newSnap: QuarterSnapshot = {
-          id:             'local-' + Date.now(),
-          quarter_number: prevQ,
-          year:           prevY,
-          kpi_data:       kpiData,
-          created_at:     new Date().toISOString(),
-        }
-        setSnapshots(prev => [newSnap, ...prev])
         setShowBanner(false)
         setArchiveSuccess(true)
         setTimeout(() => setArchiveSuccess(false), 3000)
@@ -224,270 +224,75 @@ function OverviewTab() {
     }
   }
 
-  const toggleSnap = (id: string) => {
-    setExpandedSnaps(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
-
-  if (loading) return <p className="text-sm text-gray-400">Loading…</p>
+  if (loading) return <Loading />
 
   return (
-    <div className="space-y-4">
-
-      {/* ── Archive banner ── */}
+    <div>
       {showBanner && (
-        <div className="border border-forest bg-[#f0f5f3] px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-sm font-semibold text-forest">
-            A new quarter has started. Archive Q{prevQ} {prevY} data before it updates?
-          </p>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              type="button"
-              onClick={handleArchive}
-              disabled={archiving}
-              className="bg-forest hover:bg-forest-deep disabled:opacity-60 text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors"
-            >
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-y border-night py-4">
+          <p className="rd-italic text-[22px]">A new quarter has started. Archive Q{prevQ} {prevY} before the numbers move on?</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={handleArchive} disabled={archiving} className={btnPrimary}>
               {archiving ? 'Archiving…' : `Archive Q${prevQ} ${prevY}`}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowBanner(false)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors"
-            >
-              Dismiss
-            </button>
+            <button type="button" onClick={() => setShowBanner(false)} className={btnGhost}>Dismiss</button>
           </div>
         </div>
       )}
+      {archiveSuccess && <p className="mb-8 border-y border-night/20 py-3 text-[13px]">Archived. It is now in Quarters.</p>}
 
-      {archiveSuccess && (
-        <div className="border border-green-300 bg-green-50 px-5 py-3 text-sm font-semibold text-green-800">
-          Archived successfully.
-        </div>
-      )}
+      <Numbers items={[
+        { value: totalMembers, label: 'Members' },
+        { value: totalEvents, label: 'Events' },
+        { value: totalRegs, label: 'Registrations' },
+        { value: totalBookings, label: 'Career bookings' },
+      ]} />
 
-      {/* ── Row 1: 3 Hero cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-        {/* Hero 1 — Total Members */}
-        <div className="bg-forest px-7 py-7 flex flex-col justify-between min-h-[200px]">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Total Members</p>
-          <div>
-            <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalMembers}</p>
-            <div className="flex h-3 w-full mt-5 overflow-hidden">
-              <div className="h-full transition-all duration-700 ease-out"
-                style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: '#ccff00' }} />
-              <div className="h-full transition-all duration-700 ease-out delay-100"
-                style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }} />
-              <div className="h-full transition-all duration-700 ease-out delay-200"
-                style={{ width: barMounted ? `${memberPct}%` : '0%', backgroundColor: '#e5e7eb' }} />
-            </div>
-            <div className="flex items-center gap-4 mt-2.5">
-              <span className="flex items-center gap-1.5 text-[10px] text-white/60">
-                <span className="inline-block w-2 h-2 flex-shrink-0" style={{ backgroundColor: '#ccff00' }} />
-                BoD {membersBod}
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] text-white/60">
-                <span className="inline-block w-2 h-2 flex-shrink-0" style={{ backgroundColor: '#2d6a56' }} />
-                Directors {membersDirector}
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] text-white/60">
-                <span className="inline-block w-2 h-2 flex-shrink-0" style={{ backgroundColor: '#e5e7eb' }} />
-                Members {membersMember}
-              </span>
-            </div>
+      <div className="grid gap-x-12 lg:grid-cols-2">
+        <Section title="Top pages" meta="Google Analytics">
+          {TOP_PAGES.map(p => (
+            <Row key={p.href} title={p.title} detail={`${p.href} · views in Google Analytics`} href={p.href} external action="Open" />
+          ))}
+        </Section>
+        <Section title="Where visitors come from" meta="Google Analytics">
+          {SOURCES.map(s => <Row key={s} title={s} detail="Share of visits in Google Analytics" />)}
+          <div className="mt-5">
+            <a href={GA_URL} target="_blank" rel="noopener noreferrer" className={btnGhost}>Open Google Analytics</a>
           </div>
-        </div>
-
-        {/* Hero 2 — Events */}
-        <div className="bg-forest px-7 py-7 flex flex-col justify-between min-h-[200px]">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Total Events</p>
-          <div>
-            <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalEvents}</p>
-            <p className="text-sm text-white/70 mt-4">
-              <span className="font-semibold text-white">{upcomingEvents}</span>{' '}upcoming
-              &nbsp;·&nbsp;
-              <span className="font-semibold text-white">{totalRegs}</span>{' '}total registrations
-            </p>
-            <p className="text-[10px] text-white/40 mt-1 uppercase tracking-widest">
-              {avgRegs} avg regs / event
-            </p>
-          </div>
-        </div>
-
-        {/* Hero 3 — Career Bookings */}
-        <div className="bg-forest px-7 py-7 flex flex-col justify-between min-h-[200px]">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/60">Career Bookings</p>
-          <div>
-            <p className="font-serif text-[72px] font-bold text-white leading-none mt-2">{totalBookings}</p>
-            <p className="text-sm text-white/70 mt-4">
-              <span className="font-semibold text-white">{confirmedBookings}</span>{' '}confirmed
-              &nbsp;·&nbsp;
-              <span className="font-semibold text-white">{memberFreeBookings}</span>{' '}member free
-            </p>
-            <p className="text-[10px] text-white/40 mt-1 uppercase tracking-widest">
-              {bookingsThisQuarter} this quarter
-            </p>
-          </div>
-        </div>
+        </Section>
       </div>
 
-      {/* ── Row 2: 4 medium cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: 'New Members This Quarter', value: newMembersThisQuarter },
-          { label: 'Reports This Quarter',     value: reportsQCount },
-          { label: 'Total Registrations',      value: totalRegsThisQ },
-          { label: 'Active Job Offers',        value: activeJobs },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-white border border-[#e5e7eb] px-5 py-5 flex flex-col">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">{label}</p>
-            <p className="font-serif text-[48px] font-bold text-forest leading-none">{value}</p>
-          </div>
-        ))}
+      <div className="grid gap-x-12 lg:grid-cols-2">
+        <Section title="This quarter" meta={`Q${curQ} ${curY}`}>
+          <FieldRow label="New members" value={newMembersThisQuarter} />
+          <FieldRow label="Registered" value={totalRegsThisQ} />
+          <FieldRow label="Reports" value={reportsQCount} aside="Published" />
+          <FieldRow label="Bookings" value={bookingsThisQuarter} aside="Career service" />
+          <FieldRow label="Job offers" value={activeJobs} aside="Active" />
+        </Section>
+        <Section title="Members" meta={`${totalMembers} total`}>
+          <BarRow label="Board of Directors" value={membersBod} share={totalMembers ? membersBod / totalMembers : 0} />
+          <BarRow label="Directors" value={membersDirector} share={totalMembers ? membersDirector / totalMembers : 0} />
+          <BarRow label="Members" value={membersMember} share={totalMembers ? membersMember / totalMembers : 0} />
+        </Section>
       </div>
 
-      {/* ── Row 3: Members breakdown + Career mini-stats ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-        {/* Left: Members stacked bar panel */}
-        <div className="bg-white border border-[#e5e7eb] px-6 py-6">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-5">
-            Members Breakdown
-          </p>
-          <div className="flex h-3 w-full overflow-hidden mb-4">
-            <div className="h-full transition-all duration-700 ease-out"
-              style={{ width: barMounted ? `${bodPct}%` : '0%', backgroundColor: 'var(--forest)' }} />
-            <div className="h-full transition-all duration-700 ease-out delay-100"
-              style={{ width: barMounted ? `${dirPct}%` : '0%', backgroundColor: '#2d6a56' }} />
-            <div className="h-full transition-all duration-700 ease-out delay-200"
-              style={{ width: barMounted ? `${memberPct}%` : '0%', backgroundColor: '#e5e7eb' }} />
-          </div>
-          <div className="space-y-2.5">
-            {[
-              { color: 'var(--forest)', label: 'Board of Directors', count: membersBod },
-              { color: '#2d6a56', label: 'Directors',          count: membersDirector },
-              { color: '#e5e7eb', label: 'Members',            count: membersMember, textDark: true },
-            ].map(({ color, label, count, textDark }) => (
-              <div key={label} className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="inline-block w-3 h-3 flex-shrink-0 border border-gray-200"
-                    style={{ backgroundColor: color }} />
-                  <span className="text-xs text-gray-600 uppercase tracking-wide font-medium">{label}</span>
-                </div>
-                <span className={`font-serif text-xl font-bold ${textDark ? 'text-gray-400' : 'text-forest'}`}>
-                  {count}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-widest text-gray-400">Total</span>
-            <span className="font-serif text-2xl font-bold text-forest">{totalMembers}</span>
-          </div>
-        </div>
-
-        {/* Right: Career Service mini-stats 2×2 */}
-        <div className="bg-white border border-[#e5e7eb] px-6 py-6">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-5">
-            Career Service
-          </p>
-          <div className="grid grid-cols-2 gap-px bg-[#e5e7eb]">
-            {[
-              { label: 'Total Bookings', value: totalBookings },
-              { label: 'Confirmed',      value: confirmedBookings },
-              { label: 'This Quarter',   value: bookingsThisQuarter },
-              { label: 'Member Free',    value: memberFreeBookings },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-white px-5 py-5 flex flex-col">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">{label}</p>
-                <p className="font-serif text-3xl font-bold text-forest leading-none">{value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="grid gap-x-12 lg:grid-cols-2">
+        <Section title="Events">
+          <FieldRow label="Upcoming" value={upcomingEvents} />
+          <FieldRow label="Registered" value={totalRegs} aside={`${avgRegs} per event`} />
+        </Section>
+        <Section title="Career service">
+          <FieldRow label="Bookings" value={totalBookings} />
+          <FieldRow label="Confirmed" value={confirmedBookings} />
+          <FieldRow label="Member free" value={memberFreeBookings} />
+        </Section>
       </div>
-
-      {/* ── Past Quarters (collapsible) ── */}
-      {snapshots.length > 0 && (
-        <div className="border border-gray-200 bg-white">
-          <button
-            type="button"
-            onClick={() => setPastExpanded(v => !v)}
-            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-[#fafaf9] transition-colors"
-          >
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">
-              Past Quarters
-            </span>
-            <svg
-              className={`w-4 h-4 text-gray-400 transition-transform ${pastExpanded ? 'rotate-180' : ''}`}
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {pastExpanded && (
-            <div className="border-t border-gray-200 divide-y divide-gray-100">
-              {snapshots.map(snap => {
-                const isExpanded = expandedSnaps.has(snap.id)
-                const kd = snap.kpi_data
-                const kpiItems = [
-                  { label: 'Total Members',       value: kd.total_members      ?? '—' },
-                  { label: 'New Members',          value: kd.new_members        ?? '—' },
-                  { label: 'Total Events',         value: kd.total_events       ?? '—' },
-                  { label: 'Total Registrations',  value: kd.total_registrations ?? '—' },
-                  { label: 'Total Bookings',       value: kd.total_bookings     ?? '—' },
-                  { label: 'Confirmed Bookings',   value: kd.confirmed_bookings  ?? '—' },
-                  { label: 'Reports Published',    value: kd.reports_published   ?? '—' },
-                ]
-                return (
-                  <div key={snap.id}>
-                    <button
-                      type="button"
-                      onClick={() => toggleSnap(snap.id)}
-                      className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-[#fafaf9] transition-colors"
-                    >
-                      <span className="text-sm font-semibold text-gray-700">
-                        Q{snap.quarter_number} {snap.year}
-                        <span className="ml-3 text-[10px] font-normal text-gray-400 uppercase tracking-widest">
-                          archived on {fmtDate(snap.created_at)}
-                        </span>
-                      </span>
-                      <svg
-                        className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {isExpanded && (
-                      <div className="px-6 pb-5 opacity-80">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          {kpiItems.map(item => (
-                            <div key={item.label} className="bg-[#fafaf9] border border-gray-100 px-4 py-4 flex flex-col">
-                              <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">{item.label}</p>
-                              <p className="font-serif text-2xl font-bold text-forest leading-none">{item.value}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }
 
-// ── Quarter Comparison Tab ─────────────────────────────────────────────────────
+// ── Quarters Tab (board ABa2d) ─────────────────────────────────────────────────
 
 const COMPARISON_METRICS: { label: string; key: keyof QuarterSnapshot['kpi_data'] }[] = [
   { label: 'Total Members',       key: 'total_members' },
@@ -499,9 +304,22 @@ const COMPARISON_METRICS: { label: string; key: keyof QuarterSnapshot['kpi_data'
   { label: 'Reports Published',   key: 'reports_published' },
 ]
 
+function downloadSnapshot(s: QuarterSnapshot) {
+  const rows = [['Metric', `Q${s.quarter_number} ${s.year}`], ...COMPARISON_METRICS.map(m => [m.label, String(s.kpi_data[m.key] ?? '')])]
+  const csv = rows.map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\r\n')
+  const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `alata-Q${s.quarter_number}-${s.year}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function QuarterComparisonTab() {
   const [snapshots, setSnapshots] = useState<QuarterSnapshot[]>([])
   const [loading, setLoading]     = useState(true)
+  const [openId, setOpenId]       = useState<string | null>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     createClient()
@@ -510,22 +328,16 @@ function QuarterComparisonTab() {
       .order('year', { ascending: false })
       .order('quarter_number', { ascending: false })
       .then(({ data }) => {
-        setSnapshots((data ?? []) as QuarterSnapshot[])
+        const sns = (data ?? []) as QuarterSnapshot[]
+        setSnapshots(sns)
+        setOpenId(sns[0]?.id ?? null)
         setLoading(false)
       })
   }, [])
 
-  if (loading) return <p className="text-sm text-gray-400">Loading…</p>
+  if (loading) return <Loading />
 
-  if (snapshots.length < 2) {
-    return (
-      <div className="py-16 text-center border border-dashed border-gray-200">
-        <p className="text-sm font-semibold text-gray-600 mb-1">Archive at least two quarters to see comparisons.</p>
-        <p className="text-xs text-gray-400">Use the Overview tab to archive a quarter when prompted.</p>
-      </div>
-    )
-  }
-
+  const current = snapshots.find(s => s.id === openId) ?? null
   // Show last 4 quarters (most recent first)
   const cols = snapshots.slice(0, 4)
   const latest  = cols[0]
@@ -533,75 +345,75 @@ function QuarterComparisonTab() {
 
   return (
     <div>
-      <div className="border border-gray-200 overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[480px]">
-          <thead>
-            <tr className="bg-[#fafaf9] border-b border-gray-200">
-              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-48">
-                Metric
-              </th>
-              {cols.map(s => (
-                <th key={s.id} className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-forest">
-                  Q{s.quarter_number} {s.year}
-                </th>
-              ))}
-              <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
-                Δ vs prev
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {COMPARISON_METRICS.map(metric => {
-              const values = cols.map(s => s.kpi_data[metric.key] ?? null)
-              const defined = values.filter((v): v is number => v !== null)
-              const maxVal  = defined.length > 0 ? Math.max(...defined) : null
+      <Split
+        sheetRef={sheetRef}
+        list={
+          <section>
+            <Heading title="Quarterly snapshots" meta="Archive" />
+            <div className="border-t border-night">
+              {snapshots.length === 0
+                ? <Empty>No quarter archived yet. Overview offers to archive the last quarter when a new one starts.</Empty>
+                : snapshots.map(s => (
+                  <div key={s.id} className={s.id === openId ? 'bg-night/[0.05]' : ''}>
+                    <Row
+                      title={`Q${s.quarter_number} ${s.year}`}
+                      detail={`Archived ${fmtDate(s.created_at)}`}
+                      action="Open"
+                      onClick={() => { setOpenId(s.id); revealSheet(sheetRef.current) }}
+                    />
+                  </div>
+                ))}
+            </div>
+          </section>
+        }
+        sheet={
+          current ? (
+            <Sheet
+              title={`Q${current.quarter_number} ${current.year}`}
+              meta="Snapshot"
+              actions={<button type="button" onClick={() => downloadSnapshot(current)} className={btnPrimary}>Download</button>}
+            >
+              {COMPARISON_METRICS.map(m => <FieldRow key={m.key} label={m.label.replace(/^Total /, '')} value={current.kpi_data[m.key] ?? '—'} />)}
+            </Sheet>
+          ) : (
+            <SheetEmpty title="Snapshot" text="Choose a quarter from the archive." />
+          )
+        }
+      />
 
-              const latestVal   = latest.kpi_data[metric.key] ?? null
-              const previousVal = previous.kpi_data[metric.key] ?? null
-              const delta = latestVal !== null && previousVal !== null
-                ? latestVal - previousVal
-                : null
-
-              return (
-                <tr key={metric.key} className="bg-white hover:bg-[#fafaf9] transition-colors">
-                  <td className="px-5 py-3.5 text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                    {metric.label}
-                  </td>
-                  {values.map((val, i) => {
-                    const isMax = val !== null && val === maxVal && defined.length > 1
-                    return (
-                      <td
-                        key={i}
-                        className="px-5 py-3.5 font-serif text-lg font-bold"
-                        style={isMax
-                          ? { backgroundColor: 'var(--forest)', color: '#ffffff' }
-                          : { color: 'var(--forest)' }
-                        }
-                      >
-                        {val ?? '—'}
-                      </td>
-                    )
-                  })}
-                  <td className="px-5 py-3.5 font-semibold text-sm">
-                    {delta === null ? (
-                      <span className="text-gray-300">—</span>
-                    ) : delta > 0 ? (
-                      <span className="text-green-600">+{delta}</span>
-                    ) : delta < 0 ? (
-                      <span className="text-red-600">{delta}</span>
-                    ) : (
-                      <span className="text-gray-400">0</span>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-[10px] text-gray-400 mt-3 uppercase tracking-widest">
-        Showing last {cols.length} archived quarter{cols.length > 1 ? 's' : ''}. Δ = latest vs previous.
-      </p>
+      {cols.length >= 2 && (
+        <Section title="Comparison" meta={`Last ${cols.length} quarters · Δ latest vs previous`}>
+          <div className="overflow-x-auto">
+            <div className="min-w-[520px]">
+              <div className="grid items-end gap-x-4 border-b border-night/20 py-2.5" style={{ gridTemplateColumns: `minmax(0,1.6fr) repeat(${cols.length}, minmax(0,1fr)) 64px` }}>
+                <span className="rd-eyebrow text-[9px] text-earth-500">Metric</span>
+                {cols.map(s => <span key={s.id} className="rd-eyebrow text-right text-[9px] text-earth-500">Q{s.quarter_number} {s.year}</span>)}
+                <span className="rd-eyebrow text-right text-[9px] text-earth-500">Δ</span>
+              </div>
+              {COMPARISON_METRICS.map(metric => {
+                const values = cols.map(s => s.kpi_data[metric.key] ?? null)
+                const defined = values.filter((v): v is number => v !== null)
+                const maxVal  = defined.length > 0 ? Math.max(...defined) : null
+                const latestVal   = latest.kpi_data[metric.key] ?? null
+                const previousVal = previous.kpi_data[metric.key] ?? null
+                const delta = latestVal !== null && previousVal !== null ? latestVal - previousVal : null
+                return (
+                  <div key={metric.key} className="grid items-center gap-x-4 border-b border-night/20 py-3" style={{ gridTemplateColumns: `minmax(0,1.6fr) repeat(${cols.length}, minmax(0,1fr)) 64px` }}>
+                    <span className="truncate text-[13px]">{metric.label}</span>
+                    {values.map((val, i) => {
+                      const isMax = val !== null && val === maxVal && defined.length > 1
+                      return <span key={i} className={`rd-num text-right font-serif text-[20px] ${isMax ? 'text-club underline decoration-1 underline-offset-4' : ''}`}>{val ?? '—'}</span>
+                    })}
+                    <span className={`rd-num text-right text-[13px] ${delta !== null && delta < 0 ? 'text-[#8a2a1d]' : delta ? 'text-club' : 'text-earth-500'}`}>
+                      {delta === null ? '—' : delta > 0 ? `+${delta}` : delta}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </Section>
+      )}
     </div>
   )
 }
@@ -642,45 +454,27 @@ function LinkedInPostsTab() {
   const qs          = getQuarterStart()
   const thisQuarter = posts.filter(p => p.data_pubblicazione && p.data_pubblicazione >= qs).length
 
-  if (loading) return <p className="text-sm text-gray-400">Loading…</p>
+  if (loading) return <Loading />
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-3 max-w-sm mb-8">
-        <KpiCard label="Total Posts All Time" value={posts.length} />
-        <KpiCard label="Posts This Quarter"   value={thisQuarter} />
-      </div>
+      <Numbers items={[
+        { value: posts.length, label: 'Posts, all time' },
+        { value: thisQuarter, label: 'Posts, this quarter' },
+      ]} />
 
-      {posts.length === 0 ? (
-        <p className="text-sm text-gray-400 py-10 border border-dashed border-gray-200 text-center">
-          No posts recorded yet.
-        </p>
-      ) : (
-        <div className="border border-gray-200">
-          {posts.map((p, i) => (
-            <div key={p.id}
-              className={`flex items-start gap-4 px-5 py-4 bg-white hover:bg-[#fafaf9] transition-colors ${i > 0 ? 'border-t border-gray-200' : ''}`}>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 leading-snug">{getPostTitle(p.titolo)}</p>
-              </div>
-              <div className="flex items-center gap-5 flex-shrink-0 pt-0.5">
-                <span className="text-xs text-gray-400 whitespace-nowrap">
-                  {p.data_pubblicazione ? fmtDate(p.data_pubblicazione) : '—'}
-                </span>
-                {p.link ? (
-                  <a href={p.link.startsWith('urn:') ? `https://www.linkedin.com/feed/update/${p.link}/` : p.link}
-                    target="_blank" rel="noopener noreferrer"
-                    className="text-[10px] font-semibold uppercase tracking-widest text-forest hover:underline underline-offset-2 whitespace-nowrap">
-                    Open →
-                  </a>
-                ) : (
-                  <span className="text-[10px] text-gray-300 uppercase tracking-widest">No link</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <Section title="Posts" meta={posts.length}>
+        {posts.length === 0 ? <Empty>No posts recorded yet.</Empty> : posts.map(p => (
+          <Row
+            key={p.id}
+            title={<span className="block truncate">{getPostTitle(p.titolo)}</span>}
+            detail={p.data_pubblicazione ? fmtDate(p.data_pubblicazione) : '—'}
+            href={p.link ? (p.link.startsWith('urn:') ? `https://www.linkedin.com/feed/update/${p.link}/` : p.link) : undefined}
+            external
+            action={p.link ? 'Open' : <span className="text-earth-500">No link</span>}
+          />
+        ))}
+      </Section>
     </div>
   )
 }
@@ -723,87 +517,38 @@ function SponsorsTab() {
     .filter(t => t.type === 'cost')
     .reduce((s, t) => s + t.amount, 0)
 
-  if (loading) return <p className="text-sm text-gray-400">Loading…</p>
+  if (loading) return <Loading />
 
   return (
     <div>
-      {/* Partner/sponsor count KPIs */}
-      <div className="grid grid-cols-3 gap-3 max-w-sm mb-4">
-        <KpiCard label="Total"    value={partners.length} />
-        <KpiCard label="Sponsors" value={sponsors} />
-        <KpiCard label="Partners" value={partnerCount} />
-      </div>
+      <Numbers items={[
+        { value: sponsors, label: 'Sponsors' },
+        { value: partnerCount, label: 'Partners' },
+        { value: eurRound(sponsorRevenue), label: 'Sponsor revenue' },
+        { value: eurRound(sponsorCosts), label: 'Sponsor costs' },
+      ]} />
 
-      {/* Sponsor finance KPIs */}
-      <div className="grid grid-cols-2 gap-3 max-w-sm mb-8">
-        <KpiCard label="Total Sponsor Revenue" value={fmtEuros(sponsorRevenue)} />
-        <KpiCard label="Total Sponsor Costs"   value={fmtEuros(sponsorCosts)} />
-      </div>
-
-      {/* Sponsorship transactions list */}
-      <div className="mb-8">
-        <p className={`${labelCls} mb-3`}>Sponsorship Transactions</p>
-        {sponsorTxs.length === 0 ? (
-          <p className="text-sm text-gray-400 py-10 border border-dashed border-gray-200 text-center">
-            No sponsorship transactions recorded yet.
-          </p>
-        ) : (
-          <div className="border border-gray-200 overflow-x-auto">
-            <div className="grid grid-cols-[90px_1fr_90px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200 min-w-[480px]">
-              <span className={labelCls}>Date</span>
-              <span className={labelCls}>Description</span>
-              <span className={labelCls}>Type</span>
-              <span className={`${labelCls} text-right`}>Amount</span>
-            </div>
-            {sponsorTxs.map((t, i) => (
-              <div key={t.id}
-                className={`grid grid-cols-[90px_1fr_90px_90px] gap-4 items-center px-5 py-3.5 bg-white min-w-[480px] ${i > 0 ? 'border-t border-gray-200' : ''}`}>
-                <span className="text-xs text-gray-400 whitespace-nowrap">
-                  {t.date ? new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
-                </span>
-                <span className="text-sm text-gray-700 truncate">{t.description ?? '—'}</span>
-                <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
-                  t.type === 'revenue' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                }`}>
-                  {t.type === 'revenue' ? 'Revenue' : 'Cost'}
-                </span>
-                <span className={`text-sm font-semibold text-right ${t.type === 'revenue' ? 'text-forest' : 'text-red-600'}`}>
-                  {t.type === 'cost' ? '−' : ''}{fmtEuros(t.amount)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Partners table */}
-      {partners.length === 0 ? (
-        <p className="text-sm text-gray-400 py-10 border border-dashed border-gray-200 text-center">
-          No partners or sponsors yet.
-        </p>
-      ) : (
-        <div className="border border-gray-200 overflow-x-auto">
-          <div className="grid grid-cols-[1fr_100px_90px] gap-4 px-5 py-2.5 bg-[#fafaf9] border-b border-gray-200 min-w-[420px]">
-            <span className={labelCls}>Name</span>
-            <span className={labelCls}>Type</span>
-            <span className={labelCls}>Since</span>
-          </div>
-          {partners.map((p, i) => (
-            <div key={p.id}
-              className={`grid grid-cols-[1fr_100px_90px] gap-4 items-center px-5 py-3.5 bg-white min-w-[420px] ${i > 0 ? 'border-t border-gray-200' : ''}`}>
-              <span className="text-sm font-semibold text-gray-900">{p.name}</span>
-              <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
-                p.type === 'sponsor' ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
-              }`}>
-                {p.type}
-              </span>
-              <span className="text-xs text-gray-400">
-                {new Date(p.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
-              </span>
-            </div>
+      <div className="grid gap-x-12 lg:grid-cols-2">
+        <Section title="Sponsorship transactions" meta={sponsorTxs.length}>
+          {sponsorTxs.length === 0 ? <Empty>No sponsorship transactions recorded yet.</Empty> : sponsorTxs.map(t => (
+            <Row
+              key={t.id}
+              title={<span className="block truncate">{t.description ?? '—'}</span>}
+              detail={`${t.date ? fmtDate(t.date) : '—'} · ${t.type === 'revenue' ? 'Revenue' : 'Cost'}`}
+              action={<span className={`rd-num not-italic font-sans text-[13px] ${t.type === 'cost' ? 'text-[#8a2a1d]' : ''}`}>{t.type === 'cost' ? '−' : ''}{fmtEuros(t.amount)}</span>}
+            />
           ))}
-        </div>
-      )}
+        </Section>
+        <Section title="Partners and sponsors" meta={partners.length}>
+          {partners.length === 0 ? <Empty>No partners or sponsors yet.</Empty> : partners.map(p => (
+            <Row
+              key={p.id}
+              title={p.name}
+              detail={`${p.type === 'sponsor' ? 'Sponsor' : 'Partner'} · since ${new Date(p.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}`}
+            />
+          ))}
+        </Section>
+      </div>
     </div>
   )
 }
@@ -819,10 +564,11 @@ type FinanceData = {
   merchOrders: MerchOrder[]
 }
 
+const itemLabel = (it: MerchItem) => [it.product_name, it.variant_color, it.size].filter(Boolean).join(' · ')
+
 function FinanceTab() {
   const [finance, setFinance]  = useState<FinanceData | null>(null)
   const [loading, setLoading]  = useState(true)
-  const [mounted, setMounted]  = useState(false)
 
   useEffect(() => {
     // Financial data goes through the privileged server route, not client-side reads.
@@ -831,179 +577,118 @@ function FinanceTab() {
       .then((data: FinanceData | null) => {
         setFinance(data)
         setLoading(false)
-        setTimeout(() => setMounted(true), 60)
       })
   }, [])
 
   const merchOrders = useMemo(() => finance?.merchOrders ?? [], [finance])
   const { income = 0, expenses = 0, balance = 0, byCategory = [] } = finance ?? {}
 
-  // ── Merch KPIs ──────────────────────────────────────────────────────────────
-  const { merchRevenue, merchCount, merchAvg, topProducts, recentOrders } = useMemo(() => {
+  // ── Merch KPIs: quantities from every article of every order ────────────────
+  const { merchRevenue, merchCount, merchItems, merchAvg, topProducts, recentOrders } = useMemo(() => {
     const paid = merchOrders // already filtered by status='paid' in the query
     const merchRevenue = paid.reduce((s, o) => s + (o.price_cents ?? 0), 0) / 100
     const merchCount   = paid.length
     const merchAvg     = merchCount > 0 ? merchRevenue / merchCount : 0
+    let merchItems = 0
 
-    // Group by product_name
-    const prodMap: Record<string, { name: string; orders: number; revenue: number }> = {}
+    // Group by product_name over the articles. Revenue per product is the
+    // article price × quantity; an order without item prices counts its total.
+    const prodMap: Record<string, { name: string; orders: number; units: number; revenue: number }> = {}
     for (const o of paid) {
-      const key = o.product_name
-      if (!prodMap[key]) prodMap[key] = { name: key, orders: 0, revenue: 0 }
-      prodMap[key].orders  += 1
-      prodMap[key].revenue += (o.price_cents ?? 0) / 100
+      const items = o.items?.length ? o.items : [{ product_name: o.product_name, variant_color: o.variant_color, size: o.size, quantity: o.quantity ?? 1, unit_price_cents: null }]
+      const seen = new Set<string>()
+      for (const it of items) {
+        const key = it.product_name
+        if (!prodMap[key]) prodMap[key] = { name: key, orders: 0, units: 0, revenue: 0 }
+        if (!seen.has(key)) { prodMap[key].orders += 1; seen.add(key) }
+        prodMap[key].units += it.quantity
+        prodMap[key].revenue += it.unit_price_cents != null ? (it.unit_price_cents * it.quantity) / 100 : (o.price_cents ?? 0) / 100
+        merchItems += it.quantity
+      }
     }
     const topProducts = Object.values(prodMap)
-      .sort((a, b) => b.orders - a.orders)
+      .sort((a, b) => b.units - a.units)
       .slice(0, 10)
 
     const recentOrders = paid.slice(0, 10)
 
-    return { merchRevenue, merchCount, merchAvg, topProducts, recentOrders }
+    return { merchRevenue, merchCount, merchItems, merchAvg, topProducts, recentOrders }
   }, [merchOrders])
 
-  if (loading) return <p className="text-sm text-gray-400">Loading…</p>
-
-  if (!finance?.hasTransactions) {
-    return (
-      <div className="py-16 text-center border border-dashed border-gray-200">
-        <p className="text-sm font-semibold text-gray-600 mb-1">No transactions recorded yet.</p>
-        <p className="text-xs text-gray-400 mb-6">Add your first transaction in the Finance section.</p>
-        <a href="/admin/finance" className={btnPrimary}>Go to Finance →</a>
-      </div>
-    )
-  }
+  if (loading) return <Loading />
 
   const maxAbs = Math.max(...byCategory.map(c => Math.abs(c.amount)), 1)
+  const maxUnits = Math.max(...topProducts.map(p => p.units), 1)
 
   return (
     <div>
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        <KpiCard label="Total Income"   value={fmtEuros(income)} />
-        <KpiCard label="Total Expenses" value={fmtEuros(expenses)} />
-        <KpiCard label="Balance"        value={fmtEuros(balance)}
-          sub={balance >= 0 ? 'surplus' : 'deficit'} />
+      {!finance?.hasTransactions ? (
+        <div className="border-y border-night py-8">
+          <p className="rd-italic text-[24px]">No transactions recorded yet.</p>
+          <p className="mt-2 text-[13px] text-earth-600">Add the first one in Finance.</p>
+          <a href="/admin/finance" className={`${btnPrimary} mt-5`}>Go to Finance</a>
+        </div>
+      ) : (
+        <>
+          <Numbers items={[
+            { value: eurRound(income), label: 'Income' },
+            { value: eurRound(expenses), label: 'Expenses' },
+            { value: eurRound(balance), label: balance >= 0 ? 'Balance, surplus' : 'Balance, deficit' },
+          ]} />
+          {byCategory.length > 0 && (
+            <Section title="By category" meta="Net, all time">
+              {byCategory.map((c, i) => (
+                <BarRow
+                  key={i}
+                  label={c.name}
+                  value={`${c.amount >= 0 ? '' : '−'}${fmtEuros(Math.abs(c.amount))}`}
+                  share={Math.abs(c.amount) / maxAbs}
+                  negative={c.amount < 0}
+                />
+              ))}
+            </Section>
+          )}
+        </>
+      )}
+
+      <div className="mt-14">
+        <Heading title="Merch" meta="Paid orders" />
+        <Numbers items={[
+          { value: eurRound(merchRevenue), label: 'Merch revenue' },
+          { value: merchCount, label: 'Orders' },
+          { value: merchItems, label: 'Items sold' },
+          { value: fmtEuros(merchAvg), label: 'Average order' },
+        ]} />
       </div>
 
-      {byCategory.length > 0 && (
-        <div className="bg-white border border-gray-200 p-6">
-          <p className={`${labelCls} mb-6`}>Breakdown by Category</p>
-          <div className="space-y-5">
-            {byCategory.map((c, i) => {
-              const pct        = maxAbs > 0 ? (Math.abs(c.amount) / maxAbs) * 100 : 0
-              const isPositive = c.amount >= 0
+      {merchOrders.length === 0 ? (
+        <div className="mt-8"><Empty>No merch orders yet.</Empty></div>
+      ) : (
+        <div className="grid gap-x-12 lg:grid-cols-2">
+          <Section title="Best selling" meta="By items">
+            {topProducts.map(p => (
+              <BarRow
+                key={p.name}
+                label={p.name}
+                value={`${p.units} item${p.units !== 1 ? 's' : ''} · ${fmtEuros(p.revenue)}${merchRevenue > 0 ? ` · ${((p.revenue / merchRevenue) * 100).toFixed(1)}%` : ''}`}
+                share={p.units / maxUnits}
+              />
+            ))}
+          </Section>
+          <Section title="Recent orders" meta={`Last ${recentOrders.length}`}>
+            {recentOrders.map(o => {
+              const items = o.items?.length ? o.items : []
+              const qty = items.reduce((s, it) => s + it.quantity, 0)
               return (
-                <div key={i}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                      {c.name}
-                    </span>
-                    <span className={`text-xs font-bold ${isPositive ? 'text-forest' : 'text-red-600'}`}>
-                      {isPositive ? '' : '−'}{fmtEuros(Math.abs(c.amount))}
-                    </span>
-                  </div>
-                  <div className="h-1.5 bg-gray-100 w-full">
-                    <div
-                      className="h-1.5"
-                      style={{
-                        width: mounted ? `${pct}%` : '0%',
-                        backgroundColor: isPositive ? '#1a4a3a' : '#dc2626',
-                        transition: `width 600ms ease ${i * 60}ms`,
-                      }}
-                    />
-                  </div>
-                </div>
+                <Row
+                  key={o.id}
+                  title={<span className="block truncate">{o.customer_name ?? o.customer_email ?? '—'}</span>}
+                  detail={`${fmtDate(o.created_at)} · ${items.map(it => `${it.quantity}× ${itemLabel(it)}`).join(', ') || o.product_name}`}
+                  action={<span className="rd-num font-sans text-[13px] not-italic">{o.price_cents != null ? fmtEuros(o.price_cents / 100) : '—'}{qty > 1 ? <span className="block text-right text-[11px] text-earth-500">{qty} items</span> : null}</span>}
+                />
               )
             })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Merch Performance ─────────────────────────────────────────────────── */}
-      <div className="h-px bg-black/10 my-10" />
-
-      <p className={`${labelCls} mb-6`}>Merch Performance</p>
-
-      {/* KPI row */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        <KpiCard label="Merch Revenue"      value={fmtEuros(merchRevenue)} />
-        <KpiCard label="Orders"             value={merchCount} />
-        <KpiCard label="Avg. Order Value"   value={fmtEuros(merchAvg)} />
-      </div>
-
-      {/* Top Products */}
-      {topProducts.length > 0 && (
-        <div className="mb-8 border border-black overflow-hidden">
-          <p className={`${labelCls} px-4 pt-4 pb-3`}>Best Selling Products</p>
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-black text-white">
-                <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Product</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Orders</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Revenue</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">% of Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topProducts.map((p, i) => (
-                <tr key={p.name} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-4 py-2.5 font-medium text-black border-t border-black/5">{p.name}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-700 border-t border-black/5">{p.orders}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-700 border-t border-black/5">{fmtEuros(p.revenue)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-700 border-t border-black/5">
-                    {merchRevenue > 0 ? `${((p.revenue / merchRevenue) * 100).toFixed(1)}%` : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Recent Orders */}
-      {recentOrders.length > 0 && (
-        <div className="border border-black overflow-hidden">
-          <p className={`${labelCls} px-4 pt-4 pb-3`}>Recent Orders</p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse min-w-[640px]">
-              <thead>
-                <tr className="bg-black text-white">
-                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Date</th>
-                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Customer</th>
-                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Product</th>
-                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Colour</th>
-                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Size</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((o, i) => {
-                  const d = new Date(o.created_at)
-                  const date = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
-                  return (
-                    <tr key={o.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-4 py-2.5 text-gray-600 border-t border-black/5 whitespace-nowrap">{date}</td>
-                      <td className="px-4 py-2.5 text-black font-medium border-t border-black/5 max-w-[140px] truncate">
-                        {o.customer_name ?? o.customer_email ?? '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-700 border-t border-black/5 max-w-[160px] truncate">{o.product_name}</td>
-                      <td className="px-4 py-2.5 text-gray-600 border-t border-black/5">{o.variant_color ?? '—'}</td>
-                      <td className="px-4 py-2.5 text-gray-600 border-t border-black/5">{o.size ?? '—'}</td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-black border-t border-black/5 whitespace-nowrap">
-                        {o.price_cents != null ? fmtEuros(o.price_cents / 100) : '—'}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {merchOrders.length === 0 && (
-        <div className="py-10 text-center border border-dashed border-gray-200">
-          <p className="text-xs text-gray-400 uppercase tracking-widest">No merch orders yet.</p>
+          </Section>
         </div>
       )}
     </div>
@@ -1052,6 +737,14 @@ type EventBreakdown = {
 
 type QuarterTrend = { label: string; sortKey: number; participations: number; eventCount: number }
 
+const PEOPLE_FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'member', label: 'Members' },
+  { value: 'external', label: 'External' },
+] as const
+
+const PEOPLE_TEMPLATE = 'grid-cols-[minmax(0,1fr)_56px] sm:grid-cols-[minmax(0,1fr)_72px_56px_92px]'
+
 function ParticipationTab() {
   const [participation, setParticipation] = useState<ParticipationData | null>(null)
   const [events, setEvents]               = useState<EventBreakdown[]>([])
@@ -1060,18 +753,11 @@ function ParticipationTab() {
   const [memberFilter, setMemberFilter]   = useState<'all' | 'member' | 'external'>('all')
   const [nameSearch, setNameSearch]       = useState('')
   const [sortAsc, setSortAsc]             = useState(false)
-  const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
+  const [openEmail, setOpenEmail]         = useState<string | null>(null)
   const [editingEvent, setEditingEvent]   = useState<PersonEvent | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [deletingId, setDeletingId]       = useState<string | null>(null)
-
-  function togglePersonExpanded(email: string) {
-    setExpandedEmails(prev => {
-      const next = new Set(prev)
-      next.has(email) ? next.delete(email) : next.add(email)
-      return next
-    })
-  }
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const loadData = useCallback((keepSelectedEvent: boolean) => {
     Promise.all([
@@ -1126,8 +812,7 @@ function ParticipationTab() {
     : 0
 
   // Quarterly trend: groups every (person, event) participation by the real
-  // event date (upcoming_events.date), not registration date — consistent
-  // with the first/last participation fix above.
+  // event date (upcoming_events.date), not registration date.
   const quarterlyTrend = useMemo(() => {
     const byQuarter = new Map<string, { participations: number; eventIds: Set<string>; sortKey: number }>()
     for (const p of participation?.people ?? []) {
@@ -1160,249 +845,133 @@ function ParticipationTab() {
   const maxQuarterParticipations = Math.max(...quarterlyTrend.map(q => q.participations), 1)
 
   const selectedEvent = events.find(e => e.event_id === selectedEventId) ?? null
+  const person = (participation?.people ?? []).find(p => p.email === openEmail) ?? null
 
-  if (loading) return <p className="text-sm text-gray-400">Loading…</p>
+  const columns: Column[] = [
+    { label: 'Name' },
+    { label: 'Status', wide: true },
+    { label: <button type="button" onClick={() => setSortAsc(v => !v)} className="rd-eyebrow text-[9px] text-earth-500 hover:text-night" title="Sort">Events {sortAsc ? '↑' : '↓'}</button>, align: 'right' },
+    { label: 'Last', wide: true, align: 'right' },
+  ]
+
+  if (loading) return <Loading />
 
   return (
     <div>
-      {/* KPI row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        <KpiCard label="Total Participations" value={participation?.total_participations ?? 0} />
-        <KpiCard label="Unique People"         value={participation?.total_people ?? 0} />
-        <KpiCard label="Members Share"         value={`${memberPctOfPeople}%`}
-          sub={`${participation?.members_count ?? 0} members · ${participation?.external_count ?? 0} external`} />
-        <KpiCard label="Avg. Participations / Person" value={avgParticipations} />
-      </div>
+      <Numbers items={[
+        { value: participation?.total_participations ?? 0, label: 'Participations' },
+        { value: participation?.total_people ?? 0, label: 'Unique people' },
+        { value: `${memberPctOfPeople}%`, label: `Members · ${participation?.members_count ?? 0} of ${participation?.total_people ?? 0}` },
+        { value: avgParticipations, label: 'Events per person' },
+      ]} />
 
-      {/* Per-event breakdown */}
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <p className={labelCls}>Breakdown by Event</p>
-        <select
-          value={selectedEventId}
-          onChange={e => setSelectedEventId(e.target.value)}
-          className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:border-forest transition-colors"
-        >
-          {events.map(ev => (
-            <option key={ev.event_id} value={ev.event_id}>{ev.title}</option>
-          ))}
-        </select>
-      </div>
-
-      {!selectedEvent ? (
-        <div className="py-16 text-center border border-dashed border-gray-200 mb-10">
-          <p className="text-sm text-gray-400">No events available.</p>
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 p-6 mb-10">
-          <p className="font-serif text-lg font-bold text-gray-900 mb-1">{selectedEvent.title}</p>
-          <p className="text-xs text-gray-400 mb-6">{selectedEvent.date}</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <p className={`${labelCls} mb-1`}>Total Registrations</p>
-              <p className="font-serif text-3xl font-bold text-forest">{selectedEvent.total_registrations}</p>
-            </div>
-            <div>
-              <p className={`${labelCls} mb-1`}>Members / External</p>
-              <p className="font-serif text-3xl font-bold text-forest">
-                {selectedEvent.members_count} <span className="text-gray-300">/</span> {selectedEvent.external_count}
-              </p>
-            </div>
-            <div>
-              <p className={`${labelCls} mb-1`}>Checked-in / No-show</p>
-              <p className="font-serif text-3xl font-bold text-forest">
-                {selectedEvent.checked_in_count} <span className="text-gray-300">/</span> {selectedEvent.no_show_count}
-              </p>
-            </div>
-            <div>
-              <p className={`${labelCls} mb-1`}>Manual / Self-service</p>
-              <p className="font-serif text-3xl font-bold text-forest">
-                {selectedEvent.manual_count} <span className="text-gray-300">/</span> {selectedEvent.self_count}
-              </p>
-            </div>
+      <Section
+        title="By event"
+        meta={selectedEvent?.date}
+        after={
+          <div className="pt-4">
+            <SelectField label="Event" value={selectedEventId} onChange={setSelectedEventId} width="sm:w-[360px]">
+              {events.map(ev => <option key={ev.event_id} value={ev.event_id}>{ev.title}</option>)}
+            </SelectField>
           </div>
-        </div>
-      )}
-
-      {/* Per-person table */}
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <p className={labelCls}>Participation by Person</p>
-        <div className="flex items-center gap-2 flex-wrap">
-          <input
-            value={nameSearch}
-            onChange={e => setNameSearch(e.target.value)}
-            placeholder="Search by name…"
-            className="border border-gray-300 px-3 py-1.5 text-xs text-gray-900 bg-white focus:outline-none focus:border-forest w-44 transition-colors"
-          />
-          {(['all', 'member', 'external'] as const).map(f => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setMemberFilter(f)}
-              className={`text-xs font-semibold uppercase tracking-widest px-3 py-1.5 border transition-colors ${
-                memberFilter === f
-                  ? 'bg-forest text-white border-forest'
-                  : 'border-gray-300 text-gray-500 hover:border-forest hover:text-forest'
-              }`}
-            >
-              {f === 'all' ? 'All' : f === 'member' ? 'Members' : 'External'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white border border-gray-200 mb-10">
-        <table className="w-full text-left border-collapse table-fixed">
-          <thead>
-            <tr className="bg-[#fafaf9] border-b border-gray-200">
-              <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-[26%]">Name</th>
-              <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-[30%]">Email</th>
-              <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-[16%]">Status</th>
-              <th
-                className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 cursor-pointer select-none w-[14%]"
-                onClick={() => setSortAsc(v => !v)}
-                title="Click to toggle sort order"
-              >
-                Events {sortAsc ? '▲' : '▼'}
-              </th>
-              <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500 w-[14%]">Last</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {people.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-gray-400">No participation data.</td></tr>
-            ) : people.map(p => {
-              const isExpanded = expandedEmails.has(p.email)
-              const sortedEvents = [...p.events].sort((a, b) =>
-                (a.upcoming_events?.date ?? '') < (b.upcoming_events?.date ?? '') ? 1 : -1
-              )
-              return (
-                <Fragment key={p.email}>
-                  <tr className="bg-white hover:bg-[#fafaf9] transition-colors">
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 break-words">{p.nome} {p.cognome}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 break-words">{p.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 w-fit ${
-                        p.is_member ? 'bg-forest text-white' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {p.is_member ? 'Member' : 'External'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => togglePersonExpanded(p.email)}
-                        className="flex items-center gap-1.5 font-serif text-lg font-bold text-forest hover:underline underline-offset-2"
-                        title="Show events"
-                      >
-                        {p.total_participations}
-                        <svg
-                          className={`w-3 h-3 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{fmtDate(p.last_participation_at)}</td>
-                  </tr>
-                  {isExpanded && (
-                    <tr className="bg-[#fafaf9]">
-                      <td colSpan={5} className="px-4 py-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
-                          Events attended
-                        </p>
-                        <ul className="space-y-1.5">
-                          {sortedEvents.map(ev => (
-                            <li key={ev.id} className="flex items-center justify-between gap-4 text-sm">
-                              <div className="min-w-0">
-                                <span className="text-gray-800">{ev.upcoming_events?.title ?? 'Unknown'}</span>
-                                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
-                                  {ev.upcoming_events?.date ? fmtDate(ev.upcoming_events.date) : '—'}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-3 flex-shrink-0">
-                                {deleteConfirmId === ev.id ? (
-                                  <>
-                                    <span className="text-xs text-red-600">Delete?</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleEventDelete(ev.id)}
-                                      disabled={deletingId === ev.id}
-                                      className="text-xs font-semibold uppercase tracking-wide text-red-600 hover:underline disabled:opacity-40"
-                                    >
-                                      Yes
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setDeleteConfirmId(null)}
-                                      className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:underline"
-                                    >
-                                      No
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() => setEditingEvent(ev)}
-                                      className="text-xs font-semibold uppercase tracking-wide text-forest hover:underline"
-                                    >
-                                      Modifica
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setDeleteConfirmId(ev.id)}
-                                      className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-red-600 hover:underline"
-                                    >
-                                      Elimina
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Participation trend by quarter — replaces the old fixed-bucket
-          distribution histogram with an actual time dimension, grouped by
-          the real event date (see quarterlyTrend above). */}
-      <div className="bg-white border border-gray-200 p-6 mb-10">
-        <p className={`${labelCls} mb-6`}>Participation Trend by Quarter</p>
-        {quarterlyTrend.length === 0 ? (
-          <p className="text-sm text-gray-400 py-10 text-center">No dated events yet.</p>
-        ) : (
-          <div className="flex items-end gap-5 overflow-x-auto pb-2">
-            {quarterlyTrend.map(q => {
-              const pct = maxQuarterParticipations > 0 ? (q.participations / maxQuarterParticipations) * 100 : 0
-              const avgPerEvent = q.eventCount > 0 ? Math.round((q.participations / q.eventCount) * 10) / 10 : 0
-              return (
-                <div key={q.label} className="flex flex-col items-center flex-shrink-0 w-16">
-                  <span className="text-xs font-bold text-forest mb-1">{q.participations}</span>
-                  <div className="w-8 h-32 bg-gray-100 flex items-end">
-                    <div className="w-full bg-forest transition-all duration-500" style={{ height: `${pct}%` }} />
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mt-2 whitespace-nowrap">
-                    {q.label}
-                  </span>
-                  <span className="text-[10px] text-gray-400 whitespace-nowrap">
-                    {q.eventCount} event{q.eventCount !== 1 ? 's' : ''}
-                  </span>
-                  <span className="text-[9px] text-gray-300 whitespace-nowrap">~{avgPerEvent}/event</span>
-                </div>
-              )
-            })}
+        }
+      >
+        {!selectedEvent ? <Empty>No events available.</Empty> : (
+          <div className="mt-4 grid gap-x-12 sm:grid-cols-2">
+            <div>
+              <FieldRow label="Registered" value={selectedEvent.total_registrations} />
+              <FieldRow label="Members" value={selectedEvent.members_count} aside={`${selectedEvent.external_count} external`} />
+            </div>
+            <div>
+              <FieldRow label="Checked in" value={selectedEvent.checked_in_count} aside={`${selectedEvent.no_show_count} no-show`} />
+              <FieldRow label="Added by hand" value={selectedEvent.manual_count} aside={`${selectedEvent.self_count} self`} />
+            </div>
           </div>
         )}
+      </Section>
+
+      <div className="mt-10 flex flex-wrap items-end gap-x-6 gap-y-4">
+        <SearchField value={nameSearch} onChange={setNameSearch} placeholder="Name…" />
+        <div>
+          <span className={`${labelCls} mb-2`}>Status</span>
+          <SegmentedPills size="sm" label="Status" options={[...PEOPLE_FILTERS]} value={memberFilter} onChange={setMemberFilter} />
+        </div>
       </div>
+
+      <Split
+        sheetRef={sheetRef}
+        list={
+          <CrmTable title="By person" meta={people.length} columns={columns} template={PEOPLE_TEMPLATE} isEmpty={people.length === 0} empty="No participation data.">
+            {people.map(p => (
+              <CrmRow
+                key={p.email}
+                template={PEOPLE_TEMPLATE}
+                selected={p.email === openEmail}
+                onOpen={() => { setOpenEmail(p.email); setDeleteConfirmId(null); revealSheet(sheetRef.current) }}
+                label={`Open ${p.nome} ${p.cognome}`}
+              >
+                <span className={cell(columns[0])}><NameCell name={`${p.nome} ${p.cognome}`} sub={p.email} /></span>
+                <span className={cell(columns[1], 'text-[12px] text-earth-700')}>{p.is_member ? 'Member' : 'External'}</span>
+                <span className={cell(columns[2], 'rd-num font-serif text-[20px]')}>{p.total_participations}</span>
+                <span className={cell(columns[3], 'rd-num text-[12px] text-earth-700')}>{fmtDate(p.last_participation_at)}</span>
+              </CrmRow>
+            ))}
+          </CrmTable>
+        }
+        sheet={
+          person ? (
+            <Sheet title={`${person.nome} ${person.cognome}`} meta={person.is_member ? 'Member' : 'External'}>
+              <FieldRow label="Email" value={person.email} />
+              <FieldRow label="Events" value={person.total_participations} />
+              <FieldRow label="First" value={fmtDate(person.first_participation_at)} />
+              <FieldRow label="Last" value={fmtDate(person.last_participation_at)} />
+              <div className="mt-8">
+                <Heading title="Events attended" />
+                <div className="border-t border-night">
+                  {[...person.events].sort((a, b) => (a.upcoming_events?.date ?? '') < (b.upcoming_events?.date ?? '') ? 1 : -1).map(ev => (
+                    <div key={ev.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-night/20 py-3">
+                      <div className="min-w-0">
+                        <div className="truncate font-serif text-[19px] font-medium leading-[1.15]">{ev.upcoming_events?.title ?? 'Unknown'}</div>
+                        <div className="mt-0.5 text-[12px] text-earth-600">{ev.upcoming_events?.date ? fmtDate(ev.upcoming_events.date) : '—'}</div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {deleteConfirmId === ev.id ? (
+                          <>
+                            <span className="text-[12px]">Delete?</span>
+                            <button type="button" onClick={() => handleEventDelete(ev.id)} disabled={deletingId === ev.id} className="rd-italic text-[18px] text-[#8a2a1d] disabled:opacity-40">Yes</button>
+                            <button type="button" onClick={() => setDeleteConfirmId(null)} className="rd-italic text-[18px]">No</button>
+                          </>
+                        ) : (
+                          <>
+                            <button type="button" onClick={() => setEditingEvent(ev)} className="rd-italic text-[18px]">Modifica</button>
+                            <button type="button" onClick={() => setDeleteConfirmId(ev.id)} className="rd-italic text-[18px] text-earth-600">Elimina</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Sheet>
+          ) : (
+            <SheetEmpty title="Person" text="Open a person to see every event attended." />
+          )
+        }
+      />
+
+      <Section title="Trend by quarter" meta="By event date">
+        {quarterlyTrend.length === 0 ? <Empty>No dated events yet.</Empty> : quarterlyTrend.map(q => {
+          const avgPerEvent = q.eventCount > 0 ? Math.round((q.participations / q.eventCount) * 10) / 10 : 0
+          return (
+            <BarRow
+              key={q.label}
+              label={`${q.label} · ${q.eventCount} event${q.eventCount !== 1 ? 's' : ''} · ~${avgPerEvent} per event`}
+              value={q.participations}
+              share={q.participations / maxQuarterParticipations}
+            />
+          )
+        })}
+      </Section>
 
       {editingEvent && (
         <EditParticipantModal
@@ -1419,13 +988,14 @@ function ParticipationTab() {
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'overview',           label: 'Overview' },
-  { key: 'quarter-comparison', label: 'Quarter Comparison' },
-  { key: 'linkedin',           label: 'LinkedIn Posts' },
+  { key: 'quarter-comparison', label: 'Quarters' },
+  { key: 'linkedin',           label: 'LinkedIn' },
   { key: 'sponsors',           label: 'Sponsors' },
   { key: 'finance',            label: 'Finance' },
   { key: 'participation',      label: 'Partecipazione' },
 ]
 
+/** Board ABa1d–ABa2d. Access is checked by the admin layout and again here. */
 export default function AdminAnalyticsPage() {
   const router                    = useRouter()
   const [userEmail, setUserEmail] = useState('')
@@ -1454,69 +1024,22 @@ export default function AdminAnalyticsPage() {
     })
   }, [router])
 
-  if (!ready) {
-    return (
-      <div className="min-h-screen bg-[#f9f9f9] flex items-center justify-center">
-        <p className="text-sm text-gray-400">Loading…</p>
-      </div>
-    )
-  }
+  if (!ready) return <Loading />
 
   return (
     <>
       <AdminNavbar userEmail={userEmail} />
-      <div>
-        <div>
-
-          {/* Page header */}
-          <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="font-serif text-4xl sm:text-5xl font-bold text-gray-900 mb-3">Analytics</h1>
-              <div className="w-8 h-px bg-forest" />
-            </div>
-
-            <a
-              href="https://analytics.google.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${btnPrimary} self-start flex items-center gap-2 mt-1`}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              Google Analytics
-            </a>
-          </div>
-
-          {/* Tab bar */}
-          <div className="flex gap-0 border-b border-gray-200 mb-8 overflow-x-auto">
-            {TABS.map(t => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setTab(t.key)}
-                className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest transition-colors border-b-2 -mb-px whitespace-nowrap ${
-                  tab === t.key
-                    ? 'border-forest text-forest'
-                    : 'border-transparent text-gray-400 hover:text-gray-700'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab content */}
-          {tab === 'overview'           && <OverviewTab />}
-          {tab === 'quarter-comparison' && <QuarterComparisonTab />}
-          {tab === 'linkedin'           && <LinkedInPostsTab />}
-          {tab === 'sponsors'           && <SponsorsTab />}
-          {tab === 'finance'            && <FinanceTab />}
-          {tab === 'participation'      && <ParticipationTab />}
-
-        </div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <Tabs tabs={TABS} value={tab} onChange={setTab} />
+        <a href={GA_URL} target="_blank" rel="noopener noreferrer" className={btnGhost}>Google Analytics</a>
       </div>
+
+      {tab === 'overview'           && <OverviewTab />}
+      {tab === 'quarter-comparison' && <QuarterComparisonTab />}
+      {tab === 'linkedin'           && <LinkedInPostsTab />}
+      {tab === 'sponsors'           && <SponsorsTab />}
+      {tab === 'finance'            && <FinanceTab />}
+      {tab === 'participation'      && <ParticipationTab />}
     </>
   )
 }

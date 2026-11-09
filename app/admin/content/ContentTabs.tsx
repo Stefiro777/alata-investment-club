@@ -1,6 +1,7 @@
 'use client'
 
 import { type ReactNode } from 'react'
+import { pillClass } from '@/app/components/member/ui'
 
 export default function ContentTabs({
   reportsContent,
@@ -12,14 +13,8 @@ export default function ContentTabs({
   return (
     <div>
       {/* Tab bar — Reports only */}
-      <div className="sticky top-[56px] z-20 bg-white border-b border-line-faint overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        <div className="max-w-5xl mx-auto px-8 flex items-center gap-0">
-          <button
-            className="px-6 py-4 text-xs font-medium tracking-widest uppercase whitespace-nowrap border-b-2 border-forest text-forest"
-          >
-            Reports
-          </button>
-        </div>
+      <div role="tablist" className="mb-2 flex flex-wrap gap-2">
+        <span role="tab" aria-selected="true" className={pillClass({ active: true })}>Reports</span>
       </div>
 
       <div>{reportsContent}</div>

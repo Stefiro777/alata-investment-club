@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { ABOUT_STATS_KEY, ABOUT_STATS_COUNT, type AboutStat } from '@/lib/about-stats'
+import FlagshipCreditsEditor from './FlagshipCreditsEditor'
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -21,6 +22,7 @@ export default function SettingsClient({
   showAlumniReviews,
   showEventsReviews,
   aboutStats,
+  flagshipCredits,
 }: {
   applicationsOpen: boolean
   showPrices: boolean
@@ -30,6 +32,7 @@ export default function SettingsClient({
   showAlumniReviews: boolean
   showEventsReviews: boolean
   aboutStats: AboutStat[]
+  flagshipCredits: string[]
 }) {
   // About page metrics (fixed number of slots, padded with empty rows)
   const [stats, setStats] = useState<AboutStat[]>(
@@ -412,6 +415,8 @@ export default function SettingsClient({
           </form>
         </div>
       </section>
+
+      <FlagshipCreditsEditor initial={flagshipCredits} />
 
       <section id="invite-member">
         <SectionHeading title="Invite Member" />

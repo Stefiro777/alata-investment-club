@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import Reveal from '@/app/components/Reveal'
+import { visiblePartners } from '@/lib/public-filters'
 
 type PartnerItem = {
   id: string
@@ -47,10 +48,13 @@ export default function PartnersMarquee({
       const supabase = createClient()
       const { data } = await supabase
         .from('partners')
-        .select('id, name, logo_url, website_url, order_index')
+        .select('id, name, logo_url, website_url, order_index, is_hidden')
         .order('order_index', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: true })
-      if (isMounted && data && data.length > 0) setResolved(data as PartnerItem[])
+      if (isMounted && data && data.length > 0) {
+        const shown = visiblePartners(data as (PartnerItem & { is_hidden: boolean })[])
+        if (shown.length > 0) setResolved(shown)
+      }
     }
     fetchData()
     return () => { isMounted = false }

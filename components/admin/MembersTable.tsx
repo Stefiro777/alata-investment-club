@@ -1,7 +1,11 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { TEAM_BADGE } from '@/app/dashboard/teamColors'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { FieldRow } from '@/app/components/member/ui'
+import {
+  Numbers, Toolbar, SearchField, SelectField, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, Dialog,
+  cell, fmtDate, revealSheet, fieldCls, labelCls, btnPrimary, btnGhost, errorCls, type Column,
+} from './crm/ui'
 
 type Member = {
   id: string
@@ -12,6 +16,19 @@ type Member = {
   title: string | null
   created_at: string
 }
+
+const ROLE_LABEL: Record<string, string> = { bod: 'BoD', management: 'Management', director: 'Director', member: 'Member' }
+const roleLabel = (r: string | null | undefined) => (r ? ROLE_LABEL[r] ?? r.charAt(0).toUpperCase() + r.slice(1) : '—')
+const teamLabel = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+
+const COLUMNS: Column[] = [
+  { label: '' },
+  { label: 'Name' },
+  { label: 'Role', wide: true },
+  { label: 'Team' },
+  { label: 'Joined', wide: true, align: 'right' },
+]
+const TEMPLATE = 'grid-cols-[20px_minmax(0,1fr)_84px] sm:grid-cols-[20px_minmax(0,1fr)_92px_96px_84px]'
 
 // ── Compose Modal ────────────────────────────────────────────────────────────
 function ComposeModal({
@@ -59,113 +76,59 @@ function ComposeModal({
     }
   }
 
-  const inputClass =
-    'w-full px-3 py-2 border border-[#d1d5db] focus:outline-none focus:border-forest text-sm text-[#1a1a1a] bg-white transition-colors'
-
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.65)', zIndex: 9999 }}
-      onClick={e => { if (e.target === e.currentTarget && status !== 'sending') onClose() }}
+    <Dialog
+      title="Send email"
+      sub={`${recipients.length} recipient${recipients.length !== 1 ? 's' : ''}`}
+      onClose={onClose}
+      busy={status === 'sending'}
     >
-      <div className="bg-white border border-line w-full max-w-lg shadow-xl">
-        <div className="flex items-start justify-between px-6 py-4 border-b border-line">
-          <div>
-            <p className="font-serif text-base font-bold text-forest uppercase tracking-widest">
-              Send Email
-            </p>
-            <p className="text-xs text-ink-500 mt-0.5">{recipients.length} recipient{recipients.length !== 1 ? 's' : ''}</p>
+      {status === 'done' && result ? (
+        <div className="space-y-5 py-4 text-center">
+          <p className="text-[13px]">Sent: {result.sent} · Failed: {result.failed}</p>
+          <button type="button" onClick={onClose} className={btnGhost}>Close</button>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          <p className="text-[12px] leading-[1.6] text-earth-700">
+            {visibleRecipients.map(m => m.full_name).join(', ')}
+            {overflow > 0 && ` and ${overflow} others`}
+          </p>
+
+          <label className="block">
+            <span className={labelCls}>Subject</span>
+            <input value={subject} onChange={e => setSubject(e.target.value)} disabled={status === 'sending'} className={fieldCls} />
+          </label>
+
+          <label className="block">
+            <span className={labelCls}>Message</span>
+            <textarea
+              rows={6}
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              disabled={status === 'sending'}
+              placeholder="Write your message here…"
+              className={`${fieldCls} resize-none`}
+            />
+            <span className="mt-1 block text-[11px] text-earth-500">[Nome] will be replaced with each member&apos;s name.</span>
+          </label>
+
+          {status === 'error' && errorMsg && <p className={errorCls}>{errorMsg}</p>}
+
+          <div className="flex justify-end gap-2 border-t border-night/20 pt-4">
+            <button type="button" onClick={onClose} disabled={status === 'sending'} className={btnGhost}>Cancel</button>
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={status === 'sending' || !subject.trim() || !message.trim()}
+              className={btnPrimary}
+            >
+              {status === 'sending' ? 'Sending…' : 'Send'}
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            disabled={status === 'sending'}
-            className="text-ink-500 hover:text-[#1a1a1a] text-xl leading-none transition-colors -m-4 p-4 ml-4 mt-0.5 disabled:opacity-40"
-          >
-            ✕
-          </button>
         </div>
-
-        <div className="p-6 space-y-4">
-          {status === 'done' && result ? (
-            <div className="py-8 text-center space-y-2">
-              <p className="text-forest font-medium text-sm tracking-wide">
-                ✓ Sent: {result.sent} — Failed: {result.failed}
-              </p>
-              <button
-                onClick={onClose}
-                className="mt-4 border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Recipient chips */}
-              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
-                {visibleRecipients.map(m => (
-                  <span key={m.id} className="text-[11px] bg-[#f0f5f3] text-forest px-2 py-1 border border-[#c8ddd6]">
-                    {m.full_name}
-                  </span>
-                ))}
-                {overflow > 0 && (
-                  <span className="text-[11px] bg-[#f3f4f6] text-ink-500 px-2 py-1 border border-line">
-                    +{overflow} others
-                  </span>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Subject</label>
-                <input
-                  value={subject}
-                  onChange={e => setSubject(e.target.value)}
-                  disabled={status === 'sending'}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-ink-500 uppercase tracking-widest mb-1">Message</label>
-                <textarea
-                  rows={6}
-                  value={message}
-                  onChange={e => setMessage(e.target.value)}
-                  disabled={status === 'sending'}
-                  placeholder="Write your message here…"
-                  className={`${inputClass} resize-none`}
-                />
-                <p className="text-[11px] text-ink-400 mt-1">
-                  [Nome] will be replaced with each member&apos;s name.
-                </p>
-              </div>
-
-              {status === 'error' && errorMsg && (
-                <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{errorMsg}</p>
-              )}
-
-              <div className="flex justify-end gap-3 pt-2 border-t border-black/5">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={status === 'sending'}
-                  className="border border-[#d1d5db] text-ink-500 hover:bg-[#f3f4f6] text-xs font-medium tracking-wide px-5 py-2.5 transition-colors disabled:opacity-40"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSend}
-                  disabled={status === 'sending' || !subject.trim() || !message.trim()}
-                  className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-wide px-6 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {status === 'sending' ? 'Sending…' : 'Send'}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+      )}
+    </Dialog>
   )
 }
 
@@ -178,6 +141,9 @@ export default function MembersTable() {
   const [teamFilter, setTeamFilter] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [composeOpen, setComposeOpen] = useState(false)
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/admin/crm/members')
@@ -243,154 +209,119 @@ export default function MembersTable() {
     })
   }
 
-  const selectedMembers = members.filter(m => selected.has(m.id))
+  function open(id: string) {
+    setOpenId(id)
+    setCopied(false)
+    revealSheet(sheetRef.current)
+  }
 
-  if (loading) return <p className="text-sm text-ink-500 py-10 text-center">Loading…</p>
-  if (error) return <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>
+  async function copyEmail(email: string) {
+    await navigator.clipboard.writeText(email)
+    setCopied(true)
+  }
+
+  const selectedMembers = members.filter(m => selected.has(m.id))
+  const current = members.find(m => m.id === openId) ?? null
+
+  if (loading) return <p className="py-10 text-center text-[13px] text-earth-600">Loading…</p>
+  if (error) return <p className={errorCls}>{error}</p>
 
   return (
-    <div className="space-y-6">
-      {/* KPI strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: 'Total Members', value: members.length },
-          { label: 'BoD', value: bodCount },
-          { label: 'Directors', value: directorCount },
-        ].map(kpi => (
-          <div key={kpi.label} className="bg-white border border-line px-6 py-4">
-            <p className="text-xs text-ink-500 uppercase tracking-widest font-medium">{kpi.label}</p>
-            <p className="text-2xl font-bold text-forest mt-1">{kpi.value}</p>
-          </div>
-        ))}
-      </div>
+    <div>
+      <Numbers items={[
+        { value: members.length, label: 'Total members' },
+        { value: bodCount, label: 'BoD' },
+        { value: directorCount, label: 'Directors' },
+        { value: teams.length, label: 'Teams' },
+      ]} />
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, email, team…"
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest w-64 transition-colors"
-        />
-        <select
-          value={teamFilter}
-          onChange={e => setTeamFilter(e.target.value)}
-          className="border border-[#d1d5db] px-3 py-2 text-sm text-[#1a1a1a] bg-white focus:outline-none focus:border-forest transition-colors"
-        >
-          <option value="">All Teams</option>
-          {teams.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
+      <Toolbar
+        actions={
+          <>
+            <button type="button" onClick={() => setComposeOpen(true)} disabled={selected.size === 0} className={btnPrimary}>
+              Send email{selected.size > 0 ? ` (${selected.size})` : ''}
+            </button>
+          </>
+        }
+      >
+        <SearchField value={search} onChange={setSearch} placeholder="Name, email, team…" />
+        <SelectField label="Team" value={teamFilter} onChange={setTeamFilter} width="sm:w-[180px]">
+          <option value="">All teams</option>
+          {teams.map(t => <option key={t} value={t}>{teamLabel(t)}</option>)}
+        </SelectField>
+      </Toolbar>
 
-        {selected.size > 0 && (
-          <button
-            onClick={() => setComposeOpen(true)}
-            className="bg-forest hover:bg-forest-deep text-white text-xs font-medium tracking-widest uppercase px-5 py-2.5 transition-colors"
+      <Split
+        sheetRef={sheetRef}
+        list={
+          <CrmTable
+            title="Members"
+            meta={filtered.length === members.length ? members.length : `${filtered.length} of ${members.length}`}
+            columns={[{ label: <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} disabled={filtered.length === 0} aria-label="Select all shown" className="h-3.5 w-3.5 cursor-pointer accent-[#1a4a3a]" /> }, ...COLUMNS.slice(1)]}
+            template={TEMPLATE}
+            isEmpty={filtered.length === 0}
+            empty="No members found."
           >
-            Send Email ({selected.size})
-          </button>
-        )}
-      </div>
-
-      {/* Table */}
-      <div className="bg-white border border-line overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-line bg-[#f9f9f9]">
-              <th className="px-4 py-3 w-10">
-                <label className="inline-flex items-center justify-center -m-4 p-4 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleSelectAll}
-                    className="cursor-pointer"
-                  />
-                </label>
-              </th>
-              {['Name', 'Email', 'Role', 'Team', 'Joined'].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-medium text-ink-500 uppercase tracking-wide whitespace-nowrap">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-ink-500">
-                  No members found.
-                </td>
-              </tr>
-            ) : filtered.map(m => {
-              const isSelected = selected.has(m.id)
-              const roleBadge = TEAM_BADGE[m.role]
+            {filtered.map(m => {
               const memberTeams = m.teams ?? []
               return (
-                <tr
+                <CrmRow
                   key={m.id}
-                  onClick={() => toggleRow(m.id)}
-                  className={`border-b border-black/5 last:border-0 cursor-pointer transition-colors ${
-                    isSelected ? 'bg-[#f0f5f3]' : 'hover:bg-[#f9f9f9]'
-                  }`}
+                  template={TEMPLATE}
+                  selected={m.id === openId}
+                  onOpen={() => open(m.id)}
+                  label={`Open ${m.full_name}`}
+                  lead={
+                    <input
+                      type="checkbox"
+                      checked={selected.has(m.id)}
+                      onChange={() => toggleRow(m.id)}
+                      aria-label={`Select ${m.full_name}`}
+                      className="h-3.5 w-3.5 cursor-pointer accent-[#1a4a3a]"
+                    />
+                  }
                 >
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <label className="inline-flex items-center justify-center -m-4 p-4 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleRow(m.id)}
-                        className="cursor-pointer"
-                      />
-                    </label>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-[#1a1a1a] whitespace-nowrap">{m.full_name}</td>
-                  <td className="px-4 py-3 text-ink-500">{m.email}</td>
-                  <td className="px-4 py-3">
-                    {roleBadge ? (
-                      <span
-                        className="text-[10px] font-medium tracking-widest uppercase px-2 py-1"
-                        style={{ backgroundColor: roleBadge.bg, color: roleBadge.text }}
-                      >
-                        {roleBadge.label}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-medium tracking-widest uppercase px-2 py-1 border border-line text-ink-500">
-                        {m.role ?? '—'}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {memberTeams.length === 0 ? (
-                      <span className="text-[10px] text-ink-500">—</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {memberTeams.map(t => {
-                          const badge = TEAM_BADGE[t]
-                          return badge ? (
-                            <span
-                              key={t}
-                              className="text-[10px] font-medium tracking-widest uppercase px-2 py-1"
-                              style={{ backgroundColor: badge.bg, color: badge.text }}
-                            >
-                              {badge.label}
-                            </span>
-                          ) : (
-                            <span key={t} className="text-[10px] text-ink-500">{t}</span>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-ink-500 whitespace-nowrap">
+                  <span className={cell(COLUMNS[1])}><NameCell name={m.full_name} sub={m.email} /></span>
+                  <span className={cell(COLUMNS[2], 'text-[12px] text-earth-700')}>{roleLabel(m.role)}</span>
+                  <span className={cell(COLUMNS[3], 'text-[12px] text-earth-700')}>
+                    {memberTeams.length === 0 ? '—' : memberTeams.map(teamLabel).join(', ')}
+                  </span>
+                  <span className={cell(COLUMNS[4], 'rd-num text-[12px] text-earth-700')}>
                     {m.created_at ? new Date(m.created_at).toLocaleDateString('it-IT') : '—'}
-                  </td>
-                </tr>
+                  </span>
+                </CrmRow>
               )
             })}
-          </tbody>
-        </table>
-      </div>
+          </CrmTable>
+        }
+        sheet={
+          current ? (
+            <Sheet
+              title="Member"
+              meta={roleLabel(current.role)}
+              actions={
+                <>
+                  <button type="button" onClick={() => toggleRow(current.id)} className={selected.has(current.id) ? btnPrimary : btnGhost}>
+                    {selected.has(current.id) ? 'Selected for email' : 'Select for email'}
+                  </button>
+                  <button type="button" onClick={() => copyEmail(current.email)} className={btnGhost}>
+                    {copied ? 'Email copied' : 'Copy email'}
+                  </button>
+                </>
+              }
+            >
+              <FieldRow label="Name" value={current.full_name} />
+              <FieldRow label="Email" value={<a href={`mailto:${current.email}`} className="hover:underline">{current.email}</a>} />
+              <FieldRow label="Role" value={roleLabel(current.role)} />
+              <FieldRow label="Team" value={(current.teams ?? []).length ? (current.teams ?? []).map(teamLabel).join(', ') : '—'} muted={!(current.teams ?? []).length} />
+              <FieldRow label="Title" value={current.title || '—'} muted={!current.title} />
+              <FieldRow label="Joined" value={fmtDate(current.created_at)} />
+            </Sheet>
+          ) : (
+            <SheetEmpty title="Member" text="Open a member from the list. Tick the boxes to write to several at once." />
+          )
+        }
+      />
 
       {composeOpen && (
         <ComposeModal

@@ -40,6 +40,7 @@ export type Partner = {
   order_index: number | null
   click_count: number
   created_at: string
+  is_hidden: boolean
 }
 
 export type PartnerDocument = {

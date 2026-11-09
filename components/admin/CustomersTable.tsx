@@ -1,7 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
+import { FieldRow, SegmentedPills } from '@/app/components/member/ui'
+import {
+  Numbers, Toolbar, SearchField, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, Dialog,
+  cell, fmtDate, revealSheet, fieldCls, labelCls, btnPrimary, btnGhost, errorCls, type Column,
+} from './crm/ui'
 
 const supabase = createClient()
 
@@ -29,9 +34,6 @@ async function getToken() {
   return session?.access_token ?? ''
 }
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
-}
 function fmtAmt(n: number) {
   return `€${n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
@@ -42,16 +44,20 @@ const TYPE_LABELS: Record<CustomerType, string> = {
   event: 'Event',
   membership: 'Membership',
 }
-const TYPE_COLORS: Record<CustomerType, string> = {
-  career_service: 'bg-blue-100 text-blue-800',
-  merch:          'bg-purple-100 text-purple-800',
-  event:          'bg-orange-100 text-orange-700',
-  membership:     'bg-[#edf7f0] text-forest',
-}
 
-const inputCls = 'border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-full'
-const btnGreen = 'bg-forest hover:bg-forest-deep text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40'
-const btnOutline = 'border border-forest text-forest hover:bg-forest hover:text-white text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40'
+const TYPE_FILTERS = [
+  { value: 'all', label: 'Tutti' },
+  ...(Object.keys(TYPE_LABELS) as CustomerType[]).map(t => ({ value: t, label: TYPE_LABELS[t] })),
+]
+
+const COLUMNS: Column[] = [
+  { label: '' },
+  { label: 'Nome' },
+  { label: 'Tipo', wide: true },
+  { label: 'Importo', align: 'right' },
+  { label: 'Data', wide: true, align: 'right' },
+]
+const TEMPLATE = 'grid-cols-[20px_minmax(0,1fr)_80px] sm:grid-cols-[20px_minmax(0,1fr)_104px_80px_88px]'
 
 // ── Email modal ────────────────────────────────────────────────────────────────
 
@@ -77,55 +83,42 @@ function EmailModal({ ids, count, onClose }: { ids: string[]; count: number; onC
   }
 
   return (
-    <>
-      <div className="fixed inset-0 z-50 bg-black/50" onClick={onClose} aria-hidden />
-      <div className="fixed inset-0 z-[51] flex items-center justify-center p-4">
-        <div className="bg-white w-full max-w-lg shadow-2xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-bold uppercase tracking-widest">Invia Email a {count} selezionati</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-900">✕</button>
-          </div>
-          {result ? (
-            <div className="text-center py-6">
-              <p className="text-forest font-semibold">Inviate {result.sent}/{result.total} email con successo.</p>
-              <button onClick={onClose} className={`mt-4 ${btnGreen}`}>Chiudi</button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {err && <p className="text-xs text-red-600 bg-red-50 px-3 py-2">{err}</p>}
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-widest text-gray-500 block mb-1">Oggetto</label>
-                <input value={subject} onChange={e => setSubject(e.target.value)} className={inputCls} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-widest text-gray-500 block mb-1">Corpo</label>
-                <textarea value={body} onChange={e => setBody(e.target.value)} rows={6}
-                  className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-full resize-none" />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button onClick={send} disabled={sending} className={`flex-1 py-3 ${btnGreen}`}>
-                  {sending ? `Invio in corso…` : `Invia a ${count} destinatari`}
-                </button>
-                <button onClick={onClose} className="px-4 py-3 border border-gray-200 text-xs text-gray-600 hover:bg-gray-50">Annulla</button>
-              </div>
-            </div>
-          )}
+    <Dialog title="Invia email" sub={`${count} selezionati`} onClose={onClose} busy={sending}>
+      {result ? (
+        <div className="space-y-5 py-4 text-center">
+          <p className="text-[13px]">Inviate {result.sent}/{result.total} email con successo.</p>
+          <button type="button" onClick={onClose} className={btnGhost}>Chiudi</button>
         </div>
-      </div>
-    </>
+      ) : (
+        <div className="space-y-5">
+          {err && <p className={errorCls}>{err}</p>}
+          <label className="block"><span className={labelCls}>Oggetto</span>
+            <input value={subject} onChange={e => setSubject(e.target.value)} className={fieldCls} /></label>
+          <label className="block"><span className={labelCls}>Corpo</span>
+            <textarea value={body} onChange={e => setBody(e.target.value)} rows={6} className={`${fieldCls} resize-none`} /></label>
+          <div className="flex justify-end gap-2 border-t border-night/20 pt-4">
+            <button type="button" onClick={onClose} className={btnGhost}>Annulla</button>
+            <button type="button" onClick={send} disabled={sending} className={btnPrimary}>
+              {sending ? 'Invio in corso…' : `Invia a ${count} destinatari`}
+            </button>
+          </div>
+        </div>
+      )}
+    </Dialog>
   )
 }
 
-// ── Add customer form ──────────────────────────────────────────────────────────
+// ── Add customer dialog ────────────────────────────────────────────────────────
 
-function AddCustomerForm({ onAdded }: { onAdded: () => void }) {
-  const [open, setOpen]   = useState(false)
+const EMPTY_FORM = () => ({
+  name: '', email: '', phone: '', type: 'career_service' as CustomerType,
+  reference: '', amount: '', purchased_at: new Date().toISOString().slice(0, 10), notes: '',
+})
+
+function AddCustomerModal({ onAdded, onClose }: { onAdded: () => void; onClose: () => void }) {
   const [saving, setSaving] = useState(false)
   const [err, setErr]     = useState('')
-  const [form, setForm]   = useState({
-    name: '', email: '', phone: '', type: 'career_service' as CustomerType,
-    reference: '', amount: '', purchased_at: new Date().toISOString().slice(0, 10), notes: '',
-  })
+  const [form, setForm]   = useState(EMPTY_FORM)
 
   async function save() {
     if (!form.name || !form.email) { setErr('Nome e email richiesti'); return }
@@ -138,44 +131,38 @@ function AddCustomerForm({ onAdded }: { onAdded: () => void }) {
     }).then(r => r.json())
     setSaving(false)
     if (res.error) { setErr(res.error); return }
-    setOpen(false)
-    setForm({ name: '', email: '', phone: '', type: 'career_service', reference: '', amount: '', purchased_at: new Date().toISOString().slice(0, 10), notes: '' })
     onAdded()
   }
 
-  if (!open) return (
-    <button onClick={() => setOpen(true)} className={btnGreen}>+ Aggiungi cliente</button>
+  const field = (key: keyof ReturnType<typeof EMPTY_FORM>, label: string, type = 'text') => (
+    <label className="block"><span className={labelCls}>{label}</span>
+      <input type={type} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} className={fieldCls}
+        {...(type === 'number' ? { min: 0, step: '0.01' } : {})} /></label>
   )
 
   return (
-    <div className="border border-forest p-5 mb-6 bg-white">
-      <p className="text-xs font-bold uppercase tracking-widest text-forest mb-4">Nuovo cliente</p>
-      {err && <p className="text-xs text-red-600 bg-red-50 px-3 py-2 mb-3">{err}</p>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-        <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Nome *</label>
-          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} /></div>
-        <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Email *</label>
-          <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className={inputCls} /></div>
-        <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Telefono</label>
-          <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className={inputCls} /></div>
-        <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Tipo *</label>
-          <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as CustomerType }))} className={inputCls}>
-            {Object.entries(TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select></div>
-        <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Servizio / Prodotto</label>
-          <input value={form.reference} onChange={e => setForm(f => ({ ...f, reference: e.target.value }))} className={inputCls} /></div>
-        <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Importo (€)</label>
-          <input type="number" min={0} step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} className={inputCls} /></div>
-        <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Data acquisto</label>
-          <input type="date" value={form.purchased_at} onChange={e => setForm(f => ({ ...f, purchased_at: e.target.value }))} className={inputCls} /></div>
-        <div><label className="text-xs text-gray-500 uppercase tracking-wide block mb-1">Note</label>
-          <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className={inputCls} /></div>
+    <Dialog title="Nuovo cliente" onClose={onClose} busy={saving}>
+      <div className="space-y-5">
+        {err && <p className={errorCls}>{err}</p>}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {field('name', 'Nome *')}
+          {field('email', 'Email *', 'email')}
+          {field('phone', 'Telefono')}
+          <label className="block"><span className={labelCls}>Tipo *</span>
+            <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as CustomerType }))} className={`${fieldCls} cursor-pointer`}>
+              {Object.entries(TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select></label>
+          {field('reference', 'Servizio / Prodotto')}
+          {field('amount', 'Importo (€)', 'number')}
+          {field('purchased_at', 'Data acquisto', 'date')}
+          {field('notes', 'Note')}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-night/20 pt-4">
+          <button type="button" onClick={onClose} className={btnGhost}>Annulla</button>
+          <button type="button" onClick={save} disabled={saving} className={btnPrimary}>{saving ? 'Salvo…' : 'Salva'}</button>
+        </div>
       </div>
-      <div className="flex gap-3">
-        <button onClick={save} disabled={saving} className={btnGreen}>{saving ? 'Salvo…' : 'Salva'}</button>
-        <button onClick={() => setOpen(false)} className="border border-gray-200 px-4 py-2 text-xs text-gray-600 hover:bg-gray-50">Annulla</button>
-      </div>
-    </div>
+    </Dialog>
   )
 }
 
@@ -188,10 +175,13 @@ export default function CustomersTable() {
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [search,    setSearch]    = useState('')
   const [selected,  setSelected]  = useState<Set<string>>(new Set())
-  const [expanded,  setExpanded]  = useState<string | null>(null)
+  const [openId,    setOpenId]    = useState<string | null>(null)
   const [editNotes, setEditNotes] = useState('')
   const [savingNote, setSavingNote] = useState(false)
+  const [noteSaved, setNoteSaved] = useState(false)
   const [showEmail, setShowEmail] = useState(false)
+  const [showAdd,   setShowAdd]   = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true); setFetchErr(null)
@@ -212,7 +202,8 @@ export default function CustomersTable() {
   function toggleSelect(id: string) {
     setSelected(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
@@ -222,10 +213,11 @@ export default function CustomersTable() {
     else setSelected(new Set(customers.map(c => c.id)))
   }
 
-  function openExpand(c: Customer) {
-    if (expanded === c.id) { setExpanded(null); return }
-    setExpanded(c.id)
+  function open(c: Customer) {
+    setOpenId(c.id)
     setEditNotes(c.notes ?? '')
+    setNoteSaved(false)
+    revealSheet(sheetRef.current)
   }
 
   async function saveNotes(id: string) {
@@ -237,125 +229,135 @@ export default function CustomersTable() {
       body: JSON.stringify({ notes: editNotes }),
     })
     setSavingNote(false)
+    setNoteSaved(true)
     setCustomers(prev => prev.map(c => c.id === id ? { ...c, notes: editNotes } : c))
-    setExpanded(null)
   }
 
   const selectedIds = Array.from(selected)
+  const current = customers.find(c => c.id === openId) ?? null
+  const total = customers.reduce((s, c) => s + (c.amount ?? 0), 0)
+  const allSelected = customers.length > 0 && selected.size === customers.length
 
   return (
     <div>
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 mb-5">
-        <input
-          placeholder="Cerca nome o email…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-56"
-        />
-        <div className="flex border border-gray-200 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {(['all', 'career_service', 'merch', 'event', 'membership'] as const).map(t => (
-            <button key={t} onClick={() => setTypeFilter(t)}
-              className="px-3 py-2 text-xs uppercase tracking-wide transition-colors whitespace-nowrap flex-shrink-0"
-              style={typeFilter === t ? { background: 'var(--forest)', color: '#fff' } : { color: '#6b7280' }}>
-              {t === 'all' ? 'Tutti' : TYPE_LABELS[t]}
+      <Numbers items={[
+        { value: customers.length, label: 'Clienti' },
+        { value: `€${Math.round(total).toLocaleString('it-IT')}`, label: 'Importo totale' },
+        { value: customers.filter(c => c.type === 'merch').length, label: 'Merch' },
+        { value: customers.filter(c => c.type === 'career_service').length, label: 'Career Service' },
+      ]} />
+
+      <Toolbar
+        actions={
+          <>
+            <button type="button" onClick={() => setShowEmail(true)} disabled={selected.size === 0} className={btnGhost}>
+              Invia email{selected.size > 0 ? ` (${selected.size})` : ''}
             </button>
-          ))}
+            <button type="button" onClick={() => setShowAdd(true)} className={btnPrimary}>Aggiungi cliente</button>
+          </>
+        }
+      >
+        <SearchField value={search} onChange={setSearch} placeholder="Nome o email…" />
+        <div>
+          <span className={`${labelCls} mb-2`}>Tipo</span>
+          <SegmentedPills size="sm" label="Tipo" options={TYPE_FILTERS} value={typeFilter} onChange={setTypeFilter} />
         </div>
-        <div className="ml-auto">
-          <AddCustomerForm onAdded={load} />
-        </div>
-      </div>
+      </Toolbar>
 
       {fetchErr && (
-        <div className="text-xs text-red-600 bg-red-50 border border-red-200 px-4 py-3 mb-4">
-          {fetchErr} <button onClick={load} className="ml-2 underline">Riprova</button>
-        </div>
+        <p className={`${errorCls} mt-6`}>
+          {fetchErr} <button type="button" onClick={load} className="ml-2 underline">Riprova</button>
+        </p>
       )}
 
-      {loading ? (
-        <p className="text-sm text-gray-400 py-6">Caricamento…</p>
+      {loading && customers.length === 0 ? (
+        <p className="py-10 text-[13px] text-earth-600">Caricamento…</p>
       ) : (
-        <div className="border border-gray-200 overflow-x-auto">
-          <table className="w-full text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-4 py-3 w-8">
-                  <input type="checkbox" checked={customers.length > 0 && selected.size === customers.length}
-                    onChange={toggleAll} className="accent-forest" />
-                </th>
-                {['Nome', 'Email', 'Tipo', 'Servizio/Prodotto', 'Importo', 'Data acquisto'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {customers.length === 0 ? (
-                <tr><td colSpan={7} className="text-center text-gray-400 text-sm py-10">Nessun cliente trovato.</td></tr>
-              ) : customers.map(c => (
-                <>
-                  <tr key={c.id}
-                    className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${selected.has(c.id) ? 'bg-[#f0f8f4]' : ''}`}
-                    onClick={() => openExpand(c)}>
-                    <td className="px-4 py-3" onClick={e => { e.stopPropagation(); toggleSelect(c.id) }}>
-                      <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggleSelect(c.id)}
-                        onClick={e => e.stopPropagation()} className="accent-forest" />
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{c.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-1 ${TYPE_COLORS[c.type]}`}>
-                        {TYPE_LABELS[c.type]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 max-w-[160px] truncate">{c.reference ?? '—'}</td>
-                    <td className="px-4 py-3 font-semibold tabular-nums">{c.amount != null ? fmtAmt(c.amount) : '—'}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{fmtDate(c.purchased_at)}</td>
-                  </tr>
-                  {expanded === c.id && (
-                    <tr key={`${c.id}-exp`} className="bg-[#f9f9f9]">
-                      <td colSpan={7} className="px-6 py-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-2">Note</p>
-                        <textarea
-                          value={editNotes}
-                          onChange={e => setEditNotes(e.target.value)}
-                          rows={3}
-                          className="border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-forest bg-white w-full max-w-xl resize-none mb-2"
-                          onClick={e => e.stopPropagation()}
-                        />
-                        <div className="flex gap-2">
-                          <button onClick={e => { e.stopPropagation(); saveNotes(c.id) }}
-                            disabled={savingNote} className={btnGreen}>
-                            {savingNote ? '…' : 'Salva note'}
-                          </button>
-                          <button onClick={e => { e.stopPropagation(); setExpanded(null) }}
-                            className="border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50">
-                            Chiudi
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </>
+        <Split
+          sheetRef={sheetRef}
+          list={
+            <CrmTable
+              title="Clienti"
+              meta={loading ? 'Caricamento…' : customers.length}
+              columns={[{ label: <input type="checkbox" checked={allSelected} onChange={toggleAll} disabled={customers.length === 0} aria-label="Seleziona tutti" className="h-3.5 w-3.5 cursor-pointer accent-[#1a4a3a]" /> }, ...COLUMNS.slice(1)]}
+              template={TEMPLATE}
+              isEmpty={customers.length === 0}
+              empty="Nessun cliente trovato."
+            >
+              {customers.map(c => (
+                <CrmRow
+                  key={c.id}
+                  template={TEMPLATE}
+                  selected={c.id === openId}
+                  onOpen={() => open(c)}
+                  label={`Apri ${c.name}`}
+                  lead={
+                    <input
+                      type="checkbox"
+                      checked={selected.has(c.id)}
+                      onChange={() => toggleSelect(c.id)}
+                      aria-label={`Seleziona ${c.name}`}
+                      className="h-3.5 w-3.5 cursor-pointer accent-[#1a4a3a]"
+                    />
+                  }
+                >
+                  <span className={cell(COLUMNS[1])}><NameCell name={c.name} sub={c.reference ? `${c.email} · ${c.reference}` : c.email} /></span>
+                  <span className={cell(COLUMNS[2], 'text-[12px] text-earth-700')}>{TYPE_LABELS[c.type]}</span>
+                  <span className={cell(COLUMNS[3], 'rd-num text-[12px] text-earth-700')}>{c.amount != null ? fmtAmt(c.amount) : '—'}</span>
+                  <span className={cell(COLUMNS[4], 'rd-num text-[12px] text-earth-700')}>{fmtDate(c.purchased_at)}</span>
+                </CrmRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Bulk action bar */}
-      {selected.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-forest text-white px-6 py-3 shadow-xl flex items-center gap-6">
-          <span className="text-sm font-semibold">{selected.size} selezionati</span>
-          <button onClick={() => setShowEmail(true)} className="text-xs font-semibold uppercase tracking-widest border border-white/40 px-4 py-2 hover:bg-white/10 transition-colors">
-            Invia email a {selected.size} selezionati
-          </button>
-          <button onClick={() => setSelected(new Set())} className="text-xs text-white/60 hover:text-white transition-colors">Deseleziona</button>
-        </div>
+            </CrmTable>
+          }
+          sheet={
+            current ? (
+              <Sheet
+                title="Cliente"
+                meta={TYPE_LABELS[current.type]}
+                actions={
+                  <button type="button" onClick={() => toggleSelect(current.id)} className={selected.has(current.id) ? btnPrimary : btnGhost}>
+                    {selected.has(current.id) ? 'Selezionato per email' : 'Seleziona per email'}
+                  </button>
+                }
+              >
+                <FieldRow label="Nome" value={current.name} />
+                <FieldRow label="Email" value={<a href={`mailto:${current.email}`} className="hover:underline">{current.email}</a>} />
+                <FieldRow label="Telefono" value={current.phone || '—'} muted={!current.phone} />
+                <FieldRow label="Tipo" value={TYPE_LABELS[current.type]} />
+                <FieldRow label="Prodotto" value={current.reference || '—'} muted={!current.reference} />
+                <FieldRow label="Importo" value={current.amount != null ? fmtAmt(current.amount) : '—'} muted={current.amount == null} />
+                <FieldRow label="Acquisto" value={fmtDate(current.purchased_at)} />
+                <FieldRow label="Inserito" value={fmtDate(current.created_at)} />
+                <div className="border-b border-night/20 py-[11px]">
+                  <label className="block">
+                    <span className={labelCls}>Note</span>
+                    <textarea
+                      value={editNotes}
+                      onChange={e => { setEditNotes(e.target.value); setNoteSaved(false) }}
+                      rows={3}
+                      className={`${fieldCls} resize-none`}
+                    />
+                  </label>
+                  <div className="mt-3 flex items-center gap-3">
+                    <button type="button" onClick={() => saveNotes(current.id)} disabled={savingNote || editNotes === (current.notes ?? '')} className={btnPrimary}>
+                      {savingNote ? '…' : 'Salva note'}
+                    </button>
+                    {noteSaved && <span className="text-[12px] text-earth-600">Salvate.</span>}
+                  </div>
+                </div>
+              </Sheet>
+            ) : (
+              <SheetEmpty title="Cliente" text="Apri un cliente dall'elenco. Spunta le caselle per scrivere a più clienti insieme." />
+            )
+          }
+        />
       )}
 
       {showEmail && (
         <EmailModal ids={selectedIds} count={selected.size} onClose={() => setShowEmail(false)} />
+      )}
+      {showAdd && (
+        <AddCustomerModal onAdded={() => { setShowAdd(false); load() }} onClose={() => setShowAdd(false)} />
       )}
     </div>
   )

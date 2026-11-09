@@ -41,7 +41,7 @@ export default function BoardShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="rd-app min-h-screen bg-ivory text-night">
+    <div className="rd-app rd-board min-h-screen bg-ivory text-night">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[230px] flex-col bg-night text-ivory lg:flex">
         <div className="px-6 pt-[26px]">
           <Link href="/" className="block w-fit leading-none" aria-label="Alata Investment Club, website">
