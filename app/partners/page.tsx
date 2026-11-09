@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
-import { publicOnly } from '@/lib/public-filters'
+import { publicOnly, visiblePartners } from '@/lib/public-filters'
 import SiteNav from '@/app/components/site/SiteNav'
 import SiteFooter from '@/app/components/site/SiteFooter'
 import { VeiledMedia, ScrollProgress } from '@/app/components/site/Media'
@@ -22,6 +22,7 @@ type PartnerRow = {
   description: string | null
   description_long?: string | null
   type: string | null
+  is_hidden?: boolean | null
 }
 
 export default async function PartnersPage() {
@@ -34,7 +35,7 @@ export default async function PartnersPage() {
     .order('order_index', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: true })
 
-  const rows = publicOnly(data as PartnerRow[] | null, p => p.name)
+  const rows = publicOnly(visiblePartners(data as PartnerRow[] | null), p => p.name)
   const items: PartnerStory[] = [
     ...rows.filter(r => r.type !== 'sponsor'),
     ...rows.filter(r => r.type === 'sponsor'),

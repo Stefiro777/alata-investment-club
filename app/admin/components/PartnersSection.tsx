@@ -176,7 +176,7 @@ function PartnerInsertForm({ onInserted }: { onInserted: (p: Partner) => void })
         description: description.trim() || null,
         type,
       })
-      .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at')
+      .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at, is_hidden')
       .single()
     if (error) { setError(error.message) } else {
       onInserted(data as Partner)
@@ -266,8 +266,10 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [togglingHidden, setTogglingHidden] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const hidden = partner.is_hidden === true
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -277,6 +279,16 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
     if ('error' in result) { setError(result.error) } else { setLogoUrl(result.url) }
     setUploading(false)
     if (fileRef.current) fileRef.current.value = ''
+  }
+
+  // Hidden partners stay in the database and here, but leave the public site.
+  async function handleToggleHidden() {
+    const next = !hidden
+    setTogglingHidden(true); setError(null)
+    const supabase = createClient()
+    const { error: err } = await supabase.from('partners').update({ is_hidden: next }).eq('id', partner.id)
+    if (err) { setError(err.message) } else { onUpdated({ ...partner, is_hidden: next }) }
+    setTogglingHidden(false)
   }
 
   async function handleUpdate(e: React.FormEvent) {
@@ -310,7 +322,7 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
 
   return (
     <div className="bg-white border border-line-faint mb-px">
-      <div className="flex items-center gap-3 px-4 py-3">
+      <div className={`flex items-center gap-3 px-4 py-3 ${hidden ? 'opacity-60' : ''}`}>
         {showDragHandle && (
           <div className="cursor-grab active:cursor-grabbing text-ink-400 hover:text-forest transition-colors flex-shrink-0">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -329,9 +341,25 @@ function PartnerEditRow({ partner, onUpdated, onDeleted, showDragHandle }: {
               {partner.type === 'partner' ? 'Partner' : 'Sponsor'}
             </span>
             <span className="flex-shrink-0 text-xs bg-gray-100 text-gray-600 px-2 py-0.5">{partner.click_count ?? 0} click</span>
+            {hidden && <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 bg-ink-900/10 text-ink-900">Hidden</span>}
           </div>
           {partner.website_url && <p className="text-xs text-ink-500 truncate">{partner.website_url}</p>}
         </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={hidden}
+          aria-label={`Hidden: ${partner.name}`}
+          title={hidden ? 'Hidden from the public site' : 'Visible on the public site'}
+          onClick={handleToggleHidden}
+          disabled={togglingHidden}
+          className="flex-shrink-0 flex items-center gap-2 text-xs text-ink-500 disabled:opacity-40"
+        >
+          <span className={`relative inline-block h-5 w-9 rounded-full transition-colors ${hidden ? 'bg-forest' : 'bg-ink-400/40'}`}>
+            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${hidden ? 'left-[18px]' : 'left-0.5'}`} />
+          </span>
+          Hidden
+        </button>
         <button onClick={() => setExpanded(!expanded)}
           className="flex-shrink-0 text-xs text-forest border border-forest px-3 py-1.5 hover:bg-forest hover:text-white transition-colors duration-fast">
           {expanded ? 'Close' : 'Edit'}

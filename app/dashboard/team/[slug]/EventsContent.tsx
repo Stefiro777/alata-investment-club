@@ -63,7 +63,7 @@ export default function EventsContentTab() {
       .then(({ data }) => setFeaturedEvents((data ?? []) as FeaturedGalleryItem[]))
     supabase
       .from('partners')
-      .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at')
+      .select('id, name, logo_url, website_url, description, type, order_index, click_count, created_at, is_hidden')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
       .then(({ data }) => setPartners((data ?? []) as Partner[]))

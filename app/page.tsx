@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { ABOUT_STATS_KEY, parseAboutStats } from '@/lib/about-stats'
-import { publicOnly } from '@/lib/public-filters'
+import { publicOnly, visiblePartners } from '@/lib/public-filters'
 import SiteNav from './components/site/SiteNav'
 import SiteFooter from './components/site/SiteFooter'
 import HomeScene, { type HomeEvent } from './components/home/HomeScene'
@@ -22,7 +22,7 @@ export default async function HomePage() {
   const [{ data: partners }, { data: statsRow }, { data: events }] = await Promise.all([
     supabase
       .from('partners')
-      .select('name, order_index')
+      .select('name, order_index, is_hidden')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
     supabase.from('settings').select('value').eq('key', ABOUT_STATS_KEY).maybeSingle(),
@@ -36,7 +36,7 @@ export default async function HomePage() {
   ])
 
   const nextEvents = publicOnly(events as HomeEvent[] | null, e => e.title).slice(0, 4)
-  const partnerNames = publicOnly(partners, p => p.name).map(p => p.name as string)
+  const partnerNames = publicOnly(visiblePartners(partners), p => p.name).map(p => p.name as string)
   const credits = [...FLAGSHIP_CREDITS, ...partnerNames.filter(n => !FLAGSHIP_CREDITS.includes(n))]
 
   return (
