@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { ABOUT_STATS_KEY, parseAboutStats } from '@/lib/about-stats'
 import { publicOnly, visiblePartners } from '@/lib/public-filters'
+import { FLAGSHIP_CREDITS_KEY, parseFlagshipCredits, buildCredits } from '@/lib/flagship-credits'
 import SiteNav from './components/site/SiteNav'
 import SiteFooter from './components/site/SiteFooter'
 import HomeScene, { type HomeEvent } from './components/home/HomeScene'
@@ -12,20 +13,18 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://alatainvestmentclub.com' },
 }
 
-// The hosts of the club's flagship days open the credits, then the partners.
-const FLAGSHIP_CREDITS = ['Private Banker Day', 'Borsa Italiana', 'EssilorLuxottica', 'Bellini Nautica Group']
-
 export default async function HomePage() {
   const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
 
-  const [{ data: partners }, { data: statsRow }, { data: events }] = await Promise.all([
+  const [{ data: partners }, { data: statsRow }, { data: creditsRow }, { data: events }] = await Promise.all([
     supabase
       .from('partners')
       .select('name, order_index, is_hidden')
       .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true }),
     supabase.from('settings').select('value').eq('key', ABOUT_STATS_KEY).maybeSingle(),
+    supabase.from('settings').select('value').eq('key', FLAGSHIP_CREDITS_KEY).maybeSingle(),
     supabase
       .from('upcoming_events')
       .select('id, slug, title, date, status')
@@ -37,7 +36,8 @@ export default async function HomePage() {
 
   const nextEvents = publicOnly(events as HomeEvent[] | null, e => e.title).slice(0, 4)
   const partnerNames = publicOnly(visiblePartners(partners), p => p.name).map(p => p.name as string)
-  const credits = [...FLAGSHIP_CREDITS, ...partnerNames.filter(n => !FLAGSHIP_CREDITS.includes(n))]
+  // The names that open the credits are edited in Board > Site > Settings; the partners follow.
+  const credits = buildCredits(parseFlagshipCredits(creditsRow?.value), partnerNames)
 
   return (
     <>
