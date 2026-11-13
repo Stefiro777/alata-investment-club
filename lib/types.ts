@@ -63,6 +63,8 @@ export type Resource = {
   is_folder: boolean
   order_index: number | null
   created_at: string
+  /** Tags of the years of study Getting started shows it to (lib/getting-started.ts); null = none. */
+  audience?: string[] | null
 }
 
 export type UpcomingEvent = {
@@ -84,6 +86,7 @@ export type UpcomingEvent = {
   slug?: string | null
   capacity?: number | null            // null = unlimited
   members_only?: boolean              // only verified active members can register
+  allowed_years?: string[] | null     // reserved to these years of study (e.g. 'bachelor_2'); null/empty = everyone
 }
 
 // Result of the public RPC get_event_availability()

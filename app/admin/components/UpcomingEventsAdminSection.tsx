@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import EventWaitlistAdmin from './EventWaitlistAdmin'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
+import { EVENT_YEARS, cleanAllowedYears } from '@/lib/event-years'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
 import { slugify } from '@/lib/slug'
-import { Pill, SegmentedPills } from '@/app/components/member/ui'
+import { Pill, SegmentedPills, SectionHeading } from '@/app/components/member/ui'
 
 const STATUS_OPTIONS: UpcomingEvent['status'][] = ['open', 'coming_soon', 'completed']
 const ACTION_OPTIONS = ['form', 'link'] as const
@@ -28,6 +29,8 @@ type FormState = {
   member_price_eur: string
   capacity: string // empty = unlimited
   members_only: boolean
+  /** Years of study the event is reserved to; empty = everyone. */
+  allowed_years: string[]
   slug: string
 }
 
@@ -46,6 +49,7 @@ const EMPTY_FORM: FormState = {
   member_price_eur: '',
   capacity: '',
   members_only: false,
+  allowed_years: [],
   slug: '',
 }
 
@@ -65,11 +69,13 @@ function eventToForm(ev: UpcomingEvent): FormState {
     member_price_eur: ev.member_price_cents != null ? (ev.member_price_cents / 100).toFixed(2) : '',
     capacity: ev.capacity != null ? String(ev.capacity) : '',
     members_only: !!ev.members_only,
+    allowed_years: ev.allowed_years ?? [],
     slug: ev.slug ?? '',
   }
 }
 
-function formToPayload(form: FormState) {
+/** hadYears: the event already carries a year list, so an emptied list must be written back (null). */
+function formToPayload(form: FormState, hadYears = false) {
   const ticketCents = form.ticket_price_eur ? Math.round(parseFloat(form.ticket_price_eur) * 100) : null
   const memberCents = form.member_price_eur ? Math.round(parseFloat(form.member_price_eur) * 100) : null
   const capacityNum = form.capacity.trim() ? Math.floor(Number(form.capacity)) : null
@@ -88,6 +94,8 @@ function formToPayload(form: FormState) {
     member_price_cents: memberCents && memberCents >= 0 ? memberCents : null,
     capacity: capacityNum !== null && Number.isFinite(capacityNum) && capacityNum > 0 ? capacityNum : null,
     members_only: form.members_only,
+    // Left out while unused, so saving keeps working before the allowed_years column exists.
+    ...(form.allowed_years.length > 0 || hadYears ? { allowed_years: cleanAllowedYears(form.allowed_years) } : {}),
     slug: form.slug.trim() || slugify(form.title) || `event-${Date.now().toString(36)}`,
   }
 }
@@ -673,15 +681,12 @@ function longDate(iso: string) {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-/** A titled block of the sheet: italic title over a rule, like the other member-area screens. */
-function SheetSection({ title, meta, children }: { title: string; meta?: string; children: React.ReactNode }) {
+/** A titled block of the sheet: the shared section heading, then its rows. */
+function SheetSection({ title, meta, children, flush }: { title: string; meta?: string; children: React.ReactNode; flush?: boolean }) {
   return (
-    <section className="mt-10 first:mt-0">
-      <div className="flex items-baseline justify-between gap-4 pb-3">
-        <h3 className="rd-italic text-[26px]">{title}</h3>
-        {meta && <span className="rd-eyebrow text-[10px] text-earth-500">{meta}</span>}
-      </div>
-      <div className="border-t border-night">{children}</div>
+    <section>
+      <SectionHeading as="h3" title={title} meta={meta} flush={flush} />
+      {children}
     </section>
   )
 }
@@ -743,7 +748,7 @@ function EventSheet({
     setError(null)
     const { data, error: err } = await createClient()
       .from('upcoming_events')
-      .update(formToPayload(form))
+      .update(formToPayload(form, (event.allowed_years?.length ?? 0) > 0))
       .eq('id', event.id)
       .select('*')
       .single()
@@ -771,7 +776,7 @@ function EventSheet({
   return (
     <div>
       {/* Header: the event, and how full it is */}
-      <SheetSection title={isNext ? 'Next event' : 'Event'} meta={STATUS_LABEL[event.status]?.toUpperCase()}>
+      <SheetSection flush title={isNext ? 'Next event' : 'Event'} meta={STATUS_LABEL[event.status]?.toUpperCase()}>
         <div className="pt-5">
           <div className="rd-display text-[clamp(26px,2.6vw,32px)] leading-[1.1]">{event.title}</div>
           <div className="mt-2 text-[13px] text-earth-700">{when}</div>
@@ -793,7 +798,7 @@ function EventSheet({
       </SheetSection>
 
       <SheetSection title="Registrations" meta={`${regCount} ${regCount === 1 ? 'person' : 'people'}`}>
-        <ActionRow title="Registrations" detail="Names, motivation and extra field." action="Open" onClick={onShowRegistrations} />
+        <ActionRow title="Guest list" detail="Names, motivation and extra field." action="Open" onClick={onShowRegistrations} />
         <ActionRow title="Waitlist" detail={`${waitlistCount} waiting. Seats are offered when someone leaves.`} action="Open" onClick={onShowWaitlist} />
         <ActionRow title="Email registrants" detail="Write one message to everyone who signed up." action="Write" onClick={onSendEmail} disabled={regCount === 0} />
       </SheetSection>
@@ -888,6 +893,22 @@ function EventSheet({
                 </span>
               </span>
             </label>
+          </div>
+          <div className="sm:col-span-2">
+            <div className={`${labelCls} mb-2`}>Reserved to</div>
+              <div role="group" aria-label="Reserved to years of study" className="flex flex-wrap gap-1.5">
+                {EVENT_YEARS.map(y => {
+                  const on = form.allowed_years.includes(y.value)
+                  return (
+                    <Pill key={y.value} size="sm" active={on} onClick={() => { setSaved(false); setForm(prev => ({ ...prev, allowed_years: on ? prev.allowed_years.filter(v => v !== y.value) : [...prev.allowed_years, y.value] })) }}>
+                      {y.label}
+                    </Pill>
+                  )
+                })}
+              </div>
+              <p className="mt-2 text-[11px] leading-[1.5] text-earth-600">
+                {form.allowed_years.length === 0 ? 'None selected: open to every year.' : 'Only people who enter one of these years can register, with or without an account. The check is made on the server.'}
+              </p>
           </div>
         </div>
 
@@ -1117,11 +1138,8 @@ export default function UpcomingEventsAdminSection({
 
       <div className="grid gap-x-12 gap-y-12 lg:grid-cols-2">
         <div>
-          <div className="flex items-baseline justify-between pb-3">
-            <h2 className="rd-italic text-[clamp(28px,3vw,34px)]">Events</h2>
-            <span className="rd-eyebrow text-[10px] text-earth-500">{events.length} total</span>
-          </div>
-          <div className="border-t border-night">
+          <SectionHeading flush title="Events" meta={`${events.length} total`} />
+          <div>
             {activeEvents.length === 0 ? (
               <p className="py-8 text-[13px] text-earth-600">No upcoming events.</p>
             ) : (

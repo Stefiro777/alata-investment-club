@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { FieldRow, Pill, Tabs } from '@/app/components/member/ui'
+import { FieldRow, Pill, SectionHeading, SegmentedPills, Tabs } from '@/app/components/member/ui'
+import { archiveGroups, isClosed, outcomeDate } from '@/lib/application-archive'
+import { LAB_SUBDIVISIONS } from '@/lib/invite'
 
 type Application = {
   id: number
@@ -20,10 +22,12 @@ type Application = {
   second_choice?: string | null
   linkedin_url?: string | null
   status?: 'new' | 'seen' | 'accepted' | 'declined' | null
+  /** When the outcome was saved (accepted / declined); the archive groups by its quarter. */
+  reviewed_at?: string | null
   has_cv: boolean
 }
 
-type Filter = 'all' | 'analyst' | 'member' | 'open'
+type Filter = 'all' | 'analyst' | 'member'
 const TEAM: Record<string, string> = { lab: 'Lab', media: 'Media', events: 'Events', member: 'Member' }
 
 /** Before SQL A the track and choices travel inside the motivation. */
@@ -49,6 +53,8 @@ export default function ApplicationsClient() {
   const [filter, setFilter] = useState<Filter>('all')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  // Lab invitations need a subdivision, chosen here before sending.
+  const [labSub, setLabSub] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/applications')
@@ -57,13 +63,26 @@ export default function ApplicationsClient() {
       .catch(() => setApps([]))
   }, [])
 
-  const list = useMemo(() => (apps ?? []).filter(a => {
+  const byTrack = useMemo(() => (apps ?? []).filter(a => {
     const d = derive(a)
     if (filter === 'analyst') return d.track === 'analyst'
     if (filter === 'member') return d.track === 'member'
-    if (filter === 'open') return !a.status || a.status === 'new' || a.status === 'seen'
     return true
   }), [apps, filter])
+  // On top what is still to handle; accepted and declined go to the archive, by quarter.
+  const list = useMemo(() => byTrack.filter(a => !isClosed(a)), [byTrack])
+  const archive = useMemo(() => archiveGroups(byTrack), [byTrack])
+  // The latest quarter is open until the reader chooses.
+  const [openedByReader, setOpenedByReader] = useState<Set<string> | null>(null)
+  const openQuarters = openedByReader ?? new Set(archive.slice(0, 1).map(g => g.key))
+  function toggleQuarter(key: string) {
+    setOpenedByReader(() => {
+      const next = new Set(openQuarters)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
   const current = (apps ?? []).find(a => a.id === selected) ?? null
 
   async function setStatus(a: Application, status: 'seen' | 'accepted' | 'declined') {
@@ -75,6 +94,7 @@ export default function ApplicationsClient() {
   function open(a: Application) {
     setSelected(a.id)
     setMessage(null)
+    setLabSub(null)
     // Mark as read; before SQL A the status cannot be stored and this is a no-op.
     if (!a.status || a.status === 'new') setStatus(a, 'seen').catch(() => {})
   }
@@ -91,10 +111,11 @@ export default function ApplicationsClient() {
     const d = derive(a)
     const team = d.track === 'member' ? 'member' : d.first
     if (!team || !['events', 'media', 'lab', 'member'].includes(team)) { setMessage('No team to invite to.'); return }
+    if (team === 'lab' && !labSub) { setMessage('Choose a Lab subdivision first.'); return }
     if (!confirm(`Send the invitation to ${a.email} (${TEAM[team]})?`)) return
     setBusy(true)
     setMessage(null)
-    const res = await fetch('/api/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: a.email, team }) })
+    const res = await fetch('/api/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: a.email, team, lab_subdivision: team === 'lab' ? labSub : null }) })
     const j = await res.json().catch(() => ({}))
     if (!res.ok) { setMessage(j.error ?? 'Invitation failed.'); setBusy(false); return }
     const s = await setStatus(a, 'accepted')
@@ -111,45 +132,72 @@ export default function ApplicationsClient() {
     setBusy(false)
   }
 
+  /** One line of the list; in the archive it shows the outcome date and the outcome. */
+  function renderApplication(a: Application, archived: boolean) {
+    const d = derive(a)
+    return (
+      <button
+        key={a.id}
+        type="button"
+        onClick={() => open(a)}
+        aria-pressed={selected === a.id}
+        className={`grid w-full grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-4 border-b border-night/20 py-3.5 text-left transition-colors hover:bg-night/[0.03] ${selected === a.id ? 'bg-night/[0.05]' : ''}`}
+      >
+        <span className="font-serif text-[22px] font-medium leading-none">{fmt(archived ? outcomeDate(a) : a.created_at)}</span>
+        <span className="min-w-0">
+          <span className="block font-serif text-[22px] font-medium leading-[1.1]">{a.nome} {a.cognome}</span>
+          <span className="mt-1 block truncate text-[12px] text-earth-600">
+            {[d.track === 'member' ? 'Member' : 'Analyst', a.degree_programme, d.first ? TEAM[d.first] : null].filter(Boolean).join(' · ')}
+          </span>
+        </span>
+        <Pill solid={!archived && (!a.status || a.status === 'new')}>{archived ? (a.status === 'accepted' ? 'Accepted' : 'Declined') : a.status ?? 'new'}</Pill>
+      </button>
+    )
+  }
+
   if (apps === null) return <p className="py-8 text-[13px] text-earth-600">Loading…</p>
 
   return (
     <>
       <Tabs
-        tabs={[{ key: 'all', label: 'All' }, { key: 'open', label: 'To review' }, { key: 'analyst', label: 'Analysts' }, { key: 'member', label: 'Members' }]}
+        tabs={[{ key: 'all', label: 'All' }, { key: 'analyst', label: 'Analysts' }, { key: 'member', label: 'Members' }]}
         value={filter}
         onChange={setFilter}
       />
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
         <div>
-          <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="rd-italic text-[32px]">Applications</h2>
-            <span className="rd-eyebrow text-[10px] text-earth-500">{list.length}</span>
+          <SectionHeading flush title="To handle" meta={list.length} />
+          <div className="border-t border-night/20">
+            {list.length === 0
+              ? <p className="py-6 text-[13px] text-earth-600">Nothing to handle.</p>
+              : list.map(a => renderApplication(a, false))}
           </div>
-          <div className="border-t border-night" />
-          {list.length === 0 ? (
-            <p className="py-6 text-[13px] text-earth-600">Nothing here yet.</p>
-          ) : list.map(a => {
-            const d = derive(a)
-            return (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => open(a)}
-                aria-pressed={selected === a.id}
-                className={`grid w-full grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-4 border-b border-night/20 py-3.5 text-left transition-colors hover:bg-night/[0.03] ${selected === a.id ? 'bg-night/[0.05]' : ''}`}
-              >
-                <span className="font-serif text-[22px] font-medium leading-none">{fmt(a.created_at)}</span>
-                <span className="min-w-0">
-                  <span className="block font-serif text-[22px] font-medium leading-[1.1]">{a.nome} {a.cognome}</span>
-                  <span className="mt-1 block truncate text-[12px] text-earth-600">
-                    {[d.track === 'member' ? 'Member' : 'Analyst', a.degree_programme, d.first ? TEAM[d.first] : null].filter(Boolean).join(' · ')}
-                  </span>
-                </span>
-                <Pill solid={!a.status || a.status === 'new'}>{a.status ?? 'new'}</Pill>
-              </button>
-            )
-          })}
+
+          {archive.length > 0 && (
+            <section>
+              <SectionHeading title="Archive" meta={`${archive.reduce((n, g) => n + g.apps.length, 0)} closed`} />
+              {archive.map(g => {
+                const isOpen = openQuarters.has(g.key)
+                return (
+                  <div key={g.key} className="border-t border-night/20">
+                    <button
+                      type="button"
+                      onClick={() => toggleQuarter(g.key)}
+                      aria-expanded={isOpen}
+                      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 py-3.5 text-left transition-colors hover:bg-night/[0.03]"
+                    >
+                      <span className="font-serif text-[22px] font-medium leading-[1.1]">
+                        {g.label}
+                        <span className="rd-eyebrow ml-3 text-[10px] text-earth-500">{g.apps.length}</span>
+                      </span>
+                      <span className="rd-italic text-[20px]">{isOpen ? 'Hide' : 'Show'}</span>
+                    </button>
+                    {isOpen && g.apps.map(a => renderApplication(a, true))}
+                  </div>
+                )
+              })}
+            </section>
+          )}
         </div>
 
         <div className="lg:sticky lg:top-8 lg:self-start">
@@ -170,6 +218,12 @@ export default function ApplicationsClient() {
                 </div>
                 <div className="rd-eyebrow mt-5 text-[10px] text-earth-500">Motivation</div>
                 <p className="mt-2 whitespace-pre-line text-[14px] leading-[1.65]">{d.motivation || '—'}</p>
+                {d.track === 'analyst' && d.first === 'lab' && current.status !== 'accepted' && (
+                  <div className="mt-5">
+                    <div className="rd-eyebrow mb-2 text-[10px] text-earth-500">Lab subdivision, needed to invite</div>
+                    <SegmentedPills size="sm" label="Lab subdivision" options={LAB_SUBDIVISIONS.map(l => ({ value: l.value, label: l.label }))} value={labSub ?? ''} onChange={setLabSub} />
+                  </div>
+                )}
                 <div className="mt-6 flex flex-wrap items-baseline gap-x-8 gap-y-3">
                   <button type="button" disabled={busy || current.status === 'accepted'} onClick={() => acceptAndInvite(current)} className="rd-italic text-[26px] text-club hover:underline underline-offset-[0.18em] disabled:opacity-40">
                     Accept and invite

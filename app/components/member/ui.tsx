@@ -17,14 +17,41 @@ export function PageTitle({ title, sub, action }: { title: ReactNode; sub?: Reac
   )
 }
 
-export function Section({ title, meta, after, children, id }: { title: ReactNode; meta?: ReactNode; after?: ReactNode; children: ReactNode; id?: string }) {
+/**
+ * The head of a section: a rule over the title with a short green mark on it,
+ * the italic title, and a small uppercase meta on the right. The mark and the
+ * generous space above are what set one section apart from the rows around it.
+ * `flush` drops the space above (first block of a column or sheet).
+ */
+export function SectionHeading({ title, meta, as: Tag = 'h2', flush, bare }: {
+  title: ReactNode
+  meta?: ReactNode
+  as?: 'h2' | 'h3'
+  flush?: boolean
+  /** No rule on top: the heading sits inside a block that already draws its own. */
+  bare?: boolean
+}) {
+  return (
+    <div className={flush ? '' : 'mt-14'}>
+      {!bare && (
+        <div className="relative border-t border-night" aria-hidden>
+          <i className="absolute left-0 top-[-2px] block h-[3px] w-10 bg-club" />
+        </div>
+      )}
+      <div className={`flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2.5 ${bare ? '' : 'pt-3.5'}`}>
+        <Tag className="rd-italic whitespace-nowrap text-[28px] md:text-[32px]">{title}</Tag>
+        {meta && <div className="rd-eyebrow text-[10px] text-earth-700">{meta}</div>}
+      </div>
+    </div>
+  )
+}
+
+export function Section({ title, meta, after, children, id, flush }: { title: ReactNode; meta?: ReactNode; after?: ReactNode; children: ReactNode; id?: string; flush?: boolean }) {
   return (
     <section id={id} className="scroll-mt-6">
-      <div className="mb-3 mt-[38px] flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="rd-italic whitespace-nowrap text-[28px] md:text-[32px]">{title}</h2>
-        {meta && <div className="rd-eyebrow text-[10px] text-earth-500">{meta}</div>}
-      </div>
-      <div className="border-t border-night" />
+      <SectionHeading title={title} meta={meta} flush={flush} />
+      {/* A progress bar rides on a rule of its own, right under the title. */}
+      {after && <div className="border-t border-night" />}
       {after}
       {children}
     </section>

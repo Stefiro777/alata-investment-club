@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import DashboardClient from '../DashboardClient'
+import { Section } from '@/app/components/member/ui'
 import type { Resource } from '@/lib/types'
 
 type Mentor = { id: string; full_name: string; photo_url: string | null }
@@ -58,16 +59,10 @@ export function JobResources({ displayName }: { displayName: string }) {
       .then(({ data }) => setResources((data ?? []) as Resource[]))
   }, [])
   return (
-    <section id="resources" className="mt-16 scroll-mt-6">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="rd-italic text-[32px]">Resources</h2>
-        <div className="rd-eyebrow text-[10px] text-earth-500">Career · Master · Learning · Alata documents</div>
-      </div>
-      <div>
-        {resources === null
-          ? <p className="py-6 text-[13px] text-earth-600">Loading…</p>
-          : <DashboardClient displayName={displayName} resources={resources} />}
-      </div>
-    </section>
+    <Section id="resources" title="Resources" meta="Career · Master · Learning · Alata documents">
+      {resources === null
+        ? <p className="py-6 text-[13px] text-earth-600">Loading…</p>
+        : <DashboardClient displayName={displayName} resources={resources} />}
+    </Section>
   )
 }

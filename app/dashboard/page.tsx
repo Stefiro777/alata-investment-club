@@ -10,6 +10,7 @@ import { timeRange } from '@/lib/event-display'
 import { DASHBOARD_QUOTES } from '@/lib/dashboard-quotes'
 import { isPubliclyHidden } from '@/lib/public-filters'
 import { Section, Row, FieldRow, Pill, ProgressRule } from '@/app/components/member/ui'
+import { gettingStartedFor } from '@/lib/getting-started'
 
 type NextEvent = {
   id: string; slug: string | null; title: string; date: string; status: string | null
@@ -112,17 +113,18 @@ export default function DashboardPage() {
       .from('resources')
       .select('*')
       .order('order_index', { ascending: true })
+      .order('created_at', { ascending: true })
       .then(({ data }) => {
         if (cancelled) return
-        const rows = ((data ?? []) as Resource[]).filter(r => !r.is_folder && r.url)
-        const key = profile.study_level ? `${profile.study_level}_${profile.study_year ?? ''}` : null
-        // resources.audience (SQL F) targets a year of study; until it exists,
-        // pick one guide per area: master, career, learning.
-        const targeted = key ? rows.filter(r => r.audience?.some(a => a === key || a === profile.study_level)) : []
+        // Folders count: most of the material lives in Drive folders.
+        const rows = ((data ?? []) as Resource[]).filter(r => r.url)
+        // resources.audience targets a year of study (see lib/getting-started.ts).
+        const targeted = gettingStartedFor(rows, profile.study_level, profile.study_year)
+        // Until something is tagged: one guide per area, master, career, learning.
         const picks = targeted.length > 0
           ? targeted
-          : (['masters', 'career', 'education'] as const).map(c => rows.find(r => r.category === c)).filter(Boolean) as Resource[]
-        setResources(picks.slice(0, 3))
+          : (['masters', 'career', 'education'] as const).map(c => rows.find(r => r.category === c && !r.is_folder)).filter(Boolean) as Resource[]
+        setResources(picks)
       })
 
     if (firstTeam && profile.title) {
@@ -210,7 +212,12 @@ export default function DashboardPage() {
           ) : resources.map(r => (
             <Row key={r.id} title={r.title} detail={r.description} href={r.url ?? undefined} external action="Open" />
           ))}
-          <Link href="/dashboard/career-resources#resources" className="rd-italic mt-3 inline-block text-[20px] hover:underline underline-offset-[0.18em]">All resources</Link>
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+            <Link href="/dashboard/career-resources#resources" className="rd-italic text-[20px] hover:underline underline-offset-[0.18em]">All resources</Link>
+            {!profile.study_year && (
+              <Link href="/dashboard/profile" className="rd-italic text-[20px] text-club hover:underline underline-offset-[0.18em]">Add your year to see guides for you</Link>
+            )}
+          </div>
         </Section>
 
         <Section title="Your profile" meta={`${filled} of 7`} after={<ProgressRule value={filled / 7} />}>

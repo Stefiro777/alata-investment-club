@@ -12,7 +12,7 @@ export default async function AdminDashboardPage() {
   const supabase = await createClient()
   const { data: resourcesData } = await supabase
     .from('resources')
-    .select('id, title, description, url, category, subcategory, subcategory_order, is_folder, order_index, created_at')
+    .select('id, title, description, url, category, subcategory, subcategory_order, is_folder, order_index, created_at, audience')
     .order('order_index', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: true })
 

@@ -11,6 +11,7 @@ import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
 import { checkStock, decrementMerchStock, type StockCheckProduct } from '@/lib/merch-stock'
 import { isMerchPagePublished } from '@/lib/merch-visibility'
 import { isEventPast, TICKET_PAST_ERROR } from '@/lib/event-past'
+import { isYearAllowed, yearRestrictedError } from '@/lib/event-years'
 import {
   reserveSeats, releaseReservations, attachReservationsToSession, type SeatReservation,
 } from '@/lib/event-seats'
@@ -166,6 +167,16 @@ export async function POST(req: NextRequest) {
 
   // ── Members-only events: verified server-side (cookie session or bearer token),
   // so hiding the button in the UI is never the only protection.
+  // ── Events reserved to some years of study: every registration must declare an allowed year.
+  // allowed_years is read apart and tolerates a missing column (no restriction until it exists).
+  if (ticketEventIds.length && (eventRegistrations ?? []).length) {
+    const { data: yearRows } = await supabaseAdmin.from('upcoming_events').select('id, allowed_years').in('id', ticketEventIds)
+    for (const row of (yearRows ?? []) as { id: string; allowed_years: string[] | null }[]) {
+      const bad = (eventRegistrations ?? []).find(r => r.eventId === row.id && !isYearAllowed(row.allowed_years, r.annoStudio))
+      if (bad) return NextResponse.json({ error: yearRestrictedError(row.allowed_years), code: 'year_restricted', eventId: row.id }, { status: 403 })
+    }
+  }
+
   const membersOnlyEvent = (eventsData ?? []).find(e => e.members_only)
   if (membersOnlyEvent && !isActiveMember) {
     const access = await getMemberAccess()

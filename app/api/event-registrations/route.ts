@@ -6,6 +6,7 @@ import { isEventFullError } from '@/lib/event-capacity'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
 import { EVENT_PAST_ERROR, isEventPast } from '@/lib/event-past'
 import { getMemberAccess, MEMBERS_ONLY_ERROR } from '@/lib/members-only'
+import { isYearAllowed, yearRestrictedError } from '@/lib/event-years'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     const { data: eventRowForValidation, error: eventFetchErr } = await supabase
       .from('upcoming_events')
-      .select('registration_field, title, members_only, date, status')
+      .select('*') // allowed_years may not exist yet: * never fails on a missing column
       .eq('id', event_id)
       .single()
 
@@ -98,6 +99,15 @@ export async function POST(req: NextRequest) {
           { status: access.authenticated ? 403 : 401 },
         )
       }
+    }
+
+    // Events reserved to some years of study: checked on the year declared in the form,
+    // so it also covers people without an account.
+    if (!isYearAllowed(eventRowForValidation.allowed_years, anno_di_studio)) {
+      return NextResponse.json(
+        { error: yearRestrictedError(eventRowForValidation.allowed_years), code: 'year_restricted' },
+        { status: 403 },
+      )
     }
 
     if (eventRowForValidation.registration_field === 'motivation' && !motivazione?.trim()) {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import AdminNavbar from '../components/AdminNavbar'
+import { roleLabel } from '@/lib/roles'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -235,7 +236,7 @@ function MembersTable({ token }: { token: string }) {
                   className={`grid grid-cols-[1fr_1fr_120px_200px_100px_110px] gap-0 items-center px-4 py-3 bg-white ${i > 0 ? 'border-t border-gray-200' : ''}`}>
                   <p className="text-sm font-semibold text-gray-900 pr-3 truncate">{m.full_name}</p>
                   <p className="text-xs text-gray-500 pr-3 truncate">{m.email}</p>
-                  <p className="text-xs text-gray-500 uppercase tracking-widest pr-3">{m.role}</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-widest pr-3">{roleLabel(m.role)}</p>
                   <div className="pr-3">
                     {isEdit ? (
                       <div className="flex items-center gap-2">

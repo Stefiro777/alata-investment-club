@@ -23,16 +23,12 @@ export const BOARD_SECTIONS: BoardSection[] = [
       { href: '/admin/partners', label: 'Partners' },
       { href: '/admin/featured-reports', label: 'Reports' },
       { href: '/admin/dashboard', label: 'Resources' },
-      { href: '/admin/settings', label: 'Settings' },
     ],
   },
   {
     key: 'finance', label: 'Finance', href: '/admin/finance', icon: 'finance',
-    sub: 'Transactions, budget and accounting documents.',
-    tabs: [
-      { href: '/admin/finance', label: 'Transactions and budget' },
-      { href: '/admin/archive', label: 'Documents' },
-    ],
+    sub: 'Transactions, budget, accounting documents and quotes.',
+    tabs: [],
   },
   {
     key: 'crm', label: 'CRM', href: '/admin/crm', icon: 'crm',

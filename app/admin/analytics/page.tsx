@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import AdminNavbar from '../components/AdminNavbar'
 import { EditParticipantModal, deleteParticipant, type Contact } from '@/components/admin/EditParticipantModal'
 import { Tabs, Section, Row, FieldRow, SegmentedPills } from '@/app/components/member/ui'
+import { isAnalyst } from '@/lib/roles'
 import {
   Numbers, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, Heading, SearchField, SelectField,
   cell, revealSheet, labelCls, btnPrimary, btnGhost, type Column,
@@ -15,7 +16,7 @@ import {
 
 type Tab = 'overview' | 'quarter-comparison' | 'linkedin' | 'sponsors' | 'finance' | 'participation'
 
-type Member   = { role: string; created_at: string }
+type Member   = { role: string; teams: string[] | null; created_at: string }
 type Event    = { id: string; date: string }
 type Booking  = { id: string; status: string; is_member_free: boolean; slot_date: string; created_at: string }
 type Partner  = { id: string; name: string; type: string; created_at: string }
@@ -138,7 +139,7 @@ function OverviewTab() {
     const qsDate = getQuarterStartDate()
 
     Promise.all([
-      db.from('club_members').select('role, created_at'),
+      db.from('club_members').select('role, teams, created_at'),
       db.from('upcoming_events').select('id, date'),
       db.from('event_registrations').select('id', { count: 'exact', head: true }),
       db.from('event_registrations').select('id', { count: 'exact', head: true }).gte('created_at', qsDate),
@@ -183,7 +184,9 @@ function OverviewTab() {
   const totalMembers          = members.length
   const membersBod            = members.filter(m => m.role === 'bod').length
   const membersDirector       = members.filter(m => m.role === 'director').length
-  const membersMember         = members.filter(m => m.role === 'member').length
+  // Analysts work in Lab, Media or Events; everyone else is a plain member.
+  const membersAnalyst        = members.filter(m => m.role !== 'bod' && m.role !== 'director' && isAnalyst(m.role, m.teams)).length
+  const membersMember         = totalMembers - membersBod - membersDirector - membersAnalyst
   const newMembersThisQuarter = members.filter(m => m.created_at >= qs).length
 
   const totalEvents    = events.length
@@ -272,7 +275,8 @@ function OverviewTab() {
         </Section>
         <Section title="Members" meta={`${totalMembers} total`}>
           <BarRow label="Board of Directors" value={membersBod} share={totalMembers ? membersBod / totalMembers : 0} />
-          <BarRow label="Directors" value={membersDirector} share={totalMembers ? membersDirector / totalMembers : 0} />
+          <BarRow label="Management" value={membersDirector} share={totalMembers ? membersDirector / totalMembers : 0} />
+          <BarRow label="Analysts" value={membersAnalyst} share={totalMembers ? membersAnalyst / totalMembers : 0} />
           <BarRow label="Members" value={membersMember} share={totalMembers ? membersMember / totalMembers : 0} />
         </Section>
       </div>
@@ -890,6 +894,20 @@ function ParticipationTab() {
         )}
       </Section>
 
+      <Section title="Trend by quarter" meta="By event date">
+        {quarterlyTrend.length === 0 ? <Empty>No dated events yet.</Empty> : quarterlyTrend.map(q => {
+          const avgPerEvent = q.eventCount > 0 ? Math.round((q.participations / q.eventCount) * 10) / 10 : 0
+          return (
+            <BarRow
+              key={q.label}
+              label={`${q.label} · ${q.eventCount} event${q.eventCount !== 1 ? 's' : ''} · ~${avgPerEvent} per event`}
+              value={q.participations}
+              share={q.participations / maxQuarterParticipations}
+            />
+          )
+        })}
+      </Section>
+
       <div className="mt-10 flex flex-wrap items-end gap-x-6 gap-y-4">
         <SearchField value={nameSearch} onChange={setNameSearch} placeholder="Name…" />
         <div>
@@ -958,20 +976,6 @@ function ParticipationTab() {
           )
         }
       />
-
-      <Section title="Trend by quarter" meta="By event date">
-        {quarterlyTrend.length === 0 ? <Empty>No dated events yet.</Empty> : quarterlyTrend.map(q => {
-          const avgPerEvent = q.eventCount > 0 ? Math.round((q.participations / q.eventCount) * 10) / 10 : 0
-          return (
-            <BarRow
-              key={q.label}
-              label={`${q.label} · ${q.eventCount} event${q.eventCount !== 1 ? 's' : ''} · ~${avgPerEvent} per event`}
-              value={q.participations}
-              share={q.participations / maxQuarterParticipations}
-            />
-          )
-        })}
-      </Section>
 
       {editingEvent && (
         <EditParticipantModal

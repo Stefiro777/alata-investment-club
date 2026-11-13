@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { FieldRow, SegmentedPills } from '@/app/components/member/ui'
+import { FieldRow, SectionHeading, SegmentedPills } from '@/app/components/member/ui'
+import { EVENT_YEARS, studyYearKey } from '@/lib/event-years'
 import { EditParticipantModal, deleteParticipant, type Contact } from './EditParticipantModal'
 import {
-  Numbers, Toolbar, SearchField, SelectField, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, BlockField, Tag, Dialog,
+  Numbers, Toolbar, SearchField, SelectField, Split, CrmRow, NameCell, Sheet, SheetEmpty, BlockField, Tag, Dialog,
   cell, fmtDate, revealSheet, fieldCls, labelCls, btnPrimary, btnGhost, btnDanger, errorCls, type Column,
 } from './crm/ui'
 
@@ -34,13 +35,20 @@ const FIELD_DEFS: { key: FieldKey; label: string }[] = [
 
 const ALL_FIELD_KEYS: FieldKey[] = FIELD_DEFS.map(f => f.key)
 
+// Fixed columns, the same in every event group, so rows line up from one event to the next.
 const COLUMNS: Column[] = [
   { label: 'Name' },
-  { label: 'Event', wide: true },
-  { label: 'Date', wide: true },
+  { label: 'Email', wide: true },
+  { label: 'Year', wide: true },
   { label: 'Status', align: 'right' },
 ]
-const TEMPLATE = 'grid-cols-[minmax(0,1fr)_64px] sm:grid-cols-[minmax(0,1fr)_128px_80px_64px]'
+const TEMPLATE = 'grid-cols-[minmax(0,1fr)_92px] sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_104px_92px]'
+
+/** The year as the profile shows it ("Bachelor 2"); the text as written when it cannot be read. */
+function yearLabel(text: string | null | undefined): string {
+  const key = studyYearKey(text)
+  return EVENT_YEARS.find(y => y.value === key)?.label ?? (text?.trim() || '—')
+}
 
 const MEMBER_FILTERS = [
   { value: 'all', label: 'All' },
@@ -162,7 +170,10 @@ export default function EventContactsTable() {
   const [qrState, setQrState] = useState<QrState>('idle')
   const [qrResult, setQrResult] = useState<{ sent: number; failed: number } | null>(null)
   const [qrError, setQrError] = useState<string | null>(null)
+  const [actionsOpen, setActionsOpen] = useState(false)
   const [pdfMenuOpen, setPdfMenuOpen] = useState(false)
+  const [yearFilter, setYearFilter] = useState('')
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [selectedFields, setSelectedFields] = useState<FieldKey[]>(ALL_FIELD_KEYS)
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
@@ -209,12 +220,36 @@ export default function EventContactsTable() {
         c.cognome?.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q)
       const matchEvent = !eventFilter || c.event_id === eventFilter
+      const key = studyYearKey(c.anno_di_studio)
+      const matchYear = !yearFilter || (yearFilter === 'none' ? key === null : key === yearFilter)
       const matchMember =
         memberFilter === 'all' ||
         (memberFilter === 'members' ? !!c.is_member : !c.is_member)
-      return matchSearch && matchEvent && matchMember
+      return matchSearch && matchEvent && matchMember && matchYear
     })
-  }, [contacts, search, eventFilter, memberFilter])
+  }, [contacts, search, eventFilter, memberFilter, yearFilter])
+
+  // One group per event, newest event first (the order of the event list).
+  const groups = useMemo(() => {
+    const byEvent = new Map<string, Contact[]>()
+    for (const c of filtered) {
+      const list = byEvent.get(c.event_id)
+      if (list) list.push(c)
+      else byEvent.set(c.event_id, [c])
+    }
+    return eventList
+      .filter(ev => byEvent.has(ev.id))
+      .map(ev => ({ ...ev, contacts: byEvent.get(ev.id)! }))
+  }, [filtered, eventList])
+
+  function toggleGroup(id: string) {
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const uniqueEmails = useMemo(() => new Set(contacts.map(c => c.email)).size, [contacts])
   const eventsWithRegs = useMemo(() => new Set(contacts.map(c => c.upcoming_events?.title).filter(Boolean)).size, [contacts])
@@ -313,50 +348,73 @@ export default function EventContactsTable() {
 
       <Toolbar
         actions={
-          <>
-            {selectedEvent && (
-              <button type="button" onClick={() => setShowAddModal(true)} className={btnPrimary}>Add participant</button>
-            )}
-            <div className="relative">
-              <button type="button" onClick={() => setPdfMenuOpen(o => !o)} aria-expanded={pdfMenuOpen} className={btnGhost}>
-                Download PDF
-              </button>
-              {pdfMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setPdfMenuOpen(false)} />
-                  <div className="absolute right-0 top-full z-50 mt-2 w-64 border border-night bg-ivory p-4 shadow-xl">
-                    <p className={`${labelCls} mb-3`}>Campi da esportare</p>
-                    <div className="max-h-64 space-y-2 overflow-y-auto">
-                      {FIELD_DEFS.map(f => (
-                        <label key={f.key} className="flex cursor-pointer items-center gap-2 text-[13px]">
-                          <input
-                            type="checkbox"
-                            checked={selectedFields.includes(f.key)}
-                            onChange={() => toggleField(f.key)}
-                            className="accent-[#1a4a3a]"
-                          />
-                          {f.label}
-                        </label>
-                      ))}
+          <div className="relative">
+            <button type="button" onClick={() => { setPdfMenuOpen(false); setActionsOpen(o => !o) }} aria-expanded={actionsOpen || pdfMenuOpen} className={btnPrimary}>
+              Actions
+            </button>
+            {(actionsOpen || pdfMenuOpen) && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => { setActionsOpen(false); setPdfMenuOpen(false) }} />
+                <div className="absolute right-0 top-full z-50 mt-2 w-72 border border-night bg-ivory p-4 shadow-xl">
+                  {actionsOpen && (
+                    <div className="flex flex-col items-start gap-3">
+                      <button
+                        type="button"
+                        disabled={!selectedEvent}
+                        onClick={() => { setShowAddModal(true); setActionsOpen(false) }}
+                        className="rd-italic text-[22px] hover:underline underline-offset-[0.18em] disabled:opacity-40"
+                      >
+                        Add participant
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!eventFilter || filteredForEvent.length === 0 || qrState !== 'idle'}
+                        onClick={() => { setQrState('confirm'); setActionsOpen(false) }}
+                        className="rd-italic text-[22px] hover:underline underline-offset-[0.18em] disabled:opacity-40"
+                      >
+                        Send QR codes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setActionsOpen(false); setPdfMenuOpen(true) }}
+                        className="rd-italic text-[22px] hover:underline underline-offset-[0.18em]"
+                      >
+                        Download PDF
+                      </button>
+                      {!selectedEvent && <p className="text-[11px] leading-[1.5] text-earth-600">Choose an event to add participants or send the QR codes.</p>}
                     </div>
-                    {pdfError && <p className={`${errorCls} mt-3`}>{pdfError}</p>}
-                    <button
-                      type="button"
-                      onClick={handleGeneratePdf}
-                      disabled={selectedFields.length === 0 || generatingPdf}
-                      className={`${btnPrimary} mt-4 w-full`}
-                    >
-                      {generatingPdf ? 'Generazione…' : 'Genera PDF'}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-            {/* Send QR — only when an event is selected */}
-            {eventFilter && filteredForEvent.length > 0 && qrState === 'idle' && (
-              <button type="button" onClick={() => setQrState('confirm')} className={btnGhost}>Send QR codes</button>
+                  )}
+                  {pdfMenuOpen && (
+                    <>
+                      <p className={`${labelCls} mb-3`}>Fields to export</p>
+                      <div className="max-h-64 space-y-2 overflow-y-auto">
+                        {FIELD_DEFS.map(f => (
+                          <label key={f.key} className="flex cursor-pointer items-center gap-2 text-[13px]">
+                            <input
+                              type="checkbox"
+                              checked={selectedFields.includes(f.key)}
+                              onChange={() => toggleField(f.key)}
+                              className="accent-[#1a4a3a]"
+                            />
+                            {f.label}
+                          </label>
+                        ))}
+                      </div>
+                      {pdfError && <p className={`${errorCls} mt-3`}>{pdfError}</p>}
+                      <button
+                        type="button"
+                        onClick={handleGeneratePdf}
+                        disabled={selectedFields.length === 0 || generatingPdf}
+                        className={`${btnPrimary} mt-4 w-full`}
+                      >
+                        {generatingPdf ? 'Generating…' : 'Generate PDF'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
             )}
-          </>
+          </div>
         }
       >
         <SearchField value={search} onChange={setSearch} placeholder="Name or email…" />
@@ -364,8 +422,13 @@ export default function EventContactsTable() {
           <option value="">All events</option>
           {events.map(ev => <option key={ev.id} value={ev.id}>{ev.label}</option>)}
         </SelectField>
+        <SelectField label="Year" value={yearFilter} onChange={setYearFilter} width="sm:w-[150px]">
+          <option value="">All years</option>
+          {EVENT_YEARS.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
+          <option value="none">No year</option>
+        </SelectField>
         <div>
-          <span className={`${labelCls} mb-2`}>Members</span>
+          <span className={`${labelCls} mb-2`}>Status</span>
           <SegmentedPills size="sm" label="Members filter" options={[...MEMBER_FILTERS]} value={memberFilter} onChange={setMemberFilter} />
         </div>
       </Toolbar>
@@ -400,31 +463,50 @@ export default function EventContactsTable() {
       <Split
         sheetRef={sheetRef}
         list={
-          <CrmTable
-            title="Event contacts"
-            meta={selectedEvent ? `${filtered.length} participants` : filtered.length === contacts.length ? contacts.length : `${filtered.length} of ${contacts.length}`}
-            columns={COLUMNS}
-            template={TEMPLATE}
-            isEmpty={filtered.length === 0}
-            empty="No contacts found."
-          >
-            {filtered.map(c => (
-              <CrmRow key={c.id} template={TEMPLATE} selected={c.id === openId} onOpen={() => open(c.id)} label={`Open ${c.nome} ${c.cognome}`}>
-                <span className={cell(COLUMNS[0])}>
-                  <NameCell
-                    name={`${c.nome} ${c.cognome}`}
-                    sub={c.email}
-                    tag={c.source === 'manual' ? <Tag title={c.added_by ? `Aggiunto manualmente da ${c.added_by}` : 'Aggiunto manualmente'}>Manual</Tag> : undefined}
+          <div>
+            <div role="row" className={`grid ${TEMPLATE} items-end gap-x-4 border-b border-night/20 px-1 py-2.5`}>
+              {COLUMNS.map((c, i) => (
+                <span key={i} role="columnheader" className={`rd-eyebrow truncate text-[9px] text-earth-500 ${c.wide ? 'hidden sm:block' : ''} ${c.align === 'right' ? 'text-right' : ''}`}>{c.label}</span>
+              ))}
+            </div>
+            {groups.length === 0 && <p className="py-8 text-[13px] text-earth-600">No contacts found.</p>}
+            {groups.map(g => {
+              const isCollapsed = collapsed.has(g.id)
+              return (
+                <section key={g.id}>
+                  <SectionHeading
+                    as="h3"
+                    title={g.title}
+                    meta={
+                      <button type="button" onClick={() => toggleGroup(g.id)} aria-expanded={!isCollapsed} className="uppercase tracking-[0.14em] hover:underline underline-offset-4">
+                        {g.date} · {g.contacts.length} {g.contacts.length === 1 ? 'person' : 'people'} · {isCollapsed ? 'Show' : 'Hide'}
+                      </button>
+                    }
                   />
-                </span>
-                <span className={cell(COLUMNS[1], 'text-[12px] text-earth-700')} title={c.upcoming_events?.title}>{c.upcoming_events?.title ?? '—'}</span>
-                <span className={cell(COLUMNS[2], 'rd-num text-[12px] text-earth-700')}>{c.upcoming_events?.date ?? '—'}</span>
-                <span className={cell(COLUMNS[3], 'text-[12px] text-earth-700')}>
-                  {c.is_member ? 'Member' : 'External'}{c.member_override !== null ? '*' : ''}
-                </span>
-              </CrmRow>
-            ))}
-          </CrmTable>
+                  {!isCollapsed && (
+                    <div role="table" className="border-t border-night/20">
+                      {g.contacts.map(c => (
+                        <CrmRow key={c.id} template={TEMPLATE} selected={c.id === openId} onOpen={() => open(c.id)} label={`Open ${c.nome} ${c.cognome}`}>
+                          <span className={cell(COLUMNS[0])}>
+                            <NameCell
+                              name={`${c.nome} ${c.cognome}`}
+                              tag={c.source === 'manual' ? <Tag title={c.added_by ? `Added by hand by ${c.added_by}` : 'Added by hand'}>Manual</Tag> : undefined}
+                            />
+                          </span>
+                          <span className={cell(COLUMNS[1], 'text-[12px] text-earth-700')} title={c.email}>{c.email}</span>
+                          <span className={cell(COLUMNS[2], 'text-[12px] text-earth-700')}>{yearLabel(c.anno_di_studio)}</span>
+                          <span className={cell(COLUMNS[3], 'text-[12px] text-earth-700')}>
+                            {c.is_member ? 'Member' : 'External'}{c.member_override !== null ? '*' : ''}
+                            {c.checked_in && <span className="rd-eyebrow block text-[9px] text-club">Checked in</span>}
+                          </span>
+                        </CrmRow>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )
+            })}
+          </div>
         }
         sheet={
           current ? (

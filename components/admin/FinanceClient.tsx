@@ -1,51 +1,41 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ComponentProps } from 'react'
+import { Tabs } from '@/app/components/member/ui'
 import TransactionManager from './TransactionManager'
 import BudgetReport from './BudgetReport'
 import QuoteClient from './QuoteClient'
+import ArchiveClient from '@/app/admin/archive/ArchiveClient'
 
-type Tab = 'transactions' | 'budget' | 'preventivo'
+export type FinanceTab = 'transactions' | 'budget' | 'documents' | 'quotes'
 
-export default function FinanceClient() {
-  const [tab, setTab] = useState<Tab>('transactions')
+const TABS: { key: FinanceTab; label: string }[] = [
+  { key: 'transactions', label: 'Transactions' },
+  { key: 'budget', label: 'Budget' },
+  { key: 'documents', label: 'Documents' },
+  { key: 'quotes', label: 'Quotes' },
+]
+
+export const isFinanceTab = (v: unknown): v is FinanceTab => TABS.some(t => t.key === v)
+
+/** Board > Finance: the four screens as tabs. Documents (the archive) come from the server. */
+export default function FinanceClient({ documents, userEmail, initialTab = 'transactions' }: {
+  documents: ComponentProps<typeof ArchiveClient>['initialDocs']
+  userEmail: string
+  initialTab?: FinanceTab
+}) {
+  const [tab, setTab] = useState<FinanceTab>(initialTab)
 
   return (
-    <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10">
-      <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold text-ink-900">Finance</h1>
-        <div className="w-10 h-0.5 bg-forest mt-2" />
+    <div>
+      <div className="mb-6">
+        <Tabs tabs={TABS} value={tab} onChange={setTab} />
       </div>
 
-      {/* Sub-tab bar — scrolls horizontally within itself on narrow viewports instead of
-          pushing the whole page into overflow. */}
-      <div className="border-b border-gray-200 mb-8">
-        <div className="flex gap-6 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {([
-            { key: 'transactions' as const, label: 'Transactions' },
-            { key: 'budget'       as const, label: 'Budget Report' },
-            { key: 'preventivo'   as const, label: 'Preventivo' },
-          ] as const).map(t => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setTab(t.key)}
-              className="pb-2 text-sm font-['Inter'] transition-colors whitespace-nowrap flex-shrink-0"
-              style={
-                tab === t.key
-                  ? { borderBottom: '2px solid #1a4a3a', color: 'var(--forest)', fontWeight: 600 }
-                  : { borderBottom: '2px solid transparent', color: '#9ca3af' }
-              }
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {tab === 'transactions' ? <TransactionManager /> :
-       tab === 'budget'       ? <BudgetReport /> :
-                                <QuoteClient />}
+      {tab === 'transactions' && <TransactionManager />}
+      {tab === 'budget' && <BudgetReport />}
+      {tab === 'documents' && <ArchiveClient initialDocs={documents} userEmail={userEmail} />}
+      {tab === 'quotes' && <QuoteClient />}
     </div>
   )
 }

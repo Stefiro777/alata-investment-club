@@ -82,49 +82,41 @@ export default function ReceivedApplications() {
   const unread = apps.filter(a => !a.read_at).length
 
   return (
-    <section className="mb-12">
+    <section className="mt-6">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-4 border border-gray-200 bg-white px-5 py-4 text-left hover:border-forest transition-colors"
         aria-expanded={open}
+        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-y border-night/20 py-3.5 text-left transition-colors hover:bg-night/[0.03]"
       >
-        <span className="font-serif text-xl font-bold text-gray-900">
-          Candidature ricevute ({apps.length})
-          {unread > 0 && (
-            <span className="ml-3 align-middle inline-block bg-forest text-white text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5">
-              {unread} {unread === 1 ? 'nuova' : 'nuove'}
-            </span>
-          )}
+        <span className="font-serif text-[22px] font-medium leading-[1.1]">
+          Candidature ricevute
+          <span className="rd-eyebrow ml-3 align-middle text-[10px] text-earth-500">
+            {apps.length}{unread > 0 ? ` · ${unread} ${unread === 1 ? 'nuova' : 'nuove'}` : ''}
+          </span>
         </span>
-        <svg
-          className="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform"
-          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <span className="rd-italic text-[20px]">{open ? 'Close' : 'Open'}</span>
       </button>
 
       {open && (
-        <div className="border border-t-0 border-gray-200 bg-white divide-y divide-gray-100">
+        <div>
           {apps.map(a => {
             const isOpen = expanded === a.id
             return (
-              <div key={a.id} className="px-5 py-4">
+              <div key={a.id} className="border-b border-night/20 py-3.5">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <button type="button" onClick={() => toggle(a.id)} className="flex-1 min-w-[200px] text-left">
-                    <p className={`text-sm text-gray-900 ${a.read_at ? 'font-medium' : 'font-bold'}`}>
-                      {!a.read_at && <span className="inline-block w-1.5 h-1.5 bg-forest mr-2 align-middle" aria-label="Non letta" />}
+                  <button type="button" onClick={() => toggle(a.id)} aria-expanded={isOpen} className="min-w-[200px] flex-1 text-left">
+                    <p className={`font-serif text-[20px] leading-[1.15] ${a.read_at ? 'font-medium' : 'font-semibold'}`}>
+                      {!a.read_at && <span className="mr-2 inline-block h-1.5 w-1.5 bg-club align-middle" aria-label="Non letta" />}
                       {a.first_name} {a.last_name}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">{a.job_title} · {fmtDateTime(a.submitted_at)}</p>
+                    <p className="mt-0.5 text-[12px] text-earth-600">{a.job_title} · {fmtDateTime(a.submitted_at)}</p>
                   </button>
                   <select
                     value={a.status}
                     onChange={e => setStatus(a.id, e.target.value)}
                     aria-label={`Stato candidatura di ${a.first_name} ${a.last_name}`}
-                    className="text-xs font-medium uppercase tracking-wide border border-gray-200 px-2 py-1.5 bg-white focus:outline-none focus:border-forest"
+                    className="rd-eyebrow border-b border-night bg-transparent px-1 py-1.5 text-[10px] focus:outline-none"
                   >
                     {Object.entries(STATUS_LABELS).map(([val, label]) => (
                       <option key={val} value={val}>{label}</option>
@@ -133,32 +125,32 @@ export default function ReceivedApplications() {
                 </div>
 
                 {isOpen && (
-                  <div className="mt-4 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                  <div className="mt-4 grid gap-x-8 gap-y-3 text-[13px] sm:grid-cols-2">
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">Email</p>
-                      <a href={`mailto:${a.email}`} className="text-forest hover:underline break-all">{a.email}</a>
+                      <p className="rd-eyebrow mb-0.5 text-[10px] text-earth-500">Email</p>
+                      <a href={`mailto:${a.email}`} className="break-all text-club hover:underline">{a.email}</a>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">Telefono</p>
-                      <p className="text-gray-900">{a.phone ?? '—'}</p>
+                      <p className="rd-eyebrow mb-0.5 text-[10px] text-earth-500">Telefono</p>
+                      <p>{a.phone ?? '—'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">LinkedIn</p>
+                      <p className="rd-eyebrow mb-0.5 text-[10px] text-earth-500">LinkedIn</p>
                       {a.linkedin_url
-                        ? <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-forest hover:underline break-all">{a.linkedin_url}</a>
-                        : <p className="text-gray-900">—</p>}
+                        ? <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer" className="break-all text-club hover:underline">{a.linkedin_url}</a>
+                        : <p>—</p>}
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">CV</p>
+                      <p className="rd-eyebrow mb-0.5 text-[10px] text-earth-500">CV</p>
                       {a.cv_filename
                         // Signed, short-lived link generated server-side after an access check.
-                        ? <a href={`/api/jobs/applications/${a.id}/cv`} target="_blank" rel="noopener noreferrer" className="text-forest hover:underline break-all">{a.cv_filename}</a>
-                        : <p className="text-gray-900">—</p>}
+                        ? <a href={`/api/jobs/applications/${a.id}/cv`} target="_blank" rel="noopener noreferrer" className="break-all text-club hover:underline">{a.cv_filename}</a>
+                        : <p>—</p>}
                     </div>
                     {a.cover_letter && (
                       <div className="sm:col-span-2">
-                        <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-0.5">Lettera di presentazione</p>
-                        <p className="text-gray-900 whitespace-pre-wrap">{a.cover_letter}</p>
+                        <p className="rd-eyebrow mb-0.5 text-[10px] text-earth-500">Lettera di presentazione</p>
+                        <p className="whitespace-pre-wrap">{a.cover_letter}</p>
                       </div>
                     )}
                   </div>

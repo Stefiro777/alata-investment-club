@@ -1,5 +1,5 @@
 // Metrics shown in the stats band of the About page (homepage). Stored as a
-// JSON array under settings.key = 'about_stats' and edited from /admin/settings.
+// JSON array under settings.key = 'about_stats' and edited from the Board Overview.
 
 export type AboutStat = { value: string; label: string }
 

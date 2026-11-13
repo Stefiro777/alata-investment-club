@@ -2,11 +2,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePrivilegedAccess } from '@/lib/auth'
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-// 'member' = plain member, no team. The Lab subdivision is no longer asked.
-const VALID_TEAMS = ['events', 'media', 'lab', 'member'] as const
+import { validateInvite } from '@/lib/invite'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -85,20 +81,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const body = await req.json()
-    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
-    const team = body.team
-
-    if (!email || !emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
+    // Team (Lab, Events, Media, Alumni, or plain member) and, for Lab, the subdivision.
+    const parsed = validateInvite(await req.json().catch(() => null))
+    if ('error' in parsed) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 })
     }
-
-    if (!VALID_TEAMS.includes(team)) {
-      return NextResponse.json({ error: 'Invalid team' }, { status: 400 })
-    }
-
-
-    const labSubdivision: string | null = null
+    const { email, team, labSubdivision } = parsed
 
     const supabaseAdmin = createSupabaseAdmin(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -113,7 +101,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
 
     if (existingMember) {
-      return NextResponse.json({ error: 'membro già registrato' }, { status: 400 })
+      return NextResponse.json({ error: 'This person is already a member' }, { status: 400 })
     }
 
     // Reuse a pending invite for this email if one exists, instead of
@@ -167,7 +155,7 @@ export async function POST(req: NextRequest) {
     const { error: sendError } = await resend.emails.send({
       from: FROM,
       to: email,
-      subject: 'Invito — Alata Investment Club',
+      subject: 'Invitation — Alata Investment Club',
       html: buildInviteEmail(inviteLink),
     })
 
