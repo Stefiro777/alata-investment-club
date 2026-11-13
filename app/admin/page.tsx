@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase-server'
 import { PageTitle, Section, Row, Pill } from '@/app/components/member/ui'
 import OverviewSwitches from './OverviewSwitches'
+import InviteMember, { type PendingInvite } from './InviteMember'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ export default async function BoardOverviewPage() {
   const in30 = new Date(now.getTime() + 30 * 86_400_000).toISOString()
   const since30 = new Date(now.getTime() - 30 * 86_400_000).toISOString()
 
-  const [members, expiring, nextEvents, revenue, applications, settings, costsNoReceipt, partners] = await Promise.all([
+  const [members, expiring, nextEvents, revenue, applications, settings, costsNoReceipt, partners, invites] = await Promise.all([
     db.from('club_members').select('id', { count: 'exact', head: true }).is('membership_removed_at', null).gt('membership_expires_at', now.toISOString()),
     db.from('club_members').select('id', { count: 'exact', head: true }).is('membership_removed_at', null).gt('membership_expires_at', now.toISOString()).lt('membership_expires_at', in30),
     db.from('upcoming_events').select('id, title, status, date').gte('date', today).neq('status', 'completed').order('date', { ascending: true }).limit(1),
@@ -28,7 +29,10 @@ export default async function BoardOverviewPage() {
     db.from('transactions').select('id', { count: 'exact', head: true }).eq('type', 'cost').is('receipt_url', null),
     // partners.next_step arrives with SQL B; until then this query errors and the row is hidden.
     db.from('partners').select('id, next_step').not('next_step', 'is', null),
+    // Invitations sent and not yet accepted.
+    db.from('invites').select('id, email, team, lab_subdivision, created_at').is('used_at', null).order('created_at', { ascending: false }),
   ])
+  const pendingInvites = (invites.error ? [] : invites.data ?? []) as PendingInvite[]
 
   const next = nextEvents.data?.[0] ?? null
   const registered = next
@@ -53,6 +57,7 @@ export default async function BoardOverviewPage() {
         sub="Where the club stands today."
         action={
           <div className="flex flex-wrap gap-2">
+            <Pill href="#invite" solid>Invite member</Pill>
             <Pill href="/admin/content">New event</Pill>
             <Pill href="/admin/finance">Add transaction</Pill>
           </div>
@@ -85,6 +90,10 @@ export default async function BoardOverviewPage() {
           />
           <p className="mt-6 text-[12px] text-earth-500">Only the BoD and Management see the Board panel.</p>
         </Section>
+      </div>
+
+      <div className="grid gap-x-12 lg:grid-cols-2">
+        <InviteMember pending={pendingInvites} />
       </div>
     </>
   )
