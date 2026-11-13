@@ -10,6 +10,7 @@ import { timeRange } from '@/lib/event-display'
 import { DASHBOARD_QUOTES } from '@/lib/dashboard-quotes'
 import { isPubliclyHidden } from '@/lib/public-filters'
 import { Section, Row, FieldRow, Pill, ProgressRule } from '@/app/components/member/ui'
+import { gettingStartedFor } from '@/lib/getting-started'
 
 type NextEvent = {
   id: string; slug: string | null; title: string; date: string; status: string | null
@@ -24,17 +25,6 @@ function levelLabel(p: MemberProfile) {
   if (!p.study_level) return null
   const lvl = p.study_level === 'master' ? 'Master' : 'Bachelor'
   return p.study_year ? `${lvl}, year ${p.study_year}` : lvl
-}
-
-/**
- * The audience tags a member matches in resources.audience, general first.
- * A level with no year gets the level tag (plus the first-year starter set for
- * bachelors); no level at all gets the starter set.
- */
-function audienceTags(level: string | null | undefined, year: number | null | undefined): string[] {
-  if (level !== 'bachelor' && level !== 'master') return ['bachelor_1']
-  if (year) return [level, `${level}_${year}`]
-  return level === 'bachelor' ? [level, 'bachelor_1'] : [level]
 }
 
 /**
@@ -128,16 +118,13 @@ export default function DashboardPage() {
         if (cancelled) return
         // Folders count: most of the material lives in Drive folders.
         const rows = ((data ?? []) as Resource[]).filter(r => r.url)
-        const tags = audienceTags(profile.study_level, profile.study_year)
-        // resources.audience targets a year of study ("bachelor", "bachelor_2", "master"…).
-        // The most general tag comes first, so a guide meant for the whole level leads the list.
-        const rank = (r: Resource) => Math.min(...(r.audience ?? []).map(a => tags.indexOf(a)).filter(i => i >= 0))
-        const targeted = rows.filter(r => r.audience?.some(a => tags.includes(a))).sort((a, b) => rank(a) - rank(b))
+        // resources.audience targets a year of study (see lib/getting-started.ts).
+        const targeted = gettingStartedFor(rows, profile.study_level, profile.study_year)
         // Until something is tagged: one guide per area, master, career, learning.
         const picks = targeted.length > 0
           ? targeted
           : (['masters', 'career', 'education'] as const).map(c => rows.find(r => r.category === c && !r.is_folder)).filter(Boolean) as Resource[]
-        setResources(picks.slice(0, 4))
+        setResources(picks)
       })
 
     if (firstTeam && profile.title) {
