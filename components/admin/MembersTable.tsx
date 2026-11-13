@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { FieldRow, Pill, SegmentedPills } from '@/app/components/member/ui'
+import Portrait from '@/app/components/member/Portrait'
 import { ROLES, isAnalyst, roleLabel, roleWarnings, type Role } from '@/lib/roles'
 import { EVENT_YEARS, formatStudyYear, studyKeyOf } from '@/lib/event-years'
 import {
@@ -21,6 +22,7 @@ type Member = {
   study_level?: string | null
   study_year?: number | null
   membership_removed_at?: string | null
+  photo_url?: string | null
 }
 
 type Kind = 'all' | 'analyst' | 'member' | 'other'
@@ -347,7 +349,12 @@ export default function MembersTable() {
                     />
                   }
                 >
-                  <span className={cell(COLUMNS[1])}><NameCell name={m.full_name} sub={m.email} tag={m.membership_removed_at ? <Tag>Removed</Tag> : undefined} /></span>
+                  <span className={cell(COLUMNS[1])}>
+                    <span className="flex min-w-0 items-center gap-3">
+                      <Portrait src={m.photo_url} name={m.full_name} size="sm" />
+                      <NameCell name={m.full_name} sub={m.email} tag={m.membership_removed_at ? <Tag>Removed</Tag> : undefined} />
+                    </span>
+                  </span>
                   <span className={cell(COLUMNS[2])}>
                     <Tag title={kindOf(m) === 'analyst' ? 'Works in Lab, Media or Events' : undefined}>
                       {kindOf(m) === 'analyst' ? `Analyst · ${roleLabel(m.role) === 'Member' ? teamLabel((m.teams ?? []).find(t => ['lab', 'media', 'events'].includes(t)) ?? '') : roleLabel(m.role)}` : roleLabel(m.role)}
@@ -381,6 +388,9 @@ export default function MembersTable() {
                 </>
               }
             >
+              <div className="border-b border-night/20 py-4">
+                <Portrait src={current.photo_url} name={current.full_name} size="lg" />
+              </div>
               <FieldRow label="Name" value={current.full_name} />
               <FieldRow label="Email" value={<a href={`mailto:${current.email}`} className="hover:underline">{current.email}</a>} />
               <div className="border-b border-night/20 py-[11px]">

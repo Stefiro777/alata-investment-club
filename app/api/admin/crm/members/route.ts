@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabaseAdmin
     .from('club_members')
-    .select('id, full_name, email, role, teams, lab_subdivision, title, created_at, study_level, study_year, membership_removed_at')
+    .select('id, full_name, email, role, teams, lab_subdivision, title, created_at, study_level, study_year, membership_removed_at, photo_url')
     .order('created_at', { ascending: false })
   if (req.nextUrl.searchParams.get('removed') !== '1') query = query.is('membership_removed_at', null)
   const { data, error } = await query
