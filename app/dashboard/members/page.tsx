@@ -202,7 +202,7 @@ function MemberFormModal({
         .from('club_members')
         .update(payload)
         .eq('id', initial!.id)
-        .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision')
+        .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision, photo_url, linkedin_url')
         .maybeSingle()
       if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return }
       await finish(data as Member, false)
