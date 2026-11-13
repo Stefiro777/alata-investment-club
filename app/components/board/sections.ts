@@ -23,7 +23,6 @@ export const BOARD_SECTIONS: BoardSection[] = [
       { href: '/admin/partners', label: 'Partners' },
       { href: '/admin/featured-reports', label: 'Reports' },
       { href: '/admin/dashboard', label: 'Resources' },
-      { href: '/admin/settings', label: 'Settings' },
     ],
   },
   {

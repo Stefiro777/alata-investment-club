@@ -1,6 +1,6 @@
 // Names that open the "In good company" credits on the Home, before the partners.
 // Stored as a JSON array of strings under settings.key = 'flagship_credits' and
-// edited from Board > Site > Settings. When the key does not exist yet, the
+// edited from the Board Overview. When the key does not exist yet, the
 // four historical names below are used.
 
 export const FLAGSHIP_CREDITS_KEY = 'flagship_credits'
