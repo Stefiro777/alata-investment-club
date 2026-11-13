@@ -2,17 +2,10 @@
 
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { isValidPhone, PHONE_ERROR } from '@/lib/phone'
+import { EVENT_YEARS } from '@/lib/event-years'
 
 /* Inline versions of EventRegistrationModal / EventWaitlistModal for the
    event page (boards Se3, Se4). Same endpoints, same payloads, same checks. */
-
-const YEARS = [
-  '1st year Bachelor',
-  '2nd year Bachelor',
-  '3rd year Bachelor',
-  '1st year Master',
-  '2nd year Master',
-]
 
 function Field({ label, wide = false, children }: { label: string; wide?: boolean; children: ReactNode }) {
   return (
@@ -35,7 +28,7 @@ function Done({ title, text }: { title: string; text: string }) {
 export function RegistrationForm({
   event,
 }: {
-  event: { id: string; registration_field?: 'motivation' | 'panelists' | null }
+  event: { id: string; registration_field?: 'motivation' | 'panelists' | null; allowed_years?: string[] | null }
 }) {
   const [nome, setNome] = useState('')
   const [cognome, setCognome] = useState('')
@@ -95,7 +88,7 @@ export function RegistrationForm({
       <Field label="Year of study">
         <select required value={anno} onChange={e => setAnno(e.target.value)} className={`rd-field cursor-pointer ${anno ? '' : 'text-night/40'}`}>
           <option value="" disabled>Choose</option>
-          {YEARS.map(y => <option key={y} value={y} className="text-night">{y}</option>)}
+          {EVENT_YEARS.filter(y => !event.allowed_years?.length || event.allowed_years.includes(y.value)).map(y => <option key={y.form} value={y.form} className="text-night">{y.form}</option>)}
         </select>
       </Field>
       {showField && (

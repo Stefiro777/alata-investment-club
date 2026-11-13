@@ -10,6 +10,7 @@ import Lightbox from '@/app/components/site/Lightbox'
 import { StatusPill } from '@/app/components/site/ui'
 import { eventKind, fmtEur, priceLine, shortDate, timeRange } from '@/lib/event-display'
 import { RegistrationForm, WaitlistForm } from './RegisterForms'
+import { yearsLabel } from '@/lib/event-years'
 
 type GalleryImage = { id: string; url: string; display_order: number }
 type EventWithSpeaker = UpcomingEvent & { speaker_name?: string | null; speaker_role?: string | null }
@@ -120,6 +121,7 @@ export default function EventDetailClient({
           <div className="flex flex-wrap items-center gap-4">
             <StatusPill tone="dark" solid={isOpen && !soldOut}>{statusLabel}</StatusPill>
             {event.members_only && <StatusPill tone="dark">Members only</StatusPill>}
+            {event.allowed_years && event.allowed_years.length > 0 && <StatusPill tone="dark">Reserved: {yearsLabel(event.allowed_years)}</StatusPill>}
             {kind && <span className="text-[13px] text-ivory/80">{kind}</span>}
           </div>
           <h1 className="rd-display mt-6 max-w-[760px] text-[clamp(44px,6.3vw,76px)]">
@@ -265,7 +267,7 @@ export default function EventDetailClient({
                 Register on the partner site
               </a>
             ) : event.action_type === 'form' ? (
-              <RegistrationForm event={{ id: event.id, registration_field: event.registration_field }} />
+              <RegistrationForm event={{ id: event.id, registration_field: event.registration_field, allowed_years: event.allowed_years }} />
             ) : (
               <p className="rd-italic text-[28px] text-earth-700">Registrations are handled directly by the club: write to info@alatainvestmentclub.com.</p>
             )}
