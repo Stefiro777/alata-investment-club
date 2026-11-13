@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import type { UpcomingEvent, EventRegistration } from '@/lib/types'
 import { slugify } from '@/lib/slug'
-import { Pill, SegmentedPills } from '@/app/components/member/ui'
+import { Pill, SegmentedPills, SectionHeading } from '@/app/components/member/ui'
 
 const STATUS_OPTIONS: UpcomingEvent['status'][] = ['open', 'coming_soon', 'completed']
 const ACTION_OPTIONS = ['form', 'link'] as const
@@ -673,15 +673,12 @@ function longDate(iso: string) {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-/** A titled block of the sheet: italic title over a rule, like the other member-area screens. */
-function SheetSection({ title, meta, children }: { title: string; meta?: string; children: React.ReactNode }) {
+/** A titled block of the sheet: the shared section heading, then its rows. */
+function SheetSection({ title, meta, children, flush }: { title: string; meta?: string; children: React.ReactNode; flush?: boolean }) {
   return (
-    <section className="mt-10 first:mt-0">
-      <div className="flex items-baseline justify-between gap-4 pb-3">
-        <h3 className="rd-italic text-[26px]">{title}</h3>
-        {meta && <span className="rd-eyebrow text-[10px] text-earth-500">{meta}</span>}
-      </div>
-      <div className="border-t border-night">{children}</div>
+    <section>
+      <SectionHeading as="h3" title={title} meta={meta} flush={flush} />
+      {children}
     </section>
   )
 }
@@ -771,7 +768,7 @@ function EventSheet({
   return (
     <div>
       {/* Header: the event, and how full it is */}
-      <SheetSection title={isNext ? 'Next event' : 'Event'} meta={STATUS_LABEL[event.status]?.toUpperCase()}>
+      <SheetSection flush title={isNext ? 'Next event' : 'Event'} meta={STATUS_LABEL[event.status]?.toUpperCase()}>
         <div className="pt-5">
           <div className="rd-display text-[clamp(26px,2.6vw,32px)] leading-[1.1]">{event.title}</div>
           <div className="mt-2 text-[13px] text-earth-700">{when}</div>
@@ -793,7 +790,7 @@ function EventSheet({
       </SheetSection>
 
       <SheetSection title="Registrations" meta={`${regCount} ${regCount === 1 ? 'person' : 'people'}`}>
-        <ActionRow title="Registrations" detail="Names, motivation and extra field." action="Open" onClick={onShowRegistrations} />
+        <ActionRow title="Guest list" detail="Names, motivation and extra field." action="Open" onClick={onShowRegistrations} />
         <ActionRow title="Waitlist" detail={`${waitlistCount} waiting. Seats are offered when someone leaves.`} action="Open" onClick={onShowWaitlist} />
         <ActionRow title="Email registrants" detail="Write one message to everyone who signed up." action="Write" onClick={onSendEmail} disabled={regCount === 0} />
       </SheetSection>
@@ -1117,11 +1114,8 @@ export default function UpcomingEventsAdminSection({
 
       <div className="grid gap-x-12 gap-y-12 lg:grid-cols-2">
         <div>
-          <div className="flex items-baseline justify-between pb-3">
-            <h2 className="rd-italic text-[clamp(28px,3vw,34px)]">Events</h2>
-            <span className="rd-eyebrow text-[10px] text-earth-500">{events.length} total</span>
-          </div>
-          <div className="border-t border-night">
+          <SectionHeading flush title="Events" meta={`${events.length} total`} />
+          <div>
             {activeEvents.length === 0 ? (
               <p className="py-8 text-[13px] text-earth-600">No upcoming events.</p>
             ) : (
