@@ -25,7 +25,13 @@ type InviteData = {
   lab_subdivision: string | null
 }
 
-type PageStatus = 'loading' | 'ready' | 'not_found' | 'used' | 'error'
+type PageStatus = 'loading' | 'ready' | 'not_found' | 'used' | 'cancelled' | 'error'
+
+/** A 410 is either an invitation already used or one the Board cancelled: the API says which. */
+async function goneStatus(res: Response): Promise<'used' | 'cancelled'> {
+  const body = await res.json().catch(() => ({})) as { code?: string }
+  return body.code === 'cancelled' ? 'cancelled' : 'used'
+}
 
 function AcceptInviteForm() {
   const router = useRouter()
@@ -57,7 +63,8 @@ function AcceptInviteForm() {
           return
         }
         if (res.status === 410) {
-          setStatus('used')
+          const gone = await goneStatus(res)
+          if (!cancelled) setStatus(gone)
           return
         }
         if (!res.ok) {
@@ -124,9 +131,8 @@ function AcceptInviteForm() {
       }
 
       if (res.status === 410) {
-        // Invite consumed in the meantime (race condition) — fall back to
-        // the same "already used" state shown for a stale link.
-        setStatus('used')
+        // Invite consumed or cancelled in the meantime: show the same state as a stale link.
+        setStatus(await goneStatus(res))
         setSubmitting(false)
         return
       }
@@ -221,6 +227,21 @@ function AcceptInviteForm() {
                     info@alatainvestmentclub.com
                   </a>
                   .
+                </p>
+              </div>
+            )}
+
+            {status === 'cancelled' && (
+              <div className="space-y-4">
+                <p role="alert" className="text-red-600 text-sm border-l-2 border-red-400 pl-3 py-1">
+                  This invitation was cancelled.
+                </p>
+                <p className="text-xs text-ink-500">
+                  Write to{' '}
+                  <a href="mailto:info@alatainvestmentclub.com" className="text-forest hover:underline">
+                    info@alatainvestmentclub.com
+                  </a>{' '}
+                  if you think this is a mistake.
                 </p>
               </div>
             )}
