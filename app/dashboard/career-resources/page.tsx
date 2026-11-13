@@ -1,6 +1,6 @@
 'use client'
 
-import { PageTitle } from '@/app/components/member/ui'
+import { PageTitle, Section, Pill } from '@/app/components/member/ui'
 import { MentorStrip, JobResources } from './JobsExtras'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
@@ -32,24 +32,6 @@ type ModalState = {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-function PencilIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-    </svg>
-  )
-}
-
-function TrashIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
-  )
 }
 
 // ── JobModal ──────────────────────────────────────────────────────────────────
@@ -438,122 +420,39 @@ export function JobApplicationModal({
   )
 }
 
-// ── OfficialJobCard ───────────────────────────────────────────────────────────
+// ── JobRow ────────────────────────────────────────────────────────────────────
 
-function OfficialJobCard({
+const textAction = 'rd-italic text-[22px] hover:underline underline-offset-[0.18em]'
+const dangerAction = 'rd-italic text-[22px] text-[#8a2a1d] hover:underline underline-offset-[0.18em] disabled:opacity-50'
+
+/**
+ * One offer as a row: title and company, and (for the Board) how many people
+ * applied through the form. Opening it shows the description and the actions
+ * inline, no page of its own.
+ */
+function JobRow({
   offer,
-  canManage,
+  applicants,
+  canEdit,
+  canDelete,
+  byline,
   onEdit,
   onDelete,
 }: {
   offer: JobOffer
-  canManage: boolean
-  onEdit: () => void
+  /** Applications received through the form; null when the viewer is not on the Board. */
+  applicants: number | null
+  canEdit: boolean
+  canDelete: boolean
+  byline?: string
+  onEdit?: () => void
   onDelete: () => void
 }) {
-  const [confirmDelete, setConfirmDelete]       = useState(false)
-  const [deleting, setDeleting]                 = useState(false)
-  const [collapsed, setCollapsed]               = useState(true)
-  const [showAppModal, setShowAppModal]         = useState(false)
-
-  async function handleDelete() {
-    setDeleting(true)
-    const supabase = createClient()
-    await supabase.from('job_offers').delete().eq('id', offer.id)
-    onDelete()
-  }
-
-  const isFormMode = offer.apply_mode === 'form'
-
-  return (
-    <>
-      <div className="border border-gray-200 bg-white p-6 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-serif text-lg font-bold text-gray-900 leading-tight">{offer.title}</h3>
-            <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-forest text-white uppercase tracking-wide">
-              {offer.company}
-            </span>
-          </div>
-          {canManage && (
-            // gap-2 (was gap-1) so the enlarged 44px buttons keep >=8px real clearance
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button onClick={onEdit} className="p-3.5 text-gray-400 hover:text-forest transition-colors">
-                <PencilIcon />
-              </button>
-              {confirmDelete ? (
-                <div className="flex items-center gap-1">
-                  <button onClick={handleDelete} disabled={deleting}
-                    className="text-xs border border-red-300 text-red-600 px-2 py-1 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50">
-                    Conferma
-                  </button>
-                  <button onClick={() => setConfirmDelete(false)}
-                    className="text-xs border border-gray-200 text-gray-600 px-2 py-1 hover:border-gray-400 transition-colors">
-                    Annulla
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmDelete(true)} className="p-3.5 text-gray-400 hover:text-red-500 transition-colors">
-                  <TrashIcon />
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-        {offer.description && (
-          <div>
-            <p className={`text-sm text-gray-600 leading-relaxed ${collapsed ? 'line-clamp-2' : 'whitespace-pre-wrap'}`}>
-              {offer.description}
-            </p>
-            <button
-              onClick={() => setCollapsed(c => !c)}
-              className="mt-1 text-xs text-forest hover:underline underline-offset-2 py-3.5"
-            >
-              {collapsed ? 'Leggi di più ↓' : 'Chiudi ↑'}
-            </button>
-          </div>
-        )}
-        <div className="mt-auto pt-1">
-          {isFormMode ? (
-            <button
-              onClick={() => setShowAppModal(true)}
-              className="inline-block bg-club text-ivory text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-moss transition-colors"
-            >
-              Candidati →
-            </button>
-          ) : (
-            <a href={offer.link} target="_blank" rel="noopener noreferrer"
-              className="inline-block bg-club text-ivory text-xs font-medium uppercase tracking-wide px-4 py-2 hover:bg-moss transition-colors">
-              Candidati →
-            </a>
-          )}
-        </div>
-      </div>
-
-      {showAppModal && (
-        <JobApplicationModal job={offer} onClose={() => setShowAppModal(false)} />
-      )}
-    </>
-  )
-}
-
-// ── MemberJobCard ─────────────────────────────────────────────────────────────
-
-function MemberJobCard({
-  offer,
-  userId,
-  isBoD,
-  onDelete,
-}: {
-  offer: JobOffer
-  userId: string | null
-  isBoD: boolean
-  onDelete: () => void
-}) {
+  const [open, setOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [collapsed, setCollapsed] = useState(true)
-  const canDelete = isBoD || offer.created_by === userId
+  const [showAppModal, setShowAppModal] = useState(false)
+  const isFormMode = offer.apply_mode === 'form'
 
   async function handleDelete() {
     setDeleting(true)
@@ -563,58 +462,54 @@ function MemberJobCard({
   }
 
   return (
-    <div className="border border-gray-200 bg-white p-6 flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-serif text-lg font-bold text-gray-900 leading-tight">{offer.title}</h3>
-          <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 bg-forest text-white uppercase tracking-wide">
-            {offer.company}
-          </span>
+    <div className="border-b border-night/20">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen(o => !o)}
+        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 py-3.5 text-left transition-colors hover:bg-night/[0.03]"
+      >
+        <div className="min-w-0">
+          <div className="font-serif text-[22px] font-medium leading-[1.1]">{offer.title}</div>
+          <div className="mt-[3px] text-[12px] leading-[1.5] text-earth-600">{offer.company}</div>
         </div>
-        {canDelete && (
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {confirmDelete ? (
-              <div className="flex items-center gap-1">
-                <button onClick={handleDelete} disabled={deleting}
-                  className="text-xs border border-red-300 text-red-600 px-2 py-1 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50">
-                  Conferma
-                </button>
-                <button onClick={() => setConfirmDelete(false)}
-                  className="text-xs border border-gray-200 text-gray-600 px-2 py-1 hover:border-gray-400 transition-colors">
-                  Annulla
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => setConfirmDelete(true)} className="p-3.5 text-gray-400 hover:text-red-500 transition-colors">
-                <TrashIcon />
-              </button>
-            )}
+        <span className="flex items-baseline gap-5">
+          {isFormMode && applicants !== null && (
+            <span className="rd-eyebrow text-[10px] text-earth-500">{applicants} {applicants === 1 ? 'candidate' : 'candidates'}</span>
+          )}
+          <span className="rd-italic text-[20px]">{open ? 'Close' : 'Details'}</span>
+        </span>
+      </button>
+
+      {open && (
+        <div className="pb-5">
+          {offer.description
+            ? <p className="max-w-[640px] whitespace-pre-wrap text-[13px] leading-[1.6] text-earth-700">{offer.description}</p>
+            : <p className="text-[13px] text-earth-600">No description.</p>}
+          <div className="rd-eyebrow mt-3 text-[10px] text-earth-500">
+            {[byline, fmtDate(offer.created_at)].filter(Boolean).join(' · ')}
           </div>
-        )}
-      </div>
-      {offer.description && (
-        <div>
-          <p className={`text-sm text-gray-600 leading-relaxed ${collapsed ? 'line-clamp-2' : 'whitespace-pre-wrap'}`}>
-            {offer.description}
-          </p>
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            className="mt-1 text-xs text-forest hover:underline underline-offset-2 py-3.5"
-          >
-            {collapsed ? 'Leggi di più ↓' : 'Chiudi ↑'}
-          </button>
+          <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+            {isFormMode ? (
+              <button type="button" onClick={() => setShowAppModal(true)} className={`${textAction} text-club`}>Apply</button>
+            ) : (
+              <a href={offer.link} target="_blank" rel="noopener noreferrer" className={`${textAction} text-club`}>View offer</a>
+            )}
+            {canEdit && onEdit && <button type="button" onClick={onEdit} className={textAction}>Edit</button>}
+            {canDelete && (confirmDelete ? (
+              <span className="flex flex-wrap items-baseline gap-x-5">
+                <span className="text-[13px]">Delete this offer?</span>
+                <button type="button" onClick={handleDelete} disabled={deleting} className={dangerAction}>Yes, delete</button>
+                <button type="button" onClick={() => setConfirmDelete(false)} className={textAction}>No</button>
+              </span>
+            ) : (
+              <button type="button" onClick={() => setConfirmDelete(true)} className={dangerAction}>Delete</button>
+            ))}
+          </div>
         </div>
       )}
-      <div className="flex items-center justify-between mt-auto pt-1 gap-4">
-        <div className="text-xs text-gray-400">
-          {offer.creator_name && <span>Segnalata da <span className="text-gray-600 font-medium">{offer.creator_name}</span> · </span>}
-          {fmtDate(offer.created_at)}
-        </div>
-        <a href={offer.link} target="_blank" rel="noopener noreferrer"
-          className="inline-block text-sm font-medium text-forest hover:underline underline-offset-2 flex-shrink-0">
-          Vedi offerta →
-        </a>
-      </div>
+
+      {showAppModal && <JobApplicationModal job={offer} onClose={() => setShowAppModal(false)} />}
     </div>
   )
 }
@@ -670,6 +565,21 @@ export default function JobsPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount: state is set after the request resolves
   useEffect(() => { loadData() }, [])
 
+  // How many people applied through the form, per offer: the Board only (RLS lets managers read job_applications).
+  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({})
+  useEffect(() => {
+    if (!isBoD) return
+    createClient()
+      .from('job_applications')
+      .select('job_offer_id')
+      .eq("archived", false)
+      .then(({ data }) => {
+        const counts: Record<string, number> = {}
+        for (const r of (data ?? []) as { job_offer_id: string }[]) counts[r.job_offer_id] = (counts[r.job_offer_id] ?? 0) + 1
+        setApplicantCounts(counts)
+      })
+  }, [isBoD])
+
   async function handleToggleSubscription() {
     if (togglingSubscription || !userId) return
     setToggling(true)
@@ -710,114 +620,52 @@ export default function JobsPage() {
       <PageTitle title={<>Career <em>Resources</em></>} sub="Open positions, mentors and every resource the club keeps for your applications." />
       <MentorStrip />
 
-      {/* Header */}
-      <div className="mb-6 mt-10 flex flex-wrap items-baseline justify-between gap-6 border-b border-night pb-3">
-        <div className="flex items-baseline gap-4">
-          <h2 className="rd-italic text-[32px]">Job offers</h2>
-          <span className="rd-eyebrow text-[10px] text-earth-500">{officialOffers.length + memberOffers.length} open</span>
-        </div>
-        {/* Subscription toggle — no longer flex-shrink-0: min-w-0 lets the text
-            wrap onto a second line under space pressure instead of the whole
-            row (text + switch) refusing to shrink and overflowing the page. */}
-        <div className="flex items-center gap-3 min-w-0 pt-1">
-          <span className="min-w-0 text-[13px] text-earth-600">Notify me of new offers</span>
-          <button
-            onClick={handleToggleSubscription}
-            disabled={togglingSubscription}
-            title={subscribed ? 'Notifiche attive' : 'Attiva notifiche'}
-            className="relative flex-shrink-0 w-6 h-6 transition-colors disabled:opacity-50"
-          >
-            {subscribed ? (
-              <span className="flex items-center justify-center w-6 h-6 bg-forest text-white">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </span>
-            ) : (
-              <span className="flex items-center justify-center w-6 h-6 border-2 border-gray-400 hover:border-forest transition-colors" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* ── Candidature ricevute (solo per chi gestisce almeno un'offerta) ── */}
-      <ReceivedApplications />
-
-      {/* ── Offerte ufficiali ── */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="rd-eyebrow text-[10px] text-earth-500">From the club</h3>
-          </div>
-          {isBoD && (
-            <button
-              onClick={() => setModal({ mode: 'add-official' })}
-              className="flex items-center gap-1.5 bg-club hover:bg-moss text-ivory text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors flex-shrink-0"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add offer
-            </button>
-          )}
+      <Section title="Job offers" meta={`${officialOffers.length + memberOffers.length} open`}>
+        <div className="mb-3 flex flex-wrap items-center gap-2.5">
+          {isBoD && <Pill solid onClick={() => setModal({ mode: 'add-official' })}>Add offer</Pill>}
+          <Pill onClick={() => setModal({ mode: 'add-member' })}>Suggest an offer</Pill>
+          <span className="grow" />
+          <Pill active={subscribed} disabled={togglingSubscription} onClick={handleToggleSubscription}>
+            {subscribed ? 'New offers: notifications on' : 'Notify me of new offers'}
+          </Pill>
         </div>
 
-        {officialOffers.length === 0 ? (
-          <p className="text-sm text-gray-400 py-6 border border-dashed border-gray-200 text-center">
-            No offers from the club right now.
-          </p>
-        ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
-            {officialOffers.map(offer => (
-              <OfficialJobCard
-                key={offer.id}
-                offer={offer}
-                canManage={isBoD}
-                onEdit={() => setModal({ mode: 'edit', offer })}
-                onDelete={() => setOfficial(prev => prev.filter(o => o.id !== offer.id))}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+        <ReceivedApplications />
 
-
-
-      {/* ── Offerte segnalate ── */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="rd-eyebrow text-[10px] text-earth-500">Suggested by members</h3>
-          </div>
-          <button
-            onClick={() => setModal({ mode: 'add-member' })}
-            className="flex items-center gap-1.5 border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase tracking-wide px-4 py-2 transition-colors flex-shrink-0"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Suggest an offer
-          </button>
+        <div className="rd-eyebrow mt-8 text-[10px] text-earth-500">From the club</div>
+        <div className="mt-2 border-t border-night/20">
+          {officialOffers.length === 0 ? (
+            <p className="py-5 text-[13px] text-earth-600">No offers from the club right now.</p>
+          ) : officialOffers.map(offer => (
+            <JobRow
+              key={offer.id}
+              offer={offer}
+              applicants={isBoD ? (applicantCounts[offer.id] ?? 0) : null}
+              canEdit={isBoD}
+              canDelete={isBoD}
+              onEdit={() => setModal({ mode: 'edit', offer })}
+              onDelete={() => setOfficial(prev => prev.filter(o => o.id !== offer.id))}
+            />
+          ))}
         </div>
 
-        {memberOffers.length === 0 ? (
-          <p className="text-sm text-gray-400 py-6 border border-dashed border-gray-200 text-center">
-            No offers suggested by members yet.
-          </p>
-        ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
-            {memberOffers.map(offer => (
-              <MemberJobCard
-                key={offer.id}
-                offer={offer}
-                userId={userId}
-                isBoD={isBoD}
-                onDelete={() => setMember(prev => prev.filter(o => o.id !== offer.id))}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+        <div className="rd-eyebrow mt-10 text-[10px] text-earth-500">Suggested by members</div>
+        <div className="mt-2 border-t border-night/20">
+          {memberOffers.length === 0 ? (
+            <p className="py-5 text-[13px] text-earth-600">No offers suggested by members yet.</p>
+          ) : memberOffers.map(offer => (
+            <JobRow
+              key={offer.id}
+              offer={offer}
+              applicants={isBoD ? (applicantCounts[offer.id] ?? 0) : null}
+              canEdit={false}
+              canDelete={isBoD || offer.created_by === userId}
+              byline={offer.creator_name ? `Suggested by ${offer.creator_name}` : undefined}
+              onDelete={() => setMember(prev => prev.filter(o => o.id !== offer.id))}
+            />
+          ))}
+        </div>
+      </Section>
 
       <JobResources displayName={profile?.full_name ?? 'Member'} />
 
