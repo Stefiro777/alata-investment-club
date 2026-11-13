@@ -60,3 +60,51 @@ export function isAnalyst(role: string | null | undefined, teams?: readonly stri
 export function isRoleCheckViolation(error: { code?: string; message?: string } | null | undefined): boolean {
   return !!error && (error.code === '23514' || /club_members_role_check/.test(error.message ?? ''))
 }
+
+// ── Who can change a role, and what to warn about ────────────────────────────
+
+/** The two roles with global access to the Board. 'director' is Management. */
+export const PRIVILEGED_ROLE_VALUES: readonly string[] = ['bod', 'director']
+
+/** Hardcoded superadmin: always keeps BoD or Management. */
+export const SUPERADMIN_EMAIL = 'finullistefano@gmail.com'
+
+export const isPrivilegedRole = (role: string | null | undefined) => !!role && PRIVILEGED_ROLE_VALUES.includes(role)
+export const isOperativeRole = (role: string | null | undefined) => !!role && (TEAM_ROLE_PRIORITY as readonly string[]).includes(role)
+
+export type RoleChangeCheck = { ok: true } | { ok: false; status: number; error: string }
+
+/**
+ * Rules for changing club_members.role, applied by the API (the UI only mirrors them):
+ * only BoD and Management change roles; the superadmin and the requester
+ * themselves cannot lose BoD / Management.
+ */
+export function checkRoleChange(p: {
+  requesterId: string
+  requesterRole: string
+  targetId: string
+  targetEmail: string | null
+  newRole: unknown
+}): RoleChangeCheck {
+  if (!isPrivilegedRole(p.requesterRole)) return { ok: false, status: 403, error: 'Only the BoD and Management can change roles.' }
+  if (typeof p.newRole !== 'string' || !ROLES.some(r => r.value === p.newRole)) return { ok: false, status: 400, error: 'Invalid role.' }
+  if (!isPrivilegedRole(p.newRole)) {
+    if (p.targetEmail && p.targetEmail.toLowerCase() === SUPERADMIN_EMAIL) {
+      return { ok: false, status: 403, error: 'The superadmin always keeps BoD or Management.' }
+    }
+    if (p.requesterId === p.targetId) {
+      return { ok: false, status: 403, error: 'You cannot remove your own BoD or Management role.' }
+    }
+  }
+  return { ok: true }
+}
+
+/** Notices for a role that does not match the member's data. They never block the change. */
+export function roleWarnings(role: string, teams: readonly string[] | null | undefined, labSubdivision: string | null | undefined): string[] {
+  const out: string[] = []
+  if (isOperativeRole(role) && !teams?.includes(role)) {
+    out.push(`The ${roleLabel(role)} team is not in this member's teams: the role alone gives no team access. Add it in the member's teams.`)
+  }
+  if (role === 'lab' && !labSubdivision) out.push('This member has no Lab subdivision yet.')
+  return out
+}

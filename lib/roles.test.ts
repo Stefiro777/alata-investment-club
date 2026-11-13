@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { roleForTeams, roleForInviteTeam, isAnalyst, roleLabel, isRoleCheckViolation } from './roles.ts'
+import { roleForTeams, roleForInviteTeam, isAnalyst, roleLabel, isRoleCheckViolation, checkRoleChange, roleWarnings, isPrivilegedRole, SUPERADMIN_EMAIL } from './roles.ts'
 
 test('the role is the main team, in priority order', () => {
   assert.equal(roleForTeams(['events', 'lab']), 'lab')
@@ -36,4 +36,36 @@ test('a role-check violation is told apart from other errors', () => {
   assert.equal(isRoleCheckViolation({ message: 'violates check constraint "club_members_role_check"' }), true)
   assert.equal(isRoleCheckViolation({ code: '23505' }), false)
   assert.equal(isRoleCheckViolation(null), false)
+})
+
+const base = { requesterId: 'a', requesterRole: 'bod', targetId: 'b', targetEmail: 'x@y.it' }
+
+test('only BoD and Management change roles', () => {
+  assert.deepEqual(checkRoleChange({ ...base, requesterRole: 'member', newRole: 'lab' }), { ok: false, status: 403, error: 'Only the BoD and Management can change roles.' })
+  assert.equal(checkRoleChange({ ...base, requesterRole: 'director', newRole: 'lab' }).ok, true)
+  assert.equal(checkRoleChange({ ...base, newRole: 'media' }).ok, true)
+})
+
+test('an unknown role is refused', () => {
+  const r = checkRoleChange({ ...base, newRole: 'admin' })
+  assert.equal(r.ok, false)
+  assert.equal(!r.ok && r.status, 400)
+})
+
+test('the superadmin and the requester keep their privileged role', () => {
+  assert.equal(checkRoleChange({ ...base, targetEmail: SUPERADMIN_EMAIL.toUpperCase(), newRole: 'member' }).ok, false)
+  assert.equal(checkRoleChange({ ...base, targetEmail: SUPERADMIN_EMAIL, newRole: 'director' }).ok, true)
+  assert.equal(checkRoleChange({ ...base, targetId: 'a', newRole: 'lab' }).ok, false)
+  assert.equal(checkRoleChange({ ...base, targetId: 'a', newRole: 'bod' }).ok, true)
+})
+
+test('warnings for a role the data does not support', () => {
+  assert.deepEqual(roleWarnings('member', [], null), [])
+  assert.equal(roleWarnings('media', ['events'], null).length, 1)
+  assert.equal(roleWarnings('media', ['media'], null).length, 0)
+  assert.equal(roleWarnings('lab', ['lab'], null).length, 1)
+  assert.equal(roleWarnings('lab', ['lab'], 'ma').length, 0)
+  assert.equal(roleWarnings('lab', null, null).length, 2)
+  assert.equal(isPrivilegedRole('director'), true)
+  assert.equal(isPrivilegedRole('lab'), false)
 })

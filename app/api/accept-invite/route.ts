@@ -1,5 +1,6 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { isRoleCheckViolation, roleForInviteTeam } from '@/lib/roles'
 
 function adminClient() {
   return createSupabaseAdmin(
@@ -86,15 +87,23 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { error: memberError } = await supabaseAdmin.from('club_members').insert({
+    const newMember = {
       user_id: created.user.id,
       email: invite.email,
       full_name: fullName,
       phone,
-      role: 'member',
       teams: invite.team === 'member' ? [] : [invite.team],
       lab_subdivision: invite.lab_subdivision ?? null,
-    })
+    }
+
+    // The role is the team of the invitation (lab, media, events, alumni) or 'member'.
+    // Until the roles SQL widens club_members_role_check, the DB refuses the new values:
+    // then the person joins as 'member', with the same teams, and sees no error.
+    const role = roleForInviteTeam(invite.team)
+    let { error: memberError } = await supabaseAdmin.from('club_members').insert({ ...newMember, role })
+    if (memberError && role !== 'member' && isRoleCheckViolation(memberError)) {
+      ;({ error: memberError } = await supabaseAdmin.from('club_members').insert({ ...newMember, role: 'member' }))
+    }
 
     if (memberError) {
       return NextResponse.json({ error: memberError.message }, { status: 500 })
