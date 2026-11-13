@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Resource } from '@/lib/types'
+import { SectionHeading } from '@/app/components/member/ui'
 
 type View = 'welcome' | 'masters' | 'career' | 'education' | 'documenti'
 
@@ -32,7 +33,7 @@ function ResourceRow({ resource, category }: { resource: Resource; category?: st
         className="group flex items-start justify-between gap-6 py-5"
       >
         <span className="min-w-0">
-          <span className="rd-display block text-[24px] leading-[1.15] group-hover:underline underline-offset-[0.18em]">{resource.title}</span>
+          <span className="rd-display block text-[24px] font-semibold! leading-[1.15] group-hover:underline underline-offset-[0.18em]">{resource.title}</span>
           {resource.description && <span className="mt-1.5 block text-[13px] leading-[1.55] text-earth-700">{resource.description}</span>}
           <span className="rd-eyebrow mt-2 block text-[10px] text-earth-500">{kind}</span>
         </span>
@@ -59,7 +60,7 @@ function WelcomeView({ resources, onNavigate }: { resources: Resource[]; onNavig
 
   return (
     <div className="py-6">
-      <ul className="border-t border-night">
+      <ul>
         {shown.map(cat => {
           const n = resources.filter(r => r.category === cat.id).length
           const subs = subcats(cat.id)
@@ -71,7 +72,7 @@ function WelcomeView({ resources, onNavigate }: { resources: Resource[]; onNavig
                 className="group flex w-full items-baseline justify-between gap-6 py-5 text-left"
               >
                 <span className="min-w-0">
-                  <span className="rd-display block text-[clamp(28px,3vw,36px)] leading-[1.1] group-hover:underline underline-offset-[0.18em]">{cat.label}</span>
+                  <span className="rd-display block text-[clamp(28px,3vw,36px)] font-semibold! leading-[1.1] group-hover:underline underline-offset-[0.18em]">{cat.label}</span>
                   {subs.length > 0 && <span className="mt-1.5 block text-[13px] leading-[1.5] text-earth-700">{subs.join(' · ')}</span>}
                 </span>
                 <span className="flex shrink-0 items-baseline gap-5">
@@ -85,9 +86,9 @@ function WelcomeView({ resources, onNavigate }: { resources: Resource[]; onNavig
       </ul>
 
       {recent.length > 0 && (
-        <div className="mt-12">
-          <h3 className="rd-italic text-[28px]">Recently added</h3>
-          <ul className="mt-3 grid gap-x-12 border-t border-night md:grid-cols-2">
+        <div>
+          <SectionHeading as="h3" title="Recently added" />
+          <ul className="grid gap-x-12 md:grid-cols-2">
             {recent.map(r => <ResourceRow key={r.id} resource={r} category={CATEGORY_LABELS[r.category]} />)}
           </ul>
         </div>
@@ -123,14 +124,14 @@ function SectionView({ view, resources, targetSub, onBack }: {
   const minOrder = (name: string) => Math.min(...sectionResources.filter(r => r.subcategory === name).map(r => r.subcategory_order ?? 0))
   const subcategoryNames = Array.from(new Set(sectionResources.map(r => r.subcategory).filter(Boolean) as string[])).sort((a, b) => minOrder(a) - minOrder(b))
   const ungrouped = sectionResources.filter(r => !r.subcategory)
-  const grid = 'grid gap-x-12 border-t border-night md:grid-cols-2'
+  const grid = 'grid gap-x-12 md:grid-cols-2'
 
   return (
     <div className="py-6">
       <button type="button" onClick={onBack} className="rd-italic text-[22px] hover:underline underline-offset-[0.18em]">&larr; All resources</button>
 
       <div className="mt-6 flex flex-wrap items-baseline justify-between gap-3">
-        <h3 className="rd-display text-[clamp(36px,4vw,48px)] leading-[1.1]">{cat.label}</h3>
+        <h3 className="rd-display text-[clamp(36px,4vw,48px)] font-semibold! leading-[1.1]">{cat.label}</h3>
         <span className="rd-eyebrow text-[10px] text-earth-500">{count(sectionResources.length)}</span>
       </div>
       <p className="mt-2 text-[14px] text-earth-700">{cat.description}</p>
@@ -153,16 +154,13 @@ function SectionView({ view, resources, targetSub, onBack }: {
       {sectionResources.length === 0 ? (
         <p className="mt-8 text-[14px] text-earth-700">No resources yet.</p>
       ) : (
-        <div className="mt-8 space-y-12">
-          {ungrouped.length > 0 && <ul className={grid}>{ungrouped.map(r => <ResourceRow key={r.id} resource={r} />)}</ul>}
+        <div className="mt-2">
+          {ungrouped.length > 0 && <ul className={`${grid} mt-6 border-t border-night`}>{ungrouped.map(r => <ResourceRow key={r.id} resource={r} />)}</ul>}
           {subcategoryNames.map(name => {
             const rows = sectionResources.filter(r => r.subcategory === name)
             return (
               <div key={name} id={subId(name)} className="scroll-mt-6">
-                <div className="mb-3 flex items-baseline justify-between">
-                  <h4 className="rd-italic text-[28px]">{name}</h4>
-                  <span className="rd-eyebrow text-[10px] text-earth-500">{count(rows.length)}</span>
-                </div>
+                <SectionHeading as="h3" title={name} meta={count(rows.length)} />
                 <ul className={grid}>{rows.map(r => <ResourceRow key={r.id} resource={r} />)}</ul>
               </div>
             )
