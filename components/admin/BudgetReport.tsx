@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-
-type TxType = 'revenue' | 'cost' | 'rimborso'
+import { Pill, SectionHeading, SegmentedPills } from '@/app/components/member/ui'
+import { Numbers, errorCls } from './crm/ui'
+import { budgetReport, pdfRequest, periodLabel, type CatRow, type PeriodMode, type TxType } from '@/lib/finance-view'
 
 type Transaction = {
   id: string
@@ -19,69 +20,13 @@ type BudgetCategory = {
   type: string
 }
 
-type PeriodMode = 'mensile' | 'trimestrale' | 'annuale'
-
-const MONTH_NAMES_FULL = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre']
-const MONTH_NAMES_SHORT = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
-
 function fmtAmt(n: number) {
   return `€${n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function periodLabel(mode: PeriodMode, offset: number): string {
-  const now = new Date()
-  if (mode === 'mensile') {
-    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1)
-    return `${MONTH_NAMES_FULL[d.getMonth()]} ${d.getFullYear()}`
-  }
-  if (mode === 'trimestrale') {
-    const totalQ = Math.floor(now.getMonth() / 3) + now.getFullYear() * 4 + offset
-    const year = Math.floor(totalQ / 4)
-    const q = totalQ % 4 + 1
-    return `Q${q} ${year}`
-  }
-  return String(now.getFullYear() + offset)
-}
-
-function inPeriod(dateStr: string, mode: PeriodMode, offset: number): boolean {
-  const d = new Date(dateStr)
-  const now = new Date()
-  if (mode === 'mensile') {
-    const ref = new Date(now.getFullYear(), now.getMonth() + offset, 1)
-    return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth()
-  }
-  if (mode === 'trimestrale') {
-    const totalQ = Math.floor(now.getMonth() / 3) + now.getFullYear() * 4 + offset
-    const year = Math.floor(totalQ / 4)
-    const q = totalQ % 4
-    const txQ = Math.floor(d.getMonth() / 3)
-    return d.getFullYear() === year && txQ === q
-  }
-  return d.getFullYear() === now.getFullYear() + offset
-}
-
-function beforeOrInPeriod(dateStr: string, mode: PeriodMode, offset: number): boolean {
-  const d = new Date(dateStr)
-  const now = new Date()
-  if (mode === 'mensile') {
-    const ref = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0)
-    return d <= ref
-  }
-  if (mode === 'trimestrale') {
-    const totalQ = Math.floor(now.getMonth() / 3) + now.getFullYear() * 4 + offset
-    const year = Math.floor(totalQ / 4)
-    const q = (totalQ % 4) + 1
-    const endMonth = q * 3
-    const endOfQ = new Date(year, endMonth, 0)
-    return d <= endOfQ
-  }
-  const year = now.getFullYear() + offset
-  return d <= new Date(year, 11, 31)
-}
+const textAction = 'rd-italic text-[20px] hover:underline underline-offset-[0.18em] disabled:opacity-30'
 
 const MONTHS_IT_FULL = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre']
-
-interface CatRow { name: string; entrate: number; uscite: number; saldo: number }
 
 function BudgetPreview({ period, catRows, entrate, uscite, saldo }: {
   period: string; catRows: CatRow[]; entrate: number; uscite: number; saldo: number
@@ -154,22 +99,6 @@ function BudgetPreview({ period, catRows, entrate, uscite, saldo }: {
   )
 }
 
-function SummaryCard({ label, value, dark }: { label: string; value: string; dark?: boolean }) {
-  return (
-    <div
-      className="px-5 py-4 border"
-      style={dark ? { backgroundColor: 'var(--forest)', borderColor: 'var(--forest)' } : { backgroundColor: 'white', borderColor: '#e5e5e5' }}
-    >
-      <p className="text-[10px] uppercase tracking-widest font-medium mb-1" style={{ color: dark ? 'rgba(255,255,255,0.65)' : '#9ca3af' }}>
-        {label}
-      </p>
-      <p className="text-lg font-bold" style={{ color: dark ? 'white' : '#1a1a1a' }}>
-        {value}
-      </p>
-    </div>
-  )
-}
-
 export default function BudgetReport() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<BudgetCategory[]>([])
@@ -177,6 +106,7 @@ export default function BudgetReport() {
   const [mode, setMode] = useState<PeriodMode>('mensile')
   const [offset, setOffset] = useState(0)
   const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -190,109 +120,97 @@ export default function BudgetReport() {
     })
   }, [])
 
-  const periodTxs = transactions.filter(t => inPeriod(t.date, mode, offset))
-  const allUpTo = transactions.filter(t => beforeOrInPeriod(t.date, mode, offset))
-
-  const entrate = periodTxs.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
-  const uscite = periodTxs.filter(t => t.type === 'cost' || t.type === 'rimborso').reduce((s, t) => s + t.amount, 0)
-  const saldoPeriodo = entrate - uscite
-
-  const totalRevAll = allUpTo.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
-  const totalCostAll = allUpTo.filter(t => t.type === 'cost' || t.type === 'rimborso').reduce((s, t) => s + t.amount, 0)
-  const saldoCumulativo = totalRevAll - totalCostAll
-
-  // Category breakdown
-  const catRows = categories.map(cat => {
-    const catTxs = periodTxs.filter(t => t.category_id === cat.id)
-    const catEntrate = catTxs.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
-    const catUscite = catTxs.filter(t => t.type === 'cost' || t.type === 'rimborso').reduce((s, t) => s + t.amount, 0)
-    return { name: cat.name, entrate: catEntrate, uscite: catUscite, saldo: catEntrate - catUscite }
-  }).filter(r => r.entrate > 0 || r.uscite > 0)
-
-  // Uncategorized
-  const uncatTxs = periodTxs.filter(t => !t.category_id)
-  const uncatEntrate = uncatTxs.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0)
-  const uncatUscite = uncatTxs.filter(t => t.type === 'cost' || t.type === 'rimborso').reduce((s, t) => s + t.amount, 0)
-  if (uncatEntrate > 0 || uncatUscite > 0) {
-    catRows.push({ name: '(Non categorizzato)', entrate: uncatEntrate, uscite: uncatUscite, saldo: uncatEntrate - uncatUscite })
-  }
+  // The numbers of the period (lib/finance-view.ts): the same ones the PDF carries.
+  const report = budgetReport(transactions, categories, mode, offset)
+  const { entrate, uscite, saldoPeriodo, saldoCumulativo, catRows } = report
 
   async function handleExportPDF() {
     setExporting(true)
+    setExportError(null)
     try {
+      const { body, filename } = pdfRequest(mode, offset, report)
       const res = await fetch('/api/finance/pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          period: periodLabel(mode, offset),
-          summary: { entrate, uscite, saldo: saldoPeriodo, saldoCumulativo },
-          categories: catRows,
-        }),
+        body: JSON.stringify(body),
       })
-      if (!res.ok) { setExporting(false); return }
+      if (!res.ok) { setExportError('The PDF could not be generated.'); setExporting(false); return }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `bilancio-${periodLabel(mode, offset).replace(/\s+/g, '-')}.pdf`
+      a.download = filename
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      // noop
+      setExportError('The PDF could not be generated.')
     }
     setExporting(false)
   }
 
-  if (loading) return <p className="text-sm text-ink-500 py-8">Caricamento...</p>
+  if (loading) return <p className="py-8 text-[13px] text-earth-600">Loading…</p>
 
   const label = periodLabel(mode, offset)
 
   return (
-    <div className="space-y-4">
-      {/* Controls + download button */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center flex-wrap gap-3">
-          <div className="flex border border-line overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-            {(['mensile', 'trimestrale', 'annuale'] as const).map(m => (
-              <button
-                key={m}
-                onClick={() => { setMode(m); setOffset(0) }}
-                className="px-4 py-2 text-xs font-medium uppercase tracking-wide transition-colors whitespace-nowrap flex-shrink-0"
-                style={mode === m ? { backgroundColor: 'var(--forest)', color: 'white' } : { backgroundColor: 'white', color: '#6b7280' }}
-              >
-                {m === 'mensile' ? 'Mensile' : m === 'trimestrale' ? 'Trimestrale' : 'Annuale'}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1">
-            <button onClick={() => setOffset(o => o - 1)} className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-forest transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            </button>
-            <span className="px-3 text-sm font-medium text-ink-900 min-w-[120px] text-center">{label}</span>
-            <button onClick={() => setOffset(o => Math.min(o + 1, 0))} disabled={offset >= 0} className="p-1.5 border border-line text-ink-400 hover:text-ink-900 hover:border-forest transition-colors disabled:opacity-30">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </button>
+    <div>
+      <Numbers items={[
+        { value: fmtAmt(entrate), label: `Revenue, ${label}` },
+        { value: fmtAmt(uscite), label: `Costs, ${label}` },
+        { value: (saldoPeriodo >= 0 ? '+' : '-') + fmtAmt(Math.abs(saldoPeriodo)), label: 'Balance of the period' },
+        { value: (saldoCumulativo >= 0 ? '+' : '-') + fmtAmt(Math.abs(saldoCumulativo)), label: 'Balance up to the period' },
+      ]} />
+
+      <div className="mt-9 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <SegmentedPills
+            size="sm"
+            label="Period"
+            options={[{ value: 'mensile', label: 'Monthly' }, { value: 'trimestrale', label: 'Quarterly' }, { value: 'annuale', label: 'Yearly' }]}
+            value={mode}
+            onChange={m => { setMode(m); setOffset(0) }}
+          />
+          <div className="flex items-baseline gap-4">
+            <button type="button" onClick={() => setOffset(o => o - 1)} className={textAction}>Prev</button>
+            <span className="min-w-[130px] text-center font-serif text-[22px] font-medium">{label}</span>
+            <button type="button" onClick={() => setOffset(o => Math.min(o + 1, 0))} disabled={offset >= 0} className={textAction}>Next</button>
           </div>
         </div>
-
-        <button
-          onClick={handleExportPDF}
-          disabled={exporting}
-          className="border border-forest text-forest hover:bg-forest hover:text-white text-xs font-medium uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-40 flex items-center gap-2"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          {exporting ? 'Generazione…' : 'Scarica PDF'}
-        </button>
+        <Pill solid onClick={handleExportPDF} disabled={exporting}>{exporting ? 'Generating…' : 'Download PDF'}</Pill>
       </div>
+      {exportError && <p role="alert" className={`${errorCls} mt-4`}>{exportError}</p>}
 
-      {/* A4 preview */}
-      <div className="overflow-x-auto">
-        <div style={{ width: 794, margin: '0 auto', paddingBottom: 64, boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
-          <BudgetPreview period={label} catRows={catRows} entrate={entrate} uscite={uscite} saldo={saldoPeriodo} />
+      {/* By category */}
+      <section>
+        <SectionHeading title="By category" meta={label} />
+        <div className="border-t border-night/20">
+          {catRows.length === 0 ? (
+            <p className="py-8 text-[13px] text-earth-600">No transactions in this period.</p>
+          ) : catRows.map(row => (
+            <div key={row.name} className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 border-b border-night/20 py-3.5">
+              <div className="min-w-0">
+                <div className="font-serif text-[20px] font-medium leading-[1.2]">{row.name}</div>
+                <div className="mt-0.5 text-[12px] text-earth-600">
+                  {[row.entrate > 0 ? `in ${fmtAmt(row.entrate)}` : null, row.uscite > 0 ? `out ${fmtAmt(row.uscite)}` : null].filter(Boolean).join(' · ')}
+                </div>
+              </div>
+              <span className={`rd-num font-serif text-[22px] font-medium ${row.saldo < 0 ? 'text-[#8a2a1d]' : ''}`}>
+                {(row.saldo >= 0 ? '+' : '-') + fmtAmt(Math.abs(row.saldo))}
+              </span>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
+
+      {/* A4 preview of the PDF */}
+      <section>
+        <SectionHeading title="PDF preview" meta="A4" />
+        <div className="overflow-x-auto pt-2">
+          <div style={{ width: 794, margin: '0 auto', paddingBottom: 64, boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
+            <BudgetPreview period={label} catRows={catRows} entrate={entrate} uscite={uscite} saldo={saldoPeriodo} />
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

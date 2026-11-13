@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { Pill, SegmentedPills } from '@/app/components/member/ui'
+import { Pill, SectionHeading, SegmentedPills } from '@/app/components/member/ui'
 import { Dialog, Numbers, SearchField, btnDanger, btnGhost, errorCls, fieldCls, labelCls } from './crm/ui'
 import {
   type TxForm, type TxType,
@@ -377,12 +377,9 @@ export default function TransactionManager() {
       )}
 
       {/* List */}
-      <section className="mt-8">
-        <div className="flex items-baseline justify-between gap-4 pb-3">
-          <h2 className="rd-italic text-[28px] md:text-[32px]">{monthLabel}</h2>
-          <span className="rd-eyebrow text-[10px] text-earth-500">{shown.length === inMonth.length ? `${inMonth.length} entries` : `${shown.length} of ${inMonth.length}`}</span>
-        </div>
-        <div className="border-t border-night">
+      <section>
+        <SectionHeading title={monthLabel} meta={shown.length === inMonth.length ? `${inMonth.length} entries` : `${shown.length} of ${inMonth.length}`} />
+        <div className="border-t border-night/20">
           {shown.length === 0 ? (
             <p className="py-8 text-[13px] text-earth-600">No transactions for this view.</p>
           ) : shown.map(tx => {
