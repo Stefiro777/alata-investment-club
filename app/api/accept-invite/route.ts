@@ -1,12 +1,40 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { isRoleCheckViolation, roleForInviteTeam } from '@/lib/roles'
+import { checkInviteForAccept, isMissingColumn } from '@/lib/invite-status'
 
 function adminClient() {
   return createSupabaseAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+}
+
+type InviteRecord = {
+  id: string
+  email: string
+  team: string
+  lab_subdivision: string | null
+  used_at: string | null
+  revoked_at?: string | null
+}
+
+/** The invite of a token. Before the revoked_at SQL the column does not exist: read without it. */
+async function findInvite(db: ReturnType<typeof adminClient>, token: string) {
+  const full = await db
+    .from('invites')
+    .select('id, email, team, lab_subdivision, used_at, revoked_at')
+    .eq('token', token)
+    .maybeSingle()
+  if (full.error && isMissingColumn(full.error)) {
+    const legacy = await db
+      .from('invites')
+      .select('id, email, team, lab_subdivision, used_at')
+      .eq('token', token)
+      .maybeSingle()
+    return { invite: legacy.data as InviteRecord | null, error: legacy.error }
+  }
+  return { invite: full.data as InviteRecord | null, error: full.error }
 }
 
 export async function GET(req: NextRequest) {
@@ -17,21 +45,18 @@ export async function GET(req: NextRequest) {
 
   const supabaseAdmin = adminClient()
 
-  const { data: invite, error } = await supabaseAdmin
-    .from('invites')
-    .select('email, team, lab_subdivision, used_at')
-    .eq('token', token)
-    .maybeSingle()
-
-  if (error || !invite) {
+  const { invite, error } = await findInvite(supabaseAdmin, token)
+  if (error && !invite) {
     return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
   }
 
-  if (invite.used_at) {
-    return NextResponse.json({ error: 'Invite already used' }, { status: 410 })
+  // Not found (404), used (410, code "used") or cancelled (410, code "cancelled").
+  const check = checkInviteForAccept(invite)
+  if (!check.ok) {
+    return NextResponse.json({ error: check.error, code: check.code }, { status: check.status })
   }
 
-  const { email, team, lab_subdivision } = invite
+  const { email, team, lab_subdivision } = invite!
   return NextResponse.json({ email, team, lab_subdivision })
 }
 
@@ -55,16 +80,13 @@ export async function POST(req: NextRequest) {
 
     const supabaseAdmin = adminClient()
 
-    // Revalidate the invite — must still exist and be unused.
-    const { data: invite, error: inviteError } = await supabaseAdmin
-      .from('invites')
-      .select('id, email, team, lab_subdivision, used_at')
-      .eq('token', token)
-      .maybeSingle()
-
-    if (inviteError || !invite || invite.used_at) {
-      return NextResponse.json({ error: 'Invite not found or already used' }, { status: 410 })
+    // Revalidate the invite before creating anything: it must still exist, be unused and not cancelled.
+    const { invite, error: inviteError } = await findInvite(supabaseAdmin, token)
+    const check = checkInviteForAccept(inviteError && !invite ? null : invite)
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error, code: check.code }, { status: check.status })
     }
+    if (!invite) return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
 
     const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: invite.email,

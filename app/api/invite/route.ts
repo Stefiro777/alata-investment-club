@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePrivilegedAccess } from '@/lib/auth'
 import { validateInvite } from '@/lib/invite'
+import { isMissingColumn } from '@/lib/invite-status'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Alata Investment Club <noreply@alatainvestmentclub.com>'
@@ -104,15 +105,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'This person is already a member' }, { status: 400 })
     }
 
-    // Reuse a pending invite for this email if one exists, instead of
-    // creating a second row.
-    const { data: pendingInvites, error: pendingError } = await supabaseAdmin
+    // Reuse a pending invite for this email if one exists, instead of creating a second row.
+    // A cancelled invite is not pending: it is never reused, a new one (and a new token) is created.
+    // Before the revoked_at SQL the column does not exist: look without it.
+    const pendingQuery = () => supabaseAdmin
       .from('invites')
       .select('id, token')
       .eq('email', email)
       .is('used_at', null)
+    let { data: pendingInvites, error: pendingError } = await pendingQuery()
+      .is('revoked_at', null)
       .order('created_at', { ascending: false })
       .limit(1)
+    if (pendingError && isMissingColumn(pendingError)) {
+      ;({ data: pendingInvites, error: pendingError } = await pendingQuery()
+        .order('created_at', { ascending: false })
+        .limit(1))
+    }
 
     if (pendingError) {
       return NextResponse.json({ error: pendingError.message }, { status: 500 })
