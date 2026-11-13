@@ -7,7 +7,7 @@ import { useProfile } from '../DashboardProfileContext'
 import { TEAM_BADGE } from '../teamColors'
 import { Pill, Tabs, pillClass } from '@/app/components/member/ui'
 import { ROLES, roleWarnings } from '@/lib/roles'
-import { initialsOf } from '@/lib/initials'
+import Portrait from '@/app/components/member/Portrait'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -373,20 +373,6 @@ function MemberFormModal({
 }
 
 // ── MemberRow ─────────────────────────────────────────────────────────────────
-
-function Portrait({ src, name }: { src?: string | null; name: string }) {
-  const initials = initialsOf(name)
-  return (
-    <div className="h-[57px] w-[44px] shrink-0 overflow-hidden bg-[#e8e1d2]">
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
-      ) : (
-        <span className="rd-eyebrow flex h-full items-center justify-center text-[11px] text-earth-500">{initials}</span>
-      )}
-    </div>
-  )
-}
 
 /** Board APed: photo, name in Cormorant, a dot in the team colour with title and team, LinkedIn in italics. */
 function MemberRow({

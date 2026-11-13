@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { TeamMember } from './page'
+import Portrait from '@/app/components/member/Portrait'
+import { suggestLinks } from '@/lib/team-member-match'
 
 // ── Photo upload helper ────────────────────────────────────────────────────────
 
@@ -74,10 +76,208 @@ function PhotoInput({
   )
 }
 
+// ── Linked member (the club member behind a row of /team) ──────────────────────
+
+/** A club member that a row of the public team page can be linked to. */
+export type LinkableMember = {
+  id: string
+  full_name: string
+  role: string | null
+  title: string | null
+  email: string | null
+  photo_url: string | null
+  membership_removed_at: string | null
+}
+
+const SELECT_FIELDS = 'id, name, role, photo_url, linkedin_url, type, order_index, created_at'
+const selectFields = (linkable: boolean) => (linkable ? `${SELECT_FIELDS}, member_id` : SELECT_FIELDS)
+
+/**
+ * Which club member this person is, and a button that copies their profile photo into the
+ * photo field above. Nothing is automatic: /team shows only what is saved in the photo field.
+ */
+function LinkedMemberField({
+  value,
+  onChange,
+  linkable,
+  onUsePhoto,
+}: {
+  value: string
+  onChange: (id: string) => void
+  linkable: LinkableMember[]
+  onUsePhoto: (url: string) => void
+}) {
+  const linked = linkable.find(m => m.id === value) ?? null
+  const options = linkable.filter(m => !m.membership_removed_at || m.id === value)
+
+  return (
+    <div>
+      <label className="block text-xs text-ink-500 mb-1">Linked member</label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
+      >
+        <option value="">None</option>
+        {options.map(m => (
+          <option key={m.id} value={m.id}>{[m.full_name, m.title].filter(Boolean).join(' · ')}</option>
+        ))}
+      </select>
+      {linked && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1">
+          <Portrait src={linked.photo_url} name={linked.full_name} size="sm" />
+          <button
+            type="button"
+            disabled={!linked.photo_url}
+            onClick={() => linked.photo_url && onUsePhoto(linked.photo_url)}
+            className="rd-italic text-[20px] text-club hover:underline underline-offset-[0.18em] disabled:opacity-40 disabled:no-underline"
+          >
+            Use profile photo
+          </button>
+          <span className="text-xs text-ink-500">
+            {linked.photo_url ? 'Copies it into the Photo field above; save to publish it on /team.' : 'This member has not uploaded a profile photo.'}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Suggested links: confirm who is who, nothing is written before ─────────────
+
+type PendingLink = { teamId: string; member: LinkableMember }
+
+function SuggestedLinks({
+  members,
+  linkable,
+  onLinked,
+}: {
+  members: TeamMember[]
+  linkable: LinkableMember[]
+  onLinked: (teamId: string, memberId: string) => void
+}) {
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
+  const [busy, setBusy] = useState<string | null>(null)
+  const [recap, setRecap] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const suggestions = suggestLinks(
+    members.map(m => ({ id: m.id, name: m.name, member_id: m.member_id ?? null })),
+    linkable,
+  ).filter(s => !dismissed.has(s.teamId))
+  const rowOf = (teamId: string) => members.find(m => m.id === teamId)
+  const exact = suggestions.filter(s => s.kind === 'exact')
+
+  async function save(pairs: PendingLink[], key: string) {
+    setBusy(key)
+    setError(null)
+    const supabase = createClient()
+    const results = await Promise.all(pairs.map(p => supabase.from('team_members').update({ member_id: p.member.id }).eq('id', p.teamId)))
+    const failed = results.find(r => r.error)
+    pairs.forEach((p, i) => { if (!results[i].error) onLinked(p.teamId, p.member.id) })
+    if (failed?.error) setError(failed.error.message)
+    setBusy(null)
+    setRecap(false)
+  }
+
+  if (suggestions.length === 0 && !error) return null
+
+  return (
+    <div className="mb-8 border-y border-night/20 py-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+        <h3 className="rd-italic text-[26px]">Suggested links</h3>
+        {exact.length > 0 && !recap && (
+          <button type="button" onClick={() => setRecap(true)} className="rd-italic text-[20px] text-club hover:underline underline-offset-[0.18em]">
+            Confirm exact matches ({exact.length})
+          </button>
+        )}
+      </div>
+      <p className="mt-1 max-w-[620px] text-xs leading-[1.6] text-ink-500">
+        People of this page that look like a club member. Check each pair, then confirm it. The link is only for the Board:
+        what /team shows is still the Photo field of each person.
+      </p>
+
+      {recap && (
+        <div className="mt-4 border border-night/25 p-4">
+          <p className="text-sm font-medium text-ink-900">Link these {exact.length} people? Same name, one member each.</p>
+          <ul className="mt-3 divide-y divide-night/10 text-sm">
+            {exact.map(s => (
+              <li key={s.teamId} className="flex flex-wrap items-baseline justify-between gap-x-4 py-1.5">
+                <span>{rowOf(s.teamId)?.name}</span>
+                <span className="text-ink-500">{s.member.full_name} · {s.member.email}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex items-baseline gap-6">
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => save(exact.map(s => ({ teamId: s.teamId, member: s.member })), 'all')}
+              className="rd-italic text-[22px] text-club hover:underline underline-offset-[0.18em] disabled:opacity-50"
+            >
+              {busy === 'all' ? 'Linking…' : `Yes, link these ${exact.length}`}
+            </button>
+            <button type="button" onClick={() => setRecap(false)} className="rd-italic text-[20px] hover:underline underline-offset-[0.18em]">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <ul className="mt-3">
+        {suggestions.map(s => {
+          const row = rowOf(s.teamId)
+          if (!row) return null
+          return (
+            <li key={s.teamId} className="grid grid-cols-1 items-center gap-x-6 gap-y-3 border-t border-night/15 py-3.5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+              <div className="flex min-w-0 items-center gap-3">
+                <Portrait src={row.photo_url} name={row.name} size="sm" />
+                <div className="min-w-0">
+                  <div className="truncate font-serif text-[20px] font-medium leading-[1.15]">{row.name}</div>
+                  <div className="truncate text-xs text-ink-500">On /team: {row.role}</div>
+                </div>
+              </div>
+              <div className="flex min-w-0 items-center gap-3">
+                <Portrait src={s.member.photo_url} name={s.member.full_name} size="sm" />
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <span className="truncate font-serif text-[20px] font-medium leading-[1.15]">{s.member.full_name}</span>
+                    <span className="shrink-0 rounded-full border border-night/40 px-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-500">
+                      {s.kind === 'exact' ? 'Exact name' : 'Probable'}
+                    </span>
+                  </div>
+                  <div className="truncate text-xs text-ink-500">{[s.member.title ?? 'No title', s.member.email].filter(Boolean).join(' · ')}</div>
+                </div>
+              </div>
+              <div className="flex items-baseline gap-5">
+                <button
+                  type="button"
+                  disabled={busy !== null}
+                  onClick={() => save([{ teamId: s.teamId, member: s.member }], s.teamId)}
+                  className="rd-italic text-[20px] text-club hover:underline underline-offset-[0.18em] disabled:opacity-50"
+                >
+                  {busy === s.teamId ? 'Linking…' : 'Confirm'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDismissed(prev => new Set(prev).add(s.teamId))}
+                  className="rd-italic text-[20px] hover:underline underline-offset-[0.18em]"
+                >
+                  Not this person
+                </button>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      {error && <p role="alert" className="mt-3 border-l-2 border-red-400 pl-3 text-xs text-red-600">{error}</p>}
+    </div>
+  )
+}
+
 // ── Add member form ────────────────────────────────────────────────────────────
 
-function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded: (m: TeamMember) => void }) {
+function AddMemberForm({ type, linkable, onAdded }: { type: 'bod' | 'management'; linkable?: LinkableMember[]; onAdded: (m: TeamMember) => void }) {
   const [open, setOpen] = useState(false)
+  const [memberId, setMemberId] = useState('')
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
   const [photoUrl, setPhotoUrl] = useState('')
@@ -99,19 +299,22 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
         photo_url: photoUrl.trim() || null,
         linkedin_url: linkedinUrl.trim() || null,
         type,
+        // Sent only when the link column exists (linkable is passed) and one was chosen.
+        ...(linkable && memberId ? { member_id: memberId } : {}),
       })
-      .select('id, name, role, photo_url, linkedin_url, type, order_index, created_at')
+      .select(selectFields(!!linkable))
       .single()
     if (err || !data) {
       setError(err?.message ?? 'Error adding member')
       setSaving(false)
       return
     }
-    onAdded(data as TeamMember)
+    onAdded(data as unknown as TeamMember)
     setName('')
     setRole('')
     setPhotoUrl('')
     setLinkedinUrl('')
+    setMemberId('')
     setOpen(false)
     setSaving(false)
   }
@@ -154,6 +357,11 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
             placeholder="President"
           />
         </div>
+        {linkable && (
+          <div className="sm:col-span-2">
+            <LinkedMemberField value={memberId} onChange={setMemberId} linkable={linkable} onUsePhoto={setPhotoUrl} />
+          </div>
+        )}
         <div className="sm:col-span-2">
           <PhotoInput currentUrl={photoUrl} onChange={setPhotoUrl} />
         </div>
@@ -192,11 +400,13 @@ function AddMemberForm({ type, onAdded }: { type: 'bod' | 'management'; onAdded:
 
 function MemberRow({
   member,
+  linkable,
   onUpdated,
   onDeleted,
   dragHandlers,
 }: {
   member: TeamMember
+  linkable?: LinkableMember[]
   onUpdated: (m: TeamMember) => void
   onDeleted: (id: string) => void
   dragHandlers?: {
@@ -210,6 +420,7 @@ function MemberRow({
   const [role, setRole] = useState(member.role)
   const [photoUrl, setPhotoUrl] = useState(member.photo_url ?? '')
   const [linkedinUrl, setLinkedinUrl] = useState(member.linkedin_url ?? '')
+  const [memberId, setMemberId] = useState(member.member_id ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -228,12 +439,14 @@ function MemberRow({
         role: role.trim(),
         photo_url: photoUrl.trim() || null,
         linkedin_url: linkedinUrl.trim() || null,
+        // The link column exists only when linkable is passed.
+        ...(linkable ? { member_id: memberId || null } : {}),
       })
       .eq('id', member.id)
     if (err) {
       setError(err.message)
     } else {
-      onUpdated({ ...member, name: name.trim(), role: role.trim(), photo_url: photoUrl.trim() || null, linkedin_url: linkedinUrl.trim() || null })
+      onUpdated({ ...member, name: name.trim(), role: role.trim(), photo_url: photoUrl.trim() || null, linkedin_url: linkedinUrl.trim() || null, ...(linkable ? { member_id: memberId || null } : {}) })
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     }
@@ -314,6 +527,11 @@ function MemberRow({
                 className="w-full px-3 py-2 border border-line focus:outline-none focus:border-forest text-sm bg-white"
               />
             </div>
+            {linkable && (
+              <div className="sm:col-span-2">
+                <LinkedMemberField value={memberId} onChange={setMemberId} linkable={linkable} onUsePhoto={setPhotoUrl} />
+              </div>
+            )}
             <div className="sm:col-span-2">
               <PhotoInput currentUrl={photoUrl} onChange={setPhotoUrl} />
             </div>
@@ -346,7 +564,7 @@ function MemberRow({
 
 // ── Members section with drag-and-drop ────────────────────────────────────────
 
-function MembersSection({ title, type, initialMembers }: { title: string; type: 'bod' | 'management'; initialMembers: TeamMember[] }) {
+function MembersSection({ title, type, initialMembers, linkable }: { title: string; type: 'bod' | 'management'; initialMembers: TeamMember[]; linkable?: LinkableMember[] }) {
   const [members, setMembers] = useState<TeamMember[]>(initialMembers)
   const membersRef = useRef<TeamMember[]>(members)
   // Keep the ref in step for the event handlers, outside of render.
@@ -444,6 +662,14 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
         {orderSaved && <span className="text-xs text-forest font-medium">Order saved</span>}
       </div>
 
+      {linkable && (
+        <SuggestedLinks
+          members={members}
+          linkable={linkable}
+          onLinked={(teamId, memberId) => setMembers(prev => prev.map(m => (m.id === teamId ? { ...m, member_id: memberId } : m)))}
+        />
+      )}
+
       {/* Collapsible body */}
       <div style={{ display: 'grid', gridTemplateRows: listOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
         <div style={{ overflow: 'hidden' }}>
@@ -471,6 +697,7 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
                 <MemberRow
                   key={m.id}
                   member={m}
+                  linkable={linkable}
                   onUpdated={handleUpdated}
                   onDeleted={handleDeleted}
                   dragHandlers={search.trim() ? undefined : dragHandlers}
@@ -479,7 +706,7 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
             </div>
           )}
 
-          <AddMemberForm type={type} onAdded={handleAdded} />
+          <AddMemberForm type={type} linkable={linkable} onAdded={handleAdded} />
           <div className="pb-1" />
         </div>
       </div>
@@ -489,12 +716,16 @@ function MembersSection({ title, type, initialMembers }: { title: string; type: 
 
 // ── Root client ────────────────────────────────────────────────────────────────
 
-export default function TeamClient({ members }: { members: TeamMember[] }) {
+/**
+ * `linkable` (the club members a row can be linked to) is passed only by the pages whose database
+ * has team_members.member_id; without it the selector and the suggestions are not shown.
+ */
+export default function TeamClient({ members, linkable }: { members: TeamMember[]; linkable?: LinkableMember[] }) {
   const bod = members.filter(m => m.type === 'bod')
 
   return (
     <div className="max-w-5xl mx-auto px-6 lg:px-8 py-10 space-y-16">
-      <MembersSection title="Board of Directors" type="bod" initialMembers={bod} />
+      <MembersSection title="Board of Directors" type="bod" initialMembers={bod} linkable={linkable} />
     </div>
   )
 }

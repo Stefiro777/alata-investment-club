@@ -98,6 +98,7 @@ export default function ProfilePage() {
             memberId={profile.member_id ?? null}
             memberSince={memberSince}
             expiresAt={profile.membership_expires_at ?? null}
+            photoUrl={profile.photo_url ?? null}
           />
           <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2">
             <Link href="/dashboard/membership" className="rd-italic text-[24px] text-club hover:underline underline-offset-[0.18em]">Renew</Link>

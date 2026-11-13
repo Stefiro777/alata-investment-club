@@ -12,6 +12,8 @@ export type TeamMember = {
   type: string
   order_index: number | null
   created_at: string
+  /** The club member behind this row (team_members.member_id, needs the member_id SQL). */
+  member_id?: string | null
 }
 
 export default async function AdminTeamPage() {

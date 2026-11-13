@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { renderCardJpeg } from '@/lib/card-download'
 
 interface MembershipCardProps {
   name: string
@@ -9,6 +10,8 @@ interface MembershipCardProps {
   memberId: string | null
   memberSince: string | null
   expiresAt: string | null
+  /** The member's profile photo; the card shows it when there is one and it loads. */
+  photoUrl?: string | null
 }
 
 const MONTHS_UP = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
@@ -23,10 +26,14 @@ function fmtDate(iso: string) {
   return `${get('day')} ${MONTHS_UP[get('month') - 1]} ${get('year')}`
 }
 
-export default function MembershipCard({ name, role, memberId, memberSince, expiresAt }: MembershipCardProps) {
+export default function MembershipCard({ name, role, memberId, memberSince, expiresAt, photoUrl }: MembershipCardProps) {
   const cardRef  = useRef<HTMLDivElement>(null)
   const [qrUrl,  setQrUrl]  = useState<string | null>(null)
   const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+  // A photo that does not load is simply left out of the card.
+  const [photoFailed, setPhotoFailed] = useState<string | null>(null)
+  const showPhoto = !!photoUrl && photoFailed !== photoUrl
 
   const isExpired = expiresAt ? new Date(expiresAt) <= new Date() : true
   const isSoon    = !isExpired && expiresAt
@@ -48,13 +55,17 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
   async function handleDownload() {
     if (!cardRef.current) return
     setDownloading(true)
+    setDownloadError(null)
     try {
       const { toJpeg } = await import('html-to-image')
-      const dataUrl = await toJpeg(cardRef.current, { quality: 0.97, pixelRatio: 3 })
+      // With the photo; if that fails, again without it: the card always downloads.
+      const dataUrl = await renderCardJpeg(cardRef.current, toJpeg)
       const a = document.createElement('a')
       a.href = dataUrl
       a.download = `membership-card-${memberId ?? 'alata'}.jpg`
       a.click()
+    } catch {
+      setDownloadError('The card could not be downloaded. Try again.')
     } finally {
       setDownloading(false)
     }
@@ -104,7 +115,8 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
           </div>
 
           {/* CENTER */}
-          <div style={{ paddingTop: '4%', paddingBottom: '2%' }}>
+          <div style={{ paddingTop: '4%', paddingBottom: '2%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '5%' }}>
+            <div style={{ minWidth: 0 }}>
             <p style={{
               margin: '0 0 6px',
               color: 'white',
@@ -119,6 +131,18 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
             <p style={{ margin: 0, color: 'rgba(255,255,255,0.6)', fontSize: 8, fontWeight: 500, letterSpacing: '0.4em', textTransform: 'uppercase' }}>
               {roleLabel}
             </p>
+            </div>
+            {showPhoto && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                data-card-photo=""
+                src={photoUrl!}
+                alt=""
+                crossOrigin="anonymous"
+                onError={() => setPhotoFailed(photoUrl ?? null)}
+                style={{ width: '20%', aspectRatio: '4 / 5', objectFit: 'cover', flexShrink: 0, display: 'block', border: '1px solid rgba(255,255,255,0.28)' }}
+              />
+            )}
           </div>
 
           {/* BOTTOM ROW */}
@@ -180,6 +204,8 @@ export default function MembershipCard({ name, role, memberId, memberSince, expi
           </svg>
           {downloading ? 'Download…' : 'Download the card'}
         </button>
+
+        {downloadError && <p role="alert" className="basis-full text-xs text-red-600">{downloadError}</p>}
 
         {(isExpired || isSoon) && (
           <Link
