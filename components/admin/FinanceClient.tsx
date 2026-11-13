@@ -6,17 +6,7 @@ import TransactionManager from './TransactionManager'
 import BudgetReport from './BudgetReport'
 import QuoteClient from './QuoteClient'
 import ArchiveClient from '@/app/admin/archive/ArchiveClient'
-
-export type FinanceTab = 'transactions' | 'budget' | 'documents' | 'quotes'
-
-const TABS: { key: FinanceTab; label: string }[] = [
-  { key: 'transactions', label: 'Transactions' },
-  { key: 'budget', label: 'Budget' },
-  { key: 'documents', label: 'Documents' },
-  { key: 'quotes', label: 'Quotes' },
-]
-
-export const isFinanceTab = (v: unknown): v is FinanceTab => TABS.some(t => t.key === v)
+import { FINANCE_TABS, type FinanceTab } from '@/lib/finance-tabs'
 
 /** Board > Finance: the four screens as tabs. Documents (the archive) come from the server. */
 export default function FinanceClient({ documents, userEmail, initialTab = 'transactions' }: {
@@ -29,7 +19,7 @@ export default function FinanceClient({ documents, userEmail, initialTab = 'tran
   return (
     <div>
       <div className="mb-6">
-        <Tabs tabs={TABS} value={tab} onChange={setTab} />
+        <Tabs tabs={FINANCE_TABS} value={tab} onChange={setTab} />
       </div>
 
       {tab === 'transactions' && <TransactionManager />}
