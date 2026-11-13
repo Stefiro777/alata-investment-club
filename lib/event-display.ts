@@ -66,3 +66,20 @@ export function youtubeEmbed(url: string): string | null {
   const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/)
   return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?autoplay=1&rel=0` : null
 }
+
+/**
+ * A YouTube Short: its video is vertical (9:16) and gets a vertical player; every other
+ * link that can be embedded keeps the horizontal frame.
+ */
+export function isVerticalFilm(url: string | null | undefined): boolean {
+  return !!url && youtubeEmbed(url) !== null && /youtube\.com\/shorts\//.test(url)
+}
+
+export type FilmUrlKind = 'empty' | 'vertical' | 'horizontal' | 'unsupported'
+
+/** What the stories will do with a film link, for the hint under the field in the Board. */
+export function describeFilmUrl(url: string | null | undefined): FilmUrlKind {
+  if (!url || !url.trim()) return 'empty'
+  if (youtubeEmbed(url.trim()) === null) return 'unsupported'
+  return isVerticalFilm(url.trim()) ? 'vertical' : 'horizontal'
+}
