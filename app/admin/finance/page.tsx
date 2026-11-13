@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import AdminNavbar from '../components/AdminNavbar'
-import FinanceClient, { isFinanceTab } from '@/components/admin/FinanceClient'
+import FinanceClient from '@/components/admin/FinanceClient'
+import { isFinanceTab } from '@/lib/finance-tabs'
 import { requirePrivilegedAccess } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase-server'
 
