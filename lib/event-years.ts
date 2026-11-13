@@ -50,3 +50,14 @@ export function yearsLabel(allowed: readonly string[] | null | undefined): strin
 export function yearRestrictedError(allowed: readonly string[] | null | undefined): string {
   return `This event is reserved to students of: ${yearsLabel(allowed)}. Check the year of study you entered.`
 }
+
+/** "Bachelor 2" / "Master 1" from the profile's level and year; null when either is missing. */
+export function formatStudyYear(level: string | null | undefined, year: number | null | undefined): string | null {
+  if ((level !== 'bachelor' && level !== 'master') || !year) return null
+  return `${level === 'bachelor' ? 'Bachelor' : 'Master'} ${year}`
+}
+
+/** The filter key of a profile ("bachelor_2"), or null with no study data. */
+export function studyKeyOf(level: string | null | undefined, year: number | null | undefined): string | null {
+  return (level === 'bachelor' || level === 'master') && year ? `${level}_${year}` : null
+}

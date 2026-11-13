@@ -8,15 +8,18 @@ const supabaseAdmin = createAdminClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function GET() {
+// GET /api/admin/crm/members[?removed=1]: the active members; with removed=1 also those removed from the membership.
+export async function GET(req: NextRequest) {
   if (!(await requirePrivilegedAccess())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from('club_members')
-    .select('id, full_name, email, role, teams, lab_subdivision, title, created_at')
+    .select('id, full_name, email, role, teams, lab_subdivision, title, created_at, study_level, study_year, membership_removed_at')
     .order('created_at', { ascending: false })
+  if (req.nextUrl.searchParams.get('removed') !== '1') query = query.is('membership_removed_at', null)
+  const { data, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ data })

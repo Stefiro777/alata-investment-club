@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { studyYearKey, isYearAllowed, cleanAllowedYears } from './event-years.ts'
+import { studyYearKey, isYearAllowed, cleanAllowedYears, formatStudyYear, studyKeyOf } from './event-years.ts'
 
 test('the year strings found in registrations map to a key', () => {
   assert.equal(studyYearKey('3rd year Bachelor'), 'bachelor_3')
@@ -26,4 +26,13 @@ test('cleanAllowedYears drops unknown values and returns null when empty', () =>
   assert.deepEqual(cleanAllowedYears(['master_1', 'bachelor_1', 'nope']), ['bachelor_1', 'master_1'])
   assert.equal(cleanAllowedYears(['nope']), null)
   assert.equal(cleanAllowedYears('bachelor_1'), null)
+})
+
+test('the profile year is shown as Bachelor 2 / Master 1, nothing without both parts', () => {
+  assert.equal(formatStudyYear('bachelor', 2), 'Bachelor 2')
+  assert.equal(formatStudyYear('master', 1), 'Master 1')
+  assert.equal(formatStudyYear('master', null), null)
+  assert.equal(formatStudyYear(null, 3), null)
+  assert.equal(studyKeyOf('bachelor', 3), 'bachelor_3')
+  assert.equal(studyKeyOf(null, null), null)
 })

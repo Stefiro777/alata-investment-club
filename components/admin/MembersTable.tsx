@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { FieldRow, SegmentedPills } from '@/app/components/member/ui'
-import { ROLES, roleLabel, roleWarnings, type Role } from '@/lib/roles'
+import { FieldRow, Pill, SegmentedPills } from '@/app/components/member/ui'
+import { ROLES, isAnalyst, roleLabel, roleWarnings, type Role } from '@/lib/roles'
+import { EVENT_YEARS, formatStudyYear, studyKeyOf } from '@/lib/event-years'
 import {
-  Numbers, Toolbar, SearchField, SelectField, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, Dialog,
+  Numbers, Toolbar, SearchField, SelectField, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, Dialog, Tag,
   cell, fmtDate, revealSheet, fieldCls, labelCls, btnPrimary, btnGhost, errorCls, type Column,
 } from './crm/ui'
 
@@ -17,7 +18,21 @@ type Member = {
   lab_subdivision?: string | null
   title: string | null
   created_at: string
+  study_level?: string | null
+  study_year?: number | null
+  membership_removed_at?: string | null
 }
+
+type Kind = 'all' | 'analyst' | 'member' | 'other'
+
+/**
+ * Analyst = Lab, Media or Events; Member = plain member; everyone else (BoD, Management,
+ * Career, Alumni) is shown by their role. Same rule as lib/roles.ts.
+ */
+const kindOf = (m: Pick<Member, 'role' | 'teams'>): Exclude<Kind, 'all'> =>
+  isAnalyst(m.role, m.teams) ? 'analyst' : m.role === 'member' ? 'member' : 'other'
+
+const yearOf = (m: Member) => formatStudyYear(m.study_level, m.study_year)
 
 const teamLabel = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
@@ -25,10 +40,11 @@ const COLUMNS: Column[] = [
   { label: '' },
   { label: 'Name' },
   { label: 'Role', wide: true },
+  { label: 'Year', wide: true },
   { label: 'Team' },
   { label: 'Joined', wide: true, align: 'right' },
 ]
-const TEMPLATE = 'grid-cols-[20px_minmax(0,1fr)_84px] sm:grid-cols-[20px_minmax(0,1fr)_92px_96px_84px]'
+const TEMPLATE = 'grid-cols-[20px_minmax(0,1fr)_84px] sm:grid-cols-[20px_minmax(0,1fr)_104px_88px_96px_84px]'
 
 // ── Compose Modal ────────────────────────────────────────────────────────────
 function ComposeModal({
@@ -139,6 +155,9 @@ export default function MembersTable() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [teamFilter, setTeamFilter] = useState('')
+  const [kindFilter, setKindFilter] = useState<Kind>('all')
+  const [yearFilter, setYearFilter] = useState('')
+  const [showRemoved, setShowRemoved] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [composeOpen, setComposeOpen] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
@@ -148,7 +167,7 @@ export default function MembersTable() {
   const sheetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    fetch('/api/admin/crm/members')
+    fetch(`/api/admin/crm/members${showRemoved ? '?removed=1' : ''}`)
       .then(r => r.json())
       .then(({ data, error: err }) => {
         if (err) setError(err)
@@ -159,7 +178,7 @@ export default function MembersTable() {
         setError(err.message)
         setLoading(false)
       })
-  }, [])
+  }, [showRemoved])
 
   const teams = useMemo(() => {
     const set = new Set<string>()
@@ -176,12 +195,17 @@ export default function MembersTable() {
         m.email?.toLowerCase().includes(q) ||
         teamsStr.includes(q)
       const matchTeam = !teamFilter || (m.teams ?? []).includes(teamFilter)
-      return matchSearch && matchTeam
+      const matchKind = kindFilter === 'all' || kindOf(m) === kindFilter
+      const key = studyKeyOf(m.study_level, m.study_year)
+      const matchYear = !yearFilter || (yearFilter === 'none' ? key === null : key === yearFilter)
+      return matchSearch && matchTeam && matchKind && matchYear
     })
-  }, [members, search, teamFilter])
+  }, [members, search, teamFilter, kindFilter, yearFilter])
 
-  const bodCount = members.filter(m => m.role === 'bod').length
-  const directorCount = members.filter(m => m.role === 'director').length
+  const active = members.filter(m => !m.membership_removed_at)
+  const analystCount = active.filter(m => kindOf(m) === 'analyst').length
+  const memberCount = active.filter(m => kindOf(m) === 'member').length
+  const noYearCount = active.filter(m => studyKeyOf(m.study_level, m.study_year) === null).length
 
   const allFilteredIds = filtered.map(m => m.id)
   const allSelected = allFilteredIds.length > 0 && allFilteredIds.every(id => selected.has(id))
@@ -252,10 +276,10 @@ export default function MembersTable() {
   return (
     <div>
       <Numbers items={[
-        { value: members.length, label: 'Total members' },
-        { value: bodCount, label: 'BoD' },
-        { value: directorCount, label: 'Directors' },
-        { value: teams.length, label: 'Teams' },
+        { value: active.length, label: 'Active members' },
+        { value: analystCount, label: 'Analysts' },
+        { value: memberCount, label: 'Members' },
+        { value: noYearCount, label: 'Without a year' },
       ]} />
 
       <Toolbar
@@ -272,6 +296,25 @@ export default function MembersTable() {
           <option value="">All teams</option>
           {teams.map(t => <option key={t} value={t}>{teamLabel(t)}</option>)}
         </SelectField>
+        <SelectField label="Year" value={yearFilter} onChange={setYearFilter} width="sm:w-[160px]">
+          <option value="">All years</option>
+          {EVENT_YEARS.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
+          <option value="none">No year</option>
+        </SelectField>
+        <div>
+          <span className={`${labelCls} mb-2`}>Kind</span>
+          <SegmentedPills
+            size="sm"
+            label="Kind"
+            options={[{ value: 'all', label: 'All' }, { value: 'analyst', label: 'Analysts' }, { value: 'member', label: 'Members' }, { value: 'other', label: 'Others' }]}
+            value={kindFilter}
+            onChange={setKindFilter}
+          />
+        </div>
+        <div>
+          <span className={`${labelCls} mb-2`}>Removed</span>
+          <Pill size="sm" active={showRemoved} onClick={() => setShowRemoved(v => !v)}>{showRemoved ? 'Shown' : 'Hidden'}</Pill>
+        </div>
       </Toolbar>
 
       <Split
@@ -304,12 +347,17 @@ export default function MembersTable() {
                     />
                   }
                 >
-                  <span className={cell(COLUMNS[1])}><NameCell name={m.full_name} sub={m.email} /></span>
-                  <span className={cell(COLUMNS[2], 'text-[12px] text-earth-700')}>{roleLabel(m.role)}</span>
-                  <span className={cell(COLUMNS[3], 'text-[12px] text-earth-700')}>
+                  <span className={cell(COLUMNS[1])}><NameCell name={m.full_name} sub={m.email} tag={m.membership_removed_at ? <Tag>Removed</Tag> : undefined} /></span>
+                  <span className={cell(COLUMNS[2])}>
+                    <Tag title={kindOf(m) === 'analyst' ? 'Works in Lab, Media or Events' : undefined}>
+                      {kindOf(m) === 'analyst' ? `Analyst · ${roleLabel(m.role) === 'Member' ? teamLabel((m.teams ?? []).find(t => ['lab', 'media', 'events'].includes(t)) ?? '') : roleLabel(m.role)}` : roleLabel(m.role)}
+                    </Tag>
+                  </span>
+                  <span className={cell(COLUMNS[3], 'text-[12px] text-earth-700')}>{yearOf(m) ?? '—'}</span>
+                  <span className={cell(COLUMNS[4], 'text-[12px] text-earth-700')}>
                     {memberTeams.length === 0 ? '—' : memberTeams.map(teamLabel).join(', ')}
                   </span>
-                  <span className={cell(COLUMNS[4], 'rd-num text-[12px] text-earth-700')}>
+                  <span className={cell(COLUMNS[5], 'rd-num text-[12px] text-earth-700')}>
                     {m.created_at ? new Date(m.created_at).toLocaleDateString('it-IT') : '—'}
                   </span>
                 </CrmRow>
@@ -350,6 +398,7 @@ export default function MembersTable() {
                   <p key={w} role="status" className="mt-3 text-[12px] leading-[1.5] text-earth-700">{w}</p>
                 ))}
               </div>
+              <FieldRow label="Year" value={yearOf(current) ?? '—'} muted={!yearOf(current)} />
               <FieldRow label="Team" value={(current.teams ?? []).length ? (current.teams ?? []).map(teamLabel).join(', ') : '—'} muted={!(current.teams ?? []).length} />
               <FieldRow label="Title" value={current.title || '—'} muted={!current.title} />
               <FieldRow label="Joined" value={fmtDate(current.created_at)} />
