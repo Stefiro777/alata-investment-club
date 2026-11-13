@@ -894,6 +894,20 @@ function ParticipationTab() {
         )}
       </Section>
 
+      <Section title="Trend by quarter" meta="By event date">
+        {quarterlyTrend.length === 0 ? <Empty>No dated events yet.</Empty> : quarterlyTrend.map(q => {
+          const avgPerEvent = q.eventCount > 0 ? Math.round((q.participations / q.eventCount) * 10) / 10 : 0
+          return (
+            <BarRow
+              key={q.label}
+              label={`${q.label} · ${q.eventCount} event${q.eventCount !== 1 ? 's' : ''} · ~${avgPerEvent} per event`}
+              value={q.participations}
+              share={q.participations / maxQuarterParticipations}
+            />
+          )
+        })}
+      </Section>
+
       <div className="mt-10 flex flex-wrap items-end gap-x-6 gap-y-4">
         <SearchField value={nameSearch} onChange={setNameSearch} placeholder="Name…" />
         <div>
@@ -962,20 +976,6 @@ function ParticipationTab() {
           )
         }
       />
-
-      <Section title="Trend by quarter" meta="By event date">
-        {quarterlyTrend.length === 0 ? <Empty>No dated events yet.</Empty> : quarterlyTrend.map(q => {
-          const avgPerEvent = q.eventCount > 0 ? Math.round((q.participations / q.eventCount) * 10) / 10 : 0
-          return (
-            <BarRow
-              key={q.label}
-              label={`${q.label} · ${q.eventCount} event${q.eventCount !== 1 ? 's' : ''} · ~${avgPerEvent} per event`}
-              value={q.participations}
-              share={q.participations / maxQuarterParticipations}
-            />
-          )
-        })}
-      </Section>
 
       {editingEvent && (
         <EditParticipantModal
