@@ -1,7 +1,8 @@
 import { createServiceClient } from '@/lib/supabase-server'
 import { PageTitle, Section, Row, Pill } from '@/app/components/member/ui'
 import OverviewSwitches from './OverviewSwitches'
-import InviteMember, { type PendingInvite } from './InviteMember'
+import InviteMember, { type InviteItem } from './InviteMember'
+import { isMissingColumn } from '@/lib/invite-status'
 import FlagshipCreditsEditor from './FlagshipCreditsEditor'
 import { CareerPriceSection, AboutMetricsSection } from './OverviewSettings'
 import { ABOUT_STATS_KEY, parseAboutStats } from '@/lib/about-stats'
@@ -34,14 +35,20 @@ export default async function BoardOverviewPage() {
     db.from('transactions').select('id', { count: 'exact', head: true }).eq('type', 'cost').is('receipt_url', null),
     // partners.next_step arrives with SQL B; until then this query errors and the row is hidden.
     db.from('partners').select('id, next_step').not('next_step', 'is', null),
-    // Invitations sent and not yet accepted.
-    db.from('invites').select('id, email, team, lab_subdivision, created_at').is('used_at', null).order('created_at', { ascending: false }),
+    // All the invitations: waiting, accepted and cancelled.
+    db.from('invites').select('id, email, team, lab_subdivision, created_at, used_at, revoked_at').order('created_at', { ascending: false }),
     // Site settings, edited here.
     db.from('settings').select('value').eq('key', SESSION_PRICE_KEY).maybeSingle(),
     db.from('settings').select('value').eq('key', ABOUT_STATS_KEY).maybeSingle(),
     db.from('settings').select('value').eq('key', FLAGSHIP_CREDITS_KEY).maybeSingle(),
   ])
-  const pendingInvites = (invites.error ? [] : invites.data ?? []) as PendingInvite[]
+  // Every invitation: pending ones on top, accepted and cancelled ones in the archive.
+  // Before the revoked_at SQL the column is missing: read without it (nothing is cancelled yet).
+  let inviteRows = invites
+  if (invites.error && isMissingColumn(invites.error)) {
+    inviteRows = await db.from('invites').select('id, email, team, lab_subdivision, created_at, used_at').order('created_at', { ascending: false }) as typeof invites
+  }
+  const allInvites = (inviteRows.error ? [] : inviteRows.data ?? []) as InviteItem[]
 
   const next = nextEvents.data?.[0] ?? null
   const registered = next
@@ -102,7 +109,7 @@ export default async function BoardOverviewPage() {
       </div>
 
       <div className="grid gap-x-12 lg:grid-cols-2">
-        <InviteMember pending={pendingInvites} />
+        <InviteMember invites={allInvites} />
       </div>
 
       <div className="grid gap-x-12 lg:grid-cols-2">
