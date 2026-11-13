@@ -555,7 +555,7 @@ export default function MembersPage() {
       const [{ data: memberData }, { data: alumniData }] = await Promise.all([
         supabase
           .from('club_members')
-          .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision')
+          .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision, photo_url, linkedin_url')
           .order('role', { ascending: true })
           .order('full_name', { ascending: true }),
         supabase
