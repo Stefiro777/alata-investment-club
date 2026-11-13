@@ -7,6 +7,7 @@ import { useProfile } from '../DashboardProfileContext'
 import { TEAM_BADGE } from '../teamColors'
 import { Pill, Tabs, pillClass } from '@/app/components/member/ui'
 import { ROLES, roleWarnings } from '@/lib/roles'
+import { initialsOf } from '@/lib/initials'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -202,7 +203,7 @@ function MemberFormModal({
         .from('club_members')
         .update(payload)
         .eq('id', initial!.id)
-        .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision')
+        .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision, photo_url, linkedin_url')
         .maybeSingle()
       if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return }
       await finish(data as Member, false)
@@ -374,7 +375,7 @@ function MemberFormModal({
 // ── MemberRow ─────────────────────────────────────────────────────────────────
 
 function Portrait({ src, name }: { src?: string | null; name: string }) {
-  const initials = name.split(/s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase()
+  const initials = initialsOf(name)
   return (
     <div className="h-[57px] w-[44px] shrink-0 overflow-hidden bg-[#e8e1d2]">
       {src ? (
@@ -555,7 +556,7 @@ export default function MembersPage() {
       const [{ data: memberData }, { data: alumniData }] = await Promise.all([
         supabase
           .from('club_members')
-          .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision')
+          .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision, photo_url, linkedin_url')
           .order('role', { ascending: true })
           .order('full_name', { ascending: true }),
         supabase
