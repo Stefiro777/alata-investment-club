@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { FieldRow, Pill, Tabs } from '@/app/components/member/ui'
+import { FieldRow, Pill, SegmentedPills, Tabs } from '@/app/components/member/ui'
+import { LAB_SUBDIVISIONS } from '@/lib/invite'
 
 type Application = {
   id: number
@@ -49,6 +50,8 @@ export default function ApplicationsClient() {
   const [filter, setFilter] = useState<Filter>('all')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  // Lab invitations need a subdivision, chosen here before sending.
+  const [labSub, setLabSub] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/applications')
@@ -75,6 +78,7 @@ export default function ApplicationsClient() {
   function open(a: Application) {
     setSelected(a.id)
     setMessage(null)
+    setLabSub(null)
     // Mark as read; before SQL A the status cannot be stored and this is a no-op.
     if (!a.status || a.status === 'new') setStatus(a, 'seen').catch(() => {})
   }
@@ -91,10 +95,11 @@ export default function ApplicationsClient() {
     const d = derive(a)
     const team = d.track === 'member' ? 'member' : d.first
     if (!team || !['events', 'media', 'lab', 'member'].includes(team)) { setMessage('No team to invite to.'); return }
+    if (team === 'lab' && !labSub) { setMessage('Choose a Lab subdivision first.'); return }
     if (!confirm(`Send the invitation to ${a.email} (${TEAM[team]})?`)) return
     setBusy(true)
     setMessage(null)
-    const res = await fetch('/api/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: a.email, team }) })
+    const res = await fetch('/api/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: a.email, team, lab_subdivision: team === 'lab' ? labSub : null }) })
     const j = await res.json().catch(() => ({}))
     if (!res.ok) { setMessage(j.error ?? 'Invitation failed.'); setBusy(false); return }
     const s = await setStatus(a, 'accepted')
@@ -170,6 +175,12 @@ export default function ApplicationsClient() {
                 </div>
                 <div className="rd-eyebrow mt-5 text-[10px] text-earth-500">Motivation</div>
                 <p className="mt-2 whitespace-pre-line text-[14px] leading-[1.65]">{d.motivation || '—'}</p>
+                {d.track === 'analyst' && d.first === 'lab' && current.status !== 'accepted' && (
+                  <div className="mt-5">
+                    <div className="rd-eyebrow mb-2 text-[10px] text-earth-500">Lab subdivision, needed to invite</div>
+                    <SegmentedPills size="sm" label="Lab subdivision" options={LAB_SUBDIVISIONS.map(l => ({ value: l.value, label: l.label }))} value={labSub ?? ''} onChange={setLabSub} />
+                  </div>
+                )}
                 <div className="mt-6 flex flex-wrap items-baseline gap-x-8 gap-y-3">
                   <button type="button" disabled={busy || current.status === 'accepted'} onClick={() => acceptAndInvite(current)} className="rd-italic text-[26px] text-club hover:underline underline-offset-[0.18em] disabled:opacity-40">
                     Accept and invite
