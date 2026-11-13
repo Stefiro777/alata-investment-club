@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { audienceTags, gettingStartedLimit, gettingStartedFor, yearsOverLimit } from './getting-started.ts'
+import { audienceTags, gettingStartedLimit, gettingStartedFor, yearsOverLimit, limitWarnings } from './getting-started.ts'
 
 const R = (id: string, ...audience: string[]) => ({ id, audience })
 const rows = [
@@ -48,4 +48,14 @@ test('years over the limit are reported', () => {
     { label: 'Bachelor 1', count: 4, limit: 3 },
     { label: 'Master 2', count: 5, limit: 4 },
   ])
+})
+
+test('the form warns only about the years the new tags reach', () => {
+  const more = [...rows, R('extra', 'bachelor_1'), R('extra2', 'master_2')]
+  assert.deepEqual(limitWarnings(more, ['bachelor_1']), [{ label: 'Bachelor 1', count: 4, limit: 3 }])
+  assert.deepEqual(limitWarnings(more, ['master_2']), [{ label: 'Master 2', count: 5, limit: 4 }])
+  assert.deepEqual(limitWarnings(more, ['bachelor_3']), [])
+  assert.deepEqual(limitWarnings(more, []), [])
+  // a level-wide tag reaches every year of the level
+  assert.deepEqual(limitWarnings(more, ['master']).map(w => w.label), ['Master 2'])
 })

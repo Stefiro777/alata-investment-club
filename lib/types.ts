@@ -63,6 +63,8 @@ export type Resource = {
   is_folder: boolean
   order_index: number | null
   created_at: string
+  /** Tags of the years of study Getting started shows it to (lib/getting-started.ts); null = none. */
+  audience?: string[] | null
 }
 
 export type UpcomingEvent = {

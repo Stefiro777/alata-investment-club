@@ -69,3 +69,21 @@ export function yearsOverLimit<T extends Tagged>(rows: readonly T[]): { label: s
   }
   return out
 }
+
+/**
+ * Years that would show more resources than their limit once `rows` are tagged as
+ * they are, among the years a resource tagged `audience` reaches. Used by the form
+ * to warn before saving; it never blocks.
+ */
+export function limitWarnings<T extends Tagged>(rows: readonly T[], audience: readonly string[]): { label: string; count: number; limit: number }[] {
+  const out: { label: string; count: number; limit: number }[] = []
+  for (const g of AUDIENCE_GROUPS) {
+    if (g.year === null) continue
+    const tags = audienceTags(g.level, g.year)
+    if (!tags.some(t => audience.includes(t))) continue
+    const count = resourcesForTags(rows, tags).length
+    const limit = gettingStartedLimit(g.level, g.year)
+    if (count > limit) out.push({ label: g.label, count, limit })
+  }
+  return out
+}
