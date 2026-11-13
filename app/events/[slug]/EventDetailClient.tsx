@@ -144,18 +144,23 @@ export default function EventDetailClient({
         </div>
       </section>
 
-      {/* ── The date shrinks into a bar that stays on top ─────────────── */}
-      <div className="sticky top-0 z-30 border-b border-ivory/20 bg-pine/95 text-ivory backdrop-blur-sm">
-        <div className="rd-gutter flex h-[72px] items-center gap-4 md:h-[96px] md:gap-6">
-          <span className="rd-display shrink-0 text-[28px] md:text-[40px]">{shortDate(event.date)}</span>
-          <span className="min-w-0 truncate text-[13px] text-ivory/85 md:text-[14px]">{event.title}</span>
-          {showBarRegister && (
-            <button type="button" onClick={onRegister} className="rd-italic ml-auto shrink-0 rounded-full border border-ivory px-5 pb-2.5 pt-2 text-[22px] leading-none hover:bg-ivory/10 md:px-[34px] md:pb-3.5 md:pt-3 md:text-[30px]">
-              Register
-            </button>
-          )}
+      {/* ── The date shrinks into a bar that stays on top ───────────────
+          Only where there is something to register for: the bar carries Register when the big
+          one has left the screen. Without it (a past event, or one with no registration) the bar
+          would only repeat the date and the title the opening already shows. */}
+      {canRegister && (
+        <div className="sticky top-0 z-30 border-b border-ivory/20 bg-pine/95 text-ivory backdrop-blur-sm">
+          <div className="rd-gutter flex h-[72px] items-center gap-4 md:h-[96px] md:gap-6">
+            <span className="rd-display shrink-0 text-[28px] md:text-[40px]">{shortDate(event.date)}</span>
+            <span className="min-w-0 truncate text-[13px] text-ivory/85 md:text-[14px]">{event.title}</span>
+            {showBarRegister && (
+              <button type="button" onClick={onRegister} className="rd-italic ml-auto shrink-0 rounded-full border border-ivory px-5 pb-2.5 pt-2 text-[22px] leading-none hover:bg-ivory/10 md:px-[34px] md:pb-3.5 md:pt-3 md:text-[30px]">
+                Register
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Se2 · the details ─────────────────────────────────────────── */}
       <section className="bg-pine text-ivory">
@@ -182,7 +187,8 @@ export default function EventDetailClient({
             )}
           </div>
 
-          <div className="md:sticky md:top-[128px] md:self-start">
+          {/* Sticky under the bar (96px) when there is one; near the top of the window when there is none. */}
+          <div className={`md:sticky md:self-start ${canRegister ? 'md:top-[128px]' : 'md:top-10'}`}>
             <dl className="border-t border-ivory/40">
               {event.speaker_name && (
                 <div className="border-b border-ivory/20 py-[18px]">

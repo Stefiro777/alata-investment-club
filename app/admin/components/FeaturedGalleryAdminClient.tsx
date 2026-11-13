@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { FeaturedGalleryItem, MediaItem } from '@/lib/types'
+import { describeFilmUrl } from '@/lib/event-display'
 
 // ── Upload helper ──────────────────────────────────────────────────────────────
 
@@ -39,6 +40,7 @@ function GalleryModal({
   const [authors, setAuthors] = useState(initial?.authors ?? '')
   const [images, setImages] = useState<string[]>(existingImages)
   const [videoUrl, setVideoUrl] = useState(existingVideo?.url ?? '')
+  const filmKind = describeFilmUrl(videoUrl)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -191,9 +193,12 @@ function GalleryModal({
             <input
               value={videoUrl}
               onChange={e => setVideoUrl(e.target.value)}
-              placeholder="YouTube or Vimeo URL"
+              placeholder="YouTube link: watch, youtu.be or Shorts"
               className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white"
             />
+            {filmKind === 'vertical' && <p className="mt-1.5 text-xs text-ink-500">A YouTube Short: the story shows it in a vertical player.</p>}
+            {filmKind === 'horizontal' && <p className="mt-1.5 text-xs text-ink-500">A YouTube video: the story shows it in the horizontal frame.</p>}
+            {filmKind === 'unsupported' && <p role="alert" className="mt-1.5 text-xs text-red-600">This link is not shown on the site: only YouTube links work (watch, youtu.be or Shorts). Vimeo, Instagram and files are not supported.</p>}
           </div>
 
           {error && <p className="text-red-600 text-xs border-l-2 border-red-400 pl-3 py-1">{error}</p>}
