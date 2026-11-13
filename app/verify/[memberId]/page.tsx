@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
+import { roleLabel } from '@/lib/roles'
 
 export const metadata: Metadata = {
   title: 'Membership verification — Alata Investment Club',
@@ -15,7 +16,7 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-const ROLE_LABEL: Record<string, string> = { bod: 'Board of Directors', director: 'Management', member: 'Member' }
+const ROLE_LABEL: Record<string, string> = { bod: 'Board of Directors', director: 'Management' }
 
 /** Opened from the QR code on the digital membership card. */
 export default async function VerifyPage({ params }: { params: Promise<{ memberId: string }> }) {
@@ -44,7 +45,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ memberI
             <dl className="mt-10 grid max-w-[520px] grid-cols-2 gap-6 border-t border-ivory/30 pt-6">
               <div>
                 <dt className="text-[13px] text-ivory/70">Role</dt>
-                <dd className="rd-display mt-1 text-[24px]">{ROLE_LABEL[data.role] ?? data.role}</dd>
+                <dd className="rd-display mt-1 text-[24px]">{ROLE_LABEL[data.role] ?? roleLabel(data.role)}</dd>
               </div>
               <div>
                 <dt className="text-[13px] text-ivory/70">Valid until</dt>
