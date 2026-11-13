@@ -27,6 +27,17 @@ function levelLabel(p: MemberProfile) {
 }
 
 /**
+ * The audience tags a member matches in resources.audience, general first.
+ * A level with no year gets the level tag (plus the first-year starter set for
+ * bachelors); no level at all gets the starter set.
+ */
+function audienceTags(level: string | null | undefined, year: number | null | undefined): string[] {
+  if (level !== 'bachelor' && level !== 'master') return ['bachelor_1']
+  if (year) return [level, `${level}_${year}`]
+  return level === 'bachelor' ? [level, 'bachelor_1'] : [level]
+}
+
+/**
  * The line under the name, chosen by the server at every opening (/api/dashboard-quote).
  * Nothing is drawn on the server render, so there is no hydration mismatch; the line
  * keeps its height meanwhile, and falls back to the first phrase if the request fails.
@@ -112,17 +123,21 @@ export default function DashboardPage() {
       .from('resources')
       .select('*')
       .order('order_index', { ascending: true })
+      .order('created_at', { ascending: true })
       .then(({ data }) => {
         if (cancelled) return
-        const rows = ((data ?? []) as Resource[]).filter(r => !r.is_folder && r.url)
-        const key = profile.study_level ? `${profile.study_level}_${profile.study_year ?? ''}` : null
-        // resources.audience (SQL F) targets a year of study; until it exists,
-        // pick one guide per area: master, career, learning.
-        const targeted = key ? rows.filter(r => r.audience?.some(a => a === key || a === profile.study_level)) : []
+        // Folders count: most of the material lives in Drive folders.
+        const rows = ((data ?? []) as Resource[]).filter(r => r.url)
+        const tags = audienceTags(profile.study_level, profile.study_year)
+        // resources.audience targets a year of study ("bachelor", "bachelor_2", "master"…).
+        // The most general tag comes first, so a guide meant for the whole level leads the list.
+        const rank = (r: Resource) => Math.min(...(r.audience ?? []).map(a => tags.indexOf(a)).filter(i => i >= 0))
+        const targeted = rows.filter(r => r.audience?.some(a => tags.includes(a))).sort((a, b) => rank(a) - rank(b))
+        // Until something is tagged: one guide per area, master, career, learning.
         const picks = targeted.length > 0
           ? targeted
-          : (['masters', 'career', 'education'] as const).map(c => rows.find(r => r.category === c)).filter(Boolean) as Resource[]
-        setResources(picks.slice(0, 3))
+          : (['masters', 'career', 'education'] as const).map(c => rows.find(r => r.category === c && !r.is_folder)).filter(Boolean) as Resource[]
+        setResources(picks.slice(0, 4))
       })
 
     if (firstTeam && profile.title) {
@@ -210,7 +225,12 @@ export default function DashboardPage() {
           ) : resources.map(r => (
             <Row key={r.id} title={r.title} detail={r.description} href={r.url ?? undefined} external action="Open" />
           ))}
-          <Link href="/dashboard/career-resources#resources" className="rd-italic mt-3 inline-block text-[20px] hover:underline underline-offset-[0.18em]">All resources</Link>
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+            <Link href="/dashboard/career-resources#resources" className="rd-italic text-[20px] hover:underline underline-offset-[0.18em]">All resources</Link>
+            {!profile.study_year && (
+              <Link href="/dashboard/profile" className="rd-italic text-[20px] text-club hover:underline underline-offset-[0.18em]">Add your year to see guides for you</Link>
+            )}
+          </div>
         </Section>
 
         <Section title="Your profile" meta={`${filled} of 7`} after={<ProgressRule value={filled / 7} />}>
