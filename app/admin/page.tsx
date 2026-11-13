@@ -2,6 +2,11 @@ import { createServiceClient } from '@/lib/supabase-server'
 import { PageTitle, Section, Row, Pill } from '@/app/components/member/ui'
 import OverviewSwitches from './OverviewSwitches'
 import InviteMember, { type PendingInvite } from './InviteMember'
+import FlagshipCreditsEditor from './FlagshipCreditsEditor'
+import { CareerPriceSection, AboutMetricsSection } from './OverviewSettings'
+import { ABOUT_STATS_KEY, parseAboutStats } from '@/lib/about-stats'
+import { FLAGSHIP_CREDITS_KEY, parseFlagshipCredits } from '@/lib/flagship-credits'
+import { SESSION_PRICE_KEY } from '@/lib/session-price'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +24,7 @@ export default async function BoardOverviewPage() {
   const in30 = new Date(now.getTime() + 30 * 86_400_000).toISOString()
   const since30 = new Date(now.getTime() - 30 * 86_400_000).toISOString()
 
-  const [members, expiring, nextEvents, revenue, applications, settings, costsNoReceipt, partners, invites] = await Promise.all([
+  const [members, expiring, nextEvents, revenue, applications, settings, costsNoReceipt, partners, invites, careerPrice, aboutStats, flagshipCredits] = await Promise.all([
     db.from('club_members').select('id', { count: 'exact', head: true }).is('membership_removed_at', null).gt('membership_expires_at', now.toISOString()),
     db.from('club_members').select('id', { count: 'exact', head: true }).is('membership_removed_at', null).gt('membership_expires_at', now.toISOString()).lt('membership_expires_at', in30),
     db.from('upcoming_events').select('id, title, status, date').gte('date', today).neq('status', 'completed').order('date', { ascending: true }).limit(1),
@@ -31,6 +36,10 @@ export default async function BoardOverviewPage() {
     db.from('partners').select('id, next_step').not('next_step', 'is', null),
     // Invitations sent and not yet accepted.
     db.from('invites').select('id, email, team, lab_subdivision, created_at').is('used_at', null).order('created_at', { ascending: false }),
+    // Site settings, edited here.
+    db.from('settings').select('value').eq('key', SESSION_PRICE_KEY).maybeSingle(),
+    db.from('settings').select('value').eq('key', ABOUT_STATS_KEY).maybeSingle(),
+    db.from('settings').select('value').eq('key', FLAGSHIP_CREDITS_KEY).maybeSingle(),
   ])
   const pendingInvites = (invites.error ? [] : invites.data ?? []) as PendingInvite[]
 
@@ -94,6 +103,12 @@ export default async function BoardOverviewPage() {
 
       <div className="grid gap-x-12 lg:grid-cols-2">
         <InviteMember pending={pendingInvites} />
+      </div>
+
+      <div className="grid gap-x-12 lg:grid-cols-2">
+        <CareerPriceSection initialCents={careerPrice.data?.value ?? '3000'} />
+        <AboutMetricsSection initial={parseAboutStats(aboutStats.data?.value)} />
+        <FlagshipCreditsEditor initial={parseFlagshipCredits(flagshipCredits.data?.value)} />
       </div>
     </>
   )

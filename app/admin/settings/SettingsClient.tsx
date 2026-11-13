@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { ABOUT_STATS_KEY, ABOUT_STATS_COUNT, type AboutStat } from '@/lib/about-stats'
-import FlagshipCreditsEditor from './FlagshipCreditsEditor'
+import FlagshipCreditsEditor from '../FlagshipCreditsEditor'
 
 function SectionHeading({ title }: { title: string }) {
   return (
