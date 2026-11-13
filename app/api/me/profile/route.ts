@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { getSessionMember } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase-server'
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone'
+import { prepareProfilePhoto } from '@/lib/profile-photo'
 
 const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
 const MAX_PHOTO = 4 * 1024 * 1024
@@ -70,10 +71,18 @@ export async function POST(req: NextRequest) {
   if (!PHOTO_TYPES.includes(file.type)) return NextResponse.json({ error: 'Use a JPG, PNG or WebP image.' }, { status: 400 })
   if (file.size > MAX_PHOTO) return NextResponse.json({ error: 'The photo exceeds 4 MB.' }, { status: 400 })
 
+  // Re-encoded before it is stored: at most 800px on the long side, WebP. The same limits on the way in.
+  // A file that does not decode is not an image, whatever its content type says.
+  let photo
+  try {
+    photo = await prepareProfilePhoto(Buffer.from(await file.arrayBuffer()))
+  } catch {
+    return NextResponse.json({ error: 'Use a JPG, PNG or WebP image.' }, { status: 400 })
+  }
+
   const service = createServiceClient()
-  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
-  const path = `members/${member.id}-${randomUUID()}.${ext}`
-  const { error: upErr } = await service.storage.from('team-photos').upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type })
+  const path = `members/${member.id}-${randomUUID()}.${photo.ext}`
+  const { error: upErr } = await service.storage.from('team-photos').upload(path, photo.buffer, { contentType: photo.contentType })
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
   const url = service.storage.from('team-photos').getPublicUrl(path).data.publicUrl
 
