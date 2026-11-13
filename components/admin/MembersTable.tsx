@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { FieldRow } from '@/app/components/member/ui'
+import { FieldRow, SegmentedPills } from '@/app/components/member/ui'
+import { ROLES, roleLabel, roleWarnings, type Role } from '@/lib/roles'
 import {
   Numbers, Toolbar, SearchField, SelectField, Split, CrmTable, CrmRow, NameCell, Sheet, SheetEmpty, Dialog,
   cell, fmtDate, revealSheet, fieldCls, labelCls, btnPrimary, btnGhost, errorCls, type Column,
@@ -13,12 +14,11 @@ type Member = {
   email: string
   role: string
   teams: string[] | null
+  lab_subdivision?: string | null
   title: string | null
   created_at: string
 }
 
-const ROLE_LABEL: Record<string, string> = { bod: 'BoD', management: 'Management', director: 'Director', member: 'Member' }
-const roleLabel = (r: string | null | undefined) => (r ? ROLE_LABEL[r] ?? r.charAt(0).toUpperCase() + r.slice(1) : '—')
 const teamLabel = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
 const COLUMNS: Column[] = [
@@ -143,6 +143,8 @@ export default function MembersTable() {
   const [composeOpen, setComposeOpen] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [roleBusy, setRoleBusy] = useState(false)
+  const [roleError, setRoleError] = useState<string | null>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -209,9 +211,30 @@ export default function MembersTable() {
     })
   }
 
+  /** The role goes through the API, which checks who may change it; teams are never touched. */
+  async function changeRole(m: Member, role: Role) {
+    if (role === m.role) return
+    setRoleBusy(true)
+    setRoleError(null)
+    try {
+      const res = await fetch('/api/admin/crm/members', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: m.id, role }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) setRoleError(json.error ?? 'Could not change the role.')
+      else setMembers(prev => prev.map(x => (x.id === m.id ? { ...x, role } : x)))
+    } catch {
+      setRoleError('Network error. Try again.')
+    }
+    setRoleBusy(false)
+  }
+
   function open(id: string) {
     setOpenId(id)
     setCopied(false)
+    setRoleError(null)
     revealSheet(sheetRef.current)
   }
 
@@ -312,7 +335,21 @@ export default function MembersTable() {
             >
               <FieldRow label="Name" value={current.full_name} />
               <FieldRow label="Email" value={<a href={`mailto:${current.email}`} className="hover:underline">{current.email}</a>} />
-              <FieldRow label="Role" value={roleLabel(current.role)} />
+              <div className="border-b border-night/20 py-[11px]">
+                <div className="rd-eyebrow mb-2 text-[10px] text-earth-500">Role</div>
+                <SegmentedPills
+                  size="sm"
+                  label="Role"
+                  disabled={roleBusy}
+                  options={ROLES.map(r => ({ value: r.value, label: r.label }))}
+                  value={current.role as Role}
+                  onChange={v => changeRole(current, v)}
+                />
+                {roleError && <p role="alert" className={`${errorCls} mt-3`}>{roleError}</p>}
+                {roleWarnings(current.role, current.teams, current.lab_subdivision).map(w => (
+                  <p key={w} role="status" className="mt-3 text-[12px] leading-[1.5] text-earth-700">{w}</p>
+                ))}
+              </div>
               <FieldRow label="Team" value={(current.teams ?? []).length ? (current.teams ?? []).map(teamLabel).join(', ') : '—'} muted={!(current.teams ?? []).length} />
               <FieldRow label="Title" value={current.title || '—'} muted={!current.title} />
               <FieldRow label="Joined" value={fmtDate(current.created_at)} />

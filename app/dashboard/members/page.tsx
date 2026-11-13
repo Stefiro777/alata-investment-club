@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { useProfile } from '../DashboardProfileContext'
 import { TEAM_BADGE } from '../teamColors'
 import { Pill, Tabs, pillClass } from '@/app/components/member/ui'
+import { ROLES, roleWarnings } from '@/lib/roles'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -30,16 +31,18 @@ const LAB_SUBDIVISIONS = [
   { key: 'ma',               label: 'M&A' },
 ]
 
-const ROLE_OPTIONS = [
-  { key: 'bod',       label: 'BoD' },
-  { key: 'director',  label: 'Management' },
-  { key: 'member',    label: 'Membro' },
-]
+const ROLE_OPTIONS = ROLES.map(r => ({ key: r.value, label: r.label }))
 
+// The people list, one group per role.
 const ROLE_GROUPS = [
   { key: 'bod',      label: 'Board of Directors' },
   { key: 'director', label: 'Management' },
-  { key: 'member',   label: 'Membri' },
+  { key: 'lab',      label: 'Lab' },
+  { key: 'media',    label: 'Media' },
+  { key: 'events',   label: 'Events' },
+  { key: 'career',   label: 'Career' },
+  { key: 'alumni',   label: 'Alumni' },
+  { key: 'member',   label: 'Members' },
 ]
 
 function roleGroupLabel(role: string): string {
@@ -133,6 +136,7 @@ function MemberFormModal({
   )
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState<string | null>(null)
+  const [pendingSaved, setPendingSaved] = useState<{ member: Member; isNew: boolean } | null>(null)
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -148,6 +152,27 @@ function MemberFormModal({
     })
   }
 
+  /** The role is changed by the API, which checks who may do it; the rest was saved above. */
+  async function finish(member: Member, isNewMember: boolean) {
+    const before = isNewMember ? 'member' : initial!.role
+    if (form.role !== before) {
+      const res = await fetch('/api/admin/crm/members', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: member.id, role: form.role }),
+      }).catch(() => null)
+      const json = res ? await res.json().catch(() => ({})) : {}
+      if (!res || !res.ok) {
+        setPendingSaved({ member, isNew: isNewMember })
+        setError(`Saved, but the role was not changed: ${json.error ?? 'network error'}`)
+        setSaving(false)
+        return
+      }
+      member = { ...member, role: form.role }
+    }
+    onSaved(member, isNewMember)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.full_name.trim()) return
@@ -158,7 +183,6 @@ function MemberFormModal({
       full_name:       form.full_name.trim(),
       email:           form.email.trim() || null,
       phone:           form.phone.trim() || null,
-      role:            form.role,
       title:           form.title.trim() || null,
       teams:           form.teams.length ? form.teams : null,
       lab_subdivision: form.teams.includes('lab') && form.lab_subdivision ? form.lab_subdivision : null,
@@ -168,11 +192,11 @@ function MemberFormModal({
     if (isNew) {
       const { data, error: err } = await supabase
         .from('club_members')
-        .insert(payload)
+        .insert({ ...payload, role: 'member' }) // the role goes through the API below
         .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision, photo_url, linkedin_url')
         .maybeSingle()
       if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return }
-      onSaved(data as Member, true)
+      await finish(data as Member, true)
     } else {
       const { data, error: err } = await supabase
         .from('club_members')
@@ -180,10 +204,8 @@ function MemberFormModal({
         .eq('id', initial!.id)
         .select('id, user_id, full_name, email, phone, role, title, teams, lab_subdivision')
         .maybeSingle()
-      console.log('UPDATE error:', err)
-      console.log('UPDATE data:', data)
       if (err || !data) { setError(err?.message ?? 'Errore'); setSaving(false); return }
-      onSaved(data as Member, false)
+      await finish(data as Member, false)
     }
     setSaving(false)
   }
@@ -300,6 +322,10 @@ function MemberFormModal({
             </div>
           </div>
 
+          {roleWarnings(form.role, form.teams, form.lab_subdivision).map(w => (
+            <p key={w} className="text-xs leading-[1.5] text-ink-500">{w}</p>
+          ))}
+
           {/* Lab subdivision — only when lab is selected */}
           {form.teams.includes('lab') && (
             <div>
@@ -323,11 +349,14 @@ function MemberFormModal({
           )}
 
           {error && <p className="text-xs text-red-500">{error}</p>}
+          {pendingSaved && (
+            <button type="button" onClick={() => onSaved(pendingSaved.member, pendingSaved.isNew)} className="text-sm text-ink-900 underline underline-offset-4">Done</button>
+          )}
 
           <div className="flex items-center gap-4 pt-2">
             <button
               type="submit"
-              disabled={saving || !form.full_name.trim()}
+              disabled={saving || !form.full_name.trim() || !!pendingSaved}
               className="bg-forest hover:bg-forest-deep text-white text-xs font-medium uppercase tracking-wide px-6 py-2.5 transition-colors disabled:opacity-40"
             >
               {saving ? 'Salvataggio…' : isNew ? 'Aggiungi' : 'Salva'}
