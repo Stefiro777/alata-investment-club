@@ -5,7 +5,7 @@ import { publicOnly, visiblePartners } from '@/lib/public-filters'
 import { FLAGSHIP_CREDITS_KEY, parseFlagshipCredits, buildCredits } from '@/lib/flagship-credits'
 import SiteNav from './components/site/SiteNav'
 import SiteFooter from './components/site/SiteFooter'
-import HomeScene, { type HomeEvent } from './components/home/HomeScene'
+import AboutSections, { type HomeEvent } from './components/home/AboutSections'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,8 +41,8 @@ export default async function HomePage() {
 
   return (
     <>
-      <HomeScene
-        nav={<SiteNav tone="dark" bigLogo hideLogo inheritColor />}
+      <AboutSections
+        nav={<SiteNav tone="dark" bigLogo />}
         stats={parseAboutStats(statsRow?.value)}
         events={nextEvents}
         credits={credits}

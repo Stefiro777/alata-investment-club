@@ -34,10 +34,3 @@ export function parseAboutStats(raw: string | null | undefined): AboutStat[] {
     return DEFAULT_ABOUT_STATS
   }
 }
-
-/** "190K+" -> { target: 190, suffix: 'K+' }; non-numeric values are shown as-is. */
-export function splitStatValue(value: string): { target: number | null; suffix: string } {
-  const m = /^(\d+)(.*)$/.exec(value.trim())
-  if (!m) return { target: null, suffix: value }
-  return { target: parseInt(m[1], 10), suffix: m[2] }
-}

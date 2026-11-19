@@ -196,8 +196,8 @@ function GalleryModal({
               placeholder="YouTube link: watch, youtu.be or Shorts"
               className="w-full px-3 py-2.5 border border-line focus:outline-none focus:border-forest text-sm text-ink-900 bg-white"
             />
-            {filmKind === 'vertical' && <p className="mt-1.5 text-xs text-ink-500">A YouTube Short: the story shows it in a vertical player.</p>}
-            {filmKind === 'horizontal' && <p className="mt-1.5 text-xs text-ink-500">A YouTube video: the story shows it in the horizontal frame.</p>}
+            {filmKind === 'vertical' && <p className="mt-1.5 text-xs text-ink-500">A YouTube Short: the story plays it in the vertical frame.</p>}
+            {filmKind === 'horizontal' && <p className="mt-1.5 text-xs text-ink-500">A YouTube video: the story plays it in the same layout, in its own shape.</p>}
             {filmKind === 'unsupported' && <p role="alert" className="mt-1.5 text-xs text-red-600">This link is not shown on the site: only YouTube links work (watch, youtu.be or Shorts). Vimeo, Instagram and files are not supported.</p>}
           </div>
 
