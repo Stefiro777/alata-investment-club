@@ -18,16 +18,17 @@ export type InviteItem = {
   revoked_at?: string | null
 }
 
-type Team = 'lab' | 'events' | 'media' | 'alumni'
+type Team = 'lab' | 'events' | 'media' | 'alumni' | 'member'
 
 const TEAM_OPTIONS: { value: Team; label: string }[] = [
   { value: 'lab', label: 'Lab' },
   { value: 'events', label: 'Events' },
   { value: 'media', label: 'Media' },
   { value: 'alumni', label: 'Alumni' },
+  { value: 'member', label: 'Member' },
 ]
 
-const teamLabel = (t: string) => TEAM_OPTIONS.find(o => o.value === t)?.label ?? (t === 'member' ? 'Member' : t)
+const teamLabel = (t: string) => TEAM_OPTIONS.find(o => o.value === t)?.label ?? t
 const subLabel = (s: string | null) => LAB_SUBDIVISIONS.find(l => l.value === s)?.label ?? null
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
