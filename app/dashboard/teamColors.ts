@@ -5,5 +5,4 @@ export const TEAM_BADGE: Record<string, { bg: string; text: string; label: strin
   media:      { bg: '#4b5320', text: '#ffffff', label: 'MEDIA' },
   career:     { bg: '#dc2626', text: '#ffffff', label: 'CAREER' },
   lab:        { bg: '#1a4a3a', text: '#ffffff', label: 'LAB' },
-  academy:    { bg: '#7c3aed', text: '#ffffff', label: 'ACADEMY' },
 }

@@ -1,6 +1,5 @@
 'use client'
 
-import { isHiddenTeam } from '@/lib/hidden-teams'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useProfile } from '../DashboardProfileContext'
@@ -15,13 +14,9 @@ const TEAM_OPTIONS = [
   { key: 'events',    label: 'Events' },
   { key: 'media',     label: 'Media' },
   { key: 'career',    label: 'Career' },
-  { key: 'academy',   label: 'Academy' },
   { key: 'lab',       label: 'Lab' },
 ]
 
-// Hidden teams keep their label (existing members may still carry them) but
-// can no longer be assigned or used as a filter.
-const VISIBLE_TEAM_OPTIONS = TEAM_OPTIONS.filter(t => !isHiddenTeam(t.key))
 
 const LAB_SUBDIVISIONS = [
   { key: 'macro_markets',    label: 'Macro & Markets' },
@@ -306,7 +301,7 @@ function MemberFormModal({
               Team ({form.teams.length} selezionati)
             </label>
             <div className="grid grid-cols-2 gap-1 border border-line p-3">
-              {VISIBLE_TEAM_OPTIONS.map(t => (
+              {TEAM_OPTIONS.map(t => (
                 <label key={t.key} className="flex items-center gap-2 py-1 cursor-pointer">
                   <input
                     type="checkbox"
@@ -635,7 +630,7 @@ export default function MembersPage() {
           className="min-w-[200px] flex-1 bg-transparent text-[14px] placeholder:text-earth-600 focus:outline-none"
         />
         <div className={tab === 'members' ? 'flex gap-2' : 'hidden gap-2 lg:flex'}>
-          <FilterDropdown value={teamFilter} onChange={setTeamFilter} options={[{ key: 'all', label: 'All teams' }, ...VISIBLE_TEAM_OPTIONS]} />
+          <FilterDropdown value={teamFilter} onChange={setTeamFilter} options={[{ key: 'all', label: 'All teams' }, ...TEAM_OPTIONS]} />
           <FilterDropdown value={roleFilter} onChange={setRoleFilter} options={[{ key: 'all', label: 'All roles' }, ...ROLE_OPTIONS]} />
         </div>
       </div>

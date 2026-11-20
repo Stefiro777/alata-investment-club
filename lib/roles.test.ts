@@ -5,7 +5,7 @@ import { roleForTeams, roleForInviteTeam, isAnalyst, roleLabel, isRoleCheckViola
 test('the role is the main team, in priority order', () => {
   assert.equal(roleForTeams(['events', 'lab']), 'lab')
   assert.equal(roleForTeams(['alumni', 'career']), 'career')
-  assert.equal(roleForTeams(['academy']), 'member')
+  assert.equal(roleForTeams(['unknown']), 'member')
   assert.equal(roleForTeams(null), 'member')
 })
 
