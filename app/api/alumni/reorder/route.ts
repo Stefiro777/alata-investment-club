@@ -1,10 +1,10 @@
 import { createServiceClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
-import { requireTeamAccess } from '@/lib/auth'
+import { requirePrivilegedAccess } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
-    if (!(await requireTeamAccess('alumni'))) {
+    if (!(await requirePrivilegedAccess())) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

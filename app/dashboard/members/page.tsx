@@ -15,11 +15,8 @@ const TEAM_OPTIONS = [
   { key: 'events',    label: 'Events' },
   { key: 'media',     label: 'Media' },
   { key: 'career',    label: 'Career' },
-  { key: 'education', label: 'Education' },
   { key: 'academy',   label: 'Academy' },
-  { key: 'syrto',     label: 'Syrto' },
   { key: 'lab',       label: 'Lab' },
-  { key: 'alumni',    label: 'Alumni' },
 ]
 
 // Hidden teams keep their label (existing members may still carry them) but

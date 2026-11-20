@@ -114,7 +114,8 @@ export async function POST(req: NextRequest) {
       email: invite.email,
       full_name: fullName,
       phone,
-      teams: invite.team === 'member' ? [] : [invite.team],
+      // 'alumni' is only a role now (an old invitation may still carry it): it gives no team.
+      teams: invite.team === 'member' || invite.team === 'alumni' ? [] : [invite.team],
       lab_subdivision: invite.lab_subdivision ?? null,
     }
 

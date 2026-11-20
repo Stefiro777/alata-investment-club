@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Pill, Section, SectionHeading, SegmentedPills } from '@/app/components/member/ui'
 import { fieldCls, labelCls, errorCls } from '@/components/admin/crm/ui'
 import { LAB_SUBDIVISIONS } from '@/lib/invite'
+import { roleLabel } from '@/lib/roles'
 import { inviteArchiveGroups, inviteClosedAt, inviteStatus, isPendingInvite } from '@/lib/invite-status'
 
 export type InviteItem = {
@@ -18,17 +19,17 @@ export type InviteItem = {
   revoked_at?: string | null
 }
 
-type Team = 'lab' | 'events' | 'media' | 'alumni' | 'member'
+type Team = 'lab' | 'events' | 'media' | 'member'
 
 const TEAM_OPTIONS: { value: Team; label: string }[] = [
   { value: 'lab', label: 'Lab' },
   { value: 'events', label: 'Events' },
   { value: 'media', label: 'Media' },
-  { value: 'alumni', label: 'Alumni' },
   { value: 'member', label: 'Member' },
 ]
 
-const teamLabel = (t: string) => TEAM_OPTIONS.find(o => o.value === t)?.label ?? t
+// Old invitations (accepted or cancelled) may still carry a team that is no longer offered.
+const teamLabel = (t: string) => TEAM_OPTIONS.find(o => o.value === t)?.label ?? roleLabel(t)
 const subLabel = (s: string | null) => LAB_SUBDIVISIONS.find(l => l.value === s)?.label ?? null
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 

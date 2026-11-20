@@ -12,10 +12,11 @@ test('the other teams ignore a subdivision', () => {
   assert.deepEqual(validateInvite({ email: 'a@b.it', team: 'media', lab_subdivision: 'ma' }), { email: 'a@b.it', team: 'media', labSubdivision: null })
 })
 
-test('Alumni and plain member are valid teams, unknown ones are not', () => {
-  assert.ok(!('error' in validateInvite({ email: 'a@b.it', team: 'alumni' })))
+test('plain member is a valid team, removed and unknown ones are not', () => {
   assert.ok(!('error' in validateInvite({ email: 'a@b.it', team: 'member' })))
-  assert.deepEqual(validateInvite({ email: 'a@b.it', team: 'career' }), { error: 'Invalid team' })
+  for (const team of ['alumni', 'education', 'syrto', 'career']) {
+    assert.deepEqual(validateInvite({ email: 'a@b.it', team }), { error: 'Invalid team' })
+  }
 })
 
 test('the email is checked', () => {

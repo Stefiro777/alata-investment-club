@@ -3,7 +3,7 @@
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /** 'member' = a plain member with no team (used by the "member" track of Join Us). */
-export const INVITE_TEAMS = ['lab', 'events', 'media', 'alumni', 'member'] as const
+export const INVITE_TEAMS = ['lab', 'events', 'media', 'member'] as const
 export type InviteTeam = (typeof INVITE_TEAMS)[number]
 
 /** Same values as club_members_lab_subdivision_check. */

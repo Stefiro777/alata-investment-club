@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Team (Lab, Events, Media, Alumni, or plain member) and, for Lab, the subdivision.
+    // Team (Lab, Events, Media, or plain member) and, for Lab, the subdivision.
     const parsed = validateInvite(await req.json().catch(() => null))
     if ('error' in parsed) {
       return NextResponse.json({ error: parsed.error }, { status: 400 })
