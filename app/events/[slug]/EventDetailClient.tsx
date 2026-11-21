@@ -49,7 +49,7 @@ export default function EventDetailClient({
   const isOpen = event.status === 'open' && !isPast
   const hasTicket = isOpen && !soldOut && !membersLocked && event.ticket_price_cents !== null && event.ticket_price_cents !== undefined
   const canRegister = isOpen && (soldOut || membersLocked || hasTicket || event.action_type === 'form' || (event.action_type === 'link' && !!event.action_link))
-  const statusLabel = isPast ? 'Past' : soldOut && isOpen ? 'Full' : isOpen ? 'Open' : event.status === 'coming_soon' ? 'Soon' : 'Past'
+  const statusLabel = isPast ? 'Past' : soldOut && isOpen ? 'Waiting list' : isOpen ? 'Open' : event.status === 'coming_soon' ? 'Soon' : 'Past'
   const when = [d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }), timeRange(event.start_time, event.end_time)].filter(Boolean).join(' · ')
   const price = priceLine(event.ticket_price_cents, event.member_price_cents)
   const memberNote = event.ticket_price_cents && (event.member_price_cents ?? event.ticket_price_cents) < event.ticket_price_cents
@@ -119,7 +119,7 @@ export default function EventDetailClient({
         {nav}
         <div className="rd-gutter relative flex flex-1 flex-col pb-8 pt-[clamp(120px,22vh,170px)]">
           <div className="flex flex-wrap items-center gap-4">
-            <StatusPill tone="dark" solid={isOpen && !soldOut}>{statusLabel}</StatusPill>
+            <StatusPill tone="dark" solid={isOpen && !soldOut} waiting={isOpen && soldOut}>{statusLabel}</StatusPill>
             {event.members_only && <StatusPill tone="dark">Members only</StatusPill>}
             {event.allowed_years && event.allowed_years.length > 0 && <StatusPill tone="dark">Reserved: {yearsLabel(event.allowed_years)}</StatusPill>}
             {kind && <span className="text-[13px] text-ivory/80">{kind}</span>}

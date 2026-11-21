@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { publicOnly } from '@/lib/public-filters'
 import { dayNumber, eventKind, shortPlace } from '@/lib/event-display'
-import type { FeaturedGalleryItem } from '@/lib/types'
+import type { EventAvailability, FeaturedGalleryItem } from '@/lib/types'
+import { isEventFull } from '@/lib/event-capacity'
 import SiteNav from '@/app/components/site/SiteNav'
 import SiteFooter from '@/app/components/site/SiteFooter'
 import { StatusPill } from '@/app/components/site/ui'
@@ -48,7 +49,7 @@ export default async function EventsPage() {
   const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
 
-  const [{ data: eventRows }, { data: featured }, { data: cards }, { data: images }] = await Promise.all([
+  const [{ data: eventRows }, { data: featured }, { data: cards }, { data: images }, { data: availability }] = await Promise.all([
     supabase.from('upcoming_events').select('id, slug, title, date, status, location').order('date', { ascending: true }),
     supabase.from('featured_events').select('id, title, description, authors, media, display_order').order('display_order', { ascending: true }),
     supabase
@@ -57,7 +58,9 @@ export default async function EventsPage() {
       .eq('tipo', 'evento')
       .order('data_pubblicazione', { ascending: false }),
     supabase.from('event_images').select('event_id, url, display_order').order('display_order', { ascending: true }),
+    supabase.rpc('get_event_availability'),
   ])
+  const availabilityById = new Map(((availability ?? []) as EventAvailability[]).map(a => [a.event_id, a]))
 
   const events = publicOnly(eventRows as EventRow[] | null, e => e.title)
   const firstPhoto = new Map<string, string>()
@@ -165,7 +168,9 @@ export default async function EventsPage() {
                               {sub && <span className="mt-1 block text-[12px] text-earth-500">{sub}</span>}
                             </span>
                             <span className="justify-self-end">
-                              <StatusPill solid={e.status === 'open'}>{e.status === 'open' ? 'Open' : 'Soon'}</StatusPill>
+                              {e.status === 'open' && isEventFull(e, availabilityById.get(e.id), today)
+                                ? <StatusPill waiting>Waiting list</StatusPill>
+                                : <StatusPill solid={e.status === 'open'}>{e.status === 'open' ? 'Open' : 'Soon'}</StatusPill>}
                             </span>
                           </Link>
                         </li>

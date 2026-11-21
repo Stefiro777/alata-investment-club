@@ -5,6 +5,8 @@ import SiteNav from '@/app/components/site/SiteNav'
 import SiteFooter from '@/app/components/site/SiteFooter'
 import { isPubliclyHidden } from '@/lib/public-filters'
 import { romeClock } from '@/lib/weekly-digest'
+import { isEventFull } from '@/lib/event-capacity'
+import type { EventAvailability } from '@/lib/types'
 
 const supabase = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,8 +44,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const today = romeClock(new Date()).date
   const isPast = event.date < today
   const { data: availability } = await supabase.rpc('get_event_availability')
-  const row = (availability as { event_id: string; sold_out: boolean }[] | null)?.find(a => a.event_id === event.id)
-  const soldOut = !!row?.sold_out && event.date >= today && event.status !== 'coming_soon'
+  const row = (availability as EventAvailability[] | null)?.find(a => a.event_id === event.id)
+  const soldOut = isEventFull(event, row, today)
 
   return (
     <>

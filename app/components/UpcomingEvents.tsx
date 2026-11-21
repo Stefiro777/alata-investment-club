@@ -10,6 +10,7 @@ import EventWaitlistModal from './EventWaitlistModal'
 import { useEventAvailability } from './useEventAvailability'
 import { useMemberAccess } from './useMemberAccess'
 import { useCart } from '@/app/components/CartContext'
+import { isEventFull } from '@/lib/event-capacity'
 
 // Parsed with T00:00:00 (local) so the weekday/day never slide with the timezone.
 function parseDate(dateStr: string) {
@@ -44,6 +45,7 @@ function groupByMonth(events: UpcomingEvent[]): MonthGroup[] {
 const PILL = 'inline-flex items-center text-[10px] font-medium tracking-[0.2em] uppercase px-3.5 py-2 leading-none whitespace-nowrap'
 const PILL_OUTLINE = `${PILL} border border-forest text-forest`
 const PILL_SOLID = `${PILL} border border-forest bg-forest text-white`
+const PILL_WAITING = `${PILL} border border-amber-400 bg-amber-400 text-ink-900`
 const PILL_TINT = `${PILL} border border-transparent bg-forest/[0.12] text-forest`
 // The action cluster sits above the row-wide link but lets clicks through; only real controls catch them.
 const BUTTON = `${PILL_SOLID} pointer-events-auto transition-colors duration-fast hover:bg-forest-deep hover:border-forest-deep`
@@ -151,7 +153,7 @@ function UpcomingEventRow({
     action = (
       <>
         {membersBadge}
-        <span className={PILL_SOLID}>Sold out</span>
+        <span className={PILL_WAITING}>Waiting list</span>
         <button type="button" onClick={() => onOpenWaitlist(event)} className={LINK_TEXT}>
           Join waitlist
         </button>
@@ -278,7 +280,7 @@ export default function UpcomingEvents() {
   // keep showing "Completed" as before. Coming-soon events are not open for
   // registration, so they keep their own badge.
   const isSoldOut = useCallback(
-    (ev: UpcomingEvent) => !!availability[ev.id]?.sold_out && ev.date >= today && ev.status !== 'coming_soon',
+    (ev: UpcomingEvent) => isEventFull(ev, availability[ev.id], today),
     [availability, today],
   )
 

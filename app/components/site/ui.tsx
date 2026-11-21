@@ -10,17 +10,24 @@ type Tone = 'dark' | 'light'
 export function StatusPill({
   children,
   solid = false,
+  waiting = false,
   tone = 'light',
   className = '',
 }: {
   children: ReactNode
   solid?: boolean
+  /** Event at capacity ("Waiting list"): amber instead of the green Open. */
+  waiting?: boolean
   tone?: Tone
   className?: string
 }) {
-  const palette = tone === 'light'
-    ? solid ? 'bg-club text-ivory border-club' : 'border-club text-club'
-    : solid ? 'bg-ivory text-night border-ivory' : 'border-ivory/70 text-ivory'
+  const palette = waiting
+    ? tone === 'light'
+      ? 'bg-amber-400 text-night border-amber-400'
+      : 'bg-amber-300 text-night border-amber-300'
+    : tone === 'light'
+      ? solid ? 'bg-club text-ivory border-club' : 'border-club text-club'
+      : solid ? 'bg-ivory text-night border-ivory' : 'border-ivory/70 text-ivory'
   return (
     <span
       className={`inline-block whitespace-nowrap rounded-full border px-[15px] py-[7px] text-[10px] font-semibold uppercase leading-none tracking-[0.14em] ${palette} ${className}`}

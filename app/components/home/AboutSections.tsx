@@ -4,7 +4,7 @@ import { StatusPill } from '@/app/components/site/ui'
 import type { AboutStat } from '@/lib/about-stats'
 import { shortDate } from '@/lib/event-display'
 
-export type HomeEvent = { id: string; slug: string | null; title: string; date: string; status: string | null }
+export type HomeEvent = { id: string; slug: string | null; title: string; date: string; status: string | null; full?: boolean }
 
 const VALUES = ['Community', 'Drive', 'Ambition'] as const
 
@@ -110,7 +110,9 @@ export default function AboutSections({
                       <span className="rd-display text-[26px] leading-[1.1] sm:text-[clamp(30px,4.2vw,50px)]">{shortDate(ev.date)}</span>
                       <span className="text-[15px] leading-[1.35] md:text-[18px]">{ev.title}</span>
                       <span className="col-start-2 mt-2 justify-self-start sm:col-start-auto sm:mt-0 sm:justify-self-end">
-                        <StatusPill solid={ev.status === 'open'}>{ev.status === 'open' ? 'Open' : 'Soon'}</StatusPill>
+                        {ev.status === 'open' && ev.full
+                          ? <StatusPill waiting>Waiting list</StatusPill>
+                          : <StatusPill solid={ev.status === 'open'}>{ev.status === 'open' ? 'Open' : 'Soon'}</StatusPill>}
                       </span>
                     </Link>
                   </li>

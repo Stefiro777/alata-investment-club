@@ -5,6 +5,8 @@ import { publicOnly, visiblePartners } from '@/lib/public-filters'
 import { FLAGSHIP_CREDITS_KEY, parseFlagshipCredits, buildCredits } from '@/lib/flagship-credits'
 import SiteNav from './components/site/SiteNav'
 import SiteFooter from './components/site/SiteFooter'
+import { isEventFull } from '@/lib/event-capacity'
+import type { EventAvailability } from '@/lib/types'
 import AboutSections, { type HomeEvent } from './components/home/AboutSections'
 
 export const dynamic = 'force-dynamic'
@@ -17,7 +19,7 @@ export default async function HomePage() {
   const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
 
-  const [{ data: partners }, { data: statsRow }, { data: creditsRow }, { data: events }] = await Promise.all([
+  const [{ data: partners }, { data: statsRow }, { data: creditsRow }, { data: events }, { data: availability }] = await Promise.all([
     supabase
       .from('partners')
       .select('name, order_index, is_hidden')
@@ -32,9 +34,13 @@ export default async function HomePage() {
       .neq('status', 'completed')
       .order('date', { ascending: true })
       .limit(8),
+    supabase.rpc('get_event_availability'),
   ])
 
-  const nextEvents = publicOnly(events as HomeEvent[] | null, e => e.title).slice(0, 4)
+  const availabilityById = new Map(((availability ?? []) as EventAvailability[]).map(a => [a.event_id, a]))
+  const nextEvents = publicOnly(events as HomeEvent[] | null, e => e.title)
+    .slice(0, 4)
+    .map(e => ({ ...e, full: isEventFull(e, availabilityById.get(e.id), today) }))
   const partnerNames = publicOnly(visiblePartners(partners), p => p.name).map(p => p.name as string)
   // The names that open the credits are edited in Board > Site > Settings; the partners follow.
   const credits = buildCredits(parseFlagshipCredits(creditsRow?.value), partnerNames)

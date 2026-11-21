@@ -10,6 +10,22 @@ export function isSoldOut(capacity: number | null | undefined, taken: number): b
   return capacity != null && taken >= capacity
 }
 
+/**
+ * Whether an event should be shown as "Waiting list" (at capacity). Display only:
+ * the registration logic stays in SQL. The flag comes from get_event_availability();
+ * a missing row, or a capacity that is empty/0 (unlimited), is never full. Past events
+ * and coming-soon ones keep their own status. `today` is YYYY-MM-DD.
+ */
+export function isEventFull(
+  event: { date: string; status: string | null },
+  availability: { capacity: number | null; sold_out: boolean } | null | undefined,
+  today: string,
+): boolean {
+  if (!availability?.sold_out) return false
+  if (!availability.capacity || availability.capacity <= 0) return false
+  return event.date >= today && event.status !== 'coming_soon' && event.status !== 'completed'
+}
+
 export function seatsLeft(capacity: number | null | undefined, taken: number): number | null {
   return capacity == null ? null : Math.max(0, capacity - taken)
 }

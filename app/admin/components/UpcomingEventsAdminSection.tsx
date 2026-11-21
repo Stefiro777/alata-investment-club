@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import EventWaitlistAdmin from './EventWaitlistAdmin'
+import { isEventFull } from '@/lib/event-capacity'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { EVENT_YEARS, cleanAllowedYears } from '@/lib/event-years'
@@ -927,7 +928,7 @@ function EventSheet({
             <input type="number" min="1" step="1" value={form.capacity} onChange={e => set('capacity', e.target.value)} placeholder="empty = unlimited" className={fieldCls} />
             <p className="mt-2 text-[11px] leading-[1.5] text-earth-600">
               {taken === null ? '' : `Seats taken now: ${taken}${form.capacity ? ` / ${form.capacity}` : ''} (registrations plus checkouts in progress). `}
-              When the seats run out, sign-ups close and the event shows &ldquo;Sold out&rdquo; with the waitlist; if you raise the limit or a seat frees up it opens again.
+              When the seats run out, sign-ups close and the event shows &ldquo;Waiting list&rdquo; instead of &ldquo;Open&rdquo;; if you raise the limit or a seat frees up it opens again.
             </p>
           </div>
         </div>
@@ -993,7 +994,9 @@ function EventRow({ ev, selected, muted, regCount, taken, onSelect }: {
           <span className="mt-1 block truncate text-[12px] text-earth-700">{meta}</span>
         </span>
         <span className="flex flex-col items-end gap-1.5">
-          <Pill size="sm" active={ev.status === 'open'}>{STATUS_LABEL[ev.status] ?? ev.status}</Pill>
+          {ev.status === 'open' && isEventFull(ev, { capacity: ev.capacity ?? null, sold_out: ev.capacity != null && (taken ?? regCount) >= ev.capacity }, new Date().toISOString().split('T')[0])
+            ? <span className="inline-block whitespace-nowrap rounded-full border border-amber-400 bg-amber-400 px-3 py-1.5 text-[10px] font-semibold uppercase leading-none tracking-[0.14em] text-night">Waiting list</span>
+            : <Pill size="sm" active={ev.status === 'open'}>{STATUS_LABEL[ev.status] ?? ev.status}</Pill>}
           <span className="rd-italic text-[18px]">{selected ? 'Open' : 'Edit'}</span>
         </span>
       </button>
